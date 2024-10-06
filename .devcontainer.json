@@ -1,6 +1,6 @@
 {
-    "name": "ludeeus/integration_blueprint",
-    "image": "mcr.microsoft.com/devcontainers/python:3.12",
+    "name": "Thank-you-Linus/Linus-Dashboard",
+    "image": "mcr.microsoft.com/vscode/devcontainers/python:3.12-bullseye",
     "postCreateCommand": "scripts/setup",
     "forwardPorts": [
         8123
@@ -37,5 +37,7 @@
         }
     },
     "remoteUser": "vscode",
-    "features": {}
+    "features": {
+        "ghcr.io/devcontainers/features/rust:1": {}
+    }
 }

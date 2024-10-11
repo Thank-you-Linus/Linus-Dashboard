@@ -1,55 +1,76 @@
-"""
-Custom integration to integrate linus_dashboard with Home Assistant.
+"""Linus Dashboard integration for Home Assistant."""
 
-For more details about this integration, please refer to
-https://github.com/Thank-you-Linus/Linus-Dashboard
-"""
+import logging
+import os
 
-from __future__ import annotations
-from typing import TYPE_CHECKING
+from homeassistant.components.frontend import (
+    add_extra_js_url,
+    async_register_built_in_panel,
+    async_remove_panel,
+)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 
-from homeassistant.components import frontend
-from homeassistant.components.lovelace import _register_panel
-from homeassistant.components.lovelace.dashboard import LovelaceYAML
+_LOGGER = logging.getLogger(__name__)
 
-from .load_dashboard import load_dashboard
-from .load_plugins import load_plugins
-
-from .const import DOMAIN, VERSION
-
-if TYPE_CHECKING:
-    from homeassistant.config_entries import ConfigEntry
-    from homeassistant.core import HomeAssistant
+DOMAIN = "linus_dashboard"
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigEntry) -> bool:
-    """Set up the Linus Dashboard integration."""
-    load_plugins(hass, DOMAIN)
-
+async def async_setup(hass: HomeAssistant, _config: dict) -> bool:
+    """Set up Linus Dashboard."""
+    _LOGGER.info("Setting up Linus Dashboard")
+    hass.data.setdefault(DOMAIN, {})
     return True
 
 
-# https://developers.home-assistant.io/docs/config_entries_index/#setting-up-an-entry
-async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: ConfigEntry,
-) -> bool:
-    """Set up this integration using UI."""
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up Linus Dashboard from a config entry."""
+    _LOGGER.info("Setting up Linus Dashboard entry")
 
-    load_dashboard(hass, DOMAIN)
-    entry.async_on_unload(entry.add_update_listener(async_reload_entry))
+    # Path to the YAML file for the dashboard
+    dashboard_path = os.path.join(
+        hass.config.path(f"custom_components/{DOMAIN}/lovelace/ui-lovelace.yaml")
+    )
 
+    # Path to the JavaScript file for the strategy
+    strategy_js_url = f"/{DOMAIN}/js/linus-strategy.js"
+    strategy_js_path = hass.config.path(
+        f"custom_components/{DOMAIN}/js/linus-strategy.js"
+    )
+    hass.http.register_static_path(strategy_js_url, strategy_js_path, False)
+
+    # Add the JavaScript file as a frontend resource
+    add_extra_js_url(hass, strategy_js_url)
+
+    # Use a unique name for the panel to avoid conflicts
+    sidebar_title = "Linus Dashboard"
+    sidebar_icon = "mdi:bow-tie"
+    panel_url = DOMAIN
+    async_register_built_in_panel(
+        hass,
+        panel_url,
+        sidebar_title,
+        sidebar_icon,
+        config={
+            "mode": "yaml",
+            "icon": sidebar_icon,
+            "title": sidebar_title,
+            "filename": dashboard_path,
+        },
+    )
+
+    # Store the entry
+    hass.data[DOMAIN][entry.entry_id] = panel_url
     return True
 
 
-async def async_remove_entry(hass, config_entry):
-    frontend.async_remove_panel(hass, "linus-dashboard")
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    _LOGGER.info("Unloading Linus Dashboard entry")
 
+    # Retrieve and remove the panel name
+    panel_url = hass.data[DOMAIN].pop(entry.entry_id, None)
+    if panel_url:
+        async_remove_panel(hass, panel_url)
 
-async def async_reload_entry(
-    hass: HomeAssistant,
-    entry: ConfigEntry,
-) -> None:
-    """Reload config entry."""
-    await async_remove_entry(hass, entry)
-    await async_setup_entry(hass, entry)
+    return True

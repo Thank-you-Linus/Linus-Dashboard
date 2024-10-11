@@ -1,0 +1,7 @@
+strategy:
+  type: custom:mushroom-strategy
+  options:
+    areas:
+      _:
+        type: AreaButtonCard
+views: []

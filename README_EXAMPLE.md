@@ -1,4 +1,4 @@
-# Linus Dashboard
+# Integration Blueprint
 
 [![GitHub Release][releases-shield]][releases]
 [![GitHub Activity][commits-shield]][commits]
@@ -28,7 +28,7 @@ Platform | Description
 1. Download _all_ the files from the `custom_components/linus_dashboard/` directory (folder) in this repository.
 1. Place the files you downloaded in the new directory (folder) you created.
 1. Restart Home Assistant
-1. In the HA UI go to "Configuration" -> "Integrations" click "+" and search for "Integration blueprint"
+1. In the HA UI go to "Configuration" -> "Integrations" click "+" and search for "Linus dashboard"
 
 ## Configuration is done in the UI
 
@@ -41,11 +41,11 @@ If you want to contribute to this please read the [Contribution guidelines](CONT
 ***
 
 [linus_dashboard]: https://github.com/Thank-you-Linus/Linus-Dashboard
-[buymecoffee]: https://www.buymeacoffee.com/linus
+[buymecoffee]: https://www.buymeacoffee.com/ludeeus
 [buymecoffeebadge]: https://img.shields.io/badge/buy%20me%20a%20coffee-donate-yellow.svg?style=for-the-badge
 [commits-shield]: https://img.shields.io/github/commit-activity/y/ludeeus/linus_dashboard.svg?style=for-the-badge
 [commits]: https://github.com/Thank-you-Linus/Linus-Dashboard/commits/main
-[discord]: https://discord.gg/ej2Xn4GTww
+[discord]: https://discord.gg/Qa5fW2R
 [discord-shield]: https://img.shields.io/discord/330944238910963714.svg?style=for-the-badge
 [exampleimg]: example.png
 [forum-shield]: https://img.shields.io/badge/community-forum-brightgreen.svg?style=for-the-badge

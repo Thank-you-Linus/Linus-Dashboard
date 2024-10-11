@@ -1,12 +1,12 @@
 {
   "domain": "linus_dashboard",
-  "name": "Linus Dashboard",
+  "name": "Linus dashboard",
   "codeowners": [
     "@Thank-you-Linus"
   ],
   "config_flow": true,
   "documentation": "https://github.com/Thank-you-Linus/Linus-Dashboard",
-  "iot_class": "cloud_polling",
+  "iot_class": "calculated",
   "issue_tracker": "https://github.com/Thank-you-Linus/Linus-Dashboard/issues",
-  "version": "0.0.0"
+  "version": "0.0.1"
 }

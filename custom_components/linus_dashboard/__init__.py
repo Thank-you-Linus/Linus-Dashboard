@@ -1,15 +1,19 @@
 """Linus Dashboard integration for Home Assistant."""
 
 import logging
-import os
+from pathlib import Path
 
 from homeassistant.components.frontend import (
-    add_extra_js_url,
-    async_register_built_in_panel,
     async_remove_panel,
 )
+from homeassistant.components.http import StaticPathConfig
+from homeassistant.components.lovelace import _register_panel
+from homeassistant.components.lovelace.dashboard import LovelaceYAML
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+
+from custom_components.linus_dashboard import utils
+from custom_components.linus_dashboard.const import URL_PANEL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,6 +24,7 @@ async def async_setup(hass: HomeAssistant, _config: dict) -> bool:
     """Set up Linus Dashboard."""
     _LOGGER.info("Setting up Linus Dashboard")
     hass.data.setdefault(DOMAIN, {})
+
     return True
 
 
@@ -27,40 +32,44 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Linus Dashboard from a config entry."""
     _LOGGER.info("Setting up Linus Dashboard entry")
 
-    # Path to the YAML file for the dashboard
-    dashboard_path = os.path.join(
-        hass.config.path(f"custom_components/{DOMAIN}/lovelace/ui-lovelace.yaml")
-    )
-
     # Path to the JavaScript file for the strategy
     strategy_js_url = f"/{DOMAIN}/js/linus-strategy.js"
-    strategy_js_path = hass.config.path(
-        f"custom_components/{DOMAIN}/js/linus-strategy.js"
-    )
-    hass.http.register_static_path(strategy_js_url, strategy_js_path, False)
+    strategy_js_path = Path(__file__).parent / "js/linus-strategy.js"
 
-    # Add the JavaScript file as a frontend resource
-    add_extra_js_url(hass, strategy_js_url)
+    await hass.http.async_register_static_paths(
+        [
+            StaticPathConfig(
+                strategy_js_url, str(strategy_js_path), cache_headers=False
+            ),
+        ]
+    )
+
+    # fix from https://github.com/hmmbob/WebRTC/blob/a0783df2e5426118599edc50bfd0466b1b0f0716/custom_components/webrtc/__init__.py#L83
+    version = getattr(hass.data["integrations"][DOMAIN], "version", 0)
+    await utils.init_resource(hass, f"/{DOMAIN}/js/linus-strategy.js", str(version))
 
     # Use a unique name for the panel to avoid conflicts
     sidebar_title = "Linus Dashboard"
     sidebar_icon = "mdi:bow-tie"
-    panel_url = DOMAIN
-    async_register_built_in_panel(
-        hass,
-        panel_url,
-        sidebar_title,
-        sidebar_icon,
-        config={
-            "mode": "yaml",
-            "icon": sidebar_icon,
-            "title": sidebar_title,
-            "filename": dashboard_path,
-        },
+    filename_path = Path(__file__).parent / "lovelace/ui-lovelace.yaml"
+
+    dashboard_config = {
+        "mode": "yaml",
+        "icon": sidebar_icon,
+        "title": sidebar_title,
+        "filename": str(filename_path),
+        "show_in_sidebar": True,
+        "require_admin": False,
+    }
+
+    hass.data["lovelace"]["dashboards"][URL_PANEL] = LovelaceYAML(
+        hass, URL_PANEL, dashboard_config
     )
 
+    _register_panel(hass, URL_PANEL, "yaml", dashboard_config, False)
+
     # Store the entry
-    hass.data[DOMAIN][entry.entry_id] = panel_url
+    hass.data[DOMAIN][entry.entry_id] = URL_PANEL
     return True
 
 

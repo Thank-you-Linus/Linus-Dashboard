@@ -1015,6 +1015,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _chips_LinusClimateChip__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../chips/LinusClimateChip */ "./src/chips/LinusClimateChip.ts");
 /* harmony import */ var _chips_LinusAggregateChip__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../chips/LinusAggregateChip */ "./src/chips/LinusAggregateChip.ts");
 /* harmony import */ var _chips_AreaStateChip__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../chips/AreaStateChip */ "./src/chips/AreaStateChip.ts");
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../utils */ "./src/utils.ts");
+
 
 
 
@@ -1052,7 +1054,7 @@ class AreaCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractCard {
                                 multiline_secondary: false,
                                 tap_action: {
                                     action: "navigate",
-                                    navigation_path: area.area_id,
+                                    navigation_path: (0,_utils__WEBPACK_IMPORTED_MODULE_7__.slugify)(area.name),
                                 },
                                 hold_action: {
                                     action: "none",
@@ -1152,7 +1154,7 @@ class AreaCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractCard {
           `,
                             tap_action: {
                                 action: "navigate",
-                                navigation_path: area.area_id,
+                                navigation_path: (0,_utils__WEBPACK_IMPORTED_MODULE_7__.slugify)(area.name),
                             },
                             hold_action: {
                                 action: "none",
@@ -1705,7 +1707,8 @@ class ControllerCard {
             },
         ];
         if (__classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").showControls || __classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").extraControls) {
-            const linusDevice = Array.isArray(__classPrivateFieldGet(this, _ControllerCard_target, "f").area_name) ? _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices[__classPrivateFieldGet(this, _ControllerCard_target, "f").area_name[0]] : undefined;
+            const area = Array.isArray(__classPrivateFieldGet(this, _ControllerCard_target, "f").area_id) ? _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas.find(a => a && a.name && a.name === __classPrivateFieldGet(this, _ControllerCard_target, "f").area_id?.[0]) : undefined;
+            const linusDevice = area ? _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices[area.name] : undefined;
             cards.push({
                 type: "custom:mushroom-chips-card",
                 alignment: "end",
@@ -4778,6 +4781,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./cards/ControllerCard */ "./src/cards/ControllerCard.ts");
 /* harmony import */ var _cards_SwipeCard__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./cards/SwipeCard */ "./src/cards/SwipeCard.ts");
 /* harmony import */ var _cards_MainAreaCard__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./cards/MainAreaCard */ "./src/cards/MainAreaCard.ts");
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./utils */ "./src/utils.ts");
+
 
 
 
@@ -4829,7 +4834,7 @@ class MushroomStrategy extends HTMLTemplateElement {
             if (!area.hidden) {
                 views.push({
                     title: area.name,
-                    path: area.area_id ?? area.name,
+                    path: (0,_utils__WEBPACK_IMPORTED_MODULE_5__.slugify)(area.name),
                     subview: true,
                     strategy: {
                         type: "custom:mushroom-strategy",
@@ -4866,7 +4871,6 @@ class MushroomStrategy extends HTMLTemplateElement {
         // Set the target for controller cards to the current area.
         let target = {
             area_id: [area.area_id],
-            area_name: [area.name],
         };
         // Create cards for each domain.
         for (const domain of exposedDomainIds) {
@@ -6605,7 +6609,6 @@ class AbstractView {
                 // Set the target for controller cards to the current area.
                 let target = {
                     area_id: [area.area_id],
-                    area_name: [area.name],
                 };
                 // Set the target for controller cards to entities without an area.
                 if (area.area_id === "undisclosed") {

@@ -1,7 +1,6 @@
 import {chips} from "../types/strategy/chips";
 import {WeatherChipConfig} from "../types/lovelace-mushroom/utils/lovelace/chip/types";
 import {AbstractChip} from "./AbstractChip";
-import { WeatherPopup } from "../popups/WeatherPopup";
 
 // noinspection JSUnusedGlobalSymbols False positive.
 /**
@@ -32,12 +31,9 @@ class WeatherChip extends AbstractChip {
     super();
     this.#defaultConfig = {
       ...this.#defaultConfig,
-      tap_action: new WeatherPopup(entityId).getPopup() as any,
       ...{entity: entityId},
       ...options,
     };
-
-    this.#defaultConfig.tap_action = new WeatherPopup(entityId).getPopup()
 
     this.config = Object.assign(this.config, this.#defaultConfig, options);
   }

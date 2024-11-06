@@ -11,6 +11,4 @@ export interface AreaRegistryEntry {
   name: string;
   picture: string | null;
   aliases: string[];
-  icon?: string;
-  floor_id?: string;
 }

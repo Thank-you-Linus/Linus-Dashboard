@@ -1,11 +1,5 @@
-import { generic } from "./types/strategy/generic";
+import {generic} from "./types/strategy/generic";
 import StrategyDefaults = generic.StrategyDefaults;
-import { LightControlChip } from "./chips/LightControlChip";
-import { SettingsChip } from "./chips/SettingsChip";
-import { LightSettings } from "./popups/LightSettingsPopup";
-import { ToggleSceneChip } from "./chips/ToggleSceneChip";
-import { SceneSettings } from "./popups/SceneSettingsPopup";
-import { MagicAreaRegistryEntry } from "./types/homeassistant/data/device_registry";
 
 /**
  * Default configuration for the mushroom strategy.
@@ -15,67 +9,29 @@ export const configurationDefaults: StrategyDefaults = {
     undisclosed: {
       aliases: [],
       area_id: "undisclosed",
-      name: "Non assigné",
+      name: "Undisclosed",
       picture: null,
       hidden: false,
     }
   },
-  floors: {
-    undisclosed: {
-      aliases: [],
-      floor_id: "undisclosed",
-      name: "Non assigné",
-      hidden: false,
-    }
-  },
-  debug: true,
+  debug: false,
   domains: {
     _: {
       hide_config_entities: false,
     },
     default: {
-      title: "Divers",
+      title: "Miscellaneous",
       showControls: false,
       hidden: false,
     },
     light: {
-      // title: "Lights",
+      title: "Lights",
       showControls: true,
-      extraControls: (device: MagicAreaRegistryEntry) => {
-        return [
-          new LightControlChip(device.entities.light_control?.entity_id).getChip(),
-          new SettingsChip({ tap_action: new LightSettings(device).getPopup() }).getChip()
-        ]
-      },
       iconOn: "mdi:lightbulb",
       iconOff: "mdi:lightbulb-off",
       onService: "light.turn_on",
       offService: "light.turn_off",
       hidden: false,
-      order: 1
-    },
-    scene: {
-      title: "Scènes",
-      showControls: false,
-      extraControls: (device: MagicAreaRegistryEntry) => {
-
-        return [
-          {
-            type: "conditional",
-            conditions: [{
-              entity: device.entities.all_lights?.entity_id,
-              state_not: "unavailable"
-            }],
-            chip: new ToggleSceneChip(device).getChip(),
-          },
-          new SettingsChip({ tap_action: new SceneSettings(device).getPopup() }).getChip()
-        ]
-      },
-      iconOn: "mdi:lightbulb",
-      iconOff: "mdi:lightbulb-off",
-      onService: "scene.turn_on",
-      hidden: false,
-      order: 2
     },
     fan: {
       title: "Fans",
@@ -85,7 +41,6 @@ export const configurationDefaults: StrategyDefaults = {
       onService: "fan.turn_on",
       offService: "fan.turn_off",
       hidden: false,
-      order: 4
     },
     cover: {
       title: "Covers",
@@ -95,7 +50,6 @@ export const configurationDefaults: StrategyDefaults = {
       onService: "cover.open_cover",
       offService: "cover.close_cover",
       hidden: false,
-      order: 8
     },
     switch: {
       title: "Switches",
@@ -105,31 +59,26 @@ export const configurationDefaults: StrategyDefaults = {
       onService: "switch.turn_on",
       offService: "switch.turn_off",
       hidden: false,
-      order: 5
     },
     camera: {
       title: "Cameras",
       showControls: false,
       hidden: false,
-      order: 6
     },
     lock: {
       title: "Locks",
       showControls: false,
       hidden: false,
-      order: 7
     },
     climate: {
       title: "Climates",
-      showControls: true,
+      showControls: false,
       hidden: false,
-      order: 3
     },
     media_player: {
       title: "Media Players",
-      showControls: true,
+      showControls: false,
       hidden: false,
-      order: 9
     },
     sensor: {
       title: "Sensors",
@@ -150,7 +99,16 @@ export const configurationDefaults: StrategyDefaults = {
       title: "Vacuums",
       showControls: true,
       hidden: false,
-      order: 10
+    },
+    select: {
+      title: "Selects",
+      showControls: false,
+      hidden: false,
+    },
+    input_select: {
+      title: "Input Selects",
+      showControls: false,
+      hidden: false,
     },
   },
   home_view: {
@@ -161,47 +119,32 @@ export const configurationDefaults: StrategyDefaults = {
       order: 1,
       hidden: false,
     },
-    security: {
+    light: {
       order: 2,
       hidden: false,
     },
-    light: {
+    fan: {
       order: 3,
       hidden: false,
     },
-    media_player: {
+    cover: {
       order: 4,
       hidden: false,
     },
-    climate: {
+    switch: {
       order: 5,
       hidden: false,
     },
-    fan: {
+    climate: {
       order: 6,
       hidden: false,
     },
-    cover: {
+    camera: {
       order: 7,
       hidden: false,
     },
-    camera: {
-      order: 8,
-      hidden: false,
-    },
-    switch: {
-      order: 9,
-      hidden: false,
-    },
     vacuum: {
-      order: 10,
-      hidden: false,
-    },
-    scene: {
-      order: 11,
-      hidden: false,
-    },
-    securityDetails: {
+      order: 8,
       hidden: false,
     },
   }

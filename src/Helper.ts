@@ -1,14 +1,11 @@
-import { configurationDefaults } from "./configurationDefaults";
-import { HassEntities, HassEntity } from "home-assistant-js-websocket";
+import {configurationDefaults} from "./configurationDefaults";
+import {HassEntities, HassEntity} from "home-assistant-js-websocket";
 import deepmerge from "deepmerge";
-import { EntityRegistryEntry } from "./types/homeassistant/data/entity_registry";
-import { DeviceRegistryEntry, MagicAreaRegistryEntry } from "./types/homeassistant/data/device_registry";
-import { AreaRegistryEntry } from "./types/homeassistant/data/area_registry";
-import { generic } from "./types/strategy/generic";
+import {EntityRegistryEntry} from "./types/homeassistant/data/entity_registry";
+import {DeviceRegistryEntry} from "./types/homeassistant/data/device_registry";
+import {AreaRegistryEntry} from "./types/homeassistant/data/area_registry";
+import {generic} from "./types/strategy/generic";
 import StrategyArea = generic.StrategyArea;
-import StrategyFloor = generic.StrategyFloor;
-import { FloorRegistryEntry } from "./types/homeassistant/data/floor_registry";
-import { DOMAIN } from "./variables";
 
 /**
  * Helper Class
@@ -41,28 +38,12 @@ class Helper {
   static #areas: StrategyArea[] = [];
 
   /**
-   * An array of entities from Home Assistant's area registry.
-   *
-   * @type {StrategyFloor[]}
-   * @private
-   */
-  static #floors: StrategyFloor[] = [];
-
-  /**
    * An array of state entities from Home Assistant's Hass object.
    *
    * @type {HassEntities}
    * @private
    */
   static #hassStates: HassEntities;
-
-  /**
-   * Translation method.
-   *
-   * @type {any}
-   * @private
-   */
-  static #hassLocalize: any;
 
   /**
    * Indicates whether this module is initialized.
@@ -79,14 +60,6 @@ class Helper {
    * @private
    */
   static #strategyOptions: generic.StrategyConfig;
-
-  /**
-   * The magic areas devices.
-   *
-   * @type {Record<string, MagicAreaRegistryEntry>}
-   * @private
-   */
-  static #magicAreasDevices: Record<string, MagicAreaRegistryEntry>;
 
   /**
    * Set to true for more verbose information in the console.
@@ -119,16 +92,6 @@ class Helper {
   }
 
   /**
-   * Custom strategy configuration.
-   *
-   * @returns {Record<string, MagicAreaRegistryEntry>}
-   * @static
-   */
-  static get magicAreasDevices(): Record<string, MagicAreaRegistryEntry> {
-    return this.#magicAreasDevices;
-  }
-
-  /**
    * Get the entities from Home Assistant's area registry.
    *
    * @returns {StrategyArea[]}
@@ -136,23 +99,6 @@ class Helper {
    */
   static get areas(): StrategyArea[] {
     return this.#areas;
-  }
-
-  /**
-   * Get the entities from Home Assistant's floor registry.
-   *
-   * @returns {StrategyFloor[]}
-   * @static
-   */
-  static get floors(): StrategyFloor[] {
-    return this.#floors.sort((a, b) => {
-      // Check if 'level' is undefined in either object
-      if (a.level === undefined) return 1; // a should come after b
-      if (b.level === undefined) return -1; // b should come after a
-
-      // Both 'level' values are defined, compare them
-      return a.level - b.level;
-    });
   }
 
   /**
@@ -195,8 +141,6 @@ class Helper {
   static async initialize(info: generic.DashBoardInfo): Promise<void> {
     // Initialize properties.
     this.#hassStates = info.hass.states;
-    this.#hassLocalize = info.hass.localize;
-    console.log('info.hass.resources.fr', info.hass.resources.fr)
     this.#strategyOptions = deepmerge(configurationDefaults, info.config?.strategy?.options ?? {});
     this.#debug = this.#strategyOptions.debug;
 
@@ -204,13 +148,11 @@ class Helper {
       // Query the registries of Home Assistant.
 
       // noinspection ES6MissingAwait False positive? https://youtrack.jetbrains.com/issue/WEB-63746
-      [Helper.#entities, Helper.#devices, Helper.#areas, Helper.#floors] = await Promise.all([
-        info.hass.callWS({ type: "config/entity_registry/list" }) as Promise<EntityRegistryEntry[]>,
-        info.hass.callWS({ type: "config/device_registry/list" }) as Promise<DeviceRegistryEntry[]>,
-        info.hass.callWS({ type: "config/area_registry/list" }) as Promise<AreaRegistryEntry[]>,
-        info.hass.callWS({ type: "config/floor_registry/list" }) as Promise<FloorRegistryEntry[]>,
+      [Helper.#entities, Helper.#devices, Helper.#areas] = await Promise.all([
+        info.hass.callWS({type: "config/entity_registry/list"}) as Promise<EntityRegistryEntry[]>,
+        info.hass.callWS({type: "config/device_registry/list"}) as Promise<DeviceRegistryEntry[]>,
+        info.hass.callWS({type: "config/area_registry/list"}) as Promise<AreaRegistryEntry[]>,
       ]);
-
     } catch (e) {
       Helper.logError("An error occurred while querying Home assistant's registries!", e);
       throw 'Check the console for details';
@@ -231,21 +173,13 @@ class Helper {
 
     // Merge custom areas of the strategy options into strategy areas.
     this.#areas = Helper.areas.map(area => {
-      return { ...area, ...this.#strategyOptions.areas?.[area.area_id] };
+      return {...area, ...this.#strategyOptions.areas?.[area.area_id]};
     });
 
     // Sort strategy areas by order first and then by name.
     this.#areas.sort((a, b) => {
       return (a.order ?? Infinity) - (b.order ?? Infinity) || a.name.localeCompare(b.name);
     });
-
-    // Find undisclosed and put it in last position.
-    const indexUndisclosed = this.#areas.findIndex(item => item.area_id === "undisclosed");
-    if (indexUndisclosed !== -1) {
-      const areaUndisclosed = this.#areas.splice(indexUndisclosed, 1)[0];
-      this.#areas.push(areaUndisclosed);
-    }
-
 
     // Sort custom and default views of the strategy options by order first and then by title.
     this.#strategyOptions.views = Object.fromEntries(
@@ -260,23 +194,6 @@ class Helper {
         return (a.order ?? Infinity) - (b.order ?? Infinity) || (a.title ?? "undefined").localeCompare(b.title ?? "undefined");
       }),
     );
-
-    // Get magic areas devices.
-    this.#magicAreasDevices = Helper.devices
-      .filter(device => device.manufacturer === 'Magic Areas')
-      .reduce((acc: Record<string, MagicAreaRegistryEntry>, device) => {
-        acc[device.name!] = {
-          ...device,
-          area_name: device.name!,
-          entities: this.#entities.filter(entity => entity.device_id === device.id)?.reduce((entities: Record<string, EntityRegistryEntry>, entity) => {
-            entities[entity.translation_key!] = entity;
-            return entities;
-          }, {})
-        };
-        return acc;
-      }, {});
-
-    console.log('this.#magicAreasDevices', this.#magicAreasDevices)
 
     this.#initialized = true;
   }
@@ -299,12 +216,11 @@ class Helper {
    * @param {string} domain The domain of the entities.
    * @param {string} operator The Comparison operator between state and value.
    * @param {string} value The value to which the state is compared against.
-   * @param {string} area_id
    *
    * @return {string} The template string.
    * @static
    */
-  static getCountTemplate(domain: string, operator: string, value: string, area_id?: string): string {
+  static getCountTemplate(domain: string, operator: string, value: string): string {
     // noinspection JSMismatchedCollectionQueryUpdate (False positive per 17-04-2023)
     /**
      * Array of entity state-entries, filtered by domain.
@@ -325,8 +241,6 @@ class Helper {
 
     // Get the ID of the devices which are linked to the given area.
     for (const area of this.#areas) {
-      if (area_id && area.area_id !== area_id) continue
-
       const areaDeviceIds = this.#devices.filter((device) => {
         return device.area_id === area.area_id;
       }).map((device) => {
@@ -336,74 +250,16 @@ class Helper {
       // Get the entities of which all conditions of the callback function are met. @see areaFilterCallback.
       const newStates = this.#entities.filter(
         this.#areaFilterCallback, {
-        area: area,
-        domain: domain,
-        areaDeviceIds: areaDeviceIds,
-      })
+          area: area,
+          domain: domain,
+          areaDeviceIds: areaDeviceIds,
+        })
         .map((entity) => `states['${entity.entity_id}']`);
 
       states.push(...newStates);
     }
 
     return `{% set entities = [${states}] %} {{ entities | selectattr('state','${operator}','${value}') | list | count }}`;
-  }
-
-  /**
-   * Get a template string to define the number of a given device_class's entities with a certain state.
-   *
-   * States are compared against a given value by a given operator.
-   *
-   * @param {string} domain The domain of the entities.
-   * @param {string} device_class The device class of the entities.
-   * @param {string} operator The Comparison operator between state and value.
-   * @param {string} value The value to which the state is compared against.
-   * @param {string} area_id
-   *
-   * @return {string} The template string.
-   * @static
-   */
-  static getDeviceClassCountTemplate(domain: string, device_class: string, operator: string, value: string, area_id?: string): string {
-    // noinspection JSMismatchedCollectionQueryUpdate (False positive per 17-04-2023)
-    /**
-     * Array of entity state-entries, filtered by device_class.
-     *
-     * Each element contains a template-string which is used to access home assistant's state machine (state object) in
-     * a template.
-     * E.g. "states['light.kitchen']"
-     *
-     * The array excludes hidden and disabled entities.
-     *
-     * @type {string[]}
-     */
-    const states: string[] = [];
-
-    if (!this.isInitialized()) {
-      console.warn("Helper class should be initialized before calling this method!");
-    }
-
-    // Get the ID of the devices which are linked to the given area.
-    for (const area of this.#areas) {
-      if (area_id && area.area_id !== area_id) continue
-
-      const areaDeviceIds = this.#devices.filter((device) => {
-        return device.area_id === area.area_id;
-      }).map((device) => {
-        return device.id;
-      });
-
-      // Get the entities of which all conditions of the callback function are met. @see areaFilterCallback.
-      const newStates = this.#entities.filter(
-        this.#areaFilterCallback, {
-        area: area,
-        domain: domain,
-        areaDeviceIds: areaDeviceIds,
-      })
-        .map((entity) => `states['${entity.entity_id}']`);
-
-      states.push(...newStates);
-    }
-
-    return `{% set entities = [${states}] %} {{ entities | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | selectattr('state','${operator}','${value}') | list | count }}`;
   }
 
   /**
@@ -434,30 +290,15 @@ class Helper {
     });
 
     // Return the entities of which all conditions of the callback function are met. @see areaFilterCallback.
-    let device_entities = this.#entities.filter(
+    return this.#entities.filter(
       this.#areaFilterCallback, {
-      area: area,
-      domain: domain,
-      areaDeviceIds: areaDeviceIds,
-    })
+        area: area,
+        domain: domain,
+        areaDeviceIds: areaDeviceIds,
+      })
       .sort((a, b) => {
         return (a.original_name ?? "undefined").localeCompare(b.original_name ?? "undefined");
       });
-
-    if (domain == "light") {
-
-      const device_lights = Object.values(this.#magicAreasDevices[area.name]?.entities ?? [])
-        .filter(e => e.translation_key !== 'all_lights' && e.entity_id.endsWith('_lights')
-        )
-
-      device_lights.forEach(light => {
-        const child_lights = Helper.#hassStates[light.entity_id].attributes?.entity_id;
-        const filteredEntities = device_entities.filter(entity => !child_lights.includes(entity.entity_id));
-        device_entities = [light, ...filteredEntities];
-      })
-    }
-
-    return device_entities
   }
 
   /**
@@ -577,8 +418,6 @@ class Helper {
     entity: EntityRegistryEntry): boolean {
     const entityUnhidden = entity.hidden_by === null && entity.disabled_by === null;
     const domainMatches = entity.entity_id.startsWith(`${this.domain}.`);
-    const linusDeviceIds = Helper.#devices.filter(d => [DOMAIN, "adaptive_lighting"].includes(d.identifiers[0]?.[0])).map(e => e.id)
-    const isLinusEntity = linusDeviceIds.includes(entity.device_id ?? "") || entity.platform === DOMAIN
     const entityLinked = this.area.area_id === "undisclosed"
       // Undisclosed area;
       // nor the entity itself, neither the entity's linked device (if any) is linked to any area.
@@ -587,7 +426,7 @@ class Helper {
       // The entity's linked device or the entity itself is linked to the given area.
       : this.areaDeviceIds.includes(entity.device_id ?? "") || entity.area_id === this.area.area_id;
 
-    return (!isLinusEntity && entityUnhidden && domainMatches && entityLinked);
+    return (entityUnhidden && domainMatches && entityLinked);
   }
 
   /**
@@ -631,75 +470,6 @@ class Helper {
 
     console.error(userMessage);
   }
-
-  /**
-   * Get entity state.
-   *
-   * @return {HassEntity}
-   */
-  static getEntityState(entity_id: string): HassEntity {
-    return this.#hassStates[entity_id]
-  }
-
-  /**
-   * Get entity domain.
-   *
-   * @return {string}
-   */
-  static getEntityDomain(entityId: string): string {
-    return entityId.split(".")[0];
-  }
-
-  /**
-   * Get translation.
-   *
-   * @return {string}
-   */
-  static localize(translationKey: string): string | undefined {
-    return this.#hassLocalize(translationKey);
-  }
-
-  /**
-   * Get valid entity.
-   *
-   * @return {EntityRegistryEntry}
-   */
-  static getValidEntity(entity: EntityRegistryEntry): Boolean {
-    return entity.disabled_by === null && entity.hidden_by === null
-  }
-
-  /**
-   * Get Main Alarm entity.
-   *
-   * @return {EntityRegistryEntry}
-   */
-  static getAlarmEntity(): EntityRegistryEntry | undefined {
-    return Helper.#entities.find(
-      (entity) => entity.entity_id.startsWith("alarm_control_panel.") && Helper.getValidEntity(entity),
-    )
-  }
-
-  /**
-   * Get Persons entity.
-   *
-   * @return {EntityRegistryEntry}
-   */
-  static getPersonsEntity(): EntityRegistryEntry[] | undefined {
-    return Helper.#entities.filter(
-      (entity) => entity.entity_id.startsWith("person.") && Helper.getValidEntity(entity),
-    )
-  }
-
-  /**
-   * Get Cameras entity.
-   *
-   * @return {EntityRegistryEntry}
-   */
-  static getCamerasEntity(): EntityRegistryEntry[] | undefined {
-    return Helper.#entities.filter(
-      (entity) => entity.entity_id.startsWith("camera.") && Helper.getValidEntity(entity),
-    )
-  }
 }
 
-export { Helper };
+export {Helper};

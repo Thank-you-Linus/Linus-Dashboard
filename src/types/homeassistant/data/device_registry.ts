@@ -1,5 +1,3 @@
-import { EntityRegistryEntry } from "./entity_registry";
-
 /**
  * Device Entity.
  *
@@ -37,9 +35,4 @@ export interface DeviceRegistryEntry {
   entry_type: "service" | null;
   disabled_by: "user" | "integration" | "config_entry" | null;
   configuration_url: string | null;
-}
-
-export interface MagicAreaRegistryEntry extends DeviceRegistryEntry {
-  entities: Record<string, EntityRegistryEntry>;
-  area_name: string;
 }

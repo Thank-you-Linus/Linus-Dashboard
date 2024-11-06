@@ -24,8 +24,8 @@ class SwitchChip extends AbstractChip {
     icon_color: "blue",
     content: Helper.getCountTemplate("switch", "eq", "on"),
     tap_action: {
-      action: "navigate",
-      navigation_path: "switches",
+      action: "call-service",
+      service: "switch.turn_off",
     },
     hold_action: {
       action: "navigate",

@@ -1,9 +1,7 @@
-import { MagicAreaRegistryEntry } from "../types/homeassistant/data/device_registry";
-import { ConditionalChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
-import { chips } from "../types/strategy/chips";
-import { navigateTo } from "../utils";
-import { DOMAIN_STATE_ICONS } from "../variables";
-import { AbstractChip } from "./AbstractChip";
+import {Helper} from "../Helper";
+import {AbstractChip} from "./AbstractChip";
+import {chips} from "../types/strategy/chips";
+import {TemplateChipConfig} from "../types/lovelace-mushroom/utils/lovelace/chip/types";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**
@@ -15,46 +13,35 @@ class ClimateChip extends AbstractChip {
   /**
    * Default configuration of the chip.
    *
-   * @type {ConditionalChipConfig}
+   * @type {TemplateChipConfig}
    *
+   * @readonly
+   * @private
    */
-  getDefaultConfig(entity_id: string): ConditionalChipConfig {
-    const icon = DOMAIN_STATE_ICONS.climate
-    return {
-      type: "conditional",
-      conditions: [
-        {
-          entity: entity_id,
-          state_not: "unavailable"
-        }
-      ],
-      chip: {
-        type: "template",
-        entity: entity_id,
-        icon_color: "{{ 'red' if is_state(entity, 'on') else 'grey' }}",
-        icon: icon.on,
-        content: `{{ expand(states.${entity_id}.attributes.entity_id is defined and states.${entity_id}.attributes.entity_id) | selectattr( 'state', 'eq', 'on') | list | count }}`,
-        tap_action: navigateTo('climate'),
-      },
-    }
-  }
+  readonly #defaultConfig: TemplateChipConfig = {
+    type: "template",
+    icon: "mdi:thermostat",
+    icon_color: "orange",
+    content: Helper.getCountTemplate("climate", "ne", "off"),
+    tap_action: {
+      action: "none",
+    },
+    hold_action: {
+      action: "navigate",
+      navigation_path: "climates",
+    },
+  };
 
   /**
    * Class Constructor.
    *
    * @param {chips.TemplateChipOptions} options The chip options.
    */
-  constructor(device: MagicAreaRegistryEntry, options: chips.TemplateChipOptions = {}) {
+  constructor(options: chips.TemplateChipOptions = {}) {
     super();
 
-    if (!device.entities.climate_group?.entity_id) {
-      throw new Error(`No aggregate motion entity found for device: ${device.name}`);
-    }
-
-    const defaultConfig = this.getDefaultConfig(device.entities.climate_group.entity_id)
-    this.config = Object.assign(this.config, defaultConfig);
-
+    this.config = Object.assign(this.config, this.#defaultConfig, options);
   }
 }
 
-export { ClimateChip };
+export {ClimateChip};

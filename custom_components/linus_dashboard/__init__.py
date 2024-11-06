@@ -33,20 +33,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _LOGGER.info("Setting up Linus Dashboard entry")
 
     # Path to the JavaScript file for the strategy
-    strategy_js_url = f"/{DOMAIN}/js/linus-strategy.js"
-    strategy_js_path = Path(__file__).parent / "js/linus-strategy.js"
-
-    await hass.http.async_register_static_paths(
-        [
-            StaticPathConfig(
-                strategy_js_url, str(strategy_js_path), cache_headers=False
-            ),
-        ]
-    )
-
-    # fix from https://github.com/hmmbob/WebRTC/blob/a0783df2e5426118599edc50bfd0466b1b0f0716/custom_components/webrtc/__init__.py#L83
-    version = getattr(hass.data["integrations"][DOMAIN], "version", 0)
-    await utils.init_resource(hass, f"/{DOMAIN}/js/linus-strategy.js", str(version))
+    await register_static_paths_and_resources(hass, "linus-strategy.js")
+    await register_static_paths_and_resources(hass, "mushroom.js")
 
     # Use a unique name for the panel to avoid conflicts
     sidebar_title = "Linus Dashboard"
@@ -66,7 +54,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass, URL_PANEL, dashboard_config
     )
 
-    _register_panel(hass, URL_PANEL, "yaml", dashboard_config, False)
+    _register_panel(hass, URL_PANEL, "yaml", dashboard_config, False)  # noqa: FBT003
 
     # Store the entry
     hass.data[DOMAIN][entry.entry_id] = URL_PANEL
@@ -83,3 +71,21 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         async_remove_panel(hass, panel_url)
 
     return True
+
+
+async def register_static_paths_and_resources(
+    hass: HomeAssistant, js_file: str
+) -> None:
+    """Register static paths and resources for a given JavaScript file."""
+    js_url = f"/{DOMAIN}/js/{js_file}"
+    js_path = Path(__file__).parent / f"js/{js_file}"
+
+    await hass.http.async_register_static_paths(
+        [
+            StaticPathConfig(js_url, str(js_path), cache_headers=False),
+        ]
+    )
+
+    # fix from https://github.com/hmmbob/WebRTC/blob/a0783df2e5426118599edc50bfd0466b1b0f0716/custom_components/webrtc/__init__.py#L83
+    version = getattr(hass.data["integrations"][DOMAIN], "version", 0)
+    await utils.init_resource(hass, js_url, str(version))

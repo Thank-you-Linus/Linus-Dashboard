@@ -20,13 +20,11 @@ class CoverCard extends AbstractCard {
    * @private
    */
   #defaultConfig: CoverCardConfig = {
-    type: "tile",
+    type: "custom:mushroom-cover-card",
     icon: undefined,
-    features: [
-      {
-        type: "cover-open-close"
-      }
-    ]
+    show_buttons_control: true,
+    show_position_control: true,
+    show_tilt_position_control: true,
   };
 
   /**

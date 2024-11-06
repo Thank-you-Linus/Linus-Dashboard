@@ -1,4 +1,4 @@
-import { LovelaceCardConfig } from "../../data/lovelace";
+import {LovelaceCardConfig} from "../../data/lovelace";
 
 /**
  * Home Assistant Stack Card Config.
@@ -23,14 +23,4 @@ export interface AreaCardConfig extends LovelaceCardConfig {
   area: string;
   navigation_path?: string;
   show_camera?: boolean;
-}
-
-/**
- * Home Assistant Tile Card Config.
- *
- * @see https://www.home-assistant.io/dashboards/tile/
- */
-export interface TileCardConfig extends LovelaceCardConfig {
-  type: "tile",
-  features: any[]
 }

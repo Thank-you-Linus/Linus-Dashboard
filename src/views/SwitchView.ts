@@ -49,7 +49,7 @@ class SwitchView extends AbstractView {
    * @private
    */
   #viewControllerCardConfig: cards.ControllerCardOptions = {
-    title: `${Helper.localize(`component.switch.entity_component._.name`)}s`,
+    title: "All Switches",
     subtitle: Helper.getCountTemplate(SwitchView.#domain, "eq", "on") + " switches on",
   };
 

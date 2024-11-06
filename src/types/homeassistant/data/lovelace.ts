@@ -93,11 +93,6 @@ export interface CustomActionConfig extends BaseActionConfig {
   action: "fire-dom-event";
 }
 
-export interface PopupActionConfig extends BaseActionConfig {
-  action: "fire-dom-event";
-  browser_mod: any
-}
-
 export interface BaseActionConfig {
   action: string;
   confirmation?: ConfirmationRestrictionConfig;
@@ -120,5 +115,4 @@ export type ActionConfig =
   | MoreInfoActionConfig
   | AssistActionConfig
   | NoActionConfig
-  | CustomActionConfig
-  | PopupActionConfig;
+  | CustomActionConfig;

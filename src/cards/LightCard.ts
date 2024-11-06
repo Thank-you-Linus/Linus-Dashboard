@@ -24,9 +24,22 @@ class LightCard extends AbstractCard {
    * @private
    */
   #defaultConfig: LightCardConfig = {
-    type: "tile",
+    type: "custom:mushroom-light-card",
     icon: undefined,
-    vertical: false,
+    show_brightness_control: true,
+    show_color_control: true,
+    show_color_temp_control: true,
+    use_light_color: true,
+    double_tap_action: {
+      action: "call-service",
+      service: "light.turn_on",
+      target: {
+        entity_id: undefined,
+      },
+      data: {
+        rgb_color: [255, 255, 255],
+      },
+    },
   };
 
   /**
@@ -38,6 +51,14 @@ class LightCard extends AbstractCard {
    */
   constructor(entity: EntityRegistryEntry, options: cards.LightCardOptions = {}) {
     super(entity);
+
+    // Set the target for double-tap action.
+    if (
+      isCallServiceActionConfig(this.#defaultConfig.double_tap_action)
+      && isCallServiceActionTarget(this.#defaultConfig.double_tap_action.target)
+    ) {
+      this.#defaultConfig.double_tap_action.target.entity_id = entity.entity_id;
+    }
 
     this.config = Object.assign(this.config, this.#defaultConfig, options);
   }

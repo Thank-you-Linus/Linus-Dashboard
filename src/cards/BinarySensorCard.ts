@@ -1,7 +1,7 @@
-import { SensorCard } from "./SensorCard";
-import { cards } from "../types/strategy/cards";
-import { EntityRegistryEntry } from "../types/homeassistant/data/entity_registry";
-import { EntityCardConfig } from "../types/lovelace-mushroom/cards/entity-card-config";
+import {SensorCard} from "./SensorCard";
+import {cards} from "../types/strategy/cards";
+import {EntityRegistryEntry} from "../types/homeassistant/data/entity_registry";
+import {EntityCardConfig} from "../types/lovelace-mushroom/cards/entity-card-config";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**
@@ -20,10 +20,9 @@ class BinarySensorCard extends SensorCard {
    * @private
    */
   #defaultConfig: EntityCardConfig = {
-    type: "tile",
-    icon: undefined,
-    state_content: "last_changed",
-    vertical: false,
+    type: "custom:mushroom-entity-card",
+    icon: "mdi:power-cycle",
+    icon_color: "green",
   };
 
   /**
@@ -40,4 +39,4 @@ class BinarySensorCard extends SensorCard {
   }
 }
 
-export { BinarySensorCard };
+export {BinarySensorCard};

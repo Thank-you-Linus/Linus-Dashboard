@@ -20,41 +20,15 @@ class ClimateCard extends AbstractCard {
    * @private
    */
   #defaultConfig: ClimateCardConfig = {
-    type: "tile",
+    type: "custom:mushroom-climate-card",
     icon: undefined,
-    vertical: false,
-    features: [
-      {
-        type: "target-temperature"
-      },
-      {
-        type: "climate-preset-modes",
-        style: "icons",
-        preset_modes: ["home","eco", "comfort", "away", "boost"]
-      },
-      {
-        type: "climate-hvac-modes",
-        hvac_modes: [
-          "auto",
-          "heat_cool",
-          "heat",
-          "cool",
-          "dry",
-          "fan_only",
-          "off",
-        ]
-      },
-      {
-        type: "climate-fan-modes",
-        style: "icons",
-        fan_modes: [
-          "off",
-          "low",
-          "medium",
-          "high",
-        ]
-      }
+    hvac_modes: [
+      "off",
+      "cool",
+      "heat",
+      "fan_only",
     ],
+    show_temperature_control: true,
   };
 
   /**

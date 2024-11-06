@@ -1,8 +1,7 @@
-import { cards } from "../types/strategy/cards";
-import { StackCardConfig } from "../types/homeassistant/lovelace/cards/types";
-import { LovelaceCardConfig } from "../types/homeassistant/data/lovelace";
-import { HassServiceTarget } from "home-assistant-js-websocket";
-import { Helper } from "../Helper";
+import {cards} from "../types/strategy/cards";
+import {StackCardConfig} from "../types/homeassistant/lovelace/cards/types";
+import {LovelaceCardConfig} from "../types/homeassistant/data/lovelace";
+import {HassServiceTarget} from "home-assistant-js-websocket";
 
 /**
  * Controller Card class.
@@ -25,7 +24,7 @@ class ControllerCard {
    * @private
    */
   readonly #defaultConfig: cards.ControllerCardConfig = {
-    type: "custom:mushroom-title-card",
+    type: "mushroom-title-card",
     showControls: true,
     iconOn: "mdi:power-on",
     iconOff: "mdi:power-off",
@@ -61,45 +60,35 @@ class ControllerCard {
       },
     ];
 
-    if (this.#defaultConfig.showControls || this.#defaultConfig.extraControls) {
-      const area = Array.isArray(this.#target.area_id) ? Helper.areas.find(a => a && a.name && a.name === this.#target.area_id?.[0]) : undefined;
-      const linusDevice = area ? Helper.magicAreasDevices[area.name] : undefined;
-
+    if (this.#defaultConfig.showControls) {
       cards.push({
-        type: "custom:mushroom-chips-card",
-        alignment: "end",
-        chips: [
-          (this.#defaultConfig.showControls &&
-            (this.#target.entity_id && typeof this.#target.entity_id === "string" ?
-              {
-                type: "template",
-                entity: this.#target.entity_id,
-                icon: `{{ '${this.#defaultConfig.iconOn}' if states(entity) == 'on' else '${this.#defaultConfig.iconOff}' }}`,
-                icon_color: `{{ 'amber' if states(entity) == 'on' else 'red' }}`,
-                tap_action: {
-                  action: "toggle"
-                },
-                hold_action: {
-                  action: "more-info"
-                }
-              } :
-              {
-                type: "template",
-                entity: this.#target.entity_id,
-                icon: this.#defaultConfig.iconOff,
-                tap_action: {
-                  action: "call-service",
-                  service: this.#defaultConfig.offService,
-                  target: this.#target,
-                  data: {},
-                },
-              })
-          ),
-          ...(this.#defaultConfig.extraControls && this.#target ? this.#defaultConfig.extraControls(linusDevice) : [])
+        type: "horizontal-stack",
+        cards: [
+          {
+            type: "custom:mushroom-template-card",
+            icon: this.#defaultConfig.iconOff,
+            layout: "vertical",
+            icon_color: "red",
+            tap_action: {
+              action: "call-service",
+              service: this.#defaultConfig.offService,
+              target: this.#target,
+              data: {},
+            },
+          },
+          {
+            type: "custom:mushroom-template-card",
+            icon: this.#defaultConfig.iconOn,
+            layout: "vertical",
+            icon_color: "amber",
+            tap_action: {
+              action: "call-service",
+              service: this.#defaultConfig.onService,
+              target: this.#target,
+              data: {},
+            },
+          },
         ],
-        card_mod: {
-          style: `ha-card {padding: var(--title-padding);}`
-        }
       });
     }
 
@@ -110,4 +99,4 @@ class ControllerCard {
   }
 }
 
-export { ControllerCard };
+export {ControllerCard};

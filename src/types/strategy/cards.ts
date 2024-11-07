@@ -16,7 +16,8 @@ import {MediaPlayerCardConfig} from "../lovelace-mushroom/cards/media-player-car
 import {NumberCardConfig} from "../lovelace-mushroom/cards/number-card-config";
 import {PersonCardConfig} from "../lovelace-mushroom/cards/person-card-config";
 import {VacuumCardConfig} from "../lovelace-mushroom/cards/vacuum-card-config";
-import {SelectCardConfig} from '../lovelace-mushroom/cards/select-card-config';
+import { SwipeCardConfig } from "../lovelace-mushroom/cards/swipe-card-config";
+import { SceneCardConfig } from "../lovelace-mushroom/cards/scene-card-config";
 
 export namespace cards {
   /**
@@ -37,7 +38,7 @@ export namespace cards {
    * @property {string} [offService=none] Service to call for switching entities to off state.
    */
   export interface ControllerCardConfig extends TitleCardConfig {
-    type: "mushroom-title-card",
+    type: "custom:mushroom-title-card",
     showControls?: boolean;
     iconOn?: string;
     iconOff?: string;
@@ -59,8 +60,9 @@ export namespace cards {
   export type PictureEntityCardOptions = Omit<PictureEntityCardConfig, "type">;
   export type TemplateCardOptions = Omit<TemplateCardConfig, "type">;
   export type VacuumCardOptions = Omit<VacuumCardConfig, "type">;
-  export type SelectCardOptions = Omit<SelectCardConfig, "type">;
-  export type InputSelectCardOptions = Omit<SelectCardConfig, "type">;
+
+  export type SceneCardOptions = Omit<SceneCardConfig, "type">;
+  export type SwipeCardOptions = Omit<SwipeCardConfig, "type">;
 }
 
 

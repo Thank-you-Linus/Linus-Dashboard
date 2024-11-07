@@ -1,13 +1,20 @@
-import {Helper} from "../Helper";
-import {AbstractView} from "./AbstractView";
-import {views} from "../types/strategy/views";
-import {LovelaceChipConfig} from "../types/lovelace-mushroom/utils/lovelace/chip/types";
-import {ChipsCardConfig} from "../types/lovelace-mushroom/cards/chips-card";
-import {AreaCardConfig, StackCardConfig} from "../types/homeassistant/lovelace/cards/types";
-import {TemplateCardConfig} from "../types/lovelace-mushroom/cards/template-card-config";
-import {ActionConfig} from "../types/homeassistant/data/lovelace";
-import {TitleCardConfig} from "../types/lovelace-mushroom/cards/title-card-config";
-import {PersonCardConfig} from "../types/lovelace-mushroom/cards/person-card-config";
+import { Helper } from "../Helper";
+import { AbstractView } from "./AbstractView";
+import { views } from "../types/strategy/views";
+import { LovelaceChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
+import { ChipsCardConfig } from "../types/lovelace-mushroom/cards/chips-card";
+import { AreaCardConfig, StackCardConfig } from "../types/homeassistant/lovelace/cards/types";
+import { TemplateCardConfig } from "../types/lovelace-mushroom/cards/template-card-config";
+import { ActionConfig } from "../types/homeassistant/data/lovelace";
+import { TitleCardConfig } from "../types/lovelace-mushroom/cards/title-card-config";
+import { PersonCardConfig } from "../types/lovelace-mushroom/cards/person-card-config";
+import { SettingsChip } from "../chips/SettingsChip";
+import { LinusSettings } from "../popups/LinusSettingsPopup";
+import { UnavailableChip } from "../chips/UnavailableChip";
+import { UNAVAILABLE_STATES } from "../variables";
+import { groupBy } from "../utils";
+import { generic } from "../types/strategy/generic";
+import isCallServiceActionConfig = generic.isCallServiceActionConfig;
 
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
@@ -77,9 +84,17 @@ class HomeView extends AbstractView {
       }
 
       if (!Helper.strategyOptions.home_view.hidden.includes("greeting")) {
+        const tod = Helper.magicAreasDevices.Global?.entities.time_of_the_day;
+
         homeViewCards.push({
           type: "custom:mushroom-template-card",
-          primary: "{% set time = now().hour %} {% if (time >= 18) %} Good Evening, {{user}}! {% elif (time >= 12) %} Good Afternoon, {{user}}! {% elif (time >= 5) %} Good Morning, {{user}}! {% else %} Hello, {{user}}! {% endif %}",
+          primary: `
+          {% set tod = states("${tod?.entity_id}") %}
+          {% if (tod == "evening") %} Bonne soirée, {{user}}!
+          {% elif (tod == "daytime") %} Bonne après-midi, {{user}}!
+          {% elif (tod == "morning") %} Bonjour, {{user}}!
+          {% else %} Bonne nuit, {{user}}!
+          {% endif %}`,
           icon: "mdi:hand-wave",
           icon_color: "orange",
           tap_action: {
@@ -131,7 +146,7 @@ class HomeView extends AbstractView {
     const chipOptions = Helper.strategyOptions.chips;
 
     // TODO: Get domains from config.
-    const exposedChips = ["light", "fan", "cover", "switch", "climate"];
+    const exposedChips = ["light", "fan", "cover", "switch", "climate", "safety", "motion", "door", "window"];
     // Create a list of area-ids, used for switching all devices via chips
     const areaIds = Helper.areas.map(area => area.area_id ?? "");
 
@@ -153,15 +168,46 @@ class HomeView extends AbstractView {
       }
     }
 
+    // Alarm chip.
+    const alarmEntityId = chipOptions?.alarm_entity ?? Helper.getAlarmEntity()?.entity_id;
+
+    if (alarmEntityId) {
+      try {
+        const { AlarmChip } = await import("../chips/AlarmChip");
+        const alarmChip = new AlarmChip(alarmEntityId);
+        chips.push(alarmChip.getChip());
+      } catch (e) {
+        Helper.logError("An error occurred while creating the alarm chip!", e);
+      }
+    }
+
+    // Spotify chip.
+    const spotifyEntityId = chipOptions?.spotify_entity ?? Helper.entities.find(
+      (entity) => entity.entity_id.startsWith("media_player.spotify_") && entity.disabled_by === null && entity.hidden_by === null,
+    )?.entity_id;
+
+    if (spotifyEntityId) {
+      try {
+        const { SpotifyChip } = await import("../chips/SpotifyChip");
+        const spotifyChip = new SpotifyChip(spotifyEntityId);
+        chips.push(spotifyChip.getChip());
+      } catch (e) {
+        Helper.logError("An error occurred while creating the spotify chip!", e);
+      }
+    }
+
     // Numeric chips.
     for (let chipType of exposedChips) {
+      if ((Helper.domains[chipType] ?? []).length === 0) continue
       if (chipOptions?.[`${chipType}_count` as string] ?? true) {
         const className = Helper.sanitizeClassName(chipType + "Chip");
         try {
           chipModule = await import((`../chips/${className}`));
-          const chip = new chipModule[className]();
+          const chip = new chipModule[className](Helper.magicAreasDevices["global"]);
 
-          chip.setTapActionTarget({area_id: areaIds});
+          if ("tap_action" in this.config && isCallServiceActionConfig(this.config.tap_action)) {
+            chip.setTapActionTarget({ area_id: areaIds });
+          }
           chips.push(chip.getChip());
         } catch (e) {
           Helper.logError(`An error occurred while creating the ${chipType} chip!`, e);
@@ -172,6 +218,33 @@ class HomeView extends AbstractView {
     // Extra chips.
     if (chipOptions?.extra_chips) {
       chips.push(...chipOptions.extra_chips);
+    }
+
+    // Unavailable chip.
+    const unavailableEntities = Object.values(Helper.magicAreasDevices["Global"]?.entities ?? {}).filter((e) => {
+      const entityState = Helper.getEntityState(e.entity_id);
+      return (exposedChips.includes(e.entity_id.split(".", 1)[0]) || exposedChips.includes(entityState?.attributes.device_class || '')) &&
+        UNAVAILABLE_STATES.includes(entityState?.state);
+    });
+
+    if (unavailableEntities.length) {
+      try {
+        const { UnavailableChip } = await import("../chips/UnavailableChip");
+        const unavailableChip = new UnavailableChip(unavailableEntities);
+        chips.push(unavailableChip.getChip());
+      } catch (e) {
+        Helper.logError("An error occurred while creating the unavailable chip!", e);
+      }
+    }
+
+    // Settings chip.
+    try {
+      const { SettingsChip } = await import("../chips/SettingsChip");
+      const { LinusSettings } = await import("../popups/LinusSettingsPopup");
+      const linusSettings = new SettingsChip({ tap_action: new LinusSettings().getPopup() });
+      chips.push(linusSettings.getChip());
+    } catch (e) {
+      Helper.logError("An error occurred while creating the settings chip!", e);
     }
 
     return chips;
@@ -220,60 +293,92 @@ class HomeView extends AbstractView {
 
     const groupedCards: (TitleCardConfig | StackCardConfig)[] = [];
 
-    let areaCards: (TemplateCardConfig | AreaCardConfig)[] = [];
-
     if (!Helper.strategyOptions.home_view.hidden.includes("areasTitle")) {
       groupedCards.push({
-          type: "custom:mushroom-title-card",
-          title: "Areas",
-        },
+        type: "custom:mushroom-title-card",
+        title: `${Helper.localize("ui.components.area-picker.area")}s`,
+      },
       );
     }
 
-    for (const [i, area] of Helper.areas.entries()) {
-      type ModuleType = typeof import("../cards/AreaCard");
+    const areasByFloor = groupBy(Helper.areas, (e) => e.floor_id ?? "undisclosed");
 
-      let module: ModuleType;
-      let moduleName =
-            Helper.strategyOptions.areas[area.area_id]?.type ??
-            Helper.strategyOptions.areas["_"]?.type ??
-            "default";
+    for (const floor of [...Helper.floors, Helper.strategyOptions.floors.undisclosed]) {
 
-      // Load module by type in strategy options.
-      try {
-        module = await import((`../cards/${moduleName}`));
-      } catch (e) {
-        // Fallback to the default strategy card.
-        module = await import("../cards/AreaCard");
+      let areaCards: (TemplateCardConfig | AreaCardConfig)[] = [];
+      if (!(floor.floor_id in areasByFloor)) continue
 
-        if (Helper.strategyOptions.debug && moduleName !== "default") {
-          console.error(e);
+      groupedCards.push({
+        type: "custom:mushroom-title-card",
+        subtitle: floor.name,
+        card_mod: {
+          style: `
+            ha-card.header {
+              padding-top: 8px;
+            }
+          `,
         }
-      }
+      });
 
-      // Get a card for the area.
-      if (!Helper.strategyOptions.areas[area.area_id as string]?.hidden) {
-        let options = {
-          ...Helper.strategyOptions.areas["_"],
-          ...Helper.strategyOptions.areas[area.area_id],
-        };
+      for (const [i, area] of areasByFloor[floor.floor_id].entries()) {
 
-        areaCards.push(new module.AreaCard(area, options).getCard());
-      }
+        type ModuleType = typeof import("../cards/AreaCard");
 
-      // Horizontally group every two area cards if all cards are created.
-      if (i === Helper.areas.length - 1) {
-        for (let i = 0; i < areaCards.length; i += 2) {
-          groupedCards.push({
-            type: "horizontal-stack",
-            cards: areaCards.slice(i, i + 2),
-          } as StackCardConfig);
+        let module: ModuleType;
+        let moduleName =
+          Helper.strategyOptions.areas[area.area_id]?.type ??
+          Helper.strategyOptions.areas["_"]?.type ??
+          "default";
+
+        // Load module by type in strategy options.
+        try {
+          module = await import((`../cards/${moduleName}`));
+        } catch (e) {
+          // Fallback to the default strategy card.
+          module = await import("../cards/AreaCard");
+
+          if (Helper.strategyOptions.debug && moduleName !== "default") {
+            console.error(e);
+          }
+        }
+
+        // Get a card for the area.
+        if (!Helper.strategyOptions.areas[area.area_id as string]?.hidden) {
+          let options = {
+            ...Helper.strategyOptions.areas["_"],
+            ...Helper.strategyOptions.areas[area.area_id],
+          };
+
+          areaCards.push(new module.AreaCard(area, options).getCard());
+        }
+
+        // Horizontally group every two area cards if all cards are created.
+        if (i === areasByFloor[floor.floor_id].length - 1) {
+          for (let i = 0; i < areaCards.length; i += 1) {
+            groupedCards.push({
+              type: "vertical-stack",
+              cards: areaCards.slice(i, i + 1),
+            } as StackCardConfig);
+          }
         }
       }
     }
+
+    groupedCards.push({
+      type: "custom:mushroom-template-card",
+      primary: "Ajouter une nouvelle pièce",
+      secondary: `Cliquer ici pour vous rendre sur la page des pièces`,
+      multiline_secondary: true,
+      icon: `mdi:view-dashboard-variant`,
+      fill_container: true,
+      tap_action: {
+        action: "navigate",
+        navigation_path: '/config/areas/dashboard'
+      },
+    } as any)
 
     return groupedCards;
   }
 }
 
-export {HomeView};
+export { HomeView };

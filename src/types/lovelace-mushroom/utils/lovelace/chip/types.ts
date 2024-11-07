@@ -94,6 +94,14 @@ export type MenuChipConfig = {
   icon?: string;
 };
 
+export type AlarmChipConfig = {
+  type: "alarm-control-panel";
+  entity?: string;
+  tap_action?: ActionConfig;
+  hold_action?: ActionConfig;
+  double_tap_action?: ActionConfig;
+};
+
 /**
  * Weather Chip Config
  *

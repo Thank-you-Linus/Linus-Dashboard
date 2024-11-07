@@ -1,7 +1,7 @@
-import {Helper} from "../Helper";
-import {chips} from "../types/strategy/chips";
-import {AbstractChip} from "./AbstractChip";
-import {TemplateChipConfig} from "../types/lovelace-mushroom/utils/lovelace/chip/types";
+import { Helper } from "../Helper";
+import { chips } from "../types/strategy/chips";
+import { AbstractChip } from "./AbstractChip";
+import { TemplateChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**
@@ -24,10 +24,6 @@ class LightChip extends AbstractChip {
     icon_color: "amber",
     content: Helper.getCountTemplate("light", "eq", "on"),
     tap_action: {
-      action: "call-service",
-      service: "light.turn_off",
-    },
-    hold_action: {
       action: "navigate",
       navigation_path: "lights",
     },
@@ -38,11 +34,12 @@ class LightChip extends AbstractChip {
    *
    * @param {chips.TemplateChipOptions} options The chip options.
    */
-  constructor(options: chips.TemplateChipOptions = {}) {
+  constructor(areaId: string, options: chips.TemplateChipOptions = {}) {
     super();
 
     this.config = Object.assign(this.config, this.#defaultConfig, options);
+
   }
 }
 
-export {LightChip};
+export { LightChip };

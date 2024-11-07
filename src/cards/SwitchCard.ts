@@ -20,8 +20,9 @@ class SwitchCard extends AbstractCard {
    * @private
    */
   #defaultConfig: EntityCardConfig = {
-    type: "custom:mushroom-entity-card",
+    type: "tile",
     icon: undefined,
+    vertical: false,
     tap_action: {
       action: "toggle",
     },

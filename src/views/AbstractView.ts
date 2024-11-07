@@ -1,11 +1,16 @@
-import {Helper} from "../Helper";
-import {ControllerCard} from "../cards/ControllerCard";
-import {StackCardConfig} from "../types/homeassistant/lovelace/cards/types";
-import {LovelaceCardConfig, LovelaceViewConfig} from "../types/homeassistant/data/lovelace";
-import {cards} from "../types/strategy/cards";
-import {TitleCardConfig} from "../types/lovelace-mushroom/cards/title-card-config";
-import {HassServiceTarget} from "home-assistant-js-websocket";
+import { MAGIC_AREAS_DOMAINS } from './../variables';
+import { Helper } from "../Helper";
+import { ControllerCard } from "../cards/ControllerCard";
+import { StackCardConfig } from "../types/homeassistant/lovelace/cards/types";
+import { LovelaceCardConfig, LovelaceViewConfig } from "../types/homeassistant/data/lovelace";
+import { cards } from "../types/strategy/cards";
+import { TitleCardConfig } from "../types/lovelace-mushroom/cards/title-card-config";
+import { HassServiceTarget } from "home-assistant-js-websocket";
 import abstractCardConfig = cards.AbstractCardConfig;
+import { SwipeCard } from "../cards/SwipeCard";
+import { groupBy } from "../utils";
+import { AggregateCard } from "../cards/AggregateCard";
+import { TemplateCardConfig } from '../types/lovelace-mushroom/cards/template-card-config';
 
 /**
  * Abstract View Class.
@@ -70,56 +75,99 @@ abstract class AbstractView {
   async createViewCards(): Promise<(StackCardConfig | TitleCardConfig)[]> {
     const viewCards: LovelaceCardConfig[] = [];
     const configEntityHidden =
-          Helper.strategyOptions.domains[this.#domain ?? "_"].hide_config_entities
-          || Helper.strategyOptions.domains["_"].hide_config_entities;
+      Helper.strategyOptions.domains[this.#domain ?? "_"].hide_config_entities
+      || Helper.strategyOptions.domains["_"].hide_config_entities;
 
-    // Create cards for each area.
-    for (const area of Helper.areas) {
-      const areaCards: abstractCardConfig[] = [];
-      const entities = Helper.getDeviceEntities(area, this.#domain ?? "");
-      const className = Helper.sanitizeClassName(this.#domain + "Card");
-      const cardModule = await import(`../cards/${className}`);
 
-      // Set the target for controller cards to the current area.
-      let target: HassServiceTarget = {
-        area_id: [area.area_id],
-      };
+    if (this.#domain && MAGIC_AREAS_DOMAINS.includes(this.#domain)) {
+      viewCards.push(new AggregateCard(this.#domain).createCard())
+    }
 
-      // Set the target for controller cards to entities without an area.
-      if (area.area_id === "undisclosed") {
-        target = {
-          entity_id: entities.map(entity => entity.entity_id),
+    const areasByFloor = groupBy(Helper.areas, (e) => e.floor_id ?? "undisclosed");
+
+    for (const floor of [...Helper.floors, Helper.strategyOptions.floors.undisclosed]) {
+
+      if (this.#domain && MAGIC_AREAS_DOMAINS.includes(this.#domain) && floor.floor_id !== "undisclosed") continue
+      if (!(floor.floor_id in areasByFloor) || areasByFloor[floor.floor_id].length === 0) continue
+
+
+      let floorCards: (TemplateCardConfig)[] = [];
+
+      if (floor.floor_id !== "undisclosed") {
+        floorCards.push({
+          type: "custom:mushroom-title-card",
+          title: floor.name,
+          card_mod: {
+            style: `ha-card.header {padding-top: 8px;}`,
+          }
+        });
+      }
+
+
+      let areaCards: abstractCardConfig[] = [];
+
+      // Create cards for each area.
+      for (const [i, area] of areasByFloor[floor.floor_id].entries()) {
+
+        areaCards = [];
+
+        if (this.#domain && MAGIC_AREAS_DOMAINS.includes(this.#domain) && area.area_id !== "undisclosed") continue
+
+        const entities = Helper.getDeviceEntities(area, this.#domain ?? "");
+        const className = Helper.sanitizeClassName(this.#domain + "Card");
+        const cardModule = await import(`../cards/${className}`);
+
+        // Set the target for controller cards to the current area.
+        let target: HassServiceTarget = {
+          area_id: [area.area_id],
+        };
+
+        // Set the target for controller cards to entities without an area.
+        if (area.area_id === "undisclosed") {
+
+          if (this.#domain === 'light')
+            target = {
+              entity_id: entities.map(entity => entity.entity_id),
+            }
+        }
+
+        const swipeCard = []
+
+        // Create a card for each domain-entity of the current area.
+        for (const entity of entities) {
+          let cardOptions = Helper.strategyOptions.card_options?.[entity.entity_id];
+          let deviceOptions = Helper.strategyOptions.card_options?.[entity.device_id ?? "null"];
+
+          if (cardOptions?.hidden || deviceOptions?.hidden) {
+            continue;
+          }
+
+          if (entity.entity_category === "config" && configEntityHidden) {
+            continue;
+          }
+
+          swipeCard.push(new cardModule[className](entity, cardOptions).getCard());
+        }
+        if (swipeCard.length) {
+          areaCards.push(new SwipeCard(swipeCard).getCard())
+        }
+
+        // Vertical stack the area cards if it has entities.
+        if (areaCards.length) {
+
+          const titleCardOptions = ("controllerCardOptions" in this.config) ? this.config.controllerCardOptions : {};
+
+          // Create and insert a Controller card.
+          areaCards.unshift(new ControllerCard(target, Object.assign({ subtitle: area.name }, titleCardOptions)).createCard());
+
+          floorCards.push({
+            type: "vertical-stack",
+            cards: areaCards,
+          } as StackCardConfig);
         }
       }
 
-      // Create a card for each domain-entity of the current area.
-      for (const entity of entities) {
-        let cardOptions = Helper.strategyOptions.card_options?.[entity.entity_id];
-        let deviceOptions = Helper.strategyOptions.card_options?.[entity.device_id ?? "null"];
-
-        if (cardOptions?.hidden || deviceOptions?.hidden) {
-          continue;
-        }
-
-        if (entity.entity_category === "config" && configEntityHidden) {
-          continue;
-        }
-
-        areaCards.push(new cardModule[className](entity, cardOptions).getCard());
-      }
-
-      // Vertical stack the area cards if it has entities.
-      if (areaCards.length) {
-        const titleCardOptions = ("controllerCardOptions" in this.config) ? this.config.controllerCardOptions : {};
-
-        // Create and insert a Controller card.
-        areaCards.unshift(new ControllerCard(target, Object.assign({title: area.name}, titleCardOptions)).createCard());
-
-        viewCards.push({
-          type: "vertical-stack",
-          cards: areaCards,
-        } as StackCardConfig);
-      }
+      if (floorCards.length > 0) viewCards.push(...floorCards)
     }
 
     // Add a Controller Card for all the entities in the view.
@@ -162,4 +210,4 @@ abstract class AbstractView {
   }
 }
 
-export {AbstractView};
+export { AbstractView };

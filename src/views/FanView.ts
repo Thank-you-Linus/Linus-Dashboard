@@ -49,8 +49,8 @@ class FanView extends AbstractView {
    * @private
    */
   #viewControllerCardConfig: cards.ControllerCardOptions = {
-    title: "All Fans",
-    subtitle: Helper.getCountTemplate(FanView.#domain, "eq", "on") + " fans on",
+    title: `${Helper.localize(`component.fan.entity_component._.name`)}s`,
+    subtitle: Helper.getCountTemplate(FanView.#domain, "eq", "on") + ` ${Helper.localize(`component.fan.entity_component._.state.on`)}s`,
   };
 
   /**

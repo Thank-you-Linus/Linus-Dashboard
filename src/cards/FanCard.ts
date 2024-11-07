@@ -20,11 +20,13 @@ class FanCard extends AbstractCard {
    * @private
    */
   #defaultConfig: FanCardConfig = {
-    type: "custom:mushroom-fan-card",
+    type: "tile",
     icon: undefined,
-    show_percentage_control: true,
-    show_oscillate_control: true,
-    icon_animation: true,
+    features:[
+      {
+        type: "fan-speed"
+      }
+    ]
   };
 
   /**

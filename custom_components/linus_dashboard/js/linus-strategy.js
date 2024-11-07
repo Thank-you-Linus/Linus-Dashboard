@@ -1003,10 +1003,10 @@ _AlarmCard_defaultConfig = new WeakMap();
 
 /***/ }),
 
-/***/ "./src/cards/AreaButtonCard.ts":
-/*!*************************************!*\
-  !*** ./src/cards/AreaButtonCard.ts ***!
-  \*************************************/
+/***/ "./src/cards/AreaCard.ts":
+/*!*******************************!*\
+  !*** ./src/cards/AreaCard.ts ***!
+  \*******************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -1021,8 +1021,6 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _chips_LinusClimateChip__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../chips/LinusClimateChip */ "./src/chips/LinusClimateChip.ts");
 /* harmony import */ var _chips_LinusAggregateChip__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../chips/LinusAggregateChip */ "./src/chips/LinusAggregateChip.ts");
 /* harmony import */ var _chips_AreaStateChip__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../chips/AreaStateChip */ "./src/chips/AreaStateChip.ts");
-/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../utils */ "./src/utils.ts");
-
 
 
 
@@ -1060,7 +1058,7 @@ class AreaCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractCard {
                                 multiline_secondary: false,
                                 tap_action: {
                                     action: "navigate",
-                                    navigation_path: (0,_utils__WEBPACK_IMPORTED_MODULE_7__.slugify)(area.name),
+                                    navigation_path: area.area_id,
                                 },
                                 hold_action: {
                                     action: "none",
@@ -1100,7 +1098,7 @@ class AreaCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractCard {
                 ]
             };
         }
-        const { area_state, all_lights, aggregate_temperature, aggregate_battery, aggregate_door, aggregate_window, aggregate_health, aggregate_climate, aggregate_cover, light_control } = device.entities;
+        const { area_state, all_lights, aggregate_temperature, aggregate_battery, aggregate_door, aggregate_window, aggregate_health, aggregate_climate, aggregate_cover, light_control } = device?.entities || {};
         const icon = area.icon || "mdi:home-outline";
         return {
             type: "custom:stack-in-card",
@@ -1160,7 +1158,7 @@ class AreaCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractCard {
           `,
                             tap_action: {
                                 action: "navigate",
-                                navigation_path: (0,_utils__WEBPACK_IMPORTED_MODULE_7__.slugify)(area.name),
+                                navigation_path: area.area_id,
                             },
                             hold_action: {
                                 action: "none",
@@ -1333,93 +1331,11 @@ class AreaCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractCard {
      */
     constructor(area, options = {}) {
         super(area);
-        // Don't override the default card type if default is set in the strategy options.
-        if (options.type === "AreaButtonCard") {
-            delete options.type;
-        }
-        const device = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.magicAreasDevices[area.name];
-        if (device) {
-            const defaultConfig = this.getDefaultConfig(area, device);
-            this.config = Object.assign(this.config, defaultConfig, options);
-        }
+        const device = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.magicAreasDevices[area.area_id];
+        const defaultConfig = this.getDefaultConfig(area, device);
+        this.config = Object.assign(this.config, defaultConfig, options);
     }
 }
-
-
-
-/***/ }),
-
-/***/ "./src/cards/AreaCard.ts":
-/*!*******************************!*\
-  !*** ./src/cards/AreaCard.ts ***!
-  \*******************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   AreaCard: () => (/* binding */ AreaCard)
-/* harmony export */ });
-/* harmony import */ var _AbstractCard__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./AbstractCard */ "./src/cards/AbstractCard.ts");
-var __classPrivateFieldGet = (undefined && undefined.__classPrivateFieldGet) || function (receiver, state, kind, f) {
-    if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a getter");
-    if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
-    return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
-};
-var _AreaCard_defaultConfig;
-
-// noinspection JSUnusedGlobalSymbols Class is dynamically imported.
-/**
- * Area Card Class
- *
- * Used to create a card for an entity of the area domain.
- *
- * @class
- * @extends AbstractCard
- */
-class AreaCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractCard {
-    /**
-     * Class constructor.
-     *
-     * @param {AreaRegistryEntry} area The area entity to create a card for.
-     * @param {cards.TemplateCardOptions} [options={}] Options for the card.
-     *
-     * @throws {Error} If the Helper module isn't initialized.
-     */
-    constructor(area, options = {}) {
-        super(area);
-        /**
-         * Default configuration of the card.
-         *
-         * @type {TemplateCardConfig}
-         * @private
-         */
-        _AreaCard_defaultConfig.set(this, {
-            type: "custom:mushroom-template-card",
-            primary: undefined,
-            icon: "mdi:texture-box",
-            icon_color: "blue",
-            tap_action: {
-                action: "navigate",
-                navigation_path: "",
-            },
-            hold_action: {
-                action: "none",
-            },
-        });
-        // Don't override the default card type if default is set in the strategy options.
-        if (options.type === "default") {
-            delete options.type;
-        }
-        // Initialize the default configuration.
-        __classPrivateFieldGet(this, _AreaCard_defaultConfig, "f").primary = area.name;
-        if (__classPrivateFieldGet(this, _AreaCard_defaultConfig, "f").tap_action && ("navigation_path" in __classPrivateFieldGet(this, _AreaCard_defaultConfig, "f").tap_action)) {
-            __classPrivateFieldGet(this, _AreaCard_defaultConfig, "f").tap_action.navigation_path = area.area_id;
-        }
-        this.config = Object.assign(this.config, __classPrivateFieldGet(this, _AreaCard_defaultConfig, "f"), options);
-    }
-}
-_AreaCard_defaultConfig = new WeakMap();
 
 
 
@@ -4311,14 +4227,14 @@ class ToggleSceneChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.Abstrac
     getDefaultConfig(device) {
         return {
             type: "template",
-            entity: device.entities.light_control?.entity_id,
+            entity: device?.entities.light_control?.entity_id,
             icon: "mdi:recycle-variant",
             // icon_color: "{% if is_state(config.entity, 'on') %}green{% else %}red{% endif %}",
             tap_action: {
                 action: "call-service",
                 service: `${_variables__WEBPACK_IMPORTED_MODULE_0__.DOMAIN}.area_scene_toggle`,
                 data: {
-                    area: device.name,
+                    area: device?.name,
                 }
             },
             hold_action: {
@@ -4578,7 +4494,7 @@ const configurationDefaults = {
             showControls: true,
             extraControls: (device) => {
                 return [
-                    new _chips_LightControlChip__WEBPACK_IMPORTED_MODULE_0__.LightControlChip(device.entities.light_control?.entity_id).getChip(),
+                    new _chips_LightControlChip__WEBPACK_IMPORTED_MODULE_0__.LightControlChip(device?.entities.light_control?.entity_id).getChip(),
                     new _chips_SettingsChip__WEBPACK_IMPORTED_MODULE_1__.SettingsChip({ tap_action: new _popups_LightSettingsPopup__WEBPACK_IMPORTED_MODULE_2__.LightSettings(device).getPopup() }).getChip()
                 ];
             },
@@ -5648,8 +5564,8 @@ __webpack_require__.r(__webpack_exports__);
  */
 class LightSettings extends _AbstractPopup__WEBPACK_IMPORTED_MODULE_3__.AbstractPopup {
     getDefaultConfig(device) {
-        const { aggregate_illuminance, adaptive_lighting_range, minimum_brightness, maximum_brightness, maximum_lighting_level } = device.entities;
-        const device_slug = (0,_utils__WEBPACK_IMPORTED_MODULE_1__.slugify)(device.name);
+        const { aggregate_illuminance, adaptive_lighting_range, minimum_brightness, maximum_brightness, maximum_lighting_level } = device?.entities ?? {};
+        const device_slug = (0,_utils__WEBPACK_IMPORTED_MODULE_1__.slugify)(device?.name ?? "");
         const OPTIONS_ADAPTIVE_LIGHTING_RANGE = {
             "": 1,
             "Small": 10,
@@ -5657,7 +5573,7 @@ class LightSettings extends _AbstractPopup__WEBPACK_IMPORTED_MODULE_3__.Abstract
             "Large": 50,
             "Extra large": 100,
         };
-        const adaptive_lighting_range_state = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getEntityState(adaptive_lighting_range?.entity_id).state;
+        const adaptive_lighting_range_state = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getEntityState(adaptive_lighting_range?.entity_id)?.state;
         return {
             action: "fire-dom-event",
             browser_mod: {
@@ -5722,7 +5638,7 @@ class LightSettings extends _AbstractPopup__WEBPACK_IMPORTED_MODULE_3__.Abstract
                                             action: "call-service",
                                             service: `${_variables__WEBPACK_IMPORTED_MODULE_2__.DOMAIN}.area_lux_for_lighting_max`,
                                             data: {
-                                                area: device.name
+                                                area: device?.name
                                             }
                                         },
                                     },
@@ -6985,202 +6901,132 @@ var _HomeView_instances, _HomeView_defaultConfig, _HomeView_createChips, _HomeVi
 
 
 var isCallServiceActionConfig = _types_strategy_generic__WEBPACK_IMPORTED_MODULE_4__.generic.isCallServiceActionConfig;
-// noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**
  * Home View Class.
- *
  * Used to create a Home view.
- *
  * @class HomeView
  * @extends AbstractView
  */
 class HomeView extends _AbstractView__WEBPACK_IMPORTED_MODULE_1__.AbstractView {
-    /**
-     * Class constructor.
-     *
-     * @param {views.ViewConfig} [options={}] Options for the view.
-     */
     constructor(options = {}) {
         super();
         _HomeView_instances.add(this);
-        /**
-         * Default configuration of the view.
-         *
-         * @type {views.ViewConfig}
-         * @private
-         */
         _HomeView_defaultConfig.set(this, {
             title: "Home",
             icon: "mdi:home-assistant",
             path: "home",
             subview: false,
         });
-        this.config = Object.assign(this.config, __classPrivateFieldGet(this, _HomeView_defaultConfig, "f"), options);
+        this.config = { ...this.config, ...__classPrivateFieldGet(this, _HomeView_defaultConfig, "f"), ...options };
     }
     /**
      * Create the cards to include in the view.
-     *
      * @return {Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig)[]>} Promise a View Card array.
      * @override
      */
     async createViewCards() {
-        return await Promise.all([
+        const [chips, personCards, areaCards] = await Promise.all([
             __classPrivateFieldGet(this, _HomeView_instances, "m", _HomeView_createChips).call(this),
             __classPrivateFieldGet(this, _HomeView_instances, "m", _HomeView_createPersonCards).call(this),
             __classPrivateFieldGet(this, _HomeView_instances, "m", _HomeView_createAreaSection).call(this),
-        ]).then(([chips, personCards, areaCards]) => {
-            const options = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions;
-            const homeViewCards = [];
-            if (chips.length) {
-                // TODO: Create the Chip card at this.#createChips()
-                homeViewCards.push({
-                    type: "custom:mushroom-chips-card",
-                    alignment: "center",
-                    chips: chips,
-                });
-            }
-            if (personCards.length) {
-                // TODO: Create the stack at this.#createPersonCards()
-                homeViewCards.push({
-                    type: "horizontal-stack",
-                    cards: personCards,
-                });
-            }
-            if (!_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.home_view.hidden.includes("greeting")) {
-                const tod = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices.Global?.entities.time_of_the_day;
-                homeViewCards.push({
-                    type: "custom:mushroom-template-card",
-                    primary: `
-          {% set tod = states("${tod?.entity_id}") %}
-          {% if (tod == "evening") %} Bonne soirée, {{user}}!
-          {% elif (tod == "daytime") %} Bonne après-midi, {{user}}!
-          {% elif (tod == "morning") %} Bonjour, {{user}}!
-          {% else %} Bonne nuit, {{user}}!
-          {% endif %}`,
-                    icon: "mdi:hand-wave",
-                    icon_color: "orange",
-                    tap_action: {
-                        action: "none",
-                    },
-                    double_tap_action: {
-                        action: "none",
-                    },
-                    hold_action: {
-                        action: "none",
-                    },
-                });
-            }
-            // Add quick access cards.
-            if (options.quick_access_cards) {
-                homeViewCards.push(...options.quick_access_cards);
-            }
-            // Add area cards.
+        ]);
+        const homeViewCards = [];
+        if (chips.length) {
             homeViewCards.push({
-                type: "vertical-stack",
-                cards: areaCards,
+                type: "custom:mushroom-chips-card",
+                alignment: "center",
+                chips,
             });
-            // Add custom cards.
-            if (options.extra_cards) {
-                homeViewCards.push(...options.extra_cards);
-            }
-            return homeViewCards;
+        }
+        if (personCards.length) {
+            homeViewCards.push({
+                type: "horizontal-stack",
+                cards: personCards,
+            });
+        }
+        if (!_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.home_view.hidden.includes("greeting")) {
+            const tod = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices.Global?.entities.time_of_the_day;
+            homeViewCards.push({
+                type: "custom:mushroom-template-card",
+                primary: `
+          {% set tod = states("${tod?.entity_id}") %}
+          {% if (tod == "evening") %} Bonne soirée, {{user}} !
+          {% elif (tod == "daytime") %} Bonne après-midi, {{user}} !
+          {% elif (tod == "night") %} Bonne nuit, {{user}} !
+          {% else %} Bonjour, {{user}} !
+          {% endif %}`,
+                icon: "mdi:hand-wave",
+                icon_color: "orange",
+                tap_action: { action: "none" },
+                double_tap_action: { action: "none" },
+                hold_action: { action: "none" },
+            });
+        }
+        if (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.quick_access_cards) {
+            homeViewCards.push(..._Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.quick_access_cards);
+        }
+        homeViewCards.push({
+            type: "vertical-stack",
+            cards: areaCards,
         });
+        if (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.extra_cards) {
+            homeViewCards.push(..._Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.extra_cards);
+        }
+        return homeViewCards;
     }
 }
 _HomeView_defaultConfig = new WeakMap(), _HomeView_instances = new WeakSet(), _HomeView_createChips = 
 /**
  * Create the chips to include in the view.
- *
  * @return {Promise<LovelaceChipConfig[]>} Promise a chip array.
  */
 async function _HomeView_createChips() {
-    if (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.home_view.hidden.includes("chips")) {
-        // Chips section is hidden.
+    if (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.home_view.hidden.includes("chips"))
         return [];
-    }
     const chips = [];
     const chipOptions = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.chips;
-    // TODO: Get domains from config.
     const exposedChips = ["light", "fan", "cover", "switch", "climate", "safety", "motion", "door", "window"];
-    // Create a list of area-ids, used for switching all devices via chips
     const areaIds = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas.map(area => area.area_id ?? "");
-    let chipModule;
-    // Weather chip.
+    const addChip = async (chipType, chipClass, entityId) => {
+        try {
+            const chipModule = await __webpack_require__("./src/chips lazy recursive ^\\.\\/.*$")(`./${chipClass}`);
+            const chip = new chipModule[chipClass](entityId);
+            if ("tap_action" in this.config && isCallServiceActionConfig(this.config.tap_action)) {
+                chip.setTapActionTarget({ area_id: areaIds });
+            }
+            chips.push(chip.getChip());
+        }
+        catch (e) {
+            _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.logError(`An error occurred while creating the ${chipType} chip!`, e);
+        }
+    };
     const weatherEntityId = chipOptions?.weather_entity ?? _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.entities.find((entity) => entity.entity_id.startsWith("weather.") && entity.disabled_by === null && entity.hidden_by === null)?.entity_id;
-    if (weatherEntityId) {
-        try {
-            chipModule = await Promise.resolve(/*! import() */).then(__webpack_require__.bind(__webpack_require__, /*! ../chips/WeatherChip */ "./src/chips/WeatherChip.ts"));
-            const weatherChip = new chipModule.WeatherChip(weatherEntityId);
-            chips.push(weatherChip.getChip());
-        }
-        catch (e) {
-            _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.logError("An error occurred while creating the weather chip!", e);
-        }
-    }
-    // Alarm chip.
+    if (weatherEntityId)
+        await addChip("weather", "WeatherChip", weatherEntityId);
     const alarmEntityId = chipOptions?.alarm_entity ?? _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getAlarmEntity()?.entity_id;
-    if (alarmEntityId) {
-        try {
-            const { AlarmChip } = await Promise.resolve(/*! import() */).then(__webpack_require__.bind(__webpack_require__, /*! ../chips/AlarmChip */ "./src/chips/AlarmChip.ts"));
-            const alarmChip = new AlarmChip(alarmEntityId);
-            chips.push(alarmChip.getChip());
-        }
-        catch (e) {
-            _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.logError("An error occurred while creating the alarm chip!", e);
-        }
-    }
-    // Spotify chip.
+    if (alarmEntityId)
+        await addChip("alarm", "AlarmChip", alarmEntityId);
     const spotifyEntityId = chipOptions?.spotify_entity ?? _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.entities.find((entity) => entity.entity_id.startsWith("media_player.spotify_") && entity.disabled_by === null && entity.hidden_by === null)?.entity_id;
-    if (spotifyEntityId) {
-        try {
-            const { SpotifyChip } = await Promise.resolve(/*! import() */).then(__webpack_require__.bind(__webpack_require__, /*! ../chips/SpotifyChip */ "./src/chips/SpotifyChip.ts"));
-            const spotifyChip = new SpotifyChip(spotifyEntityId);
-            chips.push(spotifyChip.getChip());
-        }
-        catch (e) {
-            _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.logError("An error occurred while creating the spotify chip!", e);
-        }
-    }
-    // Numeric chips.
-    for (let chipType of exposedChips) {
+    if (spotifyEntityId)
+        await addChip("spotify", "SpotifyChip", spotifyEntityId);
+    for (const chipType of exposedChips) {
         if ((_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.domains[chipType] ?? []).length === 0)
             continue;
         if (chipOptions?.[`${chipType}_count`] ?? true) {
-            const className = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.sanitizeClassName(chipType + "Chip");
-            try {
-                chipModule = await __webpack_require__("./src/chips lazy recursive ^\\.\\/.*$")(`./${className}`);
-                const chip = new chipModule[className](_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices["global"]);
-                if ("tap_action" in this.config && isCallServiceActionConfig(this.config.tap_action)) {
-                    chip.setTapActionTarget({ area_id: areaIds });
-                }
-                chips.push(chip.getChip());
-            }
-            catch (e) {
-                _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.logError(`An error occurred while creating the ${chipType} chip!`, e);
-            }
+            await addChip(chipType, _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.sanitizeClassName(chipType + "Chip"), _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices["global"]);
         }
     }
-    // Extra chips.
     if (chipOptions?.extra_chips) {
         chips.push(...chipOptions.extra_chips);
     }
-    // Unavailable chip.
     const unavailableEntities = Object.values(_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices["Global"]?.entities ?? {}).filter((e) => {
         const entityState = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getEntityState(e.entity_id);
         return (exposedChips.includes(e.entity_id.split(".", 1)[0]) || exposedChips.includes(entityState?.attributes.device_class || '')) &&
             _variables__WEBPACK_IMPORTED_MODULE_2__.UNAVAILABLE_STATES.includes(entityState?.state);
     });
     if (unavailableEntities.length) {
-        try {
-            const { UnavailableChip } = await Promise.resolve(/*! import() */).then(__webpack_require__.bind(__webpack_require__, /*! ../chips/UnavailableChip */ "./src/chips/UnavailableChip.ts"));
-            const unavailableChip = new UnavailableChip(unavailableEntities);
-            chips.push(unavailableChip.getChip());
-        }
-        catch (e) {
-            _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.logError("An error occurred while creating the unavailable chip!", e);
-        }
+        await addChip("unavailable", "UnavailableChip", unavailableEntities);
     }
-    // Settings chip.
     try {
         const { SettingsChip } = await Promise.resolve(/*! import() */).then(__webpack_require__.bind(__webpack_require__, /*! ../chips/SettingsChip */ "./src/chips/SettingsChip.ts"));
         const { LinusSettings } = await Promise.resolve(/*! import() */).then(__webpack_require__.bind(__webpack_require__, /*! ../popups/LinusSettingsPopup */ "./src/popups/LinusSettingsPopup.ts"));
@@ -7192,10 +7038,8 @@ async function _HomeView_createChips() {
     }
     return chips;
 }, _HomeView_createPersonCards = function _HomeView_createPersonCards() {
-    if (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.home_view.hidden.includes("persons")) {
-        // Person section is hidden.
+    if (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.home_view.hidden.includes("persons"))
         return [];
-    }
     const cards = [];
     Promise.resolve(/*! import() */).then(__webpack_require__.bind(__webpack_require__, /*! ../cards/PersonCard */ "./src/cards/PersonCard.ts")).then(personModule => {
         for (const person of _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.entities.filter((entity) => {
@@ -7210,16 +7054,12 @@ async function _HomeView_createChips() {
 }, _HomeView_createAreaSection = 
 /**
  * Create the area cards to include in the view.
- *
  * Area cards are grouped into two areas per row.
- *
  * @return {Promise<(TitleCardConfig | StackCardConfig)[]>} Promise an Area Card Section.
  */
 async function _HomeView_createAreaSection() {
-    if (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.home_view.hidden.includes("areas")) {
-        // Areas section is hidden.
+    if (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.home_view.hidden.includes("areas"))
         return [];
-    }
     const groupedCards = [];
     if (!_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.home_view.hidden.includes("areasTitle")) {
         groupedCards.push({
@@ -7229,65 +7069,40 @@ async function _HomeView_createAreaSection() {
     }
     const areasByFloor = (0,_utils__WEBPACK_IMPORTED_MODULE_3__.groupBy)(_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas, (e) => e.floor_id ?? "undisclosed");
     for (const floor of [..._Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.floors, _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.floors.undisclosed]) {
-        let areaCards = [];
         if (!(floor.floor_id in areasByFloor))
             continue;
         groupedCards.push({
             type: "custom:mushroom-title-card",
             subtitle: floor.name,
-            card_mod: {
-                style: `
-            ha-card.header {
-              padding-top: 8px;
-            }
-          `,
-            }
+            card_mod: { style: `ha-card.header { padding-top: 8px; }` },
         });
-        for (const [i, area] of areasByFloor[floor.floor_id].entries()) {
+        const areaCards = await Promise.all(areasByFloor[floor.floor_id].map(async (area) => {
+            if (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.areas[area.area_id]?.hidden)
+                return null;
+            const moduleName = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.areas[area.area_id]?.type ?? _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.areas["_"]?.type ?? "default";
             let module;
-            let moduleName = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.areas[area.area_id]?.type ??
-                _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.areas["_"]?.type ??
-                "default";
-            // Load module by type in strategy options.
-            try {
-                module = await __webpack_require__("./src/cards lazy recursive ^\\.\\/.*$")(`./${moduleName}`);
-            }
-            catch (e) {
-                // Fallback to the default strategy card.
-                module = await Promise.resolve(/*! import() */).then(__webpack_require__.bind(__webpack_require__, /*! ../cards/AreaCard */ "./src/cards/AreaCard.ts"));
-                if (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.debug && moduleName !== "default") {
-                    console.error(e);
-                }
-            }
-            // Get a card for the area.
-            if (!_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.areas[area.area_id]?.hidden) {
-                let options = {
-                    ..._Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.areas["_"],
-                    ..._Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.areas[area.area_id],
-                };
-                areaCards.push(new module.AreaCard(area, options).getCard());
-            }
-            // Horizontally group every two area cards if all cards are created.
-            if (i === areasByFloor[floor.floor_id].length - 1) {
-                for (let i = 0; i < areaCards.length; i += 1) {
-                    groupedCards.push({
-                        type: "vertical-stack",
-                        cards: areaCards.slice(i, i + 1),
-                    });
-                }
-            }
+            module = await Promise.resolve(/*! import() */).then(__webpack_require__.bind(__webpack_require__, /*! ../cards/AreaCard */ "./src/cards/AreaCard.ts"));
+            const options = { ..._Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.areas["_"], ..._Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.areas[area.area_id] };
+            return new module.AreaCard(area, options).getCard();
+        }));
+        const validAreaCards = areaCards.filter(Boolean);
+        for (const card of validAreaCards) {
+            groupedCards.push({
+                type: "vertical-stack",
+                cards: [card],
+            });
         }
     }
     groupedCards.push({
         type: "custom:mushroom-template-card",
         primary: "Ajouter une nouvelle pièce",
-        secondary: `Cliquer ici pour vous rendre sur la page des pièces`,
+        secondary: "Cliquer ici pour vous rendre sur la page des pièces",
         multiline_secondary: true,
-        icon: `mdi:view-dashboard-variant`,
+        icon: "mdi:view-dashboard-variant",
         fill_container: true,
         tap_action: {
             action: "navigate",
-            navigation_path: '/config/areas/dashboard'
+            navigation_path: "/config/areas/dashboard",
         },
     });
     return groupedCards;
@@ -7998,14 +7813,6 @@ var map = {
 	],
 	"./AlarmCard.ts": [
 		"./src/cards/AlarmCard.ts",
-		"main"
-	],
-	"./AreaButtonCard": [
-		"./src/cards/AreaButtonCard.ts",
-		"main"
-	],
-	"./AreaButtonCard.ts": [
-		"./src/cards/AreaButtonCard.ts",
 		"main"
 	],
 	"./AreaCard": [

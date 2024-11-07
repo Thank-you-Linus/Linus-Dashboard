@@ -1,47 +1,61 @@
-# Notice
+# Linus Dashboard
 
-The component and platforms in this repository are not meant to be used by a
-user, but as a "blueprint" that custom component developers can build
-upon, to make more awesome stuff.
+**Linus Dashboard** is a custom component for Home Assistant that provides a complete, ready-to-use dashboard specifically designed to work with the [hass-magic_areas](https://github.com/jseidl/hass-magic_areas) integration. This dashboard enables visualization of all entities created by hass-magic_areas alongside all standard Home Assistant entities, with a primary focus on simplicity and ease of use.
 
-HAVE FUN! 😎
+## Features
 
-## Why?
+- **Comprehensive Entity Visualization**: Automatically displays all entities created by hass-magic_areas as well as all standard Home Assistant entities, providing a centralized view of your smart home.
+- **Optimized User Interface**: A clean, intuitive interface that enhances usability and provides quick access to essential controls and information.
+- **Quick Installation**: Easy setup as a custom repository in HACS for streamlined updates.
+- **Entity Organization by Area**: Automatically organizes entities by area, making navigation and control simpler.
+- **Advanced Customization Options**: Supports config_flow for easy configuration of entities, areas, and dashboard settings.
 
-This is simple, by having custom_components look (README + structure) the same
-it is easier for developers to help each other and for users to start using them.
+## Development Status
 
-If you are a developer and you want to add things to this "blueprint" that you think more
-developers will have use for, please open a PR to add it :)
+**Linus Dashboard is currently in active development**. We welcome feedback, feature requests, and ideas to make this dashboard even better. Your input is valuable as we work toward creating a powerful yet user-friendly solution for Home Assistant.
 
-## What?
+## Installation
 
-This repository contains multiple files, here is a overview:
+### Requirements
 
-File | Purpose | Documentation
--- | -- | --
-`.devcontainer.json` | Used for development/testing with Visual Studio Code. | [Documentation](https://code.visualstudio.com/docs/remote/containers)
-`.github/ISSUE_TEMPLATE/*.yml` | Templates for the issue tracker | [Documentation](https://help.github.com/en/github/building-a-strong-community/configuring-issue-templates-for-your-repository)
-`.vscode/tasks.json` | Tasks for the devcontainer. | [Documentation](https://code.visualstudio.com/docs/editor/tasks)
-`custom_components/linus_dashboard/*` | Integration files, this is where everything happens. | [Documentation](https://developers.home-assistant.io/docs/creating_component_index)
-`CONTRIBUTING.md` | Guidelines on how to contribute. | [Documentation](https://help.github.com/en/github/building-a-strong-community/setting-guidelines-for-repository-contributors)
-`LICENSE` | The license file for the project. | [Documentation](https://help.github.com/en/github/creating-cloning-and-archiving-repositories/licensing-a-repository)
-`README.md` | The file you are reading now, should contain info about the integration, installation and configuration instructions. | [Documentation](https://help.github.com/en/github/writing-on-github/basic-writing-and-formatting-syntax)
-`requirements.txt` | Python packages used for development/lint/testing this integration. | [Documentation](https://pip.pypa.io/en/stable/user_guide/#requirements-files)
+1. **Home Assistant** (2023.9+ recommended).
+2. **HACS** - Home Assistant Community Store.
+3. **hass-magic_areas** - Ensure this integration is installed and configured correctly before starting.
 
-## How?
+### Installation Steps
 
-1. Create a new repository in GitHub, using this repository as a template by clicking the "Use this template" button in the GitHub UI.
-1. Open your new repository in Visual Studio Code devcontainer (Preferably with the "`Dev Containers: Clone Repository in Named Container Volume...`" option).
-1. Rename all instances of the `linus_dashboard` to `custom_components/<your_integration_domain>` (e.g. `custom_components/awesome_integration`).
-1. Rename all instances of the `Integration Blueprint` to `<Your Integration Name>` (e.g. `Awesome Integration`).
-1. Run the `scripts/develop` to start HA and test out your new integration.
+1. **Adding the Custom Repository**:
+   - Go to HACS > Integrations.
+   - Click on the three dots in the top right and select "Custom repositories".
+   - Add the link to this repository: [https://github.com/Thank-you-Linus/Linus-Dashboard](https://github.com/Thank-you-Linus/Linus-Dashboard) and select the category "Integration".
+   - Click "Add".
 
-## Next steps
+2. **Installing Linus Dashboard**:
+   - Search for **Linus Dashboard** in HACS, install it, and restart Home Assistant.
 
-These are some next steps you may want to look into:
-- Add tests to your integration, [`pytest-homeassistant-custom-component`](https://github.com/MatthewFlamm/pytest-homeassistant-custom-component) can help you get started.
-- Add brand images (logo/icon) to https://github.com/home-assistant/brands.
-- Create your first release.
-- Share your integration on the [Home Assistant Forum](https://community.home-assistant.io/).
-- Submit your integration to [HACS](https://hacs.xyz/docs/publish/start).
+3. **Configuring the Dashboard**:
+   - After restarting, go to `Settings` > `Devices & Services`.
+   - Find **Linus Dashboard** and start the configuration flow to select areas and entities.
+
+### Basic Configuration
+
+Once the configuration flow is started, you can:
+- Link entities to specific areas as defined by hass-magic_areas.
+- Configure visibility options for all entities.
+- Customize widget appearance and interaction based on your needs.
+
+## Usage
+
+After setup, Linus Dashboard will automatically display all Home Assistant entities and entities from hass-magic_areas, organized by area. This dashboard provides easy access and control, making it simple to monitor and interact with all parts of your smart home.
+
+## Support & Feedback
+
+If you encounter any issues, please open an [issue on GitHub](https://github.com/Thank-you-Linus/Linus-Dashboard/issues) with a detailed description of the problem. We also encourage feedback and feature requests to improve the dashboard—your input is highly appreciated!
+
+## Contributing
+
+Contributions are welcome! Feel free to fork the project, suggest improvements, or report bugs to help enhance this dashboard.
+
+---
+
+**Note**: Linus Dashboard is an open-source project and does not require any subscription.

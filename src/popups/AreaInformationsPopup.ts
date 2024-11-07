@@ -14,18 +14,18 @@ class AreaInformations extends AbstractPopup {
 
     getDefaultConfig(device: MagicAreaRegistryEntry, minimalist: boolean): PopupActionConfig {
 
-        const { area_state } = device.entities
+        const { area_state } = device?.entities ?? {}
 
-        const { friendly_name, adjoining_areas, features, states, presence_sensors, on_states } = Helper.getEntityState(area_state?.entity_id)?.attributes
+        const { friendly_name, adjoining_areas, features, states, presence_sensors, on_states } = Helper.getEntityState(area_state?.entity_id)?.attributes ?? {}
 
         presence_sensors?.sort((a: string, b: string) => {
             const aState = Helper.getEntityState(a);
             const bState = Helper.getEntityState(b);
             const lastChangeA = new Date(aState?.last_changed).getTime();
             const lastChangeB = new Date(bState?.last_changed).getTime();
-            if (a === `switch.magic_areas_presence_hold_${slugify(device.name)}`) {
+            if (a === `switch.magic_areas_presence_hold_${slugify(device?.name)}`) {
                 return -1;
-            } else if (b === `switch.magic_areas_presence_hold_${slugify(device.name)}`) {
+            } else if (b === `switch.magic_areas_presence_hold_${slugify(device?.name)}`) {
                 return 1;
             } else {
                 return lastChangeB - lastChangeA;
@@ -50,7 +50,7 @@ class AreaInformations extends AbstractPopup {
                                         name: "Présence",
                                         secondary_info: "last-changed",
                                         color: "red",
-                                        tap_action: device.id ? {
+                                        tap_action: device?.id ? {
                                             action: "fire-dom-event",
                                             browser_mod: {
                                                 service: "browser_mod.sequence",
@@ -62,7 +62,7 @@ class AreaInformations extends AbstractPopup {
                                                         },
                                                         {
                                                             service: "browser_mod.navigate",
-                                                            data: { path: `/config/devices/device/${device.id}` }
+                                                            data: { path: `/config/devices/device/${device?.id}` }
                                                         }
                                                     ]
                                                 }
@@ -77,7 +77,7 @@ class AreaInformations extends AbstractPopup {
                                         tap_action: {
                                             action: "call-service",
                                             service: `homeassistant.reload_config_entry`,
-                                            target: { "device_id": device.id },
+                                            target: { "device_id": device?.id },
                                         }
                                     },
                                 ]

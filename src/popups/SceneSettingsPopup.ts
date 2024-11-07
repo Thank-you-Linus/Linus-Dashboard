@@ -14,7 +14,7 @@ class SceneSettings extends AbstractPopup {
 
   getDefaultConfig(device: MagicAreaRegistryEntry): PopupActionConfig {
 
-    const { scene_morning, scene_daytime, scene_evening, scene_night } = device.entities
+    const { scene_morning, scene_daytime, scene_evening, scene_night } = device?.entities
     const selectControl = [scene_morning, scene_daytime, scene_evening, scene_night].filter(Boolean)
 
     return {
@@ -30,15 +30,15 @@ class SceneSettings extends AbstractPopup {
                 {
                   type: "custom:config-template-card",
                   variables: {
-                    SCENE_STATE: `states['${device.entities[('scene_' + tod) as "scene_morning"]?.entity_id}'].state`
+                    SCENE_STATE: `states['${device?.entities[('scene_' + tod) as "scene_morning"]?.entity_id}'].state`
                   },
-                  entities: [device.entities[('scene_' + tod) as "scene_morning"]?.entity_id],
+                  entities: [device?.entities[('scene_' + tod) as "scene_morning"]?.entity_id],
                   card: {
                     type: "horizontal-stack",
                     cards: [
                       {
                         type: "entities",
-                        entities : [device.entities[('scene_' + tod) as "scene_morning"]?.entity_id]
+                        entities: [device?.entities[('scene_' + tod) as "scene_morning"]?.entity_id]
                       },
                       {
                         type: "conditional",

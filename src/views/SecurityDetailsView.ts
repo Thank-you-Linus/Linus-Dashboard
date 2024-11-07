@@ -55,7 +55,7 @@ abstract class SecurityDetailsView {
   async createViewCards(): Promise<(StackCardConfig | TitleCardConfig)[]> {
     const viewCards: LovelaceCardConfig[] = [];
 
-    const globalDevice = Helper.magicAreasDevices["Global"];
+    const globalDevice = Helper.magicAreasDevices["global"];
 
     if (!globalDevice) return [];
 

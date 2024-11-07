@@ -19,7 +19,7 @@ class AreaStateChip extends AbstractChip {
    */
   getDefaultConfig(device: MagicAreaRegistryEntry, showContent: boolean = false): TemplateChipConfig {
 
-    const { area_state, presence_hold, all_media_players, aggregate_motion } = device.entities
+    const { area_state, presence_hold, all_media_players, aggregate_motion } = device?.entities ?? {}
     return {
       "type": "template",
       "entity": area_state?.entity_id,

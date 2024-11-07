@@ -18,11 +18,11 @@ class LinusAggregateChip extends AbstractChip {
    * @type {ConditionalChipConfig | undefined}
    *
    */
-  getDefaultConfig(device: MagicAreaRegistryEntry, deviceClass: string, showContent: boolean, by_area: boolean = false): ConditionalChipConfig | undefined {
+  getDefaultConfig(device: MagicAreaRegistryEntry, deviceClass: string, showContent: boolean, by_area: boolean = false): ConditionalChipConfig | undefined {
 
-    const entity = device.entities[`aggregate_${deviceClass}`]
+    const entity = device?.entities[`aggregate_${deviceClass}`]
 
-    if(!entity?.entity_id) return undefined
+    if (!entity?.entity_id) return undefined
 
     const domain = entity?.entity_id.split(".")[0]
 
@@ -62,7 +62,7 @@ class LinusAggregateChip extends AbstractChip {
       if (deviceClass === "temperature") icon_color = `{% set bl = states('${entity?.entity_id}') | int() %} {% if bl < 20 %} blue
       {% elif bl < 30 %} orange
       {% elif bl >= 30 %} red{% else %} disabled{% endif %}`
-      if (deviceClass === "illuminance") icon_color = `{{ 'blue' if 'dark' in state_attr('${device.entities.area_state?.entity_id}', 'states') else 'amber' }}`
+      if (deviceClass === "illuminance") icon_color = `{{ 'blue' if 'dark' in state_attr('${device?.entities.area_state?.entity_id}', 'states') else 'amber' }}`
 
       content = showContent ? `{{ states.${entity?.entity_id}.state | float | round(1) }} {{ states.${entity?.entity_id}.attributes.unit_of_measurement }}` : ""
     }

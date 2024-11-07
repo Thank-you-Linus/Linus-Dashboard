@@ -9,6 +9,8 @@ import StrategyArea = generic.StrategyArea;
 import StrategyFloor = generic.StrategyFloor;
 import { FloorRegistryEntry } from "./types/homeassistant/data/floor_registry";
 import { DOMAIN } from "./variables";
+import { entitySharedConfigStruct } from "./types/lovelace-mushroom/shared/config/entity-config";
+import { slugify } from "./utils";
 
 /**
  * Helper Class
@@ -292,7 +294,7 @@ class Helper {
     this.#magicAreasDevices = Helper.devices
       .filter(device => device.manufacturer === 'Magic Areas')
       .reduce((acc: Record<string, MagicAreaRegistryEntry>, device) => {
-        acc[device.id!] = {
+        acc[slugify(device.name!)] = {
           ...device,
           area_name: device.name!,
           entities: this.#entities
@@ -395,6 +397,44 @@ class Helper {
     if (!this.isInitialized()) {
       console.warn("Helper class should be initialized before calling this method!");
     }
+    const states: string[] = this.#areas
+      .filter(area => !area_id || area.area_id === area_id)
+      .flatMap(area => {
+        const areaDeviceIds = this.#devices
+          .filter(device => device.area_id === area.area_id)
+          .map(device => device.id);
+
+        return this.#entities
+          .filter(entity =>
+            entity.entity_id.startsWith(`${domain}.`) &&
+            entity.hidden_by === null &&
+            entity.disabled_by === null &&
+            (area.area_id === "undisclosed"
+              ? !entity.area_id && (areaDeviceIds.includes(entity.device_id ?? "") || !entity.device_id)
+              : areaDeviceIds.includes(entity.device_id ?? "") || entity.area_id === area.area_id)
+          )
+          .map(entity => `states['${entity.entity_id}']`);
+      });
+
+    return `{% set entities = [${states}] %} {{ entities | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | selectattr('state','${operator}','${value}') | list | count }}`;
+  }
+
+  /**
+   * Get a template string to define the average state of sensor entities with a given device class.
+   *
+   * States are compared against a given value by a given operator.
+   *
+   * @param {string} device_class The device class of the entities.
+   * @param {string} area_id
+   *
+   * @return {string} The template string.
+   * @static
+   */
+  static getAverageStateTemplate(device_class: string, area_id?: string): string {
+
+    if (!this.isInitialized()) {
+      console.warn("Helper class should be initialized before calling this method!");
+    }
 
     const states: string[] = this.#areas
       .filter(area => !area_id || area.area_id === area_id)
@@ -404,11 +444,20 @@ class Helper {
           .map(device => device.id);
 
         return this.#entities
-          .filter(this.#areaFilterCallback, { area, domain, areaDeviceIds })
+          .filter(entity =>
+            entity.entity_id.startsWith("sensor.") &&
+            entity.hidden_by === null &&
+            entity.disabled_by === null &&
+            (area.area_id === "undisclosed"
+              ? !entity.area_id && (areaDeviceIds.includes(entity.device_id ?? "") || !entity.device_id)
+              : areaDeviceIds.includes(entity.device_id ?? "") || entity.area_id === area.area_id)
+          )
           .map(entity => `states['${entity.entity_id}']`);
       });
 
-    return `{% set entities = [${states}] %} {{ entities | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | selectattr('state','${operator}','${value}') | list | count }}`;
+
+    // Todo: fix that because the temperature not working
+    return `{% set entities = [${states}] %} {{ entities | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | sum / entities | length }} {{ state_attr('sensor.outside_temperature', 'unit_of_measurement')}}`;
   }
 
   /**

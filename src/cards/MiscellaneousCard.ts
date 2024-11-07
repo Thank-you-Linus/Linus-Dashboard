@@ -19,8 +19,9 @@ class MiscellaneousCard extends AbstractCard {
    * @private
    */
   #defaultConfig: EntityCardConfig = {
-    type: "custom:mushroom-entity-card",
-    icon_color: "blue-grey",
+    type: "tile",
+    icon: undefined,
+    vertical: false,
   };
 
   /**

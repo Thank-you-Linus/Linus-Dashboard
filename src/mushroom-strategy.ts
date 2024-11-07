@@ -1,12 +1,17 @@
-import {Helper} from "./Helper";
-import {SensorCard} from "./cards/SensorCard";
-import {ControllerCard} from "./cards/ControllerCard";
-import {generic} from "./types/strategy/generic";
-import {LovelaceCardConfig, LovelaceConfig, LovelaceViewConfig} from "./types/homeassistant/data/lovelace";
-import {StackCardConfig} from "./types/homeassistant/lovelace/cards/types";
-import {EntityCardConfig} from "./types/lovelace-mushroom/cards/entity-card-config";
-import {HassServiceTarget} from "home-assistant-js-websocket";
+import { Helper } from "./Helper";
+import { SensorCard } from "./cards/SensorCard";
+import { ControllerCard } from "./cards/ControllerCard";
+import { generic } from "./types/strategy/generic";
+import { LovelaceCardConfig, LovelaceConfig, LovelaceViewConfig } from "./types/homeassistant/data/lovelace";
+import { StackCardConfig } from "./types/homeassistant/lovelace/cards/types";
+import { EntityCardConfig } from "./types/lovelace-mushroom/cards/entity-card-config";
+import { HassServiceTarget } from "home-assistant-js-websocket";
 import StrategyArea = generic.StrategyArea;
+import { SwipeCard } from "./cards/SwipeCard";
+import { MainAreaCard } from "./cards/MainAreaCard";
+import { SwipeCardConfig } from "./types/lovelace-mushroom/cards/swipe-card-config";
+import { slugify } from "./utils";
+import { MAGIC_AREAS_DOMAINS } from "./variables";
 
 /**
  * Mushroom Dashboard Strategy.<br>
@@ -40,6 +45,7 @@ class MushroomStrategy extends HTMLTemplateElement {
 
     // Create a view for each exposed domain.
     for (let viewId of Helper.getExposedViewIds()) {
+      if (MAGIC_AREAS_DOMAINS.includes(viewId) && (Helper.domains[viewId] ?? []).length === 0) continue
       try {
         const viewType = Helper.sanitizeClassName(viewId + "View");
         viewModule = await import(`./views/${viewType}`);
@@ -94,6 +100,10 @@ class MushroomStrategy extends HTMLTemplateElement {
     const area = info.view.strategy?.options?.area ?? {} as StrategyArea;
     const viewCards: LovelaceCardConfig[] = [...(area.extra_cards ?? [])];
 
+
+    if (area.area_id !== "undisclosed")
+      viewCards.push(new MainAreaCard(area).getCard());
+
     // Set the target for controller cards to the current area.
     let target: HassServiceTarget = {
       area_id: [area.area_id],
@@ -111,12 +121,17 @@ class MushroomStrategy extends HTMLTemplateElement {
 
       try {
         domainCards = await import(`./cards/${className}`).then(cardModule => {
-          let domainCards = [];
+          let domainCards = [] as any[];
           const entities = Helper.getDeviceEntities(area, domain);
           let configEntityHidden =
-                Helper.strategyOptions.domains[domain ?? "_"].hide_config_entities
-                || Helper.strategyOptions.domains["_"].hide_config_entities;
+            Helper.strategyOptions.domains[domain ?? "_"].hide_config_entities
+            || Helper.strategyOptions.domains["_"].hide_config_entities;
 
+          const magicAreasDevice = Helper.magicAreasDevices[area.name];
+          const magicAreasKey = domain === "light" ? 'all_lights' : `${domain}_group`;
+
+          // Set the target for controller cards to linus aggregate entity if exist.
+          target["entity_id"] = magicAreasDevice?.entities[magicAreasKey]?.entity_id;
           // Set the target for controller cards to entities without an area.
           if (area.area_id === "undisclosed") {
             target = {
@@ -126,9 +141,11 @@ class MushroomStrategy extends HTMLTemplateElement {
 
           if (entities.length) {
             // Create a Controller card for the current domain.
+
+            const title = Helper.localize(domain === 'scene' ? 'ui.dialogs.quick-bar.commands.navigation.scene' : `component.${domain}.entity_component._.name`);
             const titleCard = new ControllerCard(
               target,
-              Helper.strategyOptions.domains[domain],
+              { ...Helper.strategyOptions.domains[domain], domain, title },
             ).createCard();
 
             if (domain === "sensor") {
@@ -158,10 +175,7 @@ class MushroomStrategy extends HTMLTemplateElement {
               }
 
               if (sensorCards.length) {
-                domainCards.push({
-                  type: "vertical-stack",
-                  cards: sensorCards,
-                });
+                domainCards.push(new SwipeCard(sensorCards).getCard())
 
                 domainCards.unshift(titleCard);
               }
@@ -191,19 +205,7 @@ class MushroomStrategy extends HTMLTemplateElement {
               domainCards.push(new cardModule[className](entity, cardOptions).getCard());
             }
 
-            if (domain === "binary_sensor") {
-              // Horizontally group every two binary sensor cards.
-              const horizontalCards = [];
-
-              for (let i = 0; i < domainCards.length; i += 2) {
-                horizontalCards.push({
-                  type: "horizontal-stack",
-                  cards: domainCards.slice(i, i + 2),
-                });
-              }
-
-              domainCards = horizontalCards;
-            }
+            domainCards = [new SwipeCard(domainCards).getCard()];
 
             if (domainCards.length) {
               domainCards.unshift(titleCard);
@@ -245,13 +247,15 @@ class MushroomStrategy extends HTMLTemplateElement {
 
       // Create a column of miscellaneous entity cards.
       if (miscellaneousEntities.length) {
-        let miscellaneousCards: (StackCardConfig | EntityCardConfig)[] = [];
+        let miscellaneousCards: (StackCardConfig | EntityCardConfig | SwipeCardConfig)[] = [];
 
         try {
           miscellaneousCards = await import("./cards/MiscellaneousCard").then(cardModule => {
             const miscellaneousCards: (StackCardConfig | EntityCardConfig)[] = [
               new ControllerCard(target, Helper.strategyOptions.domains.default).createCard(),
             ];
+
+            const swipeCard = []
 
             for (const entity of miscellaneousEntities) {
               let cardOptions = Helper.strategyOptions.card_options?.[entity.entity_id];
@@ -267,10 +271,11 @@ class MushroomStrategy extends HTMLTemplateElement {
                 continue;
               }
 
-              miscellaneousCards.push(new cardModule.MiscellaneousCard(entity, cardOptions).getCard());
+              swipeCard.push(new cardModule.MiscellaneousCard(entity, cardOptions).getCard());
+
             }
 
-            return miscellaneousCards;
+            return [...miscellaneousCards, new SwipeCard(swipeCard).getCard()];
           });
         } catch (e) {
           Helper.logError("An error occurred while creating the domain cards!", e);
@@ -292,8 +297,8 @@ class MushroomStrategy extends HTMLTemplateElement {
 
 customElements.define("ll-strategy-mushroom-strategy", MushroomStrategy);
 
-const version = "v2.1.0";
+export const version = "v4.0.1";
 console.info(
-  "%c Mushroom Strategy %c ".concat(version, " "),
+  "%c Linus Strategy %c ".concat(version, " "),
   "color: white; background: coral; font-weight: 700;", "color: coral; background: white; font-weight: 700;"
 );

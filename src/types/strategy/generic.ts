@@ -10,6 +10,7 @@ import {cards} from "./cards";
 import {EntityRegistryEntry} from "../homeassistant/data/entity_registry";
 import {LovelaceChipConfig} from "../lovelace-mushroom/utils/lovelace/chip/types";
 import {HassServiceTarget} from "home-assistant-js-websocket";
+import { FloorRegistryEntry } from "../homeassistant/data/floor_registry";
 
 export namespace generic {
   /**
@@ -100,6 +101,7 @@ export namespace generic {
    */
   export interface StrategyConfig {
     areas: { [k: string]: StrategyArea };
+    floors: { [k: string]: StrategyFloor };
     card_options?: { [k: string]: CustomCardConfig };
     chips?: Chips;
     debug: boolean;
@@ -126,6 +128,12 @@ export namespace generic {
       },
       [k: string]: StrategyArea,
     },
+    floors: {
+      undisclosed: StrategyFloor & {
+        floor_id: "undisclosed",
+      },
+      [k: string]: StrategyFloor,
+    },
     domains: {
       default: DomainConfig,
       [k: string]: DomainConfig,
@@ -149,6 +157,18 @@ export namespace generic {
   }
 
   /**
+   * Strategy Floor.
+   *
+   * @property {number} [order] Ordering position of the area in the list of available areas.
+   * @property {boolean} [hidden] True if the entity should be hidden from the dashboard.
+   */
+  export interface StrategyFloor extends FloorRegistryEntry {
+    order?: number;
+    hidden?: boolean;
+    type?: string;
+  }
+
+  /**
    * A list of chips to show in the Home view.
    *
    * @property {boolean} light_count Chip to display the number of lights on.
@@ -168,6 +188,7 @@ export namespace generic {
     switch_count: boolean;
     climate_count: boolean;
     weather_entity: string;
+    alarm_entity: string;
 
     [key: string]: any;
   }

@@ -35,6 +35,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Path to the JavaScript file for the strategy
     await register_static_paths_and_resources(hass, "linus-strategy.js")
     await register_static_paths_and_resources(hass, "mushroom.js")
+    await register_static_paths_and_resources(hass, "card-mod.js")
+    await register_static_paths_and_resources(hass, "browser_mod.js")
+    await register_static_paths_and_resources(hass, "swipe-card.js")
+    await register_static_paths_and_resources(hass, "layout-card.js")
 
     # Use a unique name for the panel to avoid conflicts
     sidebar_title = "Linus Dashboard"

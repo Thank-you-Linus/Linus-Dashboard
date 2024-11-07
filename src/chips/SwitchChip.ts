@@ -1,7 +1,7 @@
-import {Helper} from "../Helper";
-import {chips} from "../types/strategy/chips";
-import {AbstractChip} from "./AbstractChip";
-import {TemplateChipConfig} from "../types/lovelace-mushroom/utils/lovelace/chip/types";
+import { Helper } from "../Helper";
+import { chips } from "../types/strategy/chips";
+import { AbstractChip } from "./AbstractChip";
+import { TemplateChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**
@@ -24,10 +24,6 @@ class SwitchChip extends AbstractChip {
     icon_color: "blue",
     content: Helper.getCountTemplate("switch", "eq", "on"),
     tap_action: {
-      action: "call-service",
-      service: "switch.turn_off",
-    },
-    hold_action: {
       action: "navigate",
       navigation_path: "switches",
     },
@@ -45,4 +41,4 @@ class SwitchChip extends AbstractChip {
   }
 }
 
-export {SwitchChip};
+export { SwitchChip };

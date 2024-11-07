@@ -43,6 +43,7 @@ class MushroomStrategy extends HTMLTemplateElement {
 
     let viewModule;
 
+
     // Create a view for each exposed domain.
     for (let viewId of Helper.getExposedViewIds()) {
       if (MAGIC_AREAS_DOMAINS.includes(viewId) && (Helper.domains[viewId] ?? []).length === 0) continue
@@ -51,7 +52,7 @@ class MushroomStrategy extends HTMLTemplateElement {
         viewModule = await import(`./views/${viewType}`);
         const view: LovelaceViewConfig = await new viewModule[viewType](Helper.strategyOptions.views[viewId]).getView();
 
-        if (view.cards?.length) {
+        if (view.cards?.length || view.sections?.length) {
           views.push(view);
         }
       } catch (e) {

@@ -21,7 +21,7 @@ class MainAreaCard extends AbstractCard {
 
   getDefaultConfig(area: AreaRegistryEntry): TemplateCardConfig {
 
-    const device = Helper.magicAreasDevices[area.name];
+    const device = Helper.magicAreasDevices[area.area_id];
 
     if (!device) {
       return {
@@ -39,7 +39,7 @@ class MainAreaCard extends AbstractCard {
       aggregate_door,
       aggregate_health,
       aggregate_cover,
-    } = device.entities
+    } = device?.entities ?? {}
 
     return {
       type: "custom:layout-card",
@@ -206,7 +206,7 @@ class MainAreaCard extends AbstractCard {
             ]
           }
         },
-        (device.entities.all_lights && device.entities.all_lights.entity_id !== "unavailable" ? {
+        (device?.entities.all_lights && device?.entities.all_lights.entity_id !== "unavailable" ? {
           type: "custom:mushroom-chips-card",
           alignment: "center",
           chips: new AreaScenesChips(device, area).getChips()

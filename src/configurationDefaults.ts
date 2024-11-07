@@ -63,7 +63,7 @@ export const configurationDefaults: StrategyDefaults = {
           {
             type: "conditional",
             conditions: [{
-              entity: device.entities.all_lights?.entity_id,
+              entity: device?.entities.all_lights?.entity_id,
               state_not: "unavailable"
             }],
             chip: new ToggleSceneChip(device).getChip(),

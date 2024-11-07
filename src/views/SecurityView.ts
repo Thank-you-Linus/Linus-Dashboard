@@ -1,6 +1,6 @@
 import { Helper } from "../Helper";
 import { StackCardConfig } from "../types/homeassistant/lovelace/cards/types";
-import { LovelaceCardConfig, LovelaceViewConfig } from "../types/homeassistant/data/lovelace";
+import { LovelaceCardConfig, LovelaceSectionConfig, LovelaceViewConfig } from "../types/homeassistant/data/lovelace";
 import { TitleCardConfig } from "../types/lovelace-mushroom/cards/title-card-config";
 import { AlarmCard } from "../cards/AlarmCard";
 import { PersonCard } from "../cards/PersonCard";
@@ -24,8 +24,9 @@ abstract class SecurityView {
   config: LovelaceViewConfig = {
     title: Helper.localize("component.binary_sensor.entity_component.safety.name"),
     path: "security",
+    type: "sections",
     icon: "mdi:security",
-    subview: false,
+    // subview: false,
   };
 
   /**
@@ -55,33 +56,42 @@ abstract class SecurityView {
    *
    * @return {Promise<(StackCardConfig | TitleCardConfig)[]>} An array of card objects.
    */
-  async createViewCards(): Promise<(StackCardConfig | TitleCardConfig)[]> {
-    const viewCards: LovelaceCardConfig[] = [];
+  async createSectionCards(): Promise<(StackCardConfig | TitleCardConfig)[]> {
+    const globalSection: LovelaceSectionConfig = {
+      type: "grid",
+      column_span: 1,
+      cards: []
+    };
 
     const alarmEntity = Helper.getAlarmEntity();
     if (alarmEntity?.entity_id) {
-      viewCards.push({
-        type: "custom:mushroom-title-card",
-        subtitle: "Alarme",
-        card_mod: {
-          style: `ha-card.header { padding-top: 8px; }`,
+      globalSection.cards.push(
+        {
+          type: "heading",
+          heading: "Sécurité",
+          heading_style: "title",
         }
-      })
-      viewCards.push(new AlarmCard(alarmEntity).getCard())
+      )
+      globalSection.cards.push(
+        {
+          type: "heading",
+          heading: "Alarme",
+          heading_style: "subtitle",
+        })
+      globalSection.cards.push(new AlarmCard(alarmEntity).getCard())
     }
 
     const persons = Helper.getPersonsEntity()
     if (persons?.length) {
-      viewCards.push({
-        type: "custom:mushroom-title-card",
-        subtitle: "Personnes",
-        card_mod: {
-          style: `ha-card.header { padding-top: 8px; }`,
-        }
-      })
+      globalSection.cards.push(
+        {
+          type: "heading",
+          heading: "Personnes",
+          heading_style: "subtitle",
+        })
 
       for (const person of persons) {
-        viewCards.push(new PersonCard(person, {
+        globalSection.cards.push(new PersonCard(person, {
           layout: "horizontal",
           primary_info: "name",
           secondary_info: "state"
@@ -89,9 +99,12 @@ abstract class SecurityView {
       }
     }
 
-    const globalDevice = Helper.magicAreasDevices["Global"];
+    const globalDevice = Helper.magicAreasDevices["global"];
 
-    if (!globalDevice) return [];
+    if (!globalDevice) {
+      console.debug("Security view : Global device not found");
+      return [];
+    }
 
     const {
       aggregate_motion,
@@ -100,33 +113,31 @@ abstract class SecurityView {
     } = globalDevice?.entities;
 
     if (aggregate_motion || aggregate_door || aggregate_window) {
-      viewCards.push({
-        type: "custom:mushroom-title-card",
-        subtitle: "Capteurs",
-        card_mod: {
-          style: `ha-card.header { padding-top: 8px; }`,
-        }
-      })
-      if (aggregate_motion?.entity_id) viewCards.push(new BinarySensorCard(aggregate_motion, { tap_action: navigateTo('security-details') }).getCard());
-      if (aggregate_door?.entity_id) viewCards.push(new BinarySensorCard(aggregate_door, { tap_action: navigateTo('security-details') }).getCard());
-      if (aggregate_window?.entity_id) viewCards.push(new BinarySensorCard(aggregate_window, { tap_action: navigateTo('security-details') }).getCard());
+      globalSection.cards.push(
+        {
+          type: "heading",
+          heading: "Capteurs",
+          heading_style: "subtitle",
+        })
+      if (aggregate_motion?.entity_id) globalSection.cards.push(new BinarySensorCard(aggregate_motion, { tap_action: navigateTo('security-details') }).getCard());
+      if (aggregate_door?.entity_id) globalSection.cards.push(new BinarySensorCard(aggregate_door, { tap_action: navigateTo('security-details') }).getCard());
+      if (aggregate_window?.entity_id) globalSection.cards.push(new BinarySensorCard(aggregate_window, { tap_action: navigateTo('security-details') }).getCard());
     }
 
-
-    return viewCards;
+    return [globalSection];
   }
 
   /**
    * Get a view object.
    *
-   * The view includes the cards which are created by method createViewCards().
+   * The view includes the cards which are created by method createSectionCards().
    *
    * @returns {Promise<LovelaceViewConfig>} The view object.
    */
   async getView(): Promise<LovelaceViewConfig> {
     return {
       ...this.config,
-      cards: await this.createViewCards(),
+      sections: await this.createSectionCards(),
     };
   }
 }

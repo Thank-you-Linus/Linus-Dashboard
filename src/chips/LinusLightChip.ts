@@ -24,11 +24,11 @@ class LinusLightChip extends AbstractChip {
 
     const defaultConfig: TemplateChipConfig = {
       type: "template",
-      entity: device.entities.all_lights?.entity_id,
-      icon_color: `{{ 'amber' if expand(states.${device.entities.all_lights?.entity_id}.attributes.entity_id) | selectattr( 'state', 'eq', 'on') | list | count > 0 else 'grey' }}`,
+      entity: device?.entities.all_lights?.entity_id,
+      icon_color: `{{ 'amber' if expand(states.${device?.entities.all_lights?.entity_id}.attributes.entity_id) | selectattr( 'state', 'eq', 'on') | list | count > 0 else 'grey' }}`,
       icon: "mdi:lightbulb-group",
-      content: show_content ? `{{ expand(states.${device.entities.all_lights?.entity_id}.attributes.entity_id) | selectattr( 'state', 'eq', 'on') | list | count }}` : "",
-      tap_action: show_group ? new AggregateListPopup(device.entities.all_lights?.entity_id, "light").getPopup() : {
+      content: show_content ? `{{ expand(states.${device?.entities.all_lights?.entity_id}.attributes.entity_id) | selectattr( 'state', 'eq', 'on') | list | count }}` : "",
+      tap_action: show_group ? new AggregateListPopup(device?.entities.all_lights?.entity_id, "light").getPopup() : {
         action: "call-service",
         service: `${DOMAIN}.area_light_toggle`,
         data: {

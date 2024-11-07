@@ -18,10 +18,10 @@ class LinusClimateChip extends AbstractChip {
   getDefaultConfig(device: MagicAreaRegistryEntry, showContent: boolean): TemplateChipConfig {
     return {
       "type": "template",
-      "entity": device.entities.aggregate_climate?.entity_id,
-      "icon_color": `{{ 'orange' if is_state('${device.entities.aggregate_climate?.entity_id}', 'heat') else 'grey' }}`,
+      "entity": device?.entities.aggregate_climate?.entity_id,
+      "icon_color": `{{ 'orange' if is_state('${device?.entities.aggregate_climate?.entity_id}', 'heat') else 'grey' }}`,
       "icon": "mdi:thermostat",
-      "content": showContent ? `{{ states.${device.entities.aggregate_climate?.entity_id}.attributes.preset_mode }}` : "",
+      "content": showContent ? `{{ states.${device?.entities.aggregate_climate?.entity_id}.attributes.preset_mode }}` : "",
       // "tap_action": climateList(hass, area)
     }
   }

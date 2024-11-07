@@ -27,7 +27,7 @@ class AreaScenesChips {
    */
   getDefaultConfig(device: MagicAreaRegistryEntry, area: AreaRegistryEntry): TemplateChipConfig[] {
 
-    const selects = todOrder.map(tod => Helper.getEntityState(device.entities[`scene_${tod as 'morning'}`]?.entity_id)).filter(Boolean)
+    const selects = todOrder.map(tod => Helper.getEntityState(device?.entities[`scene_${tod as 'morning'}`]?.entity_id)).filter(Boolean)
 
     const chips = [] as TemplateChipConfig[]
 

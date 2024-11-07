@@ -62,7 +62,7 @@ class AggregateCard {
 
     const cards: LovelaceCardConfig[] = [];
 
-    const globalEntities = getAggregateEntity(Helper.magicAreasDevices["Global"], domains, deviceClasses)[0] ?? false
+    const globalEntities = getAggregateEntity(Helper.magicAreasDevices["global"], domains, deviceClasses)[0] ?? false
 
     if (globalEntities) {
       cards.push({
@@ -101,7 +101,7 @@ class AggregateCard {
 
         if (area.area_id !== "undisclosed") {
           const areaEntities = getAggregateEntity(Helper.magicAreasDevices[area.name], domains, deviceClasses).map(e => e.entity_id).filter(Boolean)
-  
+
           for (const areaEntity of areaEntities) {
             areaCards.push({
               type: "tile",

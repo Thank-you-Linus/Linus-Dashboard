@@ -65,7 +65,7 @@ export function getAggregateEntity(device: MagicAreaRegistryEntry, domains: stri
 
         if (MAGIC_AREAS_AGGREGATE_DOMAINS.includes(domain)) {
             for (const deviceClass of Array.isArray(deviceClasses) ? deviceClasses : [deviceClasses]) {
-                aggregateKeys.push(device.entities[`aggregate_${deviceClass}` as 'aggregate_motion'])
+                aggregateKeys.push(device?.entities[`aggregate_${deviceClass}` as 'aggregate_motion'])
             }
 
         }

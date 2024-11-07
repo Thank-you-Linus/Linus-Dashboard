@@ -43,7 +43,7 @@ export const configurationDefaults: StrategyDefaults = {
       showControls: true,
       extraControls: (device: MagicAreaRegistryEntry) => {
         return [
-          new LightControlChip(device.entities.light_control?.entity_id).getChip(),
+          new LightControlChip(device?.entities.light_control?.entity_id).getChip(),
           new SettingsChip({ tap_action: new LightSettings(device).getPopup() }).getChip()
         ]
       },

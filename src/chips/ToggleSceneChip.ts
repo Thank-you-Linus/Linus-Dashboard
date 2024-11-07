@@ -19,14 +19,14 @@ class ToggleSceneChip extends AbstractChip {
   getDefaultConfig(device: MagicAreaRegistryEntry): TemplateChipConfig {
     return {
       type: "template",
-      entity: device.entities.light_control?.entity_id,
+      entity: device?.entities.light_control?.entity_id,
       icon: "mdi:recycle-variant",
       // icon_color: "{% if is_state(config.entity, 'on') %}green{% else %}red{% endif %}",
       tap_action: {
         action: "call-service",
         service: `${DOMAIN}.area_scene_toggle`,
         data: {
-          area: device.name,
+          area: device?.name,
         }
       },
       hold_action: {

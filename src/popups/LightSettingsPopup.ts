@@ -15,9 +15,9 @@ class LightSettings extends AbstractPopup {
 
   getDefaultConfig(device: MagicAreaRegistryEntry): PopupActionConfig {
 
-    const { aggregate_illuminance, adaptive_lighting_range, minimum_brightness, maximum_brightness, maximum_lighting_level } = device.entities
+    const { aggregate_illuminance, adaptive_lighting_range, minimum_brightness, maximum_brightness, maximum_lighting_level } = device?.entities ?? {}
 
-    const device_slug = slugify(device.name)
+    const device_slug = slugify(device?.name ?? "")
 
     const OPTIONS_ADAPTIVE_LIGHTING_RANGE = {
       "": 1,
@@ -27,7 +27,7 @@ class LightSettings extends AbstractPopup {
       "Extra large": 100,
     } as Record<string, number>
 
-    const adaptive_lighting_range_state = Helper.getEntityState(adaptive_lighting_range?.entity_id).state
+    const adaptive_lighting_range_state = Helper.getEntityState(adaptive_lighting_range?.entity_id)?.state
 
     return {
       action: "fire-dom-event",
@@ -93,7 +93,7 @@ class LightSettings extends AbstractPopup {
                       action: "call-service",
                       service: `${DOMAIN}.area_lux_for_lighting_max`,
                       data: {
-                        area: device.name
+                        area: device?.name
                       }
                     },
                   },

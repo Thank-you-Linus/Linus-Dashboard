@@ -1184,13 +1184,11 @@ class AreaCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractCard {
         return {
             type: "custom:mushroom-light-card",
             entity: all_lights?.entity_id,
-            fill_container: true,
             show_brightness_control: true,
             icon_type: "none",
             primary_info: "none",
             secondary_info: "none",
             use_light_color: true,
-            layout: "horizontal",
             card_mod: { style: this.getLightCardModStyle() }
         };
     }
@@ -1220,9 +1218,7 @@ class AreaCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractCard {
         return `
       :host {
         background: #1f1f1f;
-        --mush-icon-size: 74px;
         height: 66px;
-        margin-left: -26px !important;
       }
       mushroom-badge-icon {
         left: 178px;
@@ -1232,6 +1228,10 @@ class AreaCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractCard {
         box-shadow: none!important;
         border: none;
       }
+      ha-state-icon {
+        --icon-symbol-size: 30px;
+      }
+
     `;
     }
     getChipsCardModStyle() {
@@ -1240,25 +1240,48 @@ class AreaCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractCard {
         --chip-box-shadow: none;
         --chip-spacing: 0px;
         width: -webkit-fill-available;
-        position: absolute;
-        top: 16px;
-        right: 8px;
-      }
-      .chip-container {
-        position: absolute;
-        right: 0px;
       }
     `;
     }
     getLightCardModStyle() {
         return `
-      :host {
-        --mush-control-height: 1rem;
-      }
       ha-card {
         box-shadow: none!important;
         border: none;
       }
+
+      #TODO: Fix this
+      mushroom-light-brightness-control$:
+        mushroom-slider$: |
+          .slider {
+            width: 16px !important;
+            height: 16px !important;
+          }
+      mushroom-light-color-control$:
+        mushroom-slider$: |
+          .slider {
+            width: 16px !important;
+            height: 16px !important;
+          }
+      mushroom-light-color-temp-control$:
+        mushroom-slider$: |
+          .slider {
+            width: 16px !important;
+            height: 16px !important;
+          }
+      .: |
+        mushroom-light-brightness-control {
+          height: 16px;
+        }
+        mushroom-light-color-control {
+          height: 16px;
+        }
+        mushroom-light-color-temp-control {
+          height: 16px;
+        }
+      }
+
+
     `;
     }
 }
@@ -6413,6 +6436,14 @@ class AbstractView {
         return viewCards;
     }
     /**
+     * Create the cards to include in the view.
+     *
+     * @return {Promise<(StackCardConfig | TitleCardConfig)[]>} An array of card objects.
+     */
+    async createSectionCards() {
+        return [];
+    }
+    /**
      * Get a view object.
      *
      * The view includes the cards which are created by method createViewCards().
@@ -6423,6 +6454,7 @@ class AbstractView {
         return {
             ...this.config,
             cards: await this.createViewCards(),
+            sections: await this.createSectionCards(),
         };
     }
     /**
@@ -6860,6 +6892,7 @@ class HomeView extends _AbstractView__WEBPACK_IMPORTED_MODULE_1__.AbstractView {
         _HomeView_defaultConfig.set(this, {
             title: "Home",
             icon: "mdi:home-assistant",
+            type: "sections",
             path: "home",
             subview: false,
         });
@@ -6872,16 +6905,29 @@ class HomeView extends _AbstractView__WEBPACK_IMPORTED_MODULE_1__.AbstractView {
      * @override
      */
     async createViewCards() {
+        return [];
+    }
+    /**
+     * Create the cards to include in the view.
+     *
+     * @return {Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig)[]>} Promise a View Card array.
+     * @override
+     */
+    async createSectionCards() {
         return await Promise.all([
             __classPrivateFieldGet(this, _HomeView_instances, "m", _HomeView_createChips).call(this),
             __classPrivateFieldGet(this, _HomeView_instances, "m", _HomeView_createPersonCards).call(this),
             __classPrivateFieldGet(this, _HomeView_instances, "m", _HomeView_createAreaSection).call(this),
         ]).then(([chips, personCards, areaCards]) => {
             const options = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions;
-            const homeViewCards = [];
+            const firstSection = {
+                type: "grid",
+                column_span: 1,
+                cards: []
+            };
             if (chips.length) {
                 // TODO: Create the Chip card at this.#createChips()
-                homeViewCards.push({
+                firstSection.cards.push({
                     type: "custom:mushroom-chips-card",
                     alignment: "center",
                     chips: chips,
@@ -6889,14 +6935,14 @@ class HomeView extends _AbstractView__WEBPACK_IMPORTED_MODULE_1__.AbstractView {
             }
             if (personCards.length) {
                 // TODO: Create the stack at this.#createPersonCards()
-                homeViewCards.push({
+                firstSection.cards.push({
                     type: "horizontal-stack",
                     cards: personCards,
                 });
             }
             if (!_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.home_view.hidden.includes("greeting")) {
                 const tod = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices.global?.entities.time_of_the_day;
-                homeViewCards.push({
+                firstSection.cards.push({
                     type: "custom:mushroom-template-card",
                     primary: `
           {% set tod = states("${tod?.entity_id}") %}
@@ -6920,18 +6966,19 @@ class HomeView extends _AbstractView__WEBPACK_IMPORTED_MODULE_1__.AbstractView {
             }
             // Add quick access cards.
             if (options.quick_access_cards) {
-                homeViewCards.push(...options.quick_access_cards);
+                firstSection.cards.push(...options.quick_access_cards);
             }
-            // Add area cards.
-            homeViewCards.push({
-                type: "vertical-stack",
-                cards: areaCards,
-            });
             // Add custom cards.
             if (options.extra_cards) {
-                homeViewCards.push(...options.extra_cards);
+                firstSection.cards.push(...options.extra_cards);
             }
-            return homeViewCards;
+            // Add area cards.
+            const secondSection = {
+                type: "grid",
+                column_span: 1,
+                cards: areaCards,
+            };
+            return [firstSection, secondSection];
         });
     }
 }
@@ -7055,25 +7102,19 @@ async function _HomeView_createAreaSection() {
     const groupedCards = [];
     if (!_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.home_view.hidden.includes("areasTitle")) {
         groupedCards.push({
-            type: "custom:mushroom-title-card",
-            title: `${_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("ui.components.area-picker.area")}s`,
+            type: "heading",
+            heading: `${_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("ui.components.area-picker.area")}s`,
+            heading_style: "title",
         });
     }
     const areasByFloor = (0,_utils__WEBPACK_IMPORTED_MODULE_6__.groupBy)(_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas, (e) => e.floor_id ?? "undisclosed");
     for (const floor of [..._Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.floors, _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.floors.undisclosed]) {
-        let areaCards = [];
         if (!(floor.floor_id in areasByFloor))
             continue;
         groupedCards.push({
-            type: "custom:mushroom-title-card",
-            subtitle: floor.name,
-            card_mod: {
-                style: `
-            ha-card.header {
-              padding-top: 8px;
-            }
-          `,
-            }
+            type: "heading",
+            heading: floor.name,
+            heading_style: "subtitle",
         });
         for (const [i, area] of areasByFloor[floor.floor_id].entries()) {
             let module;
@@ -7097,16 +7138,12 @@ async function _HomeView_createAreaSection() {
                     ..._Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.areas["_"],
                     ..._Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.areas[area.area_id],
                 };
-                areaCards.push(new module.AreaCard(area, options).getCard());
-            }
-            // Horizontally group every two area cards if all cards are created.
-            if (i === areasByFloor[floor.floor_id].length - 1) {
-                for (let i = 0; i < areaCards.length; i += 1) {
-                    groupedCards.push({
-                        type: "vertical-stack",
-                        cards: areaCards.slice(i, i + 1),
-                    });
-                }
+                groupedCards.push({
+                    ...new module.AreaCard(area, options).getCard(),
+                    layout_options: {
+                        grid_columns: 2
+                    }
+                });
             }
         }
     }
@@ -7534,7 +7571,6 @@ class SecurityView {
             path: "security",
             type: "sections",
             icon: "mdi:security",
-            // subview: false,
         };
         /**
          * A card to switch all entities in the view.

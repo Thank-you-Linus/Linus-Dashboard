@@ -26,7 +26,6 @@ abstract class SecurityView {
     path: "security",
     type: "sections",
     icon: "mdi:security",
-    // subview: false,
   };
 
   /**

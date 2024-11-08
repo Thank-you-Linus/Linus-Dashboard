@@ -63,7 +63,7 @@ class AreaCard extends AbstractCard {
     const icon = area.icon || "mdi:home-outline";
 
     return {
-      type: "custom:stack-in-card",
+      type: "vertical-stack",
       cards: [
         this.getMainCard(area, icon, aggregate_temperature, aggregate_battery, area_state),
         this.getChipsCard(area, device, area_state, aggregate_health, aggregate_window, aggregate_door, aggregate_cover, aggregate_climate, all_lights, light_control),

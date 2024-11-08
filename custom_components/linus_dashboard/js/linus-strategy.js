@@ -1142,7 +1142,6 @@ class AreaCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractCard {
         };
     }
     getMainCard(area, icon, aggregate_temperature, aggregate_battery, area_state) {
-        console.log('area ', area);
         return {
             type: "custom:mushroom-template-card",
             primary: area.name,
@@ -5745,7 +5744,7 @@ __webpack_require__.r(__webpack_exports__);
  */
 class SceneSettings extends _AbstractPopup__WEBPACK_IMPORTED_MODULE_2__.AbstractPopup {
     getDefaultConfig(device) {
-        const { scene_morning, scene_daytime, scene_evening, scene_night } = device?.entities;
+        const { scene_morning, scene_daytime, scene_evening, scene_night } = device?.entities ?? {};
         const selectControl = [scene_morning, scene_daytime, scene_evening, scene_night].filter(Boolean);
         return {
             action: "fire-dom-event",

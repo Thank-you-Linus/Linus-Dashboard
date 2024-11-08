@@ -88,7 +88,6 @@ class AreaCard extends AbstractCard {
   }
 
   getMainCard(area: StrategyArea, icon: string, aggregate_temperature: any, aggregate_battery: any, area_state: any): any {
-    console.log('area ', area)
     return {
       type: "custom:mushroom-template-card",
       primary: area.name,

@@ -43,7 +43,7 @@ class AggregateListPopup extends AbstractPopup {
         const entity = Helper.magicAreasDevices[area.slug]?.entities[`aggregate_${aggregate_entity.attributes?.device_class}`]
 
         // Get a card for the area.
-        if (entity && !Helper.strategyOptions.areas[area.slug]?.hidden) {
+        if (entity && !Helper.strategyOptions.areas[area.area_id]?.hidden) {
 
           areaCards.push({
             type: "tile",

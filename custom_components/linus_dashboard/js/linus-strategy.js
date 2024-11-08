@@ -317,7 +317,7 @@ class Helper {
         }
         // Merge custom areas of the strategy options into strategy areas.
         __classPrivateFieldSet(this, _a, _a.areas.map(area => {
-            return { ...area, ...__classPrivateFieldGet(this, _a, "f", _Helper_strategyOptions).areas?.[area.slug] };
+            return { ...area, ...__classPrivateFieldGet(this, _a, "f", _Helper_strategyOptions).areas?.[area.area_id] };
         }), "f", _Helper_areas);
         // Sort strategy areas by order first and then by name.
         __classPrivateFieldGet(this, _a, "f", _Helper_areas).sort((a, b) => {
@@ -942,7 +942,7 @@ class AggregateCard {
             });
             let areaCards = [];
             for (const [i, area] of areasByFloor[floor.floor_id].entries()) {
-                if (_Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.strategyOptions.areas[area.slug]?.hidden)
+                if (_Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.strategyOptions.areas[area.area_id]?.hidden)
                     continue;
                 if (area.slug !== "undisclosed") {
                     const areaEntities = (0,_utils__WEBPACK_IMPORTED_MODULE_0__.getAggregateEntity)(_Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.magicAreasDevices[area.slug], domains, deviceClasses).map(e => e.entity_id).filter(Boolean);
@@ -5004,7 +5004,7 @@ class AggregateListPopup extends _AbstractPopup__WEBPACK_IMPORTED_MODULE_2__.Abs
             for (const [i, area] of areasByFloor[floor.floor_id].entries()) {
                 const entity = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices[area.slug]?.entities[`aggregate_${aggregate_entity.attributes?.device_class}`];
                 // Get a card for the area.
-                if (entity && !_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.areas[area.slug]?.hidden) {
+                if (entity && !_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.areas[area.area_id]?.hidden) {
                     areaCards.push({
                         type: "tile",
                         entity: entity?.entity_id,
@@ -6929,7 +6929,7 @@ async function _HomeView_createChips() {
     // TODO: Get domains from config.
     const exposedChips = ["light", "fan", "cover", "switch", "climate", "safety", "motion", "door", "window"];
     // Create a list of area-ids, used for switching all devices via chips
-    const areaIds = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas.map(area => area.slug ?? "");
+    const areaIds = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas.map(area => area.area_id ?? "");
     let chipModule;
     // Weather chip.
     const weatherEntityId = chipOptions?.weather_entity ?? _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.entities.find((entity) => entity.entity_id.startsWith("weather.") && entity.disabled_by === null && entity.hidden_by === null)?.entity_id;
@@ -7049,7 +7049,7 @@ async function _HomeView_createAreaSection() {
         });
         for (const [i, area] of areasByFloor[floor.floor_id].entries()) {
             let module;
-            let moduleName = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.areas[area.slug]?.type ??
+            let moduleName = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.areas[area.area_id]?.type ??
                 _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.areas["_"]?.type ??
                 "default";
             // Load module by type in strategy options.
@@ -7064,10 +7064,10 @@ async function _HomeView_createAreaSection() {
                 }
             }
             // Get a card for the area.
-            if (!_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.areas[area.slug]?.hidden) {
+            if (!_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.areas[area.area_id]?.hidden) {
                 let options = {
                     ..._Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.areas["_"],
-                    ..._Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.areas[area.slug],
+                    ..._Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.areas[area.area_id],
                 };
                 groupedCards.push({
                     ...new module.AreaCard(area, options).getCard(),

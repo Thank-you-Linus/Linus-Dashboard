@@ -97,7 +97,7 @@ class AggregateCard {
 
       for (const [i, area] of areasByFloor[floor.floor_id].entries()) {
 
-        if (Helper.strategyOptions.areas[area.slug]?.hidden) continue
+        if (Helper.strategyOptions.areas[area.area_id]?.hidden) continue
 
         if (area.slug !== "undisclosed") {
           const areaEntities = getAggregateEntity(Helper.magicAreasDevices[area.slug], domains, deviceClasses).map(e => e.entity_id).filter(Boolean)

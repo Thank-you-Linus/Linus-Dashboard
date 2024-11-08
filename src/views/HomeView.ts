@@ -5,7 +5,7 @@ import { LovelaceChipConfig } from "../types/lovelace-mushroom/utils/lovelace/ch
 import { ChipsCardConfig } from "../types/lovelace-mushroom/cards/chips-card";
 import { AreaCardConfig, StackCardConfig } from "../types/homeassistant/lovelace/cards/types";
 import { TemplateCardConfig } from "../types/lovelace-mushroom/cards/template-card-config";
-import { ActionConfig } from "../types/homeassistant/data/lovelace";
+import { ActionConfig, LovelaceSectionConfig } from "../types/homeassistant/data/lovelace";
 import { TitleCardConfig } from "../types/lovelace-mushroom/cards/title-card-config";
 import { PersonCardConfig } from "../types/lovelace-mushroom/cards/person-card-config";
 import { SettingsChip } from "../chips/SettingsChip";
@@ -36,6 +36,7 @@ class HomeView extends AbstractView {
   #defaultConfig: views.ViewConfig = {
     title: "Home",
     icon: "mdi:home-assistant",
+    type: "sections",
     path: "home",
     subview: false,
   };
@@ -58,17 +59,31 @@ class HomeView extends AbstractView {
    * @override
    */
   async createViewCards(): Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig)[]> {
+    return []
+  }
+
+  /**
+   * Create the cards to include in the view.
+   *
+   * @return {Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig)[]>} Promise a View Card array.
+   * @override
+   */
+  async createSectionCards(): Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig)[]> {
     return await Promise.all([
       this.#createChips(),
       this.#createPersonCards(),
       this.#createAreaSection(),
     ]).then(([chips, personCards, areaCards]) => {
       const options = Helper.strategyOptions;
-      const homeViewCards = [];
+      const firstSection: LovelaceSectionConfig = {
+        type: "grid",
+        column_span: 1,
+        cards: []
+      };
 
       if (chips.length) {
         // TODO: Create the Chip card at this.#createChips()
-        homeViewCards.push({
+        firstSection.cards.push({
           type: "custom:mushroom-chips-card",
           alignment: "center",
           chips: chips,
@@ -77,7 +92,7 @@ class HomeView extends AbstractView {
 
       if (personCards.length) {
         // TODO: Create the stack at this.#createPersonCards()
-        homeViewCards.push({
+        firstSection.cards.push({
           type: "horizontal-stack",
           cards: personCards,
         } as StackCardConfig);
@@ -86,7 +101,7 @@ class HomeView extends AbstractView {
       if (!Helper.strategyOptions.home_view.hidden.includes("greeting")) {
         const tod = Helper.magicAreasDevices.global?.entities.time_of_the_day;
 
-        homeViewCards.push({
+        firstSection.cards.push({
           type: "custom:mushroom-template-card",
           primary: `
           {% set tod = states("${tod?.entity_id}") %}
@@ -112,21 +127,22 @@ class HomeView extends AbstractView {
 
       // Add quick access cards.
       if (options.quick_access_cards) {
-        homeViewCards.push(...options.quick_access_cards);
+        firstSection.cards.push(...options.quick_access_cards);
       }
-
-      // Add area cards.
-      homeViewCards.push({
-        type: "vertical-stack",
-        cards: areaCards,
-      } as StackCardConfig);
 
       // Add custom cards.
       if (options.extra_cards) {
-        homeViewCards.push(...options.extra_cards);
+        firstSection.cards.push(...options.extra_cards);
       }
 
-      return homeViewCards;
+      // Add area cards.
+      const secondSection: LovelaceSectionConfig = {
+        type: "grid",
+        column_span: 1,
+        cards: areaCards,
+      };
+
+      return [firstSection, secondSection];
     });
   }
 
@@ -285,31 +301,27 @@ class HomeView extends AbstractView {
     const groupedCards: (TitleCardConfig | StackCardConfig)[] = [];
 
     if (!Helper.strategyOptions.home_view.hidden.includes("areasTitle")) {
-      groupedCards.push({
-        type: "custom:mushroom-title-card",
-        title: `${Helper.localize("ui.components.area-picker.area")}s`,
-      },
+      groupedCards.push(
+        {
+          type: "heading",
+          heading: `${Helper.localize("ui.components.area-picker.area")}s`,
+          heading_style: "title",
+        },
       );
     }
 
     const areasByFloor = groupBy(Helper.areas, (e) => e.floor_id ?? "undisclosed");
 
     for (const floor of [...Helper.floors, Helper.strategyOptions.floors.undisclosed]) {
-
-      let areaCards: (TemplateCardConfig | AreaCardConfig)[] = [];
       if (!(floor.floor_id in areasByFloor)) continue
 
-      groupedCards.push({
-        type: "custom:mushroom-title-card",
-        subtitle: floor.name,
-        card_mod: {
-          style: `
-            ha-card.header {
-              padding-top: 8px;
-            }
-          `,
+      groupedCards.push(
+        {
+          type: "heading",
+          heading: floor.name,
+          heading_style: "subtitle",
         }
-      });
+      );
 
       for (const [i, area] of areasByFloor[floor.floor_id].entries()) {
 
@@ -340,17 +352,12 @@ class HomeView extends AbstractView {
             ...Helper.strategyOptions.areas[area.area_id],
           };
 
-          areaCards.push(new module.AreaCard(area, options).getCard());
-        }
-
-        // Horizontally group every two area cards if all cards are created.
-        if (i === areasByFloor[floor.floor_id].length - 1) {
-          for (let i = 0; i < areaCards.length; i += 1) {
-            groupedCards.push({
-              type: "vertical-stack",
-              cards: areaCards.slice(i, i + 1),
-            } as StackCardConfig);
-          }
+          groupedCards.push({
+            ...new module.AreaCard(area, options).getCard(),
+            layout_options: {
+              grid_columns: 2
+            }
+          });
         }
       }
     }

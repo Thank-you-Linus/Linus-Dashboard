@@ -2,7 +2,7 @@ import { MAGIC_AREAS_DOMAINS } from './../variables';
 import { Helper } from "../Helper";
 import { ControllerCard } from "../cards/ControllerCard";
 import { StackCardConfig } from "../types/homeassistant/lovelace/cards/types";
-import { LovelaceCardConfig, LovelaceViewConfig } from "../types/homeassistant/data/lovelace";
+import { LovelaceCardConfig, LovelaceSectionConfig, LovelaceViewConfig } from "../types/homeassistant/data/lovelace";
 import { cards } from "../types/strategy/cards";
 import { TitleCardConfig } from "../types/lovelace-mushroom/cards/title-card-config";
 import { HassServiceTarget } from "home-assistant-js-websocket";
@@ -178,6 +178,17 @@ abstract class AbstractView {
     return viewCards;
   }
 
+
+  /**
+   * Create the cards to include in the view.
+   *
+   * @return {Promise<(StackCardConfig | TitleCardConfig)[]>} An array of card objects.
+   */
+  async createSectionCards(): Promise<(StackCardConfig | TitleCardConfig)[]> {
+
+    return [];
+  }
+
   /**
    * Get a view object.
    *
@@ -185,10 +196,11 @@ abstract class AbstractView {
    *
    * @returns {Promise<LovelaceViewConfig>} The view object.
    */
-  async getView(): Promise<LovelaceViewConfig> {
+  async getView(): Promise<LovelaceViewConfig | LovelaceSectionConfig> {
     return {
       ...this.config,
       cards: await this.createViewCards(),
+      sections: await this.createSectionCards(),
     };
   }
 

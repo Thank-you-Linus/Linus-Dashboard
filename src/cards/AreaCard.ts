@@ -135,13 +135,11 @@ class AreaCard extends AbstractCard {
     return {
       type: "custom:mushroom-light-card",
       entity: all_lights?.entity_id,
-      fill_container: true,
       show_brightness_control: true,
       icon_type: "none",
       primary_info: "none",
       secondary_info: "none",
       use_light_color: true,
-      layout: "horizontal",
       card_mod: { style: this.getLightCardModStyle() }
     };
   }
@@ -174,9 +172,7 @@ class AreaCard extends AbstractCard {
     return `
       :host {
         background: #1f1f1f;
-        --mush-icon-size: 74px;
         height: 66px;
-        margin-left: -26px !important;
       }
       mushroom-badge-icon {
         left: 178px;
@@ -186,6 +182,10 @@ class AreaCard extends AbstractCard {
         box-shadow: none!important;
         border: none;
       }
+      ha-state-icon {
+        --icon-symbol-size: 30px;
+      }
+
     `;
   }
 
@@ -195,26 +195,49 @@ class AreaCard extends AbstractCard {
         --chip-box-shadow: none;
         --chip-spacing: 0px;
         width: -webkit-fill-available;
-        position: absolute;
-        top: 16px;
-        right: 8px;
-      }
-      .chip-container {
-        position: absolute;
-        right: 0px;
       }
     `;
   }
 
   getLightCardModStyle(): string {
     return `
-      :host {
-        --mush-control-height: 1rem;
-      }
       ha-card {
         box-shadow: none!important;
         border: none;
       }
+
+      #TODO: Fix this
+      mushroom-light-brightness-control$:
+        mushroom-slider$: |
+          .slider {
+            width: 16px !important;
+            height: 16px !important;
+          }
+      mushroom-light-color-control$:
+        mushroom-slider$: |
+          .slider {
+            width: 16px !important;
+            height: 16px !important;
+          }
+      mushroom-light-color-temp-control$:
+        mushroom-slider$: |
+          .slider {
+            width: 16px !important;
+            height: 16px !important;
+          }
+      .: |
+        mushroom-light-brightness-control {
+          height: 16px;
+        }
+        mushroom-light-color-control {
+          height: 16px;
+        }
+        mushroom-light-color-temp-control {
+          height: 16px;
+        }
+      }
+
+
     `;
   }
 }

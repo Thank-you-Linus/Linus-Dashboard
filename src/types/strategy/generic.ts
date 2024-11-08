@@ -4,12 +4,12 @@ import {
   LovelaceConfig,
   LovelaceViewConfig
 } from "../homeassistant/data/lovelace";
-import {HomeAssistant} from "../homeassistant/types";
-import {AreaRegistryEntry} from "../homeassistant/data/area_registry";
-import {cards} from "./cards";
-import {EntityRegistryEntry} from "../homeassistant/data/entity_registry";
-import {LovelaceChipConfig} from "../lovelace-mushroom/utils/lovelace/chip/types";
-import {HassServiceTarget} from "home-assistant-js-websocket";
+import { HomeAssistant } from "../homeassistant/types";
+import { AreaRegistryEntry } from "../homeassistant/data/area_registry";
+import { cards } from "./cards";
+import { EntityRegistryEntry } from "../homeassistant/data/entity_registry";
+import { LovelaceChipConfig } from "../lovelace-mushroom/utils/lovelace/chip/types";
+import { HassServiceTarget } from "home-assistant-js-websocket";
 import { FloorRegistryEntry } from "../homeassistant/data/floor_registry";
 
 export namespace generic {
@@ -150,6 +150,7 @@ export namespace generic {
    * @property {string} [type=default] The type of area card.
    */
   export interface StrategyArea extends AreaRegistryEntry {
+    slug: string;
     order?: number;
     hidden?: boolean;
     extra_cards?: LovelaceCardConfig[];

@@ -13,6 +13,7 @@ import { MagicAreaRegistryEntry } from "./types/homeassistant/data/device_regist
 export const configurationDefaults: StrategyDefaults = {
   areas: {
     undisclosed: {
+      slug: "undisclosed",
       aliases: [],
       area_id: "undisclosed",
       name: "Non assigné",

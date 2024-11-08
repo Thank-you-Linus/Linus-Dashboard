@@ -107,7 +107,7 @@ class MushroomStrategy extends HTMLTemplateElement {
 
     // Set the target for controller cards to the current area.
     let target: HassServiceTarget = {
-      area_id: [area.area_id],
+      area_id: [area.slug],
     };
 
     // Create cards for each domain.
@@ -128,7 +128,7 @@ class MushroomStrategy extends HTMLTemplateElement {
             Helper.strategyOptions.domains[domain ?? "_"].hide_config_entities
             || Helper.strategyOptions.domains["_"].hide_config_entities;
 
-          const magicAreasDevice = Helper.magicAreasDevices[area.area_id];
+          const magicAreasDevice = Helper.magicAreasDevices[area.slug];
           const magicAreasKey = domain === "light" ? 'all_lights' : `${domain}_group`;
 
           // Set the target for controller cards to linus aggregate entity if exist.

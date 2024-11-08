@@ -1137,7 +1137,7 @@ class AreaCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractCard {
             icon_color: "grey",
             fill_container: true,
             layout: "horizontal",
-            tap_action: { action: "navigate", navigation_path: area.area_id },
+            tap_action: { action: "navigate", navigation_path: area.slug },
             card_mod: { style: this.getCardModStyle() }
         };
     }
@@ -1168,7 +1168,7 @@ class AreaCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractCard {
                 this.getConditionalChip(aggregate_door?.entity_id, "on", new _chips_LinusAggregateChip__WEBPACK_IMPORTED_MODULE_5__.LinusAggregateChip(device, "door").getChip()),
                 this.getConditionalChip(aggregate_cover?.entity_id, "on", new _chips_LinusAggregateChip__WEBPACK_IMPORTED_MODULE_5__.LinusAggregateChip(device, "cover").getChip()),
                 this.getConditionalChip(aggregate_climate?.entity_id, "unavailable", new _chips_LinusClimateChip__WEBPACK_IMPORTED_MODULE_4__.LinusClimateChip(device).getChip()),
-                this.getConditionalChip(all_lights?.entity_id, "unavailable", new _chips_LinusLightChip__WEBPACK_IMPORTED_MODULE_3__.LinusLightChip(device, area.area_id).getChip()),
+                this.getConditionalChip(all_lights?.entity_id, "unavailable", new _chips_LinusLightChip__WEBPACK_IMPORTED_MODULE_3__.LinusLightChip(device, area.slug).getChip()),
                 this.getConditionalChip(all_lights?.entity_id, "unavailable", new _chips_LightControlChip__WEBPACK_IMPORTED_MODULE_2__.LightControlChip(light_control?.entity_id).getChip())
             ].filter(Boolean),
             card_mod: { style: this.getChipsCardModStyle() }
@@ -1741,68 +1741,6 @@ class FanCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractCard {
     }
 }
 _FanCard_defaultConfig = new WeakMap();
-
-
-
-/***/ }),
-
-/***/ "./src/cards/HaAreaCard.ts":
-/*!*********************************!*\
-  !*** ./src/cards/HaAreaCard.ts ***!
-  \*********************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   AreaCard: () => (/* binding */ AreaCard)
-/* harmony export */ });
-/* harmony import */ var _AbstractCard__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./AbstractCard */ "./src/cards/AbstractCard.ts");
-var __classPrivateFieldGet = (undefined && undefined.__classPrivateFieldGet) || function (receiver, state, kind, f) {
-    if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a getter");
-    if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
-    return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
-};
-var _AreaCard_defaultConfig;
-
-// noinspection JSUnusedGlobalSymbols Class is dynamically imported.
-/**
- * HA Area Card Class
- *
- * Used to create a card for an entity of the area domain using the built-in type 'area'.
- *
- * @class
- * @extends AbstractCard
- */
-class AreaCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractCard {
-    /**
-     * Class constructor.
-     *
-     * @param {AreaRegistryEntry} area The area entity to create a card for.
-     * @param {cards.AreaCardOptions} [options={}] Options for the card.
-     * @throws {Error} If the Helper module isn't initialized.
-     */
-    constructor(area, options = {}) {
-        super(area);
-        /**
-         * Default configuration of the card.
-         *
-         * @type {AreaCardConfig}
-         * @private
-         */
-        _AreaCard_defaultConfig.set(this, {
-            type: "area",
-            area: "",
-        });
-        // Initialize the default configuration.
-        __classPrivateFieldGet(this, _AreaCard_defaultConfig, "f").area = area.area_id;
-        __classPrivateFieldGet(this, _AreaCard_defaultConfig, "f").navigation_path = __classPrivateFieldGet(this, _AreaCard_defaultConfig, "f").area;
-        // Enforce the card type.
-        delete options.type;
-        this.config = Object.assign(this.config, __classPrivateFieldGet(this, _AreaCard_defaultConfig, "f"), options);
-    }
-}
-_AreaCard_defaultConfig = new WeakMap();
 
 
 
@@ -4675,7 +4613,7 @@ class MushroomStrategy extends HTMLTemplateElement {
             if (!area.hidden) {
                 views.push({
                     title: area.name,
-                    path: area.area_id ?? area.name,
+                    path: area.slug ?? area.name,
                     subview: true,
                     strategy: {
                         type: "custom:linus-strategy",
@@ -7919,14 +7857,6 @@ var map = {
 	],
 	"./FanCard.ts": [
 		"./src/cards/FanCard.ts",
-		"main"
-	],
-	"./HaAreaCard": [
-		"./src/cards/HaAreaCard.ts",
-		"main"
-	],
-	"./HaAreaCard.ts": [
-		"./src/cards/HaAreaCard.ts",
 		"main"
 	],
 	"./LightCard": [

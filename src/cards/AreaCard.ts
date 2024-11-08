@@ -82,7 +82,7 @@ class AreaCard extends AbstractCard {
       icon_color: "grey",
       fill_container: true,
       layout: "horizontal",
-      tap_action: { action: "navigate", navigation_path: area.area_id },
+      tap_action: { action: "navigate", navigation_path: area.slug },
       card_mod: { style: this.getCardModStyle() }
     };
   }
@@ -115,7 +115,7 @@ class AreaCard extends AbstractCard {
         this.getConditionalChip(aggregate_door?.entity_id, "on", new LinusAggregateChip(device, "door").getChip()),
         this.getConditionalChip(aggregate_cover?.entity_id, "on", new LinusAggregateChip(device, "cover").getChip()),
         this.getConditionalChip(aggregate_climate?.entity_id, "unavailable", new LinusClimateChip(device).getChip()),
-        this.getConditionalChip(all_lights?.entity_id, "unavailable", new LinusLightChip(device, area.area_id).getChip()),
+        this.getConditionalChip(all_lights?.entity_id, "unavailable", new LinusLightChip(device, area.slug).getChip()),
         this.getConditionalChip(all_lights?.entity_id, "unavailable", new LightControlChip(light_control?.entity_id).getChip())
       ].filter(Boolean),
       card_mod: { style: this.getChipsCardModStyle() }

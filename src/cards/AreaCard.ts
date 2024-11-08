@@ -1,6 +1,5 @@
 import { AbstractCard } from "./AbstractCard";
 import { cards } from "../types/strategy/cards";
-import { AreaRegistryEntry } from "../types/homeassistant/data/area_registry";
 import { TemplateCardConfig } from "../types/lovelace-mushroom/cards/template-card-config";
 import { Helper } from "../Helper";
 import { LightControlChip } from "../chips/LightControlChip";
@@ -9,6 +8,9 @@ import { LinusClimateChip } from "../chips/LinusClimateChip";
 import { LinusAggregateChip } from "../chips/LinusAggregateChip";
 import { AreaStateChip } from "../chips/AreaStateChip";
 import { MagicAreaRegistryEntry } from "../types/homeassistant/data/device_registry";
+import { generic } from "../types/strategy/generic";
+import StrategyArea = generic.StrategyArea;
+import { slugify } from "../utils";
 
 // Utility function to generate badge icon and color
 const getBadgeIcon = (entityId: string) => `
@@ -47,14 +49,14 @@ const getBadgeColor = (entityId: string) => `
 `;
 
 class AreaCard extends AbstractCard {
-  constructor(area: AreaRegistryEntry, options: cards.TemplateCardOptions = {}) {
+  constructor(area: StrategyArea, options: cards.TemplateCardOptions = {}) {
     super(area);
-    const device = Helper.magicAreasDevices[area.area_id];
+    const device = Helper.magicAreasDevices[area.slug];
     const defaultConfig = this.getDefaultConfig(area, device);
     this.config = { ...this.config, ...defaultConfig, ...options };
   }
 
-  getDefaultConfig(area: AreaRegistryEntry, device: MagicAreaRegistryEntry): TemplateCardConfig {
+  getDefaultConfig(area: StrategyArea, device: MagicAreaRegistryEntry): TemplateCardConfig {
     if (area.area_id === "undisclosed") {
       return this.getUndisclosedAreaConfig(area);
     }
@@ -72,7 +74,7 @@ class AreaCard extends AbstractCard {
     };
   }
 
-  getUndisclosedAreaConfig(area: AreaRegistryEntry): TemplateCardConfig {
+  getUndisclosedAreaConfig(area: StrategyArea): TemplateCardConfig {
     return {
       type: "custom:mushroom-template-card",
       primary: area.name,
@@ -85,7 +87,8 @@ class AreaCard extends AbstractCard {
     };
   }
 
-  getMainCard(area: AreaRegistryEntry, icon: string, aggregate_temperature: any, aggregate_battery: any, area_state: any): any {
+  getMainCard(area: StrategyArea, icon: string, aggregate_temperature: any, aggregate_battery: any, area_state: any): any {
+    console.log('area ', area)
     return {
       type: "custom:mushroom-template-card",
       primary: area.name,
@@ -96,12 +99,12 @@ class AreaCard extends AbstractCard {
       layout: "horizontal",
       badge_icon: getBadgeIcon(aggregate_battery?.entity_id),
       badge_color: getBadgeColor(aggregate_battery?.entity_id),
-      tap_action: { action: "navigate", navigation_path: area.area_id },
+      tap_action: { action: "navigate", navigation_path: slugify(area.name) },
       card_mod: { style: this.getCardModStyle() }
     };
   }
 
-  getChipsCard(area: AreaRegistryEntry, device: MagicAreaRegistryEntry, area_state: any, aggregate_health: any, aggregate_window: any, aggregate_door: any, aggregate_cover: any, aggregate_climate: any, all_lights: any, light_control: any): any {
+  getChipsCard(area: StrategyArea, device: MagicAreaRegistryEntry, area_state: any, aggregate_health: any, aggregate_window: any, aggregate_door: any, aggregate_cover: any, aggregate_climate: any, all_lights: any, light_control: any): any {
     return {
       type: "custom:mushroom-chips-card",
       alignment: "end",

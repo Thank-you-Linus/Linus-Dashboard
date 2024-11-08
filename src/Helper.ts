@@ -222,13 +222,17 @@ class Helper {
     try {
       // Query the registries of Home Assistant.
 
-      // noinspection ES6MissingAwait False positive? https://youtrack.jetbrains.com/issue/WEB-63746
-      [Helper.#entities, Helper.#devices, Helper.#areas, Helper.#floors] = await Promise.all([
+      const [entities, devices, areas, floors] = await Promise.all([
         info.hass.callWS({ type: "config/entity_registry/list" }) as Promise<EntityRegistryEntry[]>,
         info.hass.callWS({ type: "config/device_registry/list" }) as Promise<DeviceRegistryEntry[]>,
         info.hass.callWS({ type: "config/area_registry/list" }) as Promise<AreaRegistryEntry[]>,
         info.hass.callWS({ type: "config/floor_registry/list" }) as Promise<FloorRegistryEntry[]>,
       ]);
+
+      Helper.#entities = entities;
+      Helper.#devices = devices;
+      Helper.#floors = floors;
+      Helper.#areas = areas.map(area => ({ ...area, slug: slugify(area.name) }));
 
     } catch (e) {
       Helper.logError("An error occurred while querying Home assistant's registries!", e);
@@ -250,7 +254,7 @@ class Helper {
 
     // Merge custom areas of the strategy options into strategy areas.
     this.#areas = Helper.areas.map(area => {
-      return { ...area, ...this.#strategyOptions.areas?.[area.area_id] };
+      return { ...area, ...this.#strategyOptions.areas?.[area.slug] };
     });
 
     // Sort strategy areas by order first and then by name.

@@ -290,13 +290,16 @@ class Helper {
         __classPrivateFieldSet(this, _a, __classPrivateFieldGet(this, _a, "f", _Helper_strategyOptions).debug, "f", _Helper_debug);
         try {
             // Query the registries of Home Assistant.
-            // noinspection ES6MissingAwait False positive? https://youtrack.jetbrains.com/issue/WEB-63746
-            [({ set value(_b) { __classPrivateFieldSet(_a, _a, _b, "f", _Helper_entities); } }).value, ({ set value(_b) { __classPrivateFieldSet(_a, _a, _b, "f", _Helper_devices); } }).value, ({ set value(_b) { __classPrivateFieldSet(_a, _a, _b, "f", _Helper_areas); } }).value, ({ set value(_b) { __classPrivateFieldSet(_a, _a, _b, "f", _Helper_floors); } }).value] = await Promise.all([
+            const [entities, devices, areas, floors] = await Promise.all([
                 info.hass.callWS({ type: "config/entity_registry/list" }),
                 info.hass.callWS({ type: "config/device_registry/list" }),
                 info.hass.callWS({ type: "config/area_registry/list" }),
                 info.hass.callWS({ type: "config/floor_registry/list" }),
             ]);
+            __classPrivateFieldSet(_a, _a, entities, "f", _Helper_entities);
+            __classPrivateFieldSet(_a, _a, devices, "f", _Helper_devices);
+            __classPrivateFieldSet(_a, _a, floors, "f", _Helper_floors);
+            __classPrivateFieldSet(_a, _a, areas.map(area => ({ ...area, slug: (0,_utils__WEBPACK_IMPORTED_MODULE_3__.slugify)(area.name) })), "f", _Helper_areas);
         }
         catch (e) {
             _a.logError("An error occurred while querying Home assistant's registries!", e);
@@ -314,7 +317,7 @@ class Helper {
         }
         // Merge custom areas of the strategy options into strategy areas.
         __classPrivateFieldSet(this, _a, _a.areas.map(area => {
-            return { ...area, ...__classPrivateFieldGet(this, _a, "f", _Helper_strategyOptions).areas?.[area.area_id] };
+            return { ...area, ...__classPrivateFieldGet(this, _a, "f", _Helper_strategyOptions).areas?.[area.slug] };
         }), "f", _Helper_areas);
         // Sort strategy areas by order first and then by name.
         __classPrivateFieldGet(this, _a, "f", _Helper_areas).sort((a, b) => {
@@ -939,10 +942,10 @@ class AggregateCard {
             });
             let areaCards = [];
             for (const [i, area] of areasByFloor[floor.floor_id].entries()) {
-                if (_Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.strategyOptions.areas[area.area_id]?.hidden)
+                if (_Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.strategyOptions.areas[area.slug]?.hidden)
                     continue;
-                if (area.area_id !== "undisclosed") {
-                    const areaEntities = (0,_utils__WEBPACK_IMPORTED_MODULE_0__.getAggregateEntity)(_Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.magicAreasDevices[area.area_id], domains, deviceClasses).map(e => e.entity_id).filter(Boolean);
+                if (area.slug !== "undisclosed") {
+                    const areaEntities = (0,_utils__WEBPACK_IMPORTED_MODULE_0__.getAggregateEntity)(_Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.magicAreasDevices[area.slug], domains, deviceClasses).map(e => e.entity_id).filter(Boolean);
                     for (const areaEntity of areaEntities) {
                         areaCards.push({
                             type: "tile",
@@ -1061,6 +1064,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _chips_LinusClimateChip__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../chips/LinusClimateChip */ "./src/chips/LinusClimateChip.ts");
 /* harmony import */ var _chips_LinusAggregateChip__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../chips/LinusAggregateChip */ "./src/chips/LinusAggregateChip.ts");
 /* harmony import */ var _chips_AreaStateChip__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../chips/AreaStateChip */ "./src/chips/AreaStateChip.ts");
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../utils */ "./src/utils.ts");
+
 
 
 
@@ -1105,7 +1110,7 @@ const getBadgeColor = (entityId) => `
 class AreaCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractCard {
     constructor(area, options = {}) {
         super(area);
-        const device = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.magicAreasDevices[area.area_id];
+        const device = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.magicAreasDevices[area.slug];
         const defaultConfig = this.getDefaultConfig(area, device);
         this.config = { ...this.config, ...defaultConfig, ...options };
     }
@@ -1137,6 +1142,7 @@ class AreaCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractCard {
         };
     }
     getMainCard(area, icon, aggregate_temperature, aggregate_battery, area_state) {
+        console.log('area ', area);
         return {
             type: "custom:mushroom-template-card",
             primary: area.name,
@@ -1147,7 +1153,7 @@ class AreaCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractCard {
             layout: "horizontal",
             badge_icon: getBadgeIcon(aggregate_battery?.entity_id),
             badge_color: getBadgeColor(aggregate_battery?.entity_id),
-            tap_action: { action: "navigate", navigation_path: area.area_id },
+            tap_action: { action: "navigate", navigation_path: (0,_utils__WEBPACK_IMPORTED_MODULE_7__.slugify)(area.name) },
             card_mod: { style: this.getCardModStyle() }
         };
     }
@@ -1949,7 +1955,7 @@ __webpack_require__.r(__webpack_exports__);
  */
 class MainAreaCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractCard {
     getDefaultConfig(area) {
-        const device = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.magicAreasDevices[area.area_id];
+        const device = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.magicAreasDevices[area.slug];
         if (!device) {
             return {
                 type: "custom:layout-card",
@@ -2129,7 +2135,7 @@ class MainAreaCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractCa
     /**
      * Class constructor.
      *
-     * @param {AreaRegistryEntry} area The area entity to create a card for.
+     * @param {StrategyArea} area The area entity to create a card for.
      * @param {cards.TemplateCardOptions} [options={}] Options for the card.
      *
      * @throws {Error} If the Helper module isn't initialized.
@@ -4401,6 +4407,7 @@ __webpack_require__.r(__webpack_exports__);
 const configurationDefaults = {
     areas: {
         undisclosed: {
+            slug: "undisclosed",
             aliases: [],
             area_id: "undisclosed",
             name: "Non assigné",
@@ -4704,7 +4711,7 @@ class MushroomStrategy extends HTMLTemplateElement {
             viewCards.push(new _cards_MainAreaCard__WEBPACK_IMPORTED_MODULE_4__.MainAreaCard(area).getCard());
         // Set the target for controller cards to the current area.
         let target = {
-            area_id: [area.area_id],
+            area_id: [area.slug],
         };
         // Create cards for each domain.
         for (const domain of exposedDomainIds) {
@@ -4719,7 +4726,7 @@ class MushroomStrategy extends HTMLTemplateElement {
                     const entities = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getDeviceEntities(area, domain);
                     let configEntityHidden = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain ?? "_"].hide_config_entities
                         || _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains["_"].hide_config_entities;
-                    const magicAreasDevice = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices[area.area_id];
+                    const magicAreasDevice = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices[area.slug];
                     const magicAreasKey = domain === "light" ? 'all_lights' : `${domain}_group`;
                     // Set the target for controller cards to linus aggregate entity if exist.
                     target["entity_id"] = magicAreasDevice?.entities[magicAreasKey]?.entity_id;
@@ -5057,9 +5064,9 @@ class AggregateListPopup extends _AbstractPopup__WEBPACK_IMPORTED_MODULE_2__.Abs
             });
             let areaCards = [];
             for (const [i, area] of areasByFloor[floor.floor_id].entries()) {
-                const entity = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices[area.area_id]?.entities[`aggregate_${aggregate_entity.attributes?.device_class}`];
+                const entity = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices[area.slug]?.entities[`aggregate_${aggregate_entity.attributes?.device_class}`];
                 // Get a card for the area.
-                if (entity && !_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.areas[area.area_id]?.hidden) {
+                if (entity && !_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.areas[area.slug]?.hidden) {
                     areaCards.push({
                         type: "tile",
                         entity: entity?.entity_id,
@@ -6376,7 +6383,7 @@ class AbstractView {
                 const cardModule = await __webpack_require__("./src/cards lazy recursive ^\\.\\/.*$")(`./${className}`);
                 // Set the target for controller cards to the current area.
                 let target = {
-                    area_id: [area.area_id],
+                    area_id: [area.slug],
                 };
                 // Set the target for controller cards to entities without an area.
                 if (area.area_id === "undisclosed") {
@@ -6984,7 +6991,7 @@ async function _HomeView_createChips() {
     // TODO: Get domains from config.
     const exposedChips = ["light", "fan", "cover", "switch", "climate", "safety", "motion", "door", "window"];
     // Create a list of area-ids, used for switching all devices via chips
-    const areaIds = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas.map(area => area.area_id ?? "");
+    const areaIds = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas.map(area => area.slug ?? "");
     let chipModule;
     // Weather chip.
     const weatherEntityId = chipOptions?.weather_entity ?? _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.entities.find((entity) => entity.entity_id.startsWith("weather.") && entity.disabled_by === null && entity.hidden_by === null)?.entity_id;
@@ -7104,7 +7111,7 @@ async function _HomeView_createAreaSection() {
         });
         for (const [i, area] of areasByFloor[floor.floor_id].entries()) {
             let module;
-            let moduleName = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.areas[area.area_id]?.type ??
+            let moduleName = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.areas[area.slug]?.type ??
                 _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.areas["_"]?.type ??
                 "default";
             // Load module by type in strategy options.
@@ -7119,10 +7126,10 @@ async function _HomeView_createAreaSection() {
                 }
             }
             // Get a card for the area.
-            if (!_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.areas[area.area_id]?.hidden) {
+            if (!_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.areas[area.slug]?.hidden) {
                 let options = {
                     ..._Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.areas["_"],
-                    ..._Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.areas[area.area_id],
+                    ..._Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.areas[area.slug],
                 };
                 groupedCards.push({
                     ...new module.AreaCard(area, options).getCard(),

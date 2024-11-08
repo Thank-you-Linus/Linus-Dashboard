@@ -120,7 +120,7 @@ abstract class AbstractView {
 
         // Set the target for controller cards to the current area.
         let target: HassServiceTarget = {
-          area_id: [area.area_id],
+          area_id: [area.slug],
         };
 
         // Set the target for controller cards to entities without an area.

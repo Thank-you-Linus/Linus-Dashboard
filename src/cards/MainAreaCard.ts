@@ -1,8 +1,9 @@
 import { AbstractCard } from "./AbstractCard";
 import { cards } from "../types/strategy/cards";
-import { AreaRegistryEntry } from "../types/homeassistant/data/area_registry";
 import { TemplateCardConfig } from "../types/lovelace-mushroom/cards/template-card-config";
 import { Helper } from "../Helper";
+import { generic } from "../types/strategy/generic";
+import StrategyArea = generic.StrategyArea;
 import { LinusAggregateChip } from "../chips/LinusAggregateChip";
 import { AreaStateChip } from "../chips/AreaStateChip";
 
@@ -19,9 +20,9 @@ import { AreaScenesChips } from "../chips/AreaScenesChips";
  */
 class MainAreaCard extends AbstractCard {
 
-  getDefaultConfig(area: AreaRegistryEntry): TemplateCardConfig {
+  getDefaultConfig(area: StrategyArea): TemplateCardConfig {
 
-    const device = Helper.magicAreasDevices[area.area_id];
+    const device = Helper.magicAreasDevices[area.slug];
 
     if (!device) {
       return {
@@ -218,12 +219,12 @@ class MainAreaCard extends AbstractCard {
   /**
    * Class constructor.
    *
-   * @param {AreaRegistryEntry} area The area entity to create a card for.
+   * @param {StrategyArea} area The area entity to create a card for.
    * @param {cards.TemplateCardOptions} [options={}] Options for the card.
    *
    * @throws {Error} If the Helper module isn't initialized.
    */
-  constructor(area: AreaRegistryEntry, options: cards.TemplateCardOptions = {}) {
+  constructor(area: StrategyArea, options: cards.TemplateCardOptions = {}) {
     super(area);
 
     // Don't override the default card type if default is set in the strategy options.

@@ -14,7 +14,7 @@ class SceneSettings extends AbstractPopup {
 
   getDefaultConfig(device: MagicAreaRegistryEntry): PopupActionConfig {
 
-    const { scene_morning, scene_daytime, scene_evening, scene_night } = device?.entities
+    const { scene_morning, scene_daytime, scene_evening, scene_night } = device?.entities ?? {}
     const selectControl = [scene_morning, scene_daytime, scene_evening, scene_night].filter(Boolean)
 
     return {

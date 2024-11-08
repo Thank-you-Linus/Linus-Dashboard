@@ -13,7 +13,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from custom_components.linus_dashboard import utils
-from custom_components.linus_dashboard.const import URL_PANEL
+from custom_components.linus_dashboard.const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,14 +55,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "require_admin": False,
     }
 
-    hass.data["lovelace"]["dashboards"][URL_PANEL] = LovelaceYAML(
-        hass, URL_PANEL, dashboard_config
+    hass.data["lovelace"]["dashboards"][DOMAIN] = LovelaceYAML(
+        hass, DOMAIN, dashboard_config
     )
 
-    _register_panel(hass, URL_PANEL, "yaml", dashboard_config, False)  # noqa: FBT003
+    _register_panel(hass, DOMAIN, "yaml", dashboard_config, False)  # noqa: FBT003
 
     # Store the entry
-    hass.data[DOMAIN][entry.entry_id] = URL_PANEL
+    hass.data[DOMAIN][entry.entry_id] = DOMAIN
     return True
 
 
@@ -82,7 +82,7 @@ async def register_static_paths_and_resources(
     hass: HomeAssistant, js_file: str
 ) -> None:
     """Register static paths and resources for a given JavaScript file."""
-    js_url = f"/{DOMAIN}/js/{js_file}"
+    js_url = f"/{DOMAIN}_files/js/{js_file}"
     js_path = Path(__file__).parent / f"js/{js_file}"
 
     await hass.http.async_register_static_paths(

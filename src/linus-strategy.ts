@@ -24,7 +24,7 @@ import { MAGIC_AREAS_DOMAINS } from "./variables";
  *     😍 Built-in Views for several standard domains.<br>
  *     🎨 Many options to customize to your needs.<br>
  * <br>
- * Check the [Repository]{@link https://github.com/AalianKhan/mushroom-strategy} for more information.
+ * Check the [Repository]{@link https://github.com/AalianKhan/linus-strategy} for more information.
  */
 class MushroomStrategy extends HTMLTemplateElement {
   /**
@@ -68,7 +68,7 @@ class MushroomStrategy extends HTMLTemplateElement {
           path: area.area_id ?? area.name,
           subview: true,
           strategy: {
-            type: "custom:mushroom-strategy",
+            type: "custom:linus-strategy",
             options: {
               area,
             },
@@ -296,7 +296,7 @@ class MushroomStrategy extends HTMLTemplateElement {
   }
 }
 
-customElements.define("ll-strategy-mushroom-strategy", MushroomStrategy);
+customElements.define("ll-strategy-linus-strategy", MushroomStrategy);
 
 export const version = "v4.0.1";
 console.info(

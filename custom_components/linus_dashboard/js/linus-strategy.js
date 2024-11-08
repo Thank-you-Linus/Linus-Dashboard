@@ -4609,10 +4609,10 @@ const configurationDefaults = {
 
 /***/ }),
 
-/***/ "./src/mushroom-strategy.ts":
-/*!**********************************!*\
-  !*** ./src/mushroom-strategy.ts ***!
-  \**********************************/
+/***/ "./src/linus-strategy.ts":
+/*!*******************************!*\
+  !*** ./src/linus-strategy.ts ***!
+  \*******************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -4643,7 +4643,7 @@ __webpack_require__.r(__webpack_exports__);
  *     😍 Built-in Views for several standard domains.<br>
  *     🎨 Many options to customize to your needs.<br>
  * <br>
- * Check the [Repository]{@link https://github.com/AalianKhan/mushroom-strategy} for more information.
+ * Check the [Repository]{@link https://github.com/AalianKhan/linus-strategy} for more information.
  */
 class MushroomStrategy extends HTMLTemplateElement {
     /**
@@ -4683,7 +4683,7 @@ class MushroomStrategy extends HTMLTemplateElement {
                     path: area.area_id ?? area.name,
                     subview: true,
                     strategy: {
-                        type: "custom:mushroom-strategy",
+                        type: "custom:linus-strategy",
                         options: {
                             area,
                         },
@@ -4864,7 +4864,7 @@ class MushroomStrategy extends HTMLTemplateElement {
         };
     }
 }
-customElements.define("ll-strategy-mushroom-strategy", MushroomStrategy);
+customElements.define("ll-strategy-linus-strategy", MushroomStrategy);
 const version = "v4.0.1";
 console.info("%c Linus Strategy %c ".concat(version, " "), "color: white; background: coral; font-weight: 700;", "color: coral; background: white; font-weight: 700;");
 
@@ -5712,7 +5712,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   LinusSettings: () => (/* binding */ LinusSettings)
 /* harmony export */ });
 /* harmony import */ var _Helper__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../Helper */ "./src/Helper.ts");
-/* harmony import */ var _mushroom_strategy__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../mushroom-strategy */ "./src/mushroom-strategy.ts");
+/* harmony import */ var _linus_strategy__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../linus-strategy */ "./src/linus-strategy.ts");
 /* harmony import */ var _AbstractPopup__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./AbstractPopup */ "./src/popups/AbstractPopup.ts");
 
 
@@ -5763,7 +5763,7 @@ class LinusSettings extends _AbstractPopup__WEBPACK_IMPORTED_MODULE_2__.Abstract
                             },
                             {
                                 type: "markdown",
-                                content: `Linus dashboard est en version ${_mushroom_strategy__WEBPACK_IMPORTED_MODULE_1__.version}.`,
+                                content: `Linus dashboard est en version ${_linus_strategy__WEBPACK_IMPORTED_MODULE_1__.version}.`,
                             },
                         ].filter(Boolean)
                     }
@@ -8455,7 +8455,7 @@ module.exports = webpackAsyncContext;
 /******/ 	// startup
 /******/ 	// Load entry module and return exports
 /******/ 	// This entry module is referenced by other modules so it can't be inlined
-/******/ 	var __webpack_exports__ = __webpack_require__("./src/mushroom-strategy.ts");
+/******/ 	var __webpack_exports__ = __webpack_require__("./src/linus-strategy.ts");
 /******/ 	
 /******/ })()
 ;

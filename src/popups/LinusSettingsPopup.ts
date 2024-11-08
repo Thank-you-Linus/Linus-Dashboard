@@ -1,5 +1,5 @@
 import { Helper } from "../Helper";
-import { version } from "../mushroom-strategy";
+import { version } from "../linus-strategy";
 import { PopupActionConfig } from "../types/homeassistant/data/lovelace";
 import { AbstractPopup } from "./AbstractPopup";
 

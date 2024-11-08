@@ -100,7 +100,7 @@ class AggregateCard {
         if (Helper.strategyOptions.areas[area.area_id]?.hidden) continue
 
         if (area.area_id !== "undisclosed") {
-          const areaEntities = getAggregateEntity(Helper.magicAreasDevices[area.name], domains, deviceClasses).map(e => e.entity_id).filter(Boolean)
+          const areaEntities = getAggregateEntity(Helper.magicAreasDevices[area.area_id], domains, deviceClasses).map(e => e.entity_id).filter(Boolean)
 
           for (const areaEntity of areaEntities) {
             areaCards.push({

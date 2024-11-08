@@ -1126,26 +1126,14 @@ class AreaCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractCard {
     }
     getUndisclosedAreaConfig(area) {
         return {
-            type: "custom:stack-in-card",
-            cards: [
-                {
-                    type: "custom:stack-in-card",
-                    mode: "horizontal",
-                    cards: [
-                        {
-                            type: "custom:mushroom-template-card",
-                            primary: area.name,
-                            icon: "mdi:devices",
-                            icon_color: "grey",
-                            fill_container: true,
-                            layout: "horizontal",
-                            tap_action: { action: "navigate", navigation_path: area.area_id },
-                            card_mod: { style: this.getCardModStyle() }
-                        }
-                    ],
-                    card_mod: { style: this.getCardModStyle() }
-                }
-            ]
+            type: "custom:mushroom-template-card",
+            primary: area.name,
+            icon: "mdi:devices",
+            icon_color: "grey",
+            fill_container: true,
+            layout: "horizontal",
+            tap_action: { action: "navigate", navigation_path: area.area_id },
+            card_mod: { style: this.getCardModStyle() }
         };
     }
     getMainCard(area, icon, aggregate_temperature, aggregate_battery, area_state) {
@@ -6372,18 +6360,16 @@ class AbstractView {
             let floorCards = [];
             if (floor.floor_id !== "undisclosed") {
                 floorCards.push({
-                    type: "custom:mushroom-title-card",
-                    title: floor.name,
-                    card_mod: {
-                        style: `ha-card.header {padding-top: 8px;}`,
-                    }
+                    type: "heading",
+                    heading: floor.name,
+                    heading_style: "title",
                 });
             }
             let areaCards = [];
             // Create cards for each area.
             for (const [i, area] of areasByFloor[floor.floor_id].entries()) {
                 areaCards = [];
-                if (__classPrivateFieldGet(this, _AbstractView_domain, "f") && _variables__WEBPACK_IMPORTED_MODULE_0__.MAGIC_AREAS_DOMAINS.includes(__classPrivateFieldGet(this, _AbstractView_domain, "f")) && area.area_id !== "undisclosed")
+                if (__classPrivateFieldGet(this, _AbstractView_domain, "f") && !_variables__WEBPACK_IMPORTED_MODULE_0__.MAGIC_AREAS_DOMAINS.includes(__classPrivateFieldGet(this, _AbstractView_domain, "f")) && area.area_id !== "undisclosed")
                     continue;
                 const entities = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.getDeviceEntities(area, __classPrivateFieldGet(this, _AbstractView_domain, "f") ?? "");
                 const className = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.sanitizeClassName(__classPrivateFieldGet(this, _AbstractView_domain, "f") + "Card");

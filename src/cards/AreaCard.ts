@@ -74,26 +74,14 @@ class AreaCard extends AbstractCard {
 
   getUndisclosedAreaConfig(area: AreaRegistryEntry): TemplateCardConfig {
     return {
-      type: "custom:stack-in-card",
-      cards: [
-        {
-          type: "custom:stack-in-card",
-          mode: "horizontal",
-          cards: [
-            {
-              type: "custom:mushroom-template-card",
-              primary: area.name,
-              icon: "mdi:devices",
-              icon_color: "grey",
-              fill_container: true,
-              layout: "horizontal",
-              tap_action: { action: "navigate", navigation_path: area.area_id },
-              card_mod: { style: this.getCardModStyle() }
-            }
-          ],
-          card_mod: { style: this.getCardModStyle() }
-        }
-      ]
+      type: "custom:mushroom-template-card",
+      primary: area.name,
+      icon: "mdi:devices",
+      icon_color: "grey",
+      fill_container: true,
+      layout: "horizontal",
+      tap_action: { action: "navigate", navigation_path: area.area_id },
+      card_mod: { style: this.getCardModStyle() }
     };
   }
 

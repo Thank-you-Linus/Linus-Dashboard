@@ -85,6 +85,7 @@ abstract class AbstractView {
 
     const areasByFloor = groupBy(Helper.areas, (e) => e.floor_id ?? "undisclosed");
 
+
     for (const floor of [...Helper.floors, Helper.strategyOptions.floors.undisclosed]) {
 
       if (this.#domain && MAGIC_AREAS_DOMAINS.includes(this.#domain) && floor.floor_id !== "undisclosed") continue
@@ -94,13 +95,13 @@ abstract class AbstractView {
       let floorCards: (TemplateCardConfig)[] = [];
 
       if (floor.floor_id !== "undisclosed") {
-        floorCards.push({
-          type: "custom:mushroom-title-card",
-          title: floor.name,
-          card_mod: {
-            style: `ha-card.header {padding-top: 8px;}`,
+        floorCards.push(
+          {
+            type: "heading",
+            heading: floor.name,
+            heading_style: "title",
           }
-        });
+        );
       }
 
 
@@ -111,7 +112,7 @@ abstract class AbstractView {
 
         areaCards = [];
 
-        if (this.#domain && MAGIC_AREAS_DOMAINS.includes(this.#domain) && area.area_id !== "undisclosed") continue
+        if (this.#domain && !MAGIC_AREAS_DOMAINS.includes(this.#domain) && area.area_id !== "undisclosed") continue
 
         const entities = Helper.getDeviceEntities(area, this.#domain ?? "");
         const className = Helper.sanitizeClassName(this.#domain + "Card");
@@ -145,7 +146,6 @@ abstract class AbstractView {
           if (entity.entity_category === "config" && configEntityHidden) {
             continue;
           }
-
           swipeCard.push(new cardModule[className](entity, cardOptions).getCard());
         }
         if (swipeCard.length) {

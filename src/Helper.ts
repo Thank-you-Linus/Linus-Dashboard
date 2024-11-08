@@ -626,7 +626,7 @@ class Helper {
    */
   static #areaFilterCallback(
     this: {
-      area: AreaRegistryEntry,
+      area: StrategyArea,
       areaDeviceIds: string[],
       domain: string,
     },

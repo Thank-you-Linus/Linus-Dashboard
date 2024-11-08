@@ -65,7 +65,7 @@ class MushroomStrategy extends HTMLTemplateElement {
       if (!area.hidden) {
         views.push({
           title: area.name,
-          path: area.area_id ?? area.name,
+          path: area.slug ?? area.name,
           subview: true,
           strategy: {
             type: "custom:linus-strategy",

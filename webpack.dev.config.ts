@@ -4,7 +4,7 @@ import path from 'path';
 import webpack from 'webpack';
 
 const config: webpack.Configuration = {
-  entry: "./src/mushroom-strategy.ts",
+  entry: "./src/linus-strategy.ts",
   mode: "development",
   devtool: "source-map",
   output: {

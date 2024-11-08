@@ -164,7 +164,7 @@ class HomeView extends AbstractView {
     // TODO: Get domains from config.
     const exposedChips = ["light", "fan", "cover", "switch", "climate", "safety", "motion", "door", "window"];
     // Create a list of area-ids, used for switching all devices via chips
-    const areaIds = Helper.areas.map(area => area.slug ?? "");
+    const areaIds = Helper.areas.map(area => area.area_id ?? "");
 
     let chipModule;
 
@@ -329,7 +329,7 @@ class HomeView extends AbstractView {
 
         let module: ModuleType;
         let moduleName =
-          Helper.strategyOptions.areas[area.slug]?.type ??
+          Helper.strategyOptions.areas[area.area_id]?.type ??
           Helper.strategyOptions.areas["_"]?.type ??
           "default";
 
@@ -346,10 +346,10 @@ class HomeView extends AbstractView {
         }
 
         // Get a card for the area.
-        if (!Helper.strategyOptions.areas[area.slug as string]?.hidden) {
+        if (!Helper.strategyOptions.areas[area.area_id as string]?.hidden) {
           let options = {
             ...Helper.strategyOptions.areas["_"],
-            ...Helper.strategyOptions.areas[area.slug],
+            ...Helper.strategyOptions.areas[area.area_id],
           };
 
           groupedCards.push({

@@ -254,7 +254,7 @@ class Helper {
 
     // Merge custom areas of the strategy options into strategy areas.
     this.#areas = Helper.areas.map(area => {
-      return { ...area, ...this.#strategyOptions.areas?.[area.slug] };
+      return { ...area, ...this.#strategyOptions.areas?.[area.area_id] };
     });
 
     // Sort strategy areas by order first and then by name.

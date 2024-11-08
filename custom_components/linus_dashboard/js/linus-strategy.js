@@ -942,7 +942,7 @@ class AggregateCard {
                 if (_Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.strategyOptions.areas[area.area_id]?.hidden)
                     continue;
                 if (area.area_id !== "undisclosed") {
-                    const areaEntities = (0,_utils__WEBPACK_IMPORTED_MODULE_0__.getAggregateEntity)(_Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.magicAreasDevices[area.name], domains, deviceClasses).map(e => e.entity_id).filter(Boolean);
+                    const areaEntities = (0,_utils__WEBPACK_IMPORTED_MODULE_0__.getAggregateEntity)(_Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.magicAreasDevices[area.area_id], domains, deviceClasses).map(e => e.entity_id).filter(Boolean);
                     for (const areaEntity of areaEntities) {
                         areaCards.push({
                             type: "tile",
@@ -4719,7 +4719,7 @@ class MushroomStrategy extends HTMLTemplateElement {
                     const entities = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getDeviceEntities(area, domain);
                     let configEntityHidden = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain ?? "_"].hide_config_entities
                         || _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains["_"].hide_config_entities;
-                    const magicAreasDevice = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices[area.name];
+                    const magicAreasDevice = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices[area.area_id];
                     const magicAreasKey = domain === "light" ? 'all_lights' : `${domain}_group`;
                     // Set the target for controller cards to linus aggregate entity if exist.
                     target["entity_id"] = magicAreasDevice?.entities[magicAreasKey]?.entity_id;
@@ -5057,7 +5057,7 @@ class AggregateListPopup extends _AbstractPopup__WEBPACK_IMPORTED_MODULE_2__.Abs
             });
             let areaCards = [];
             for (const [i, area] of areasByFloor[floor.floor_id].entries()) {
-                const entity = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices[area.name]?.entities[`aggregate_${aggregate_entity.attributes?.device_class}`];
+                const entity = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices[area.area_id]?.entities[`aggregate_${aggregate_entity.attributes?.device_class}`];
                 // Get a card for the area.
                 if (entity && !_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.areas[area.area_id]?.hidden) {
                     areaCards.push({

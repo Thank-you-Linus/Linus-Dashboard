@@ -40,7 +40,7 @@ class AggregateListPopup extends AbstractPopup {
 
       for (const [i, area] of areasByFloor[floor.floor_id].entries()) {
 
-        const entity = Helper.magicAreasDevices[area.name]?.entities[`aggregate_${aggregate_entity.attributes?.device_class}`]
+        const entity = Helper.magicAreasDevices[area.area_id]?.entities[`aggregate_${aggregate_entity.attributes?.device_class}`]
 
         // Get a card for the area.
         if (entity && !Helper.strategyOptions.areas[area.area_id]?.hidden) {
@@ -55,7 +55,7 @@ class AggregateListPopup extends AbstractPopup {
             // badge_color: "red",
           });
         }
-          
+
         // Horizontally group every two area cards if all cards are created.
         if (i === areasByFloor[floor.floor_id].length - 1) {
           for (let i = 0; i < areaCards.length; i += 2) {
@@ -68,8 +68,8 @@ class AggregateListPopup extends AbstractPopup {
 
       }
 
-      if(areaCards.length === 0) groupedCards.pop()
-      
+      if (areaCards.length === 0) groupedCards.pop()
+
     }
 
     return {

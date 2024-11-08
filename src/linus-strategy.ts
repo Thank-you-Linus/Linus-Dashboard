@@ -128,7 +128,7 @@ class MushroomStrategy extends HTMLTemplateElement {
             Helper.strategyOptions.domains[domain ?? "_"].hide_config_entities
             || Helper.strategyOptions.domains["_"].hide_config_entities;
 
-          const magicAreasDevice = Helper.magicAreasDevices[area.name];
+          const magicAreasDevice = Helper.magicAreasDevices[area.area_id];
           const magicAreasKey = domain === "light" ? 'all_lights' : `${domain}_group`;
 
           // Set the target for controller cards to linus aggregate entity if exist.

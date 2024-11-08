@@ -4649,7 +4649,7 @@ class MushroomStrategy extends HTMLTemplateElement {
             viewCards.push(new _cards_MainAreaCard__WEBPACK_IMPORTED_MODULE_4__.MainAreaCard(area).getCard());
         // Set the target for controller cards to the current area.
         let target = {
-            area_id: [area.slug],
+            area_id: [area.area_id],
         };
         // Create cards for each domain.
         for (const domain of exposedDomainIds) {
@@ -6321,7 +6321,7 @@ class AbstractView {
                 const cardModule = await __webpack_require__("./src/cards lazy recursive ^\\.\\/.*$")(`./${className}`);
                 // Set the target for controller cards to the current area.
                 let target = {
-                    area_id: [area.slug],
+                    area_id: [area.area_id],
                 };
                 // Set the target for controller cards to entities without an area.
                 if (area.area_id === "undisclosed") {

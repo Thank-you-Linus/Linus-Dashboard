@@ -17,8 +17,6 @@ from custom_components.linus_dashboard.const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "linus_dashboard"
-
 
 async def async_setup(hass: HomeAssistant, _config: dict) -> bool:
     """Set up Linus Dashboard."""

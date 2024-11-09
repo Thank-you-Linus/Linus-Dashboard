@@ -165,8 +165,8 @@ class AreaCard extends AbstractCard {
         height: 66px;
       }
       mushroom-badge-icon {
-        left: 178px;
-        top: 17px;
+        left: 24px;
+        top: 0px;
       }
       ha-card {
         box-shadow: none!important;

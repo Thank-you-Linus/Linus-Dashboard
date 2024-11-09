@@ -1214,8 +1214,8 @@ class AreaCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractCard {
         height: 66px;
       }
       mushroom-badge-icon {
-        left: 178px;
-        top: 17px;
+        left: 24px;
+        top: 0px;
       }
       ha-card {
         box-shadow: none!important;
@@ -4630,7 +4630,7 @@ class MushroomStrategy extends HTMLTemplateElement {
         let viewModule;
         // Create a view for each exposed domain.
         for (let viewId of _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getExposedViewIds()) {
-            if (_variables__WEBPACK_IMPORTED_MODULE_1__.MAGIC_AREAS_DOMAINS.includes(viewId) && (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.domains[viewId] ?? []).length === 0)
+            if (_variables__WEBPACK_IMPORTED_MODULE_1__.AREA_CARDS_DOMAINS.includes(viewId) && (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.domains[viewId] ?? []).length === 0)
                 continue;
             try {
                 const viewType = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.sanitizeClassName(viewId + "View");
@@ -4683,7 +4683,6 @@ class MushroomStrategy extends HTMLTemplateElement {
         const viewCards = [...(area.extra_cards ?? [])];
         let view = {};
         // Create a view for each exposed domain.
-        // if (MAGIC_AREAS_DOMAINS.includes(viewId) && (Helper.domains[viewId] ?? []).length === 0) continue
         try {
             view = await new _views_AreaView__WEBPACK_IMPORTED_MODULE_2__.AreaView(area).getView();
         }
@@ -6202,7 +6201,7 @@ class AbstractView {
             || _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.strategyOptions.domains["_"].hide_config_entities;
         const areasByFloor = (0,_utils__WEBPACK_IMPORTED_MODULE_3__.groupBy)(_Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.areas, (e) => e.floor_id ?? "undisclosed");
         for (const floor of [..._Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.floors, _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.strategyOptions.floors.undisclosed]) {
-            if (!_variables__WEBPACK_IMPORTED_MODULE_0__.MAGIC_AREAS_DOMAINS.includes(__classPrivateFieldGet(this, _AbstractView_domain, "f") ?? ""))
+            if (!_variables__WEBPACK_IMPORTED_MODULE_0__.AREA_CARDS_DOMAINS.includes(__classPrivateFieldGet(this, _AbstractView_domain, "f") ?? ""))
                 continue;
             if (!(floor.floor_id in areasByFloor) || areasByFloor[floor.floor_id].length === 0)
                 continue;
@@ -6618,7 +6617,7 @@ class CameraView extends _AbstractView__WEBPACK_IMPORTED_MODULE_1__.AbstractView
         });
         this.config = Object.assign(this.config, __classPrivateFieldGet(this, _CameraView_defaultConfig, "f"), options);
         // Create a Controller card to switch all entities of the domain.
-        this.viewControllerCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_0__.ControllerCard({}, {
+        this.viewControllerCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_0__.ControllerCard(this.targetDomain(__classPrivateFieldGet(_a, _a, "f", _CameraView_domain)), {
             ...__classPrivateFieldGet(this, _CameraView_viewControllerCardConfig, "f"),
             ...("controllerCardOptions" in this.config ? this.config.controllerCardOptions : {}),
         }).createCard();

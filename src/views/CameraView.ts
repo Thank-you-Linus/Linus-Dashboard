@@ -1,8 +1,8 @@
-import {ControllerCard} from "../cards/ControllerCard";
-import {AbstractView} from "./AbstractView";
-import {views} from "../types/strategy/views";
-import {cards} from "../types/strategy/cards";
-import {Helper} from "../Helper";
+import { ControllerCard } from "../cards/ControllerCard";
+import { AbstractView } from "./AbstractView";
+import { views } from "../types/strategy/views";
+import { cards } from "../types/strategy/cards";
+import { Helper } from "../Helper";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**
@@ -62,7 +62,7 @@ class CameraView extends AbstractView {
 
     // Create a Controller card to switch all entities of the domain.
     this.viewControllerCard = new ControllerCard(
-      {},
+      this.targetDomain(CameraView.#domain),
       {
         ...this.#viewControllerCardConfig,
         ...("controllerCardOptions" in this.config ? this.config.controllerCardOptions : {}) as cards.ControllerCardConfig,
@@ -70,4 +70,4 @@ class CameraView extends AbstractView {
   }
 }
 
-export {CameraView};
+export { CameraView };

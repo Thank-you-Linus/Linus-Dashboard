@@ -1,4 +1,4 @@
-import { MAGIC_AREAS_DOMAINS } from './../variables';
+import { AREA_CARDS_DOMAINS } from './../variables';
 import { Helper } from "../Helper";
 import { ControllerCard } from "../cards/ControllerCard";
 import { LovelaceGridCardConfig, StackCardConfig } from "../types/homeassistant/lovelace/cards/types";
@@ -89,7 +89,7 @@ abstract class AbstractView {
 
     for (const floor of [...Helper.floors, Helper.strategyOptions.floors.undisclosed]) {
 
-      if (!MAGIC_AREAS_DOMAINS.includes(this.#domain ?? "")) continue
+      if (!AREA_CARDS_DOMAINS.includes(this.#domain ?? "")) continue
       if (!(floor.floor_id in areasByFloor) || areasByFloor[floor.floor_id].length === 0) continue
 
       let floorCards = {

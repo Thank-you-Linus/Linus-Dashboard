@@ -4579,14 +4579,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   version: () => (/* binding */ version)
 /* harmony export */ });
 /* harmony import */ var _Helper__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./Helper */ "./src/Helper.ts");
-/* harmony import */ var _cards_SensorCard__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./cards/SensorCard */ "./src/cards/SensorCard.ts");
-/* harmony import */ var _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./cards/ControllerCard */ "./src/cards/ControllerCard.ts");
-/* harmony import */ var _cards_SwipeCard__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./cards/SwipeCard */ "./src/cards/SwipeCard.ts");
-/* harmony import */ var _cards_MainAreaCard__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./cards/MainAreaCard */ "./src/cards/MainAreaCard.ts");
-/* harmony import */ var _variables__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./variables */ "./src/variables.ts");
-
-
-
+/* harmony import */ var _variables__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./variables */ "./src/variables.ts");
+/* harmony import */ var _views_AreaView__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./views/AreaView */ "./src/views/AreaView.ts");
 
 
 
@@ -4619,7 +4613,7 @@ class MushroomStrategy extends HTMLTemplateElement {
         let viewModule;
         // Create a view for each exposed domain.
         for (let viewId of _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getExposedViewIds()) {
-            if (_variables__WEBPACK_IMPORTED_MODULE_5__.MAGIC_AREAS_DOMAINS.includes(viewId) && (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.domains[viewId] ?? []).length === 0)
+            if (_variables__WEBPACK_IMPORTED_MODULE_1__.MAGIC_AREAS_DOMAINS.includes(viewId) && (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.domains[viewId] ?? []).length === 0)
                 continue;
             try {
                 const viewType = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.sanitizeClassName(viewId + "View");
@@ -4639,6 +4633,7 @@ class MushroomStrategy extends HTMLTemplateElement {
                 views.push({
                     title: area.name,
                     path: area.slug ?? area.name,
+                    // type: "sections",
                     subview: true,
                     strategy: {
                         type: "custom:linus-strategy",
@@ -4667,159 +4662,19 @@ class MushroomStrategy extends HTMLTemplateElement {
      * @return {Promise<LovelaceViewConfig>}
      */
     static async generateView(info) {
-        const exposedDomainIds = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getExposedDomainIds();
         const area = info.view.strategy?.options?.area ?? {};
         const viewCards = [...(area.extra_cards ?? [])];
-        if (area.area_id !== "undisclosed")
-            viewCards.push(new _cards_MainAreaCard__WEBPACK_IMPORTED_MODULE_4__.MainAreaCard(area).getCard());
-        // Set the target for controller cards to the current area.
-        let target = {
-            area_id: [area.area_id],
-        };
-        // Create cards for each domain.
-        for (const domain of exposedDomainIds) {
-            if (domain === "default") {
-                continue;
-            }
-            const className = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.sanitizeClassName(domain + "Card");
-            let domainCards = [];
-            try {
-                domainCards = await __webpack_require__("./src/cards lazy recursive ^\\.\\/.*$")(`./${className}`).then(cardModule => {
-                    let domainCards = [];
-                    const entities = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getDeviceEntities(area, domain);
-                    let configEntityHidden = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain ?? "_"].hide_config_entities
-                        || _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains["_"].hide_config_entities;
-                    const magicAreasDevice = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices[area.slug];
-                    const magicAreasKey = domain === "light" ? 'all_lights' : `${domain}_group`;
-                    // Set the target for controller cards to linus aggregate entity if exist.
-                    target["entity_id"] = magicAreasDevice?.entities[magicAreasKey]?.entity_id;
-                    // Set the target for controller cards to entities without an area.
-                    if (area.area_id === "undisclosed") {
-                        target = {
-                            entity_id: entities.map(entity => entity.entity_id),
-                        };
-                    }
-                    if (entities.length) {
-                        // Create a Controller card for the current domain.
-                        const title = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize(domain === 'scene' ? 'ui.dialogs.quick-bar.commands.navigation.scene' : `component.${domain}.entity_component._.name`);
-                        const titleCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_2__.ControllerCard(target, { ..._Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain], domain, title }).createCard();
-                        if (domain === "sensor") {
-                            // Create a card for each entity-sensor of the current area.
-                            const sensorStates = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getStateEntities(area, "sensor");
-                            const sensorCards = [];
-                            for (const sensor of entities) {
-                                // Find the state of the current sensor.
-                                const sensorState = sensorStates.find(state => state.entity_id === sensor.entity_id);
-                                let cardOptions = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.card_options?.[sensor.entity_id];
-                                let deviceOptions = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.card_options?.[sensor.device_id ?? "null"];
-                                if (!cardOptions?.hidden && !deviceOptions?.hidden) {
-                                    if (sensorState?.attributes.unit_of_measurement) {
-                                        cardOptions = {
-                                            ...{
-                                                type: "custom:mini-graph-card",
-                                                entities: [sensor.entity_id],
-                                            },
-                                            ...cardOptions,
-                                        };
-                                    }
-                                    sensorCards.push(new _cards_SensorCard__WEBPACK_IMPORTED_MODULE_1__.SensorCard(sensor, cardOptions).getCard());
-                                }
-                            }
-                            if (sensorCards.length) {
-                                domainCards.push(new _cards_SwipeCard__WEBPACK_IMPORTED_MODULE_3__.SwipeCard(sensorCards).getCard());
-                                domainCards.unshift(titleCard);
-                            }
-                            return domainCards;
-                        }
-                        // Create a card for each other domain-entity of the current area.
-                        for (const entity of entities) {
-                            let deviceOptions;
-                            let cardOptions = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.card_options?.[entity.entity_id];
-                            if (entity.device_id) {
-                                deviceOptions = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.card_options?.[entity.device_id];
-                            }
-                            // Don't include the entity if hidden in the strategy options.
-                            if (cardOptions?.hidden || deviceOptions?.hidden) {
-                                continue;
-                            }
-                            // Don't include the config-entity if hidden in the strategy options.
-                            if (entity.entity_category === "config" && configEntityHidden) {
-                                continue;
-                            }
-                            domainCards.push(new cardModule[className](entity, cardOptions).getCard());
-                        }
-                        domainCards = [new _cards_SwipeCard__WEBPACK_IMPORTED_MODULE_3__.SwipeCard(domainCards).getCard()];
-                        if (domainCards.length) {
-                            domainCards.unshift(titleCard);
-                        }
-                    }
-                    return domainCards;
-                });
-            }
-            catch (e) {
-                _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.logError("An error occurred while creating the domain cards!", e);
-            }
-            if (domainCards.length) {
-                viewCards.push({
-                    type: "vertical-stack",
-                    cards: domainCards,
-                });
-            }
+        let view = {};
+        // Create a view for each exposed domain.
+        // if (MAGIC_AREAS_DOMAINS.includes(viewId) && (Helper.domains[viewId] ?? []).length === 0) continue
+        try {
+            view = await new _views_AreaView__WEBPACK_IMPORTED_MODULE_2__.AreaView(area).getView();
         }
-        if (!_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains.default.hidden) {
-            // Create cards for any other domain.
-            // Collect device entities of the current area.
-            const areaDevices = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.devices.filter((device) => device.area_id === area.area_id)
-                .map((device) => device.id);
-            // Collect the remaining entities of which all conditions below are met:
-            // 1. The entity is not hidden.
-            // 2. The entity's domain isn't exposed (entities of exposed domains are already included).
-            // 3. The entity is linked to a device which is linked to the current area,
-            //    or the entity itself is linked to the current area.
-            const miscellaneousEntities = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.entities.filter((entity) => {
-                const entityLinked = areaDevices.includes(entity.device_id ?? "null") || entity.area_id === area.area_id;
-                const entityUnhidden = entity.hidden_by === null && entity.disabled_by === null;
-                const domainExposed = exposedDomainIds.includes(entity.entity_id.split(".", 1)[0]);
-                return entityUnhidden && !domainExposed && entityLinked;
-            });
-            // Create a column of miscellaneous entity cards.
-            if (miscellaneousEntities.length) {
-                let miscellaneousCards = [];
-                try {
-                    miscellaneousCards = await Promise.resolve(/*! import() */).then(__webpack_require__.bind(__webpack_require__, /*! ./cards/MiscellaneousCard */ "./src/cards/MiscellaneousCard.ts")).then(cardModule => {
-                        const miscellaneousCards = [
-                            new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_2__.ControllerCard(target, _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains.default).createCard(),
-                        ];
-                        const swipeCard = [];
-                        for (const entity of miscellaneousEntities) {
-                            let cardOptions = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.card_options?.[entity.entity_id];
-                            let deviceOptions = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.card_options?.[entity.device_id ?? "null"];
-                            // Don't include the entity if hidden in the strategy options.
-                            if (cardOptions?.hidden || deviceOptions?.hidden) {
-                                continue;
-                            }
-                            // Don't include the config-entity if hidden in the strategy options
-                            if (entity.entity_category === "config" && _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains["_"].hide_config_entities) {
-                                continue;
-                            }
-                            swipeCard.push(new cardModule.MiscellaneousCard(entity, cardOptions).getCard());
-                        }
-                        return [...miscellaneousCards, new _cards_SwipeCard__WEBPACK_IMPORTED_MODULE_3__.SwipeCard(swipeCard).getCard()];
-                    });
-                }
-                catch (e) {
-                    _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.logError("An error occurred while creating the domain cards!", e);
-                }
-                viewCards.push({
-                    type: "vertical-stack",
-                    cards: miscellaneousCards,
-                });
-            }
+        catch (e) {
+            _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.logError(`View for area '${area.name}' couldn't be loaded!`, e);
         }
-        // Return cards.
-        return {
-            cards: viewCards,
-        };
+        // Return the created view.
+        return view;
     }
 }
 customElements.define("ll-strategy-linus-strategy", MushroomStrategy);
@@ -6327,13 +6182,25 @@ class AbstractView {
             || _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.strategyOptions.domains["_"].hide_config_entities;
         const areasByFloor = (0,_utils__WEBPACK_IMPORTED_MODULE_3__.groupBy)(_Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.areas, (e) => e.floor_id ?? "undisclosed");
         for (const floor of [..._Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.floors, _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.strategyOptions.floors.undisclosed]) {
-            if (__classPrivateFieldGet(this, _AbstractView_domain, "f") && _variables__WEBPACK_IMPORTED_MODULE_0__.MAGIC_AREAS_DOMAINS.includes(__classPrivateFieldGet(this, _AbstractView_domain, "f")) && floor.floor_id !== "undisclosed")
+            if (!_variables__WEBPACK_IMPORTED_MODULE_0__.MAGIC_AREAS_DOMAINS.includes(__classPrivateFieldGet(this, _AbstractView_domain, "f") ?? ""))
                 continue;
             if (!(floor.floor_id in areasByFloor) || areasByFloor[floor.floor_id].length === 0)
                 continue;
             let floorCards = {
                 type: "grid",
-                cards: []
+                cards: [
+                    {
+                        type: "heading",
+                        heading: floor.name,
+                        heading_style: "title",
+                        badges: [],
+                        layout_options: {
+                            grid_columns: "full",
+                            grid_rows: 1
+                        },
+                        icon: floor.icon ?? "mdi:floor-plan",
+                    }
+                ]
             };
             // Create cards for each area.
             for (const [i, area] of areasByFloor[floor.floor_id].entries()) {
@@ -6343,7 +6210,6 @@ class AbstractView {
                 if (entities.length === 0 || !cardModule) {
                     continue;
                 }
-                console.log("AbstractView ", __classPrivateFieldGet(this, _AbstractView_domain, "f"), area, entities);
                 // Set the target for controller cards to the current area.
                 let target = {
                     area_id: [area.area_id],
@@ -6355,19 +6221,8 @@ class AbstractView {
                             entity_id: entities.map(entity => entity.entity_id),
                         };
                 }
-                floorCards.cards.push({
-                    type: "heading",
-                    heading: floor.name,
-                    heading_style: "title",
-                    badges: [],
-                    layout_options: {
-                        grid_columns: "full",
-                        grid_rows: 1
-                    },
-                    icon: floor.icon ?? "mdi:floor-plan",
-                });
                 let areaCards = [];
-                const swipeCards = [];
+                const entityCards = [];
                 // Create a card for each domain-entity of the current area.
                 for (const entity of entities) {
                     let cardOptions = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.strategyOptions.card_options?.[entity.entity_id];
@@ -6378,12 +6233,11 @@ class AbstractView {
                     if (entity.entity_category === "config" && configEntityHidden) {
                         continue;
                     }
-                    swipeCards.push(new cardModule[className](entity, cardOptions).getCard());
+                    entityCards.push(new cardModule[className](entity, cardOptions).getCard());
                 }
-                console.log('swipeCards', swipeCards);
-                if (swipeCards.length) {
-                    // areaCards.push(new SwipeCard(swipeCards).getCard())
-                    areaCards.push(...swipeCards);
+                if (entityCards.length) {
+                    // areaCards.push(new SwipeCard(entityCards).getCard())
+                    areaCards.push(...entityCards);
                 }
                 // Vertical stack the area cards if it has entities.
                 if (areaCards.length) {
@@ -6396,14 +6250,13 @@ class AbstractView {
                     floorCards.cards.push(...areaCards);
                 }
             }
-            if (floorCards.cards.length > 0)
+            if (floorCards.cards.length > 1)
                 viewSections.push(floorCards);
         }
         // // Add a Controller Card for all the entities in the view.
         // if (viewSections.length) {
         //   viewSections.unshift(this.viewControllerCard);
         // }
-        console.log('viewSections', viewSections);
         return viewSections;
     }
     /**
@@ -6435,6 +6288,236 @@ class AbstractView {
     }
 }
 _AbstractView_domain = new WeakMap();
+
+
+
+/***/ }),
+
+/***/ "./src/views/AreaView.ts":
+/*!*******************************!*\
+  !*** ./src/views/AreaView.ts ***!
+  \*******************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   AreaView: () => (/* binding */ AreaView)
+/* harmony export */ });
+/* harmony import */ var _Helper__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../Helper */ "./src/Helper.ts");
+/* harmony import */ var _cards_SwipeCard__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../cards/SwipeCard */ "./src/cards/SwipeCard.ts");
+/* harmony import */ var _cards_SensorCard__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../cards/SensorCard */ "./src/cards/SensorCard.ts");
+/* harmony import */ var _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../cards/ControllerCard */ "./src/cards/ControllerCard.ts");
+/* harmony import */ var _cards_MainAreaCard__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../cards/MainAreaCard */ "./src/cards/MainAreaCard.ts");
+
+
+
+
+
+// noinspection JSUnusedGlobalSymbols Class is dynamically imported.
+/**
+ * Area View Class.
+ *
+ * Used to create a Area view.
+ *
+ * @class AreaView
+ */
+class AreaView {
+    /**
+     * Class constructor.
+     *
+     * @param {views.ViewConfig} [options={}] Options for the view.
+     */
+    constructor(area, options = {}) {
+        /**
+         * Default configuration of the view.
+         *
+         * @type {views.ViewConfig}
+         * @private
+         */
+        this.config = {
+            icon: "mdi:home-assistant",
+            type: "sections",
+            path: "home",
+            subview: true,
+        };
+        this.area = area;
+        this.config = { ...this.config, ...options };
+    }
+    /**
+     * Create the cards to include in the view.
+     *
+     * @return {Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig)[]>} Promise a View Card array.
+     * @override
+     */
+    async createViewCards() {
+        return [];
+    }
+    /**
+     * Create the cards to include in the view.
+     *
+     * @return {Promise<LovelaceGridCardConfig[]>} Promise a View Card array.
+     * @override
+     */
+    async createSectionCards() {
+        const viewSections = [];
+        const exposedDomainIds = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getExposedDomainIds();
+        // Create a global section for the main area card
+        const globalSection = {
+            type: "grid",
+            column_span: 1,
+            cards: []
+        };
+        if (this.area.area_id !== "undisclosed") {
+            globalSection.cards.push(new _cards_MainAreaCard__WEBPACK_IMPORTED_MODULE_4__.MainAreaCard(this.area).getCard());
+        }
+        if (globalSection.cards.length) {
+            viewSections.push(globalSection);
+        }
+        // Set the target for controller cards to the current area
+        let target = {
+            area_id: [this.area.area_id],
+        };
+        // Create cards for each domain
+        for (const domain of exposedDomainIds) {
+            if (domain === "default")
+                continue;
+            const className = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.sanitizeClassName(domain + "Card");
+            try {
+                const domainSections = await __webpack_require__("./src/cards lazy recursive ^\\.\\/.*$")(`./${className}`).then(cardModule => {
+                    const entities = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getDeviceEntities(this.area, domain);
+                    const configEntityHidden = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain]?.hide_config_entities || _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains["_"].hide_config_entities;
+                    const magicAreasDevice = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices[this.area.slug];
+                    const magicAreasKey = domain === "light" ? 'all_lights' : `${domain}_group`;
+                    // Set the target for controller cards to linus aggregate entity if exist
+                    target["entity_id"] = magicAreasDevice?.entities[magicAreasKey]?.entity_id;
+                    // Set the target for controller cards to entities without an area
+                    if (this.area.area_id === "undisclosed") {
+                        target = {
+                            entity_id: entities.map(entity => entity.entity_id),
+                        };
+                    }
+                    const domainCards = [];
+                    if (entities.length) {
+                        // Create a Controller card for the current domain
+                        const title = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize(domain === 'scene' ? 'ui.dialogs.quick-bar.commands.navigation.scene' : `component.${domain}.entity_component._.name`);
+                        const titleCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_3__.ControllerCard(target, { ..._Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain], domain, title }).createCard();
+                        if (domain === "sensor") {
+                            // Create a card for each entity-sensor of the current area
+                            const sensorStates = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getStateEntities(this.area, "sensor");
+                            const sensorCards = [];
+                            for (const sensor of entities) {
+                                const sensorState = sensorStates.find(state => state.entity_id === sensor.entity_id);
+                                let cardOptions = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.card_options?.[sensor.entity_id];
+                                let deviceOptions = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.card_options?.[sensor.device_id ?? "null"];
+                                if (!cardOptions?.hidden && !deviceOptions?.hidden) {
+                                    if (sensorState?.attributes.unit_of_measurement) {
+                                        cardOptions = {
+                                            type: "custom:mini-graph-card",
+                                            entities: [sensor.entity_id],
+                                            ...cardOptions,
+                                        };
+                                    }
+                                    sensorCards.push(new _cards_SensorCard__WEBPACK_IMPORTED_MODULE_2__.SensorCard(sensor, cardOptions).getCard());
+                                }
+                            }
+                            if (sensorCards.length) {
+                                domainCards.push(new _cards_SwipeCard__WEBPACK_IMPORTED_MODULE_1__.SwipeCard(sensorCards).getCard());
+                                domainCards.unshift(...titleCard);
+                            }
+                            return {
+                                type: "grid",
+                                column_span: 1,
+                                cards: domainCards
+                            };
+                        }
+                        // Create a card for each other domain-entity of the current area
+                        for (const entity of entities) {
+                            let cardOptions = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.card_options?.[entity.entity_id];
+                            let deviceOptions = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.card_options?.[entity.device_id ?? "null"];
+                            if (cardOptions?.hidden || deviceOptions?.hidden)
+                                continue;
+                            if (entity.entity_category === "config" && configEntityHidden)
+                                continue;
+                            domainCards.push(new cardModule[className](entity, cardOptions).getCard());
+                        }
+                        if (domainCards.length) {
+                            domainCards.unshift(...titleCard);
+                            // domainCards.push(new SwipeCard(domainCards).getCard());
+                        }
+                    }
+                    return {
+                        type: "grid",
+                        column_span: 1,
+                        cards: domainCards
+                    };
+                });
+                if (domainSections.cards.length) {
+                    viewSections.push({
+                        type: "grid",
+                        column_span: 1,
+                        cards: domainSections.cards
+                    });
+                }
+            }
+            catch (e) {
+                _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.logError("An error occurred while creating the domain cards!", e);
+            }
+        }
+        // Create cards for any other domain
+        if (!_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains.default.hidden) {
+            const areaDevices = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.devices.filter(device => device.area_id === this.area.area_id).map(device => device.id);
+            const miscellaneousEntities = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.entities.filter(entity => {
+                const entityLinked = areaDevices.includes(entity.device_id ?? "null") || entity.area_id === this.area.area_id;
+                const entityUnhidden = entity.hidden_by === null && entity.disabled_by === null;
+                const domainExposed = exposedDomainIds.includes(entity.entity_id.split(".", 1)[0]);
+                return entityUnhidden && !domainExposed && entityLinked;
+            });
+            if (miscellaneousEntities.length) {
+                try {
+                    const miscellaneousCards = await Promise.resolve(/*! import() */).then(__webpack_require__.bind(__webpack_require__, /*! ../cards/MiscellaneousCard */ "./src/cards/MiscellaneousCard.ts")).then(cardModule => {
+                        const cards = [
+                            new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_3__.ControllerCard(target, _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains.default).createCard(),
+                        ];
+                        const swipeCard = [];
+                        for (const entity of miscellaneousEntities) {
+                            let cardOptions = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.card_options?.[entity.entity_id];
+                            let deviceOptions = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.card_options?.[entity.device_id ?? "null"];
+                            if (cardOptions?.hidden || deviceOptions?.hidden)
+                                continue;
+                            if (entity.entity_category === "config" && _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains["_"].hide_config_entities)
+                                continue;
+                            swipeCard.push(new cardModule.MiscellaneousCard(entity, cardOptions).getCard());
+                        }
+                        return [...cards, new _cards_SwipeCard__WEBPACK_IMPORTED_MODULE_1__.SwipeCard(swipeCard).getCard()];
+                    });
+                    viewSections.push({
+                        type: "grid",
+                        column_span: 1,
+                        cards: miscellaneousCards
+                    });
+                }
+                catch (e) {
+                    _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.logError("An error occurred while creating the domain cards!", e);
+                }
+            }
+        }
+        return viewSections;
+    }
+    /**
+     * Get a view object.
+     *
+     * The view includes the cards which are created by method createSectionCards().
+     *
+     * @returns {Promise<LovelaceViewConfig>} The view object.
+     */
+    async getView() {
+        return {
+            ...this.config,
+            sections: await this.createSectionCards(),
+        };
+    }
+}
 
 
 
@@ -8215,6 +8298,12 @@ var map = {
 		"./src/views/AbstractView.ts",
 		"main"
 	],
+	"./AreaView": [
+		"./src/views/AreaView.ts"
+	],
+	"./AreaView.ts": [
+		"./src/views/AreaView.ts"
+	],
 	"./CameraView": [
 		"./src/views/CameraView.ts",
 		"main"
@@ -8322,7 +8411,7 @@ function webpackAsyncContext(req) {
 	}
 
 	var ids = map[req], id = ids[0];
-	return __webpack_require__.e(ids[1]).then(() => {
+	return Promise.all(ids.slice(1).map(__webpack_require__.e)).then(() => {
 		return __webpack_require__(id);
 	});
 }

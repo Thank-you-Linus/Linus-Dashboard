@@ -9,7 +9,7 @@ const config: webpack.Configuration = {
   devtool: "source-map",
   output: {
     filename: "linus-strategy.js",
-    path: path.resolve("./custom_components/linus_dashboard", "js"),
+    path: path.resolve("./custom_components/linus_dashboard", "www"),
   },
   resolve: {
     extensions: [".ts", ".tsx", ".js"],

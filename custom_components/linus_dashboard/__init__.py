@@ -32,13 +32,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Path to the JavaScript file for the strategy
     await register_static_paths_and_resources(hass, "linus-strategy.js")
-    await register_static_paths_and_resources(hass, "mushroom.js")
-    await register_static_paths_and_resources(hass, "card-mod.js")
     await register_static_paths_and_resources(hass, "browser_mod.js")
-    await register_static_paths_and_resources(hass, "swipe-card.js")
-    await register_static_paths_and_resources(hass, "layout-card.js")
-    await register_static_paths_and_resources(hass, "stack-in-card.js")
-    await register_static_paths_and_resources(hass, "mini-graph-card.js")
+    await register_static_paths_and_resources(hass, "lovelace-mushroom/mushroom.js")
+    await register_static_paths_and_resources(hass, "lovelace-card-mod/card-mod.js")
+    await register_static_paths_and_resources(hass, "swipe/card/swipe-card.js")
+    await register_static_paths_and_resources(
+        hass, "lovelace-layout-card/layout-card.js"
+    )
+    await register_static_paths_and_resources(hass, "stack-in-card/stack-in-card.js")
+    await register_static_paths_and_resources(
+        hass, "mini-graph-card/mini-graph-card-bundle.js"
+    )
 
     # Use a unique name for the panel to avoid conflicts
     sidebar_title = "Linus Dashboard"
@@ -81,8 +85,19 @@ async def register_static_paths_and_resources(
     hass: HomeAssistant, js_file: str
 ) -> None:
     """Register static paths and resources for a given JavaScript file."""
-    js_url = f"/{DOMAIN}_files/js/{js_file}"
-    js_path = Path(__file__).parent / f"js/{js_file}"
+    # Check if the file is already installed via HACS
+    if js_file == "browser_mod.js":
+        hacs_installed_path = Path(hass.config.path("custom_components/browser_mod"))
+    else:
+        hacs_installed_path = Path(hass.config.path(f"www/community/{js_file}"))
+    if hacs_installed_path.exists():
+        _LOGGER.info(
+            "%s is already installed via HACS, skipping registration.", js_file
+        )
+        return
+
+    js_url = f"/{DOMAIN}_files/www/{js_file}"
+    js_path = Path(__file__).parent / f"www/{js_file}"
 
     await hass.http.async_register_static_paths(
         [

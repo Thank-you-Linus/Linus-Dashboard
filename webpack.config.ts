@@ -8,7 +8,7 @@ const config: webpack.Configuration = {
   mode: "production",
   output: {
     filename: "linus-strategy.js",
-    path: path.resolve("./custom_components/linus_dashboard", "js"),
+    path: path.resolve("./custom_components/linus_dashboard", "www"),
     clean: true,
   },
   resolve: {

@@ -186,6 +186,8 @@ abstract class AbstractView {
     //   viewSections.unshift(this.viewControllerCard);
     // }
 
+    console.log('viewSections', viewSections)
+
     return viewSections;
   }
 

@@ -3,7 +3,7 @@ import { AbstractView } from "./AbstractView";
 import { views } from "../types/strategy/views";
 import { LovelaceChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
 import { ChipsCardConfig } from "../types/lovelace-mushroom/cards/chips-card";
-import { AreaCardConfig, StackCardConfig } from "../types/homeassistant/lovelace/cards/types";
+import { LovelaceGridCardConfig, StackCardConfig } from "../types/homeassistant/lovelace/cards/types";
 import { TemplateCardConfig } from "../types/lovelace-mushroom/cards/template-card-config";
 import { ActionConfig, LovelaceSectionConfig } from "../types/homeassistant/data/lovelace";
 import { TitleCardConfig } from "../types/lovelace-mushroom/cards/title-card-config";
@@ -65,17 +65,17 @@ class HomeView extends AbstractView {
   /**
    * Create the cards to include in the view.
    *
-   * @return {Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig)[]>} Promise a View Card array.
+   * @return {Promise<LovelaceGridCardConfig[]>} Promise a View Card array.
    * @override
    */
-  async createSectionCards(): Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig)[]> {
+  async createSectionCards(): Promise<LovelaceGridCardConfig[]> {
     return await Promise.all([
       this.#createChips(),
       this.#createPersonCards(),
       this.#createAreaSection(),
     ]).then(([chips, personCards, areaCards]) => {
       const options = Helper.strategyOptions;
-      const firstSection: LovelaceSectionConfig = {
+      const firstSection: LovelaceGridCardConfig = {
         type: "grid",
         column_span: 1,
         cards: []
@@ -136,7 +136,7 @@ class HomeView extends AbstractView {
       }
 
       // Add area cards.
-      const secondSection: LovelaceSectionConfig = {
+      const secondSection: LovelaceGridCardConfig = {
         type: "grid",
         column_span: 1,
         cards: areaCards,

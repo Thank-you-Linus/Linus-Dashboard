@@ -1,16 +1,14 @@
 import { MAGIC_AREAS_DOMAINS } from './../variables';
 import { Helper } from "../Helper";
 import { ControllerCard } from "../cards/ControllerCard";
-import { StackCardConfig } from "../types/homeassistant/lovelace/cards/types";
-import { LovelaceCardConfig, LovelaceSectionConfig, LovelaceViewConfig } from "../types/homeassistant/data/lovelace";
+import { LovelaceGridCardConfig, StackCardConfig } from "../types/homeassistant/lovelace/cards/types";
+import { LovelaceBadgeConfig, LovelaceCardConfig, LovelaceSectionConfig, LovelaceViewConfig } from "../types/homeassistant/data/lovelace";
 import { cards } from "../types/strategy/cards";
-import { TitleCardConfig } from "../types/lovelace-mushroom/cards/title-card-config";
 import { HassServiceTarget } from "home-assistant-js-websocket";
-import abstractCardConfig = cards.AbstractCardConfig;
 import { SwipeCard } from "../cards/SwipeCard";
 import { groupBy } from "../utils";
-import { AggregateCard } from "../cards/AggregateCard";
 import { TemplateCardConfig } from '../types/lovelace-mushroom/cards/template-card-config';
+import { ChipsCardConfig } from '../types/lovelace-mushroom/cards/chips-card';
 
 /**
  * Abstract View Class.
@@ -28,15 +26,16 @@ abstract class AbstractView {
    */
   config: LovelaceViewConfig = {
     icon: "mdi:view-dashboard",
+    type: "sections",
     subview: false,
   };
 
   /**
    * A card to switch all entities in the view.
    *
-   * @type {StackCardConfig}
+   * @type {LovelaceBadgeConfig}
    */
-  viewControllerCard: StackCardConfig = {
+  viewControllerCard: LovelaceBadgeConfig = {
     cards: [],
     type: "",
   };
@@ -70,18 +69,24 @@ abstract class AbstractView {
   /**
    * Create the cards to include in the view.
    *
-   * @return {Promise<(StackCardConfig | TitleCardConfig)[]>} An array of card objects.
+   * @return {Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig)[]>} Promise a View Card array.
+   * @override
    */
-  async createViewCards(): Promise<(StackCardConfig | TitleCardConfig)[]> {
-    const viewCards: LovelaceCardConfig[] = [];
+  async createViewCards(): Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig)[]> {
+    return []
+  }
+
+  /**
+   * Create the cards to include in the view.
+   *
+   * @return {Promise<LovelaceGridCardConfig[]>} Promise a View Card array.
+   * @override
+   */
+  async createSectionCards(): Promise<LovelaceGridCardConfig[]> {
+    const viewSections: LovelaceGridCardConfig[] = [];
     const configEntityHidden =
       Helper.strategyOptions.domains[this.#domain ?? "_"].hide_config_entities
       || Helper.strategyOptions.domains["_"].hide_config_entities;
-
-
-    if (this.#domain && MAGIC_AREAS_DOMAINS.includes(this.#domain)) {
-      viewCards.push(new AggregateCard(this.#domain).createCard())
-    }
 
     const areasByFloor = groupBy(Helper.areas, (e) => e.floor_id ?? "undisclosed");
 
@@ -91,32 +96,20 @@ abstract class AbstractView {
       if (this.#domain && MAGIC_AREAS_DOMAINS.includes(this.#domain) && floor.floor_id !== "undisclosed") continue
       if (!(floor.floor_id in areasByFloor) || areasByFloor[floor.floor_id].length === 0) continue
 
-
-      let floorCards: (TemplateCardConfig)[] = [];
-
-      if (floor.floor_id !== "undisclosed") {
-        floorCards.push(
-          {
-            type: "heading",
-            heading: floor.name,
-            heading_style: "title",
-          }
-        );
-      }
-
-
-      let areaCards: abstractCardConfig[] = [];
+      let floorCards = {
+        type: "grid",
+        cards: []
+      } as LovelaceGridCardConfig
 
       // Create cards for each area.
       for (const [i, area] of areasByFloor[floor.floor_id].entries()) {
-
-        areaCards = [];
-
-        if (this.#domain && !MAGIC_AREAS_DOMAINS.includes(this.#domain) && area.area_id !== "undisclosed") continue
-
         const entities = Helper.getDeviceEntities(area, this.#domain ?? "");
         const className = Helper.sanitizeClassName(this.#domain + "Card");
         const cardModule = await import(`../cards/${className}`);
+
+        if (entities.length === 0 || !cardModule) {
+          continue;
+        }
 
         // Set the target for controller cards to the current area.
         let target: HassServiceTarget = {
@@ -131,6 +124,22 @@ abstract class AbstractView {
               entity_id: entities.map(entity => entity.entity_id),
             }
         }
+
+        floorCards.cards.push(
+          {
+            type: "heading",
+            heading: floor.name,
+            heading_style: "title",
+            badges: [],
+            layout_options: {
+              grid_columns: "full",
+              grid_rows: 1
+            },
+            icon: floor.icon ?? "mdi:floor-plan",
+          }
+        );
+
+        let areaCards: LovelaceCardConfig[] = [];
 
         const swipeCard = []
 
@@ -155,38 +164,26 @@ abstract class AbstractView {
         // Vertical stack the area cards if it has entities.
         if (areaCards.length) {
 
-          const titleCardOptions = ("controllerCardOptions" in this.config) ? this.config.controllerCardOptions : {};
-
+          const titleCardOptions: any = ("controllerCardOptions" in this.config) ? this.config.controllerCardOptions : {};
+          titleCardOptions.subtitle = area.name
+          titleCardOptions.subtitleIcon = area.icon ?? "mdi:floor-plan";
+          titleCardOptions.navigate = area.slug;
           // Create and insert a Controller card.
-          areaCards.unshift(new ControllerCard(target, Object.assign({ subtitle: area.name }, titleCardOptions)).createCard());
+          areaCards.unshift(...new ControllerCard(target, titleCardOptions).createCard())
 
-          floorCards.push({
-            type: "vertical-stack",
-            cards: areaCards,
-          } as StackCardConfig);
+          floorCards.cards.push(...areaCards);
         }
       }
 
-      if (floorCards.length > 0) viewCards.push(...floorCards)
+      if (floorCards.cards.length > 0) viewSections.push(floorCards)
     }
 
-    // Add a Controller Card for all the entities in the view.
-    if (viewCards.length) {
-      viewCards.unshift(this.viewControllerCard);
-    }
+    // // Add a Controller Card for all the entities in the view.
+    // if (viewSections.length) {
+    //   viewSections.unshift(this.viewControllerCard);
+    // }
 
-    return viewCards;
-  }
-
-
-  /**
-   * Create the cards to include in the view.
-   *
-   * @return {Promise<(StackCardConfig | TitleCardConfig)[]>} An array of card objects.
-   */
-  async createSectionCards(): Promise<(StackCardConfig | TitleCardConfig)[]> {
-
-    return [];
+    return viewSections;
   }
 
   /**

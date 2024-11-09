@@ -1560,20 +1560,52 @@ class ControllerCard {
     /**
      * Create a Controller card.
      *
-     * @return {StackCardConfig} A Controller card.
+     * @return {LovelaceCardConfig[]} A Controller card.
      */
     createCard() {
-        const cards = [
-            {
-                type: "custom:mushroom-title-card",
-                title: __classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").title,
-                subtitle: __classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").subtitle,
-            },
-        ];
+        const cards = [];
+        if (__classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").title) {
+            cards.push({
+                type: "heading",
+                heading: __classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").title,
+                icon: __classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").titleIcon,
+                heading_style: "title",
+                badges: [],
+                layout_options: {
+                    grid_columns: "full",
+                    grid_rows: 1
+                },
+                ...(__classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").navigate && {
+                    tap_action: {
+                        action: "navigate",
+                        navigation_path: __classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").navigate
+                    },
+                })
+            });
+        }
+        if (__classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").subtitle) {
+            cards.push({
+                type: "heading",
+                heading: __classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").subtitle,
+                icon: __classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").subtitleIcon,
+                heading_style: "subtitle",
+                badges: [],
+                layout_options: {
+                    grid_columns: "full",
+                    grid_rows: 1
+                },
+                ...(__classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").navigate && {
+                    tap_action: {
+                        action: "navigate",
+                        navigation_path: __classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").navigate
+                    },
+                })
+            });
+        }
         if (__classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").showControls || __classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").extraControls) {
             const areaId = Array.isArray(__classPrivateFieldGet(this, _ControllerCard_target, "f").area_id) ? __classPrivateFieldGet(this, _ControllerCard_target, "f").area_id[0] : __classPrivateFieldGet(this, _ControllerCard_target, "f").area_id;
             const linusDevice = areaId ? _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices[areaId] : undefined;
-            cards.push({
+            cards[0].badges.push({
                 type: "custom:mushroom-chips-card",
                 alignment: "end",
                 chips: [
@@ -1604,15 +1636,9 @@ class ControllerCard {
                             })),
                     ...(__classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").extraControls && __classPrivateFieldGet(this, _ControllerCard_target, "f") ? __classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").extraControls(linusDevice) : [])
                 ],
-                card_mod: {
-                    style: `ha-card {padding: var(--title-padding);}`
-                }
             });
         }
-        return {
-            type: "horizontal-stack",
-            cards: cards,
-        };
+        return cards;
     }
 }
 _ControllerCard_target = new WeakMap(), _ControllerCard_defaultConfig = new WeakMap();
@@ -4798,7 +4824,7 @@ class MushroomStrategy extends HTMLTemplateElement {
 }
 customElements.define("ll-strategy-linus-strategy", MushroomStrategy);
 const version = "v4.0.1";
-console.info("%c Linus Strategy %c ".concat(version, " "), "color: white; background: coral; font-weight: 700;", "color: coral; background: white; font-weight: 700;");
+console.info("%c Linus Strategy %c ".concat(version, " "), "color: #F5F5DC; background: #004225; font-weight: 700;", "color: #004225; background: #F5F5DC; font-weight: 700;");
 
 
 /***/ }),
@@ -6040,7 +6066,7 @@ function getStateContent(entity_id) {
 function navigateTo(path) {
     return {
         action: "navigate",
-        navigation_path: `/dashboard/${path}`,
+        navigation_path: `${path}`,
     };
 }
 function getAggregateEntity(device, domains, deviceClasses) {
@@ -6214,7 +6240,6 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../cards/ControllerCard */ "./src/cards/ControllerCard.ts");
 /* harmony import */ var _cards_SwipeCard__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../cards/SwipeCard */ "./src/cards/SwipeCard.ts");
 /* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../utils */ "./src/utils.ts");
-/* harmony import */ var _cards_AggregateCard__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../cards/AggregateCard */ "./src/cards/AggregateCard.ts");
 var __classPrivateFieldSet = (undefined && undefined.__classPrivateFieldSet) || function (receiver, state, value, kind, f) {
     if (kind === "m") throw new TypeError("Private method is not writable");
     if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a setter");
@@ -6227,7 +6252,6 @@ var __classPrivateFieldGet = (undefined && undefined.__classPrivateFieldGet) || 
     return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
 };
 var _AbstractView_domain;
-
 
 
 
@@ -6258,12 +6282,13 @@ class AbstractView {
          */
         this.config = {
             icon: "mdi:view-dashboard",
+            type: "sections",
             subview: false,
         };
         /**
          * A card to switch all entities in the view.
          *
-         * @type {StackCardConfig}
+         * @type {LovelaceBadgeConfig}
          */
         this.viewControllerCard = {
             cards: [],
@@ -6286,38 +6311,40 @@ class AbstractView {
     /**
      * Create the cards to include in the view.
      *
-     * @return {Promise<(StackCardConfig | TitleCardConfig)[]>} An array of card objects.
+     * @return {Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig)[]>} Promise a View Card array.
+     * @override
      */
     async createViewCards() {
-        const viewCards = [];
+        return [];
+    }
+    /**
+     * Create the cards to include in the view.
+     *
+     * @return {Promise<LovelaceGridCardConfig[]>} Promise a View Card array.
+     * @override
+     */
+    async createSectionCards() {
+        const viewSections = [];
         const configEntityHidden = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.strategyOptions.domains[__classPrivateFieldGet(this, _AbstractView_domain, "f") ?? "_"].hide_config_entities
             || _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.strategyOptions.domains["_"].hide_config_entities;
-        if (__classPrivateFieldGet(this, _AbstractView_domain, "f") && _variables__WEBPACK_IMPORTED_MODULE_0__.MAGIC_AREAS_DOMAINS.includes(__classPrivateFieldGet(this, _AbstractView_domain, "f"))) {
-            viewCards.push(new _cards_AggregateCard__WEBPACK_IMPORTED_MODULE_5__.AggregateCard(__classPrivateFieldGet(this, _AbstractView_domain, "f")).createCard());
-        }
         const areasByFloor = (0,_utils__WEBPACK_IMPORTED_MODULE_4__.groupBy)(_Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.areas, (e) => e.floor_id ?? "undisclosed");
         for (const floor of [..._Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.floors, _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.strategyOptions.floors.undisclosed]) {
             if (__classPrivateFieldGet(this, _AbstractView_domain, "f") && _variables__WEBPACK_IMPORTED_MODULE_0__.MAGIC_AREAS_DOMAINS.includes(__classPrivateFieldGet(this, _AbstractView_domain, "f")) && floor.floor_id !== "undisclosed")
                 continue;
             if (!(floor.floor_id in areasByFloor) || areasByFloor[floor.floor_id].length === 0)
                 continue;
-            let floorCards = [];
-            if (floor.floor_id !== "undisclosed") {
-                floorCards.push({
-                    type: "heading",
-                    heading: floor.name,
-                    heading_style: "title",
-                });
-            }
-            let areaCards = [];
+            let floorCards = {
+                type: "grid",
+                cards: []
+            };
             // Create cards for each area.
             for (const [i, area] of areasByFloor[floor.floor_id].entries()) {
-                areaCards = [];
-                if (__classPrivateFieldGet(this, _AbstractView_domain, "f") && !_variables__WEBPACK_IMPORTED_MODULE_0__.MAGIC_AREAS_DOMAINS.includes(__classPrivateFieldGet(this, _AbstractView_domain, "f")) && area.area_id !== "undisclosed")
-                    continue;
                 const entities = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.getDeviceEntities(area, __classPrivateFieldGet(this, _AbstractView_domain, "f") ?? "");
                 const className = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.sanitizeClassName(__classPrivateFieldGet(this, _AbstractView_domain, "f") + "Card");
                 const cardModule = await __webpack_require__("./src/cards lazy recursive ^\\.\\/.*$")(`./${className}`);
+                if (entities.length === 0 || !cardModule) {
+                    continue;
+                }
                 // Set the target for controller cards to the current area.
                 let target = {
                     area_id: [area.area_id],
@@ -6329,6 +6356,18 @@ class AbstractView {
                             entity_id: entities.map(entity => entity.entity_id),
                         };
                 }
+                floorCards.cards.push({
+                    type: "heading",
+                    heading: floor.name,
+                    heading_style: "title",
+                    badges: [],
+                    layout_options: {
+                        grid_columns: "full",
+                        grid_rows: 1
+                    },
+                    icon: floor.icon ?? "mdi:floor-plan",
+                });
+                let areaCards = [];
                 const swipeCard = [];
                 // Create a card for each domain-entity of the current area.
                 for (const entity of entities) {
@@ -6348,30 +6387,22 @@ class AbstractView {
                 // Vertical stack the area cards if it has entities.
                 if (areaCards.length) {
                     const titleCardOptions = ("controllerCardOptions" in this.config) ? this.config.controllerCardOptions : {};
+                    titleCardOptions.subtitle = area.name;
+                    titleCardOptions.subtitleIcon = area.icon ?? "mdi:floor-plan";
+                    titleCardOptions.navigate = area.slug;
                     // Create and insert a Controller card.
-                    areaCards.unshift(new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_2__.ControllerCard(target, Object.assign({ subtitle: area.name }, titleCardOptions)).createCard());
-                    floorCards.push({
-                        type: "vertical-stack",
-                        cards: areaCards,
-                    });
+                    areaCards.unshift(...new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_2__.ControllerCard(target, titleCardOptions).createCard());
+                    floorCards.cards.push(...areaCards);
                 }
             }
-            if (floorCards.length > 0)
-                viewCards.push(...floorCards);
+            if (floorCards.cards.length > 0)
+                viewSections.push(floorCards);
         }
-        // Add a Controller Card for all the entities in the view.
-        if (viewCards.length) {
-            viewCards.unshift(this.viewControllerCard);
-        }
-        return viewCards;
-    }
-    /**
-     * Create the cards to include in the view.
-     *
-     * @return {Promise<(StackCardConfig | TitleCardConfig)[]>} An array of card objects.
-     */
-    async createSectionCards() {
-        return [];
+        // // Add a Controller Card for all the entities in the view.
+        // if (viewSections.length) {
+        //   viewSections.unshift(this.viewControllerCard);
+        // }
+        return viewSections;
     }
     /**
      * Get a view object.
@@ -6840,7 +6871,7 @@ class HomeView extends _AbstractView__WEBPACK_IMPORTED_MODULE_1__.AbstractView {
     /**
      * Create the cards to include in the view.
      *
-     * @return {Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig)[]>} Promise a View Card array.
+     * @return {Promise<LovelaceGridCardConfig[]>} Promise a View Card array.
      * @override
      */
     async createSectionCards() {
@@ -7422,8 +7453,10 @@ class SecurityDetailsView {
     async createViewCards() {
         const viewCards = [];
         const globalDevice = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices["global"];
-        if (!globalDevice)
+        if (!globalDevice) {
+            console.debug("Security view : Global device not found");
             return [];
+        }
         const { aggregate_motion, aggregate_door, aggregate_window, } = globalDevice?.entities;
         if (aggregate_motion?.entity_id) {
             viewCards.push(new _cards_AggregateCard__WEBPACK_IMPORTED_MODULE_1__.AggregateCard('binary_sensor', { device_class: 'motion', title: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.binary_sensor.entity_component.motion.name") }).createCard());

@@ -41,7 +41,7 @@ export function getStateContent(entity_id: string): string {
 export function navigateTo(path: string): ActionConfig {
     return {
         action: "navigate",
-        navigation_path: `/dashboard/${path}`,
+        navigation_path: `${path}`,
     }
 }
 

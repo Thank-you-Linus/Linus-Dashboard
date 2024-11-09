@@ -1,4 +1,5 @@
 import { HassServiceTarget } from "home-assistant-js-websocket";
+import { LovelaceGridCardConfig } from "../lovelace/cards/types";
 
 export type LovelaceStrategyConfig = {
   type: string;
@@ -57,7 +58,7 @@ export interface LovelaceSectionConfig {
   view_index?: number;
   view_layout?: any;
   type: string;
-  [key: string]: any;
+  sections: LovelaceGridCardConfig[];
 }
 
 export interface ToggleActionConfig extends BaseActionConfig {

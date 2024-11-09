@@ -26,7 +26,7 @@ class DoorChip extends AbstractChip {
     content: Helper.getDeviceClassCountTemplate("binary_sensor", "door", "ne", "off"),
     tap_action: {
       action: "navigate",
-      navigation_path: "doors",
+      navigation_path: "security-details",
     },
   };
 

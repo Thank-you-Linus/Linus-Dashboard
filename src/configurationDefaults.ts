@@ -48,8 +48,8 @@ export const configurationDefaults: StrategyDefaults = {
           new SettingsChip({ tap_action: new LightSettings(device).getPopup() }).getChip()
         ]
       },
-      iconOn: "mdi:lightbulb",
-      iconOff: "mdi:lightbulb-off",
+      iconOn: "mdi:lightbulb-group",
+      iconOff: "mdi:lightbulb-group-off",
       onService: "light.turn_on",
       offService: "light.turn_off",
       hidden: false,

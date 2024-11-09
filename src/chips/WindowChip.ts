@@ -26,7 +26,7 @@ class WindowChip extends AbstractChip {
     content: Helper.getDeviceClassCountTemplate("binary_sensor", "window", "ne", "off"),
     tap_action: {
       action: "navigate",
-      navigation_path: "windows",
+      navigation_path: "security-details",
     },
   };
 

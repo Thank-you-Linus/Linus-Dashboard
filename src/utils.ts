@@ -73,3 +73,8 @@ export function getAggregateEntity(device: MagicAreaRegistryEntry, domains: stri
 
     return aggregateKeys.filter(Boolean)
 }
+
+export function getMAEntity(device: MagicAreaRegistryEntry, domain: string, deviceClass?: string): EntityRegistryEntry {
+    const magicAreasKey = domain === "light" ? 'all_lights' : `${domain}_group`;
+    return device?.entities[magicAreasKey]
+}

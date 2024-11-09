@@ -1504,6 +1504,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   ControllerCard: () => (/* binding */ ControllerCard)
 /* harmony export */ });
 /* harmony import */ var _Helper__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../Helper */ "./src/Helper.ts");
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utils */ "./src/utils.ts");
 var __classPrivateFieldSet = (undefined && undefined.__classPrivateFieldSet) || function (receiver, state, value, kind, f) {
     if (kind === "m") throw new TypeError("Private method is not writable");
     if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a setter");
@@ -1515,7 +1516,8 @@ var __classPrivateFieldGet = (undefined && undefined.__classPrivateFieldGet) || 
     if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
     return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
 };
-var _ControllerCard_target, _ControllerCard_defaultConfig;
+var _ControllerCard_target, _ControllerCard_domain, _ControllerCard_defaultConfig;
+
 
 /**
  * Controller Card class.
@@ -1531,12 +1533,17 @@ class ControllerCard {
      * @param {HassServiceTarget} target The target to control the entities of.
      * @param {cards.ControllerCardOptions} options Controller Card options.
      */
-    constructor(target, options = {}) {
+    constructor(target, options = {}, domain) {
         /**
          * @type {HassServiceTarget} The target to control the entities of.
          * @private
          */
         _ControllerCard_target.set(this, void 0);
+        /**
+         * @type {string} The target to control the entities of.
+         * @private
+         */
+        _ControllerCard_domain.set(this, void 0);
         /**
          * Default configuration of the card.
          *
@@ -1552,6 +1559,7 @@ class ControllerCard {
             offService: "none",
         });
         __classPrivateFieldSet(this, _ControllerCard_target, target, "f");
+        __classPrivateFieldSet(this, _ControllerCard_domain, domain, "f");
         __classPrivateFieldSet(this, _ControllerCard_defaultConfig, {
             ...__classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f"),
             ...options,
@@ -1605,17 +1613,17 @@ class ControllerCard {
         if (__classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").showControls || __classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").extraControls) {
             const areaId = Array.isArray(__classPrivateFieldGet(this, _ControllerCard_target, "f").area_id) ? __classPrivateFieldGet(this, _ControllerCard_target, "f").area_id[0] : __classPrivateFieldGet(this, _ControllerCard_target, "f").area_id;
             const linusDevice = areaId ? _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices[areaId] : undefined;
-            cards[0].badges.push({
-                type: "custom:mushroom-chips-card",
-                alignment: "end",
-                chips: [
-                    (__classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").showControls &&
-                        (__classPrivateFieldGet(this, _ControllerCard_target, "f").entity_id && typeof __classPrivateFieldGet(this, _ControllerCard_target, "f").entity_id === "string" ?
+            const magicAreasEntity = linusDevice && __classPrivateFieldGet(this, _ControllerCard_domain, "f") && (0,_utils__WEBPACK_IMPORTED_MODULE_1__.getMAEntity)(linusDevice, __classPrivateFieldGet(this, _ControllerCard_domain, "f"));
+            const badges = [];
+            if (__classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").showControls) {
+                badges.push({
+                    type: "custom:mushroom-chips-card",
+                    alignment: "end",
+                    chips: [magicAreasEntity ?
                             {
-                                type: "template",
-                                entity: __classPrivateFieldGet(this, _ControllerCard_target, "f").entity_id,
-                                icon: `{{ '${__classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").iconOn}' if states(entity) == 'on' else '${__classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").iconOff}' }}`,
-                                icon_color: `{{ 'amber' if states(entity) == 'on' else 'red' }}`,
+                                type: "entity",
+                                entity: magicAreasEntity.entity_id,
+                                content_info: "none",
                                 tap_action: {
                                     action: "toggle"
                                 },
@@ -1633,15 +1641,27 @@ class ControllerCard {
                                     target: __classPrivateFieldGet(this, _ControllerCard_target, "f"),
                                     data: {},
                                 },
-                            })),
-                    ...(__classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").extraControls && __classPrivateFieldGet(this, _ControllerCard_target, "f") ? __classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").extraControls(linusDevice) : [])
-                ],
-            });
+                            }
+                    ]
+                });
+            }
+            if (magicAreasEntity && __classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").extraControls) {
+                badges.push(...__classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").extraControls(linusDevice)?.map((chip) => {
+                    return {
+                        type: "custom:mushroom-chips-card",
+                        alignment: "end",
+                        chips: [chip]
+                    };
+                }));
+            }
+            if (badges.length) {
+                cards[0].badges = badges;
+            }
         }
         return cards;
     }
 }
-_ControllerCard_target = new WeakMap(), _ControllerCard_defaultConfig = new WeakMap();
+_ControllerCard_target = new WeakMap(), _ControllerCard_domain = new WeakMap(), _ControllerCard_defaultConfig = new WeakMap();
 
 
 
@@ -3203,7 +3223,7 @@ class DoorChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.AbstractChip {
             content: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getDeviceClassCountTemplate("binary_sensor", "door", "ne", "off"),
             tap_action: {
                 action: "navigate",
-                navigation_path: "doors",
+                navigation_path: "security-details",
             },
         });
         this.config = Object.assign(this.config, __classPrivateFieldGet(this, _DoorChip_defaultConfig, "f"), options);
@@ -3731,11 +3751,8 @@ class MotionChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.AbstractChip
             icon_color: "grey",
             content: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getDeviceClassCountTemplate("binary_sensor", "motion", "ne", "off"),
             tap_action: {
-                action: "none",
-            },
-            hold_action: {
                 action: "navigate",
-                navigation_path: "motions",
+                navigation_path: "security-details",
             },
         });
         this.config = Object.assign(this.config, __classPrivateFieldGet(this, _MotionChip_defaultConfig, "f"), options);
@@ -4331,7 +4348,7 @@ class WindowChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.AbstractChip
             content: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getDeviceClassCountTemplate("binary_sensor", "window", "ne", "off"),
             tap_action: {
                 action: "navigate",
-                navigation_path: "windows",
+                navigation_path: "security-details",
             },
         });
         this.config = Object.assign(this.config, __classPrivateFieldGet(this, _WindowChip_defaultConfig, "f"), options);
@@ -4405,8 +4422,8 @@ const configurationDefaults = {
                     new _chips_SettingsChip__WEBPACK_IMPORTED_MODULE_1__.SettingsChip({ tap_action: new _popups_LightSettingsPopup__WEBPACK_IMPORTED_MODULE_2__.LightSettings(device).getPopup() }).getChip()
                 ];
             },
-            iconOn: "mdi:lightbulb",
-            iconOff: "mdi:lightbulb-off",
+            iconOn: "mdi:lightbulb-group",
+            iconOff: "mdi:lightbulb-group-off",
             onService: "light.turn_on",
             offService: "light.turn_off",
             hidden: false,
@@ -5883,6 +5900,7 @@ var generic;
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   getAggregateEntity: () => (/* binding */ getAggregateEntity),
+/* harmony export */   getMAEntity: () => (/* binding */ getMAEntity),
 /* harmony export */   getStateContent: () => (/* binding */ getStateContent),
 /* harmony export */   groupBy: () => (/* binding */ groupBy),
 /* harmony export */   navigateTo: () => (/* binding */ navigateTo),
@@ -5944,6 +5962,10 @@ function getAggregateEntity(device, domains, deviceClasses) {
         }
     }
     return aggregateKeys.filter(Boolean);
+}
+function getMAEntity(device, domain, deviceClass) {
+    const magicAreasKey = domain === "light" ? 'all_lights' : `${domain}_group`;
+    return device?.entities[magicAreasKey];
 }
 
 
@@ -6157,9 +6179,7 @@ class AbstractView {
         if (!_Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.isInitialized()) {
             throw new Error("The Helper module must be initialized before using this one.");
         }
-        if (domain) {
-            __classPrivateFieldSet(this, _AbstractView_domain, domain, "f");
-        }
+        __classPrivateFieldSet(this, _AbstractView_domain, domain, "f");
     }
     /**
      * Create the cards to include in the view.
@@ -6245,8 +6265,12 @@ class AbstractView {
                     titleCardOptions.subtitle = area.name;
                     titleCardOptions.subtitleIcon = area.icon ?? "mdi:floor-plan";
                     titleCardOptions.navigate = area.slug;
+                    if (__classPrivateFieldGet(this, _AbstractView_domain, "f")) {
+                        titleCardOptions.showControls = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.strategyOptions.domains[__classPrivateFieldGet(this, _AbstractView_domain, "f")].showControls;
+                        titleCardOptions.extraControls = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.strategyOptions.domains[__classPrivateFieldGet(this, _AbstractView_domain, "f")].extraControls;
+                    }
                     // Create and insert a Controller card.
-                    areaCards.unshift(...new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_2__.ControllerCard(target, titleCardOptions).createCard());
+                    areaCards.unshift(...new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_2__.ControllerCard(target, titleCardOptions, __classPrivateFieldGet(this, _AbstractView_domain, "f")).createCard());
                     floorCards.cards.push(...areaCards);
                 }
             }
@@ -6309,6 +6333,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _cards_SensorCard__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../cards/SensorCard */ "./src/cards/SensorCard.ts");
 /* harmony import */ var _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../cards/ControllerCard */ "./src/cards/ControllerCard.ts");
 /* harmony import */ var _cards_MainAreaCard__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../cards/MainAreaCard */ "./src/cards/MainAreaCard.ts");
+/* harmony import */ var _variables__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../variables */ "./src/variables.ts");
+
 
 
 
@@ -6387,10 +6413,6 @@ class AreaView {
                 const domainSections = await __webpack_require__("./src/cards lazy recursive ^\\.\\/.*$")(`./${className}`).then(cardModule => {
                     const entities = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getDeviceEntities(this.area, domain);
                     const configEntityHidden = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain]?.hide_config_entities || _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains["_"].hide_config_entities;
-                    const magicAreasDevice = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices[this.area.slug];
-                    const magicAreasKey = domain === "light" ? 'all_lights' : `${domain}_group`;
-                    // Set the target for controller cards to linus aggregate entity if exist
-                    target["entity_id"] = magicAreasDevice?.entities[magicAreasKey]?.entity_id;
                     // Set the target for controller cards to entities without an area
                     if (this.area.area_id === "undisclosed") {
                         target = {
@@ -6400,8 +6422,14 @@ class AreaView {
                     const domainCards = [];
                     if (entities.length) {
                         // Create a Controller card for the current domain
-                        const title = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize(domain === 'scene' ? 'ui.dialogs.quick-bar.commands.navigation.scene' : `component.${domain}.entity_component._.name`);
-                        const titleCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_3__.ControllerCard(target, { ..._Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain], domain, title }).createCard();
+                        const titleCardOptions = ("controllerCardOptions" in this.config) ? this.config.controllerCardOptions : {};
+                        titleCardOptions.subtitle = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize(domain === 'scene' ? 'ui.dialogs.quick-bar.commands.navigation.scene' : `component.${domain}.entity_component._.name`);
+                        titleCardOptions.domain = domain;
+                        titleCardOptions.subtitleIcon = _variables__WEBPACK_IMPORTED_MODULE_5__.DOMAIN_ICONS[domain];
+                        titleCardOptions.navigate = domain + "s";
+                        titleCardOptions.showControls = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain].showControls;
+                        titleCardOptions.extraControls = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain].extraControls;
+                        const titleCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_3__.ControllerCard(target, titleCardOptions, domain).createCard();
                         if (domain === "sensor") {
                             // Create a card for each entity-sensor of the current area
                             const sensorStates = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getStateEntities(this.area, "sensor");
@@ -7263,8 +7291,8 @@ class LightView extends _AbstractView__WEBPACK_IMPORTED_MODULE_2__.AbstractView 
             icon: "mdi:lightbulb-group",
             subview: false,
             controllerCardOptions: {
-                iconOn: "mdi:lightbulb",
-                iconOff: "mdi:lightbulb-off",
+                iconOn: "mdi:lightbulb-group",
+                iconOff: "mdi:lightbulb-group-off",
                 onService: "light.turn_on",
                 offService: "light.turn_off",
             },

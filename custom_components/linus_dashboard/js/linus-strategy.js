@@ -6345,6 +6345,7 @@ class AbstractView {
                 if (entities.length === 0 || !cardModule) {
                     continue;
                 }
+                console.log("AbstractView ", __classPrivateFieldGet(this, _AbstractView_domain, "f"), area);
                 // Set the target for controller cards to the current area.
                 let target = {
                     area_id: [area.area_id],
@@ -6370,6 +6371,7 @@ class AbstractView {
                 let areaCards = [];
                 const swipeCard = [];
                 // Create a card for each domain-entity of the current area.
+                console.log("entities", entities);
                 for (const entity of entities) {
                     let cardOptions = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.strategyOptions.card_options?.[entity.entity_id];
                     let deviceOptions = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.strategyOptions.card_options?.[entity.device_id ?? "null"];

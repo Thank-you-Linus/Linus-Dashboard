@@ -1,5 +1,4 @@
 import { cards } from "../types/strategy/cards";
-import { StackCardConfig } from "../types/homeassistant/lovelace/cards/types";
 import { LovelaceCardConfig } from "../types/homeassistant/data/lovelace";
 import { HassServiceTarget } from "home-assistant-js-websocket";
 import { Helper } from "../Helper";
@@ -50,22 +49,56 @@ class ControllerCard {
   /**
    * Create a Controller card.
    *
-   * @return {StackCardConfig} A Controller card.
+   * @return {LovelaceCardConfig[]} A Controller card.
    */
-  createCard(): StackCardConfig {
-    const cards: LovelaceCardConfig[] = [
-      {
-        type: "custom:mushroom-title-card",
-        title: this.#defaultConfig.title,
-        subtitle: this.#defaultConfig.subtitle,
-      },
-    ];
+  createCard(): LovelaceCardConfig[] {
+    const cards: LovelaceCardConfig[] = [];
+
+    if (this.#defaultConfig.title) {
+      cards.push({
+        type: "heading",
+        heading: this.#defaultConfig.title,
+        icon: this.#defaultConfig.titleIcon,
+        heading_style: "title",
+        badges: [],
+        layout_options: {
+          grid_columns: "full",
+          grid_rows: 1
+        },
+        ...(this.#defaultConfig.navigate && {
+          tap_action: {
+            action: "navigate",
+            navigation_path: this.#defaultConfig.navigate
+          },
+        })
+      })
+    }
+
+    if (this.#defaultConfig.subtitle) {
+      cards.push({
+        type: "heading",
+        heading: this.#defaultConfig.subtitle,
+        icon: this.#defaultConfig.subtitleIcon,
+        heading_style: "subtitle",
+        badges: [],
+        layout_options: {
+          grid_columns: "full",
+          grid_rows: 1
+        },
+        ...(this.#defaultConfig.navigate && {
+          tap_action: {
+            action: "navigate",
+            navigation_path: this.#defaultConfig.navigate
+          },
+        })
+      })
+    }
 
     if (this.#defaultConfig.showControls || this.#defaultConfig.extraControls) {
       const areaId = Array.isArray(this.#target.area_id) ? this.#target.area_id[0] : this.#target.area_id;
       const linusDevice = areaId ? Helper.magicAreasDevices[areaId] : undefined;
 
-      cards.push({
+      cards[0].badges.push({
         type: "custom:mushroom-chips-card",
         alignment: "end",
         chips: [
@@ -97,16 +130,10 @@ class ControllerCard {
           ),
           ...(this.#defaultConfig.extraControls && this.#target ? this.#defaultConfig.extraControls(linusDevice) : [])
         ],
-        card_mod: {
-          style: `ha-card {padding: var(--title-padding);}`
-        }
       });
     }
 
-    return {
-      type: "horizontal-stack",
-      cards: cards,
-    };
+    return cards;
   }
 }
 

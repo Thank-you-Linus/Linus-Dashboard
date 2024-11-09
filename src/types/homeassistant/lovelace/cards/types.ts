@@ -1,4 +1,4 @@
-import { LovelaceCardConfig } from "../../data/lovelace";
+import { ActionConfig, LovelaceBadgeConfig, LovelaceCardConfig } from "../../data/lovelace";
 
 /**
  * Home Assistant Stack Card Config.
@@ -33,4 +33,33 @@ export interface AreaCardConfig extends LovelaceCardConfig {
 export interface TileCardConfig extends LovelaceCardConfig {
   type: "tile",
   features: any[]
+}
+
+export interface LovelaceGridCardConfig extends LovelaceCardConfig {
+  type: "grid";
+  cards: LovelaceCardConfig[];
+  column_span?: number;
+}
+
+export interface LovelaceHeadingCardConfig extends LovelaceCardConfig {
+  type: "heading";
+  heading: string;
+  heading_style: string;
+  badges?: LovelaceBadgeConfig[];
+  layout_options?: {
+    grid_columns?: string;
+    grid_rows?: number;
+  };
+  tap_action?: ActionConfig;
+  icon?: string;
+}
+
+export interface LovelaceTileCardConfig extends LovelaceCardConfig {
+  type: "tile";
+  entity: string;
+  hide_state?: boolean;
+  vertical?: boolean;
+  features?: Array<{
+    type: string;
+  }>;
 }

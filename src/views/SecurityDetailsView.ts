@@ -57,7 +57,10 @@ abstract class SecurityDetailsView {
 
     const globalDevice = Helper.magicAreasDevices["global"];
 
-    if (!globalDevice) return [];
+    if (!globalDevice) {
+      console.debug("Security view : Global device not found");
+      return [];
+    }
 
     const {
       aggregate_motion,

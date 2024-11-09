@@ -2,7 +2,7 @@ import { Helper } from "./Helper";
 import { SensorCard } from "./cards/SensorCard";
 import { ControllerCard } from "./cards/ControllerCard";
 import { generic } from "./types/strategy/generic";
-import { LovelaceCardConfig, LovelaceConfig, LovelaceViewConfig } from "./types/homeassistant/data/lovelace";
+import { LovelaceBadgeConfig, LovelaceCardConfig, LovelaceConfig, LovelaceViewConfig } from "./types/homeassistant/data/lovelace";
 import { StackCardConfig } from "./types/homeassistant/lovelace/cards/types";
 import { EntityCardConfig } from "./types/lovelace-mushroom/cards/entity-card-config";
 import { HassServiceTarget } from "home-assistant-js-websocket";
@@ -248,15 +248,15 @@ class MushroomStrategy extends HTMLTemplateElement {
 
       // Create a column of miscellaneous entity cards.
       if (miscellaneousEntities.length) {
-        let miscellaneousCards: (StackCardConfig | EntityCardConfig | SwipeCardConfig)[] = [];
+        let miscellaneousCards: (LovelaceBadgeConfig | EntityCardConfig | SwipeCardConfig)[] = [];
 
         try {
           miscellaneousCards = await import("./cards/MiscellaneousCard").then(cardModule => {
-            const miscellaneousCards: (StackCardConfig | EntityCardConfig)[] = [
+            const miscellaneousCards: (LovelaceBadgeConfig | EntityCardConfig)[] = [
               new ControllerCard(target, Helper.strategyOptions.domains.default).createCard(),
             ];
 
-            const swipeCard = []
+            const swipeCard = [] as SwipeCardConfig[];
 
             for (const entity of miscellaneousEntities) {
               let cardOptions = Helper.strategyOptions.card_options?.[entity.entity_id];
@@ -301,5 +301,5 @@ customElements.define("ll-strategy-linus-strategy", MushroomStrategy);
 export const version = "v4.0.1";
 console.info(
   "%c Linus Strategy %c ".concat(version, " "),
-  "color: white; background: coral; font-weight: 700;", "color: coral; background: white; font-weight: 700;"
+  "color: #F5F5DC; background: #004225; font-weight: 700;", "color: #004225; background: #F5F5DC; font-weight: 700;"
 );

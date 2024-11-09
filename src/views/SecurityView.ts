@@ -1,5 +1,5 @@
 import { Helper } from "../Helper";
-import { StackCardConfig } from "../types/homeassistant/lovelace/cards/types";
+import { LovelaceGridCardConfig, StackCardConfig } from "../types/homeassistant/lovelace/cards/types";
 import { LovelaceCardConfig, LovelaceSectionConfig, LovelaceViewConfig } from "../types/homeassistant/data/lovelace";
 import { TitleCardConfig } from "../types/lovelace-mushroom/cards/title-card-config";
 import { AlarmCard } from "../cards/AlarmCard";
@@ -56,7 +56,7 @@ abstract class SecurityView {
    * @return {Promise<(StackCardConfig | TitleCardConfig)[]>} An array of card objects.
    */
   async createSectionCards(): Promise<(StackCardConfig | TitleCardConfig)[]> {
-    const globalSection: LovelaceSectionConfig = {
+    const globalSection: LovelaceGridCardConfig = {
       type: "grid",
       column_span: 1,
       cards: []

@@ -2,7 +2,7 @@ import { Helper } from "./Helper";
 import { generic } from "./types/strategy/generic";
 import { LovelaceCardConfig, LovelaceConfig, LovelaceViewConfig } from "./types/homeassistant/data/lovelace";
 import StrategyArea = generic.StrategyArea;
-import { MAGIC_AREAS_DOMAINS } from "./variables";
+import { AREA_CARDS_DOMAINS } from "./variables";
 import { AreaView } from "./views/AreaView";
 
 /**
@@ -38,7 +38,7 @@ class MushroomStrategy extends HTMLTemplateElement {
 
     // Create a view for each exposed domain.
     for (let viewId of Helper.getExposedViewIds()) {
-      if (MAGIC_AREAS_DOMAINS.includes(viewId) && (Helper.domains[viewId] ?? []).length === 0) continue
+      if (AREA_CARDS_DOMAINS.includes(viewId) && (Helper.domains[viewId] ?? []).length === 0) continue
       try {
         const viewType = Helper.sanitizeClassName(viewId + "View");
         viewModule = await import(`./views/${viewType}`);
@@ -97,7 +97,6 @@ class MushroomStrategy extends HTMLTemplateElement {
     let view = {} as LovelaceViewConfig
 
     // Create a view for each exposed domain.
-    // if (MAGIC_AREAS_DOMAINS.includes(viewId) && (Helper.domains[viewId] ?? []).length === 0) continue
     try {
       view = await new AreaView(area).getView();
     } catch (e) {

@@ -143,7 +143,7 @@ abstract class AbstractView {
 
         let areaCards: LovelaceCardConfig[] = [];
 
-        const swipeCard = []
+        const swipeCards = []
 
         // Create a card for each domain-entity of the current area.
         for (const entity of entities) {
@@ -157,11 +157,12 @@ abstract class AbstractView {
           if (entity.entity_category === "config" && configEntityHidden) {
             continue;
           }
-          swipeCard.push(new cardModule[className](entity, cardOptions).getCard());
+          swipeCards.push(new cardModule[className](entity, cardOptions).getCard());
         }
-        console.log('swipeCard', swipeCard)
-        if (swipeCard.length) {
-          areaCards.push(new SwipeCard(swipeCard).getCard())
+        console.log('swipeCards', swipeCards)
+        if (swipeCards.length) {
+          areaCards.push(new SwipeCard(swipeCards).getCard())
+          console.log('WOW areaCards ', areaCards)
         }
 
         // Vertical stack the area cards if it has entities.

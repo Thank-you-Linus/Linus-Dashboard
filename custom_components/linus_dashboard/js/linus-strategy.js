@@ -6369,7 +6369,7 @@ class AbstractView {
                     icon: floor.icon ?? "mdi:floor-plan",
                 });
                 let areaCards = [];
-                const swipeCard = [];
+                const swipeCards = [];
                 // Create a card for each domain-entity of the current area.
                 for (const entity of entities) {
                     let cardOptions = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.strategyOptions.card_options?.[entity.entity_id];
@@ -6380,11 +6380,12 @@ class AbstractView {
                     if (entity.entity_category === "config" && configEntityHidden) {
                         continue;
                     }
-                    swipeCard.push(new cardModule[className](entity, cardOptions).getCard());
+                    swipeCards.push(new cardModule[className](entity, cardOptions).getCard());
                 }
-                console.log('swipeCard', swipeCard);
-                if (swipeCard.length) {
-                    areaCards.push(new _cards_SwipeCard__WEBPACK_IMPORTED_MODULE_3__.SwipeCard(swipeCard).getCard());
+                console.log('swipeCards', swipeCards);
+                if (swipeCards.length) {
+                    areaCards.push(new _cards_SwipeCard__WEBPACK_IMPORTED_MODULE_3__.SwipeCard(swipeCards).getCard());
+                    console.log('WOW areaCards ', areaCards);
                 }
                 // Vertical stack the area cards if it has entities.
                 if (areaCards.length) {

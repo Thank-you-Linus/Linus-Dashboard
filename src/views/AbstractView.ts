@@ -44,7 +44,7 @@ abstract class AbstractView {
    * @private
    * @readonly
    */
-  readonly #domain?: string;
+  readonly #domain: string;
 
   /**
    * Class constructor.
@@ -59,9 +59,7 @@ abstract class AbstractView {
       throw new Error("The Helper module must be initialized before using this one.");
     }
 
-    if (domain) {
-      this.#domain = domain;
-    }
+    this.#domain = domain;
   }
 
   /**
@@ -160,13 +158,17 @@ abstract class AbstractView {
 
         // Vertical stack the area cards if it has entities.
         if (areaCards.length) {
-
           const titleCardOptions: any = ("controllerCardOptions" in this.config) ? this.config.controllerCardOptions : {};
           titleCardOptions.subtitle = area.name
           titleCardOptions.subtitleIcon = area.icon ?? "mdi:floor-plan";
           titleCardOptions.navigate = area.slug;
+          if (this.#domain) {
+            titleCardOptions.showControls = Helper.strategyOptions.domains[this.#domain].showControls;
+            titleCardOptions.extraControls = Helper.strategyOptions.domains[this.#domain].extraControls;
+          }
+
           // Create and insert a Controller card.
-          areaCards.unshift(...new ControllerCard(target, titleCardOptions).createCard())
+          areaCards.unshift(...new ControllerCard(target, titleCardOptions, this.#domain).createCard())
 
           floorCards.cards.push(...areaCards);
         }

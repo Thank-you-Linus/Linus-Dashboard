@@ -1,7 +1,8 @@
 import { cards } from "../types/strategy/cards";
-import { LovelaceCardConfig } from "../types/homeassistant/data/lovelace";
+import { LovelaceBadgeConfig, LovelaceCardConfig } from "../types/homeassistant/data/lovelace";
 import { HassServiceTarget } from "home-assistant-js-websocket";
 import { Helper } from "../Helper";
+import { getMAEntity } from "../utils";
 
 /**
  * Controller Card class.
@@ -16,6 +17,12 @@ class ControllerCard {
    * @private
    */
   readonly #target: HassServiceTarget;
+
+  /**
+   * @type {string} The target to control the entities of.
+   * @private
+   */
+  readonly #domain?: string;
 
   /**
    * Default configuration of the card.
@@ -38,8 +45,9 @@ class ControllerCard {
    * @param {HassServiceTarget} target The target to control the entities of.
    * @param {cards.ControllerCardOptions} options Controller Card options.
    */
-  constructor(target: HassServiceTarget, options: cards.ControllerCardOptions = {}) {
+  constructor(target: HassServiceTarget, options: cards.ControllerCardOptions = {}, domain?: string) {
     this.#target = target;
+    this.#domain = domain;
     this.#defaultConfig = {
       ...this.#defaultConfig,
       ...options,
@@ -98,39 +106,55 @@ class ControllerCard {
       const areaId = Array.isArray(this.#target.area_id) ? this.#target.area_id[0] : this.#target.area_id;
       const linusDevice = areaId ? Helper.magicAreasDevices[areaId] : undefined;
 
-      cards[0].badges.push({
-        type: "custom:mushroom-chips-card",
-        alignment: "end",
-        chips: [
-          (this.#defaultConfig.showControls &&
-            (this.#target.entity_id && typeof this.#target.entity_id === "string" ?
-              {
-                type: "template",
-                entity: this.#target.entity_id,
-                icon: `{{ '${this.#defaultConfig.iconOn}' if states(entity) == 'on' else '${this.#defaultConfig.iconOff}' }}`,
-                icon_color: `{{ 'amber' if states(entity) == 'on' else 'red' }}`,
-                tap_action: {
-                  action: "toggle"
-                },
-                hold_action: {
-                  action: "more-info"
-                }
-              } :
-              {
-                type: "template",
-                entity: this.#target.entity_id,
-                icon: this.#defaultConfig.iconOff,
-                tap_action: {
-                  action: "call-service",
-                  service: this.#defaultConfig.offService,
-                  target: this.#target,
-                  data: {},
-                },
-              })
-          ),
-          ...(this.#defaultConfig.extraControls && this.#target ? this.#defaultConfig.extraControls(linusDevice) : [])
-        ],
-      });
+
+      const magicAreasEntity = linusDevice && this.#domain && getMAEntity(linusDevice, this.#domain);
+
+      const badges: LovelaceBadgeConfig[] = [];
+
+      if (this.#defaultConfig.showControls) {
+        badges.push({
+          type: "custom:mushroom-chips-card",
+          alignment: "end",
+          chips: [magicAreasEntity ?
+            {
+              type: "entity",
+              entity: magicAreasEntity.entity_id,
+              content_info: "none",
+              tap_action: {
+                action: "toggle"
+              },
+              hold_action: {
+                action: "more-info"
+              }
+            } :
+            {
+              type: "template",
+              entity: this.#target.entity_id,
+              icon: this.#defaultConfig.iconOff,
+              tap_action: {
+                action: "call-service",
+                service: this.#defaultConfig.offService,
+                target: this.#target,
+                data: {},
+              },
+            }
+          ]
+        });
+      }
+
+      if (magicAreasEntity && this.#defaultConfig.extraControls) {
+        badges.push(...this.#defaultConfig.extraControls(linusDevice)?.map((chip: any) => {
+          return {
+            type: "custom:mushroom-chips-card",
+            alignment: "end",
+            chips: [chip]
+          }
+        }));
+      }
+
+      if (badges.length) {
+        cards[0].badges = badges;
+      }
     }
 
     return cards;

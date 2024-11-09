@@ -25,11 +25,8 @@ class MotionChip extends AbstractChip {
     icon_color: "grey",
     content: Helper.getDeviceClassCountTemplate("binary_sensor", "motion", "ne", "off"),
     tap_action: {
-      action: "none",
-    },
-    hold_action: {
       action: "navigate",
-      navigation_path: "motions",
+      navigation_path: "security-details",
     },
   };
 

@@ -1,8 +1,8 @@
-import {Helper} from "../Helper";
-import {ControllerCard} from "../cards/ControllerCard";
-import {AbstractView} from "./AbstractView";
-import {views} from "../types/strategy/views";
-import {cards} from "../types/strategy/cards";
+import { Helper } from "../Helper";
+import { ControllerCard } from "../cards/ControllerCard";
+import { AbstractView } from "./AbstractView";
+import { views } from "../types/strategy/views";
+import { cards } from "../types/strategy/cards";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**
@@ -34,8 +34,8 @@ class LightView extends AbstractView {
     icon: "mdi:lightbulb-group",
     subview: false,
     controllerCardOptions: {
-      iconOn: "mdi:lightbulb",
-      iconOff: "mdi:lightbulb-off",
+      iconOn: "mdi:lightbulb-group",
+      iconOff: "mdi:lightbulb-group-off",
       onService: "light.turn_on",
       offService: "light.turn_off",
     },
@@ -72,4 +72,4 @@ class LightView extends AbstractView {
   }
 }
 
-export {LightView};
+export { LightView };

@@ -13,6 +13,7 @@ import { ControllerCard } from "../cards/ControllerCard";
 import { HassServiceTarget } from "home-assistant-js-websocket";
 import { MainAreaCard } from "../cards/MainAreaCard";
 import { SwipeCardConfig } from "../types/lovelace-mushroom/cards/swipe-card-config";
+import { DOMAIN_ICONS } from "../variables";
 
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
@@ -108,11 +109,6 @@ class AreaView {
         const domainSections = await import(`../cards/${className}`).then(cardModule => {
           const entities = Helper.getDeviceEntities(this.area, domain);
           const configEntityHidden = Helper.strategyOptions.domains[domain]?.hide_config_entities || Helper.strategyOptions.domains["_"].hide_config_entities;
-          const magicAreasDevice = Helper.magicAreasDevices[this.area.slug];
-          const magicAreasKey = domain === "light" ? 'all_lights' : `${domain}_group`;
-
-          // Set the target for controller cards to linus aggregate entity if exist
-          target["entity_id"] = magicAreasDevice?.entities[magicAreasKey]?.entity_id;
 
           // Set the target for controller cards to entities without an area
           if (this.area.area_id === "undisclosed") {
@@ -125,8 +121,16 @@ class AreaView {
 
           if (entities.length) {
             // Create a Controller card for the current domain
-            const title = Helper.localize(domain === 'scene' ? 'ui.dialogs.quick-bar.commands.navigation.scene' : `component.${domain}.entity_component._.name`);
-            const titleCard = new ControllerCard(target, { ...Helper.strategyOptions.domains[domain], domain, title }).createCard();
+
+            const titleCardOptions: any = ("controllerCardOptions" in this.config) ? this.config.controllerCardOptions : {};
+            titleCardOptions.subtitle = Helper.localize(domain === 'scene' ? 'ui.dialogs.quick-bar.commands.navigation.scene' : `component.${domain}.entity_component._.name`);
+            titleCardOptions.domain = domain;
+            titleCardOptions.subtitleIcon = DOMAIN_ICONS[domain as keyof typeof DOMAIN_ICONS];
+            titleCardOptions.navigate = domain + "s";
+            titleCardOptions.showControls = Helper.strategyOptions.domains[domain].showControls;
+            titleCardOptions.extraControls = Helper.strategyOptions.domains[domain].extraControls;
+
+            const titleCard = new ControllerCard(target, titleCardOptions, domain).createCard();
 
             if (domain === "sensor") {
               // Create a card for each entity-sensor of the current area

@@ -111,6 +111,8 @@ abstract class AbstractView {
           continue;
         }
 
+        console.log("AbstractView ", this.#domain, area)
+
         // Set the target for controller cards to the current area.
         let target: HassServiceTarget = {
           area_id: [area.area_id],
@@ -144,6 +146,7 @@ abstract class AbstractView {
         const swipeCard = []
 
         // Create a card for each domain-entity of the current area.
+        console.log("entities", entities)
         for (const entity of entities) {
           let cardOptions = Helper.strategyOptions.card_options?.[entity.entity_id];
           let deviceOptions = Helper.strategyOptions.card_options?.[entity.device_id ?? "null"];

@@ -161,8 +161,8 @@ abstract class AbstractView {
         }
         console.log('swipeCards', swipeCards)
         if (swipeCards.length) {
-          areaCards.push(new SwipeCard(swipeCards).getCard())
-          console.log('WOW areaCards ', areaCards)
+          // areaCards.push(new SwipeCard(swipeCards).getCard())
+          areaCards.push(...swipeCards)
         }
 
         // Vertical stack the area cards if it has entities.

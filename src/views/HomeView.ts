@@ -320,6 +320,7 @@ class HomeView extends AbstractView {
           type: "heading",
           heading: floor.name,
           heading_style: "subtitle",
+          icon: floor.icon ?? "mdi:floor-plan",
         }
       );
 

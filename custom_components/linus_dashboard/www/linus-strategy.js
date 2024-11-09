@@ -1121,7 +1121,7 @@ class AreaCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractCard {
         const { area_state, all_lights, aggregate_temperature, aggregate_battery, aggregate_health, aggregate_window, aggregate_door, aggregate_cover, aggregate_climate, light_control } = device?.entities || {};
         const icon = area.icon || "mdi:home-outline";
         return {
-            type: "vertical-stack",
+            type: "custom:stack-in-card",
             cards: [
                 this.getMainCard(area, icon, aggregate_temperature, aggregate_battery, area_state),
                 this.getChipsCard(area, device, area_state, aggregate_health, aggregate_window, aggregate_door, aggregate_cover, aggregate_climate, all_lights, light_control),
@@ -4695,7 +4695,7 @@ class MushroomStrategy extends HTMLTemplateElement {
     }
 }
 customElements.define("ll-strategy-linus-strategy", MushroomStrategy);
-const version = "v4.0.1";
+const version = "v0.0.1";
 console.info("%c Linus Strategy %c ".concat(version, " "), "color: #F5F5DC; background: #004225; font-weight: 700;", "color: #004225; background: #F5F5DC; font-weight: 700;");
 
 
@@ -7189,6 +7189,7 @@ async function _HomeView_createAreaSection() {
             type: "heading",
             heading: floor.name,
             heading_style: "subtitle",
+            icon: floor.icon ?? "mdi:floor-plan",
         });
         for (const [i, area] of areasByFloor[floor.floor_id].entries()) {
             let module;

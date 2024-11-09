@@ -112,7 +112,7 @@ class MushroomStrategy extends HTMLTemplateElement {
 
 customElements.define("ll-strategy-linus-strategy", MushroomStrategy);
 
-export const version = "v4.0.1";
+export const version = "v0.0.1";
 console.info(
   "%c Linus Strategy %c ".concat(version, " "),
   "color: #F5F5DC; background: #004225; font-weight: 700;", "color: #004225; background: #F5F5DC; font-weight: 700;"

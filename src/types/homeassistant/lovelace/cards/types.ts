@@ -37,7 +37,7 @@ export interface TileCardConfig extends LovelaceCardConfig {
 
 export interface LovelaceGridCardConfig extends LovelaceCardConfig {
   type: "grid";
-  cards: LovelaceCardConfig[];
+  cards: (LovelaceBadgeConfig | LovelaceCardConfig)[];
   column_span?: number;
 }
 

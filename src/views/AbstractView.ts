@@ -3,9 +3,7 @@ import { Helper } from "../Helper";
 import { ControllerCard } from "../cards/ControllerCard";
 import { LovelaceGridCardConfig, StackCardConfig } from "../types/homeassistant/lovelace/cards/types";
 import { LovelaceBadgeConfig, LovelaceCardConfig, LovelaceSectionConfig, LovelaceViewConfig } from "../types/homeassistant/data/lovelace";
-import { cards } from "../types/strategy/cards";
 import { HassServiceTarget } from "home-assistant-js-websocket";
-import { SwipeCard } from "../cards/SwipeCard";
 import { groupBy } from "../utils";
 import { TemplateCardConfig } from '../types/lovelace-mushroom/cards/template-card-config';
 import { ChipsCardConfig } from '../types/lovelace-mushroom/cards/chips-card';
@@ -93,12 +91,24 @@ abstract class AbstractView {
 
     for (const floor of [...Helper.floors, Helper.strategyOptions.floors.undisclosed]) {
 
-      if (this.#domain && MAGIC_AREAS_DOMAINS.includes(this.#domain) && floor.floor_id !== "undisclosed") continue
+      if (!MAGIC_AREAS_DOMAINS.includes(this.#domain ?? "")) continue
       if (!(floor.floor_id in areasByFloor) || areasByFloor[floor.floor_id].length === 0) continue
 
       let floorCards = {
         type: "grid",
-        cards: []
+        cards: [
+          {
+            type: "heading",
+            heading: floor.name,
+            heading_style: "title",
+            badges: [],
+            layout_options: {
+              grid_columns: "full",
+              grid_rows: 1
+            },
+            icon: floor.icon ?? "mdi:floor-plan",
+          }
+        ]
       } as LovelaceGridCardConfig
 
       // Create cards for each area.
@@ -110,8 +120,6 @@ abstract class AbstractView {
         if (entities.length === 0 || !cardModule) {
           continue;
         }
-
-        console.log("AbstractView ", this.#domain, area, entities)
 
         // Set the target for controller cards to the current area.
         let target: HassServiceTarget = {
@@ -127,23 +135,9 @@ abstract class AbstractView {
             }
         }
 
-        floorCards.cards.push(
-          {
-            type: "heading",
-            heading: floor.name,
-            heading_style: "title",
-            badges: [],
-            layout_options: {
-              grid_columns: "full",
-              grid_rows: 1
-            },
-            icon: floor.icon ?? "mdi:floor-plan",
-          }
-        );
-
         let areaCards: LovelaceCardConfig[] = [];
 
-        const swipeCards = []
+        const entityCards = []
 
         // Create a card for each domain-entity of the current area.
         for (const entity of entities) {
@@ -157,12 +151,11 @@ abstract class AbstractView {
           if (entity.entity_category === "config" && configEntityHidden) {
             continue;
           }
-          swipeCards.push(new cardModule[className](entity, cardOptions).getCard());
+          entityCards.push(new cardModule[className](entity, cardOptions).getCard());
         }
-        console.log('swipeCards', swipeCards)
-        if (swipeCards.length) {
-          // areaCards.push(new SwipeCard(swipeCards).getCard())
-          areaCards.push(...swipeCards)
+        if (entityCards.length) {
+          // areaCards.push(new SwipeCard(entityCards).getCard())
+          areaCards.push(...entityCards)
         }
 
         // Vertical stack the area cards if it has entities.
@@ -179,7 +172,7 @@ abstract class AbstractView {
         }
       }
 
-      if (floorCards.cards.length > 0) viewSections.push(floorCards)
+      if (floorCards.cards.length > 1) viewSections.push(floorCards)
     }
 
     // // Add a Controller Card for all the entities in the view.
@@ -187,7 +180,6 @@ abstract class AbstractView {
     //   viewSections.unshift(this.viewControllerCard);
     // }
 
-    console.log('viewSections', viewSections)
 
     return viewSections;
   }

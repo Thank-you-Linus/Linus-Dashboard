@@ -1,17 +1,9 @@
 import { Helper } from "./Helper";
-import { SensorCard } from "./cards/SensorCard";
-import { ControllerCard } from "./cards/ControllerCard";
 import { generic } from "./types/strategy/generic";
-import { LovelaceBadgeConfig, LovelaceCardConfig, LovelaceConfig, LovelaceViewConfig } from "./types/homeassistant/data/lovelace";
-import { StackCardConfig } from "./types/homeassistant/lovelace/cards/types";
-import { EntityCardConfig } from "./types/lovelace-mushroom/cards/entity-card-config";
-import { HassServiceTarget } from "home-assistant-js-websocket";
+import { LovelaceCardConfig, LovelaceConfig, LovelaceViewConfig } from "./types/homeassistant/data/lovelace";
 import StrategyArea = generic.StrategyArea;
-import { SwipeCard } from "./cards/SwipeCard";
-import { MainAreaCard } from "./cards/MainAreaCard";
-import { SwipeCardConfig } from "./types/lovelace-mushroom/cards/swipe-card-config";
-import { slugify } from "./utils";
 import { MAGIC_AREAS_DOMAINS } from "./variables";
+import { AreaView } from "./views/AreaView";
 
 /**
  * Mushroom Dashboard Strategy.<br>
@@ -66,6 +58,7 @@ class MushroomStrategy extends HTMLTemplateElement {
         views.push({
           title: area.name,
           path: area.slug ?? area.name,
+          // type: "sections",
           subview: true,
           strategy: {
             type: "custom:linus-strategy",
@@ -97,202 +90,23 @@ class MushroomStrategy extends HTMLTemplateElement {
    * @return {Promise<LovelaceViewConfig>}
    */
   static async generateView(info: generic.ViewInfo): Promise<LovelaceViewConfig> {
-    const exposedDomainIds = Helper.getExposedDomainIds();
+
     const area = info.view.strategy?.options?.area ?? {} as StrategyArea;
     const viewCards: LovelaceCardConfig[] = [...(area.extra_cards ?? [])];
 
+    let view = {} as LovelaceViewConfig
 
-    if (area.area_id !== "undisclosed")
-      viewCards.push(new MainAreaCard(area).getCard());
-
-    // Set the target for controller cards to the current area.
-    let target: HassServiceTarget = {
-      area_id: [area.area_id],
-    };
-
-    // Create cards for each domain.
-    for (const domain of exposedDomainIds) {
-      if (domain === "default") {
-        continue;
-      }
-
-      const className = Helper.sanitizeClassName(domain + "Card");
-
-      let domainCards = [];
-
-      try {
-        domainCards = await import(`./cards/${className}`).then(cardModule => {
-          let domainCards = [] as any[];
-          const entities = Helper.getDeviceEntities(area, domain);
-          let configEntityHidden =
-            Helper.strategyOptions.domains[domain ?? "_"].hide_config_entities
-            || Helper.strategyOptions.domains["_"].hide_config_entities;
-
-          const magicAreasDevice = Helper.magicAreasDevices[area.slug];
-          const magicAreasKey = domain === "light" ? 'all_lights' : `${domain}_group`;
-
-          // Set the target for controller cards to linus aggregate entity if exist.
-          target["entity_id"] = magicAreasDevice?.entities[magicAreasKey]?.entity_id;
-          // Set the target for controller cards to entities without an area.
-          if (area.area_id === "undisclosed") {
-            target = {
-              entity_id: entities.map(entity => entity.entity_id),
-            }
-          }
-
-          if (entities.length) {
-            // Create a Controller card for the current domain.
-
-            const title = Helper.localize(domain === 'scene' ? 'ui.dialogs.quick-bar.commands.navigation.scene' : `component.${domain}.entity_component._.name`);
-            const titleCard = new ControllerCard(
-              target,
-              { ...Helper.strategyOptions.domains[domain], domain, title },
-            ).createCard();
-
-            if (domain === "sensor") {
-              // Create a card for each entity-sensor of the current area.
-              const sensorStates = Helper.getStateEntities(area, "sensor");
-              const sensorCards: EntityCardConfig[] = [];
-
-              for (const sensor of entities) {
-                // Find the state of the current sensor.
-                const sensorState = sensorStates.find(state => state.entity_id === sensor.entity_id);
-                let cardOptions = Helper.strategyOptions.card_options?.[sensor.entity_id];
-                let deviceOptions = Helper.strategyOptions.card_options?.[sensor.device_id ?? "null"];
-
-                if (!cardOptions?.hidden && !deviceOptions?.hidden) {
-                  if (sensorState?.attributes.unit_of_measurement) {
-                    cardOptions = {
-                      ...{
-                        type: "custom:mini-graph-card",
-                        entities: [sensor.entity_id],
-                      },
-                      ...cardOptions,
-                    };
-                  }
-
-                  sensorCards.push(new SensorCard(sensor, cardOptions).getCard());
-                }
-              }
-
-              if (sensorCards.length) {
-                domainCards.push(new SwipeCard(sensorCards).getCard())
-
-                domainCards.unshift(titleCard);
-              }
-
-              return domainCards;
-            }
-
-            // Create a card for each other domain-entity of the current area.
-            for (const entity of entities) {
-              let deviceOptions;
-              let cardOptions = Helper.strategyOptions.card_options?.[entity.entity_id];
-
-              if (entity.device_id) {
-                deviceOptions = Helper.strategyOptions.card_options?.[entity.device_id];
-              }
-
-              // Don't include the entity if hidden in the strategy options.
-              if (cardOptions?.hidden || deviceOptions?.hidden) {
-                continue;
-              }
-
-              // Don't include the config-entity if hidden in the strategy options.
-              if (entity.entity_category === "config" && configEntityHidden) {
-                continue;
-              }
-
-              domainCards.push(new cardModule[className](entity, cardOptions).getCard());
-            }
-
-            domainCards = [new SwipeCard(domainCards).getCard()];
-
-            if (domainCards.length) {
-              domainCards.unshift(titleCard);
-            }
-          }
-
-          return domainCards;
-        });
-      } catch (e) {
-        Helper.logError("An error occurred while creating the domain cards!", e);
-      }
-
-      if (domainCards.length) {
-        viewCards.push({
-          type: "vertical-stack",
-          cards: domainCards,
-        });
-      }
+    // Create a view for each exposed domain.
+    // if (MAGIC_AREAS_DOMAINS.includes(viewId) && (Helper.domains[viewId] ?? []).length === 0) continue
+    try {
+      view = await new AreaView(area).getView();
+    } catch (e) {
+      Helper.logError(`View for area '${area.name}' couldn't be loaded!`, e);
     }
 
-    if (!Helper.strategyOptions.domains.default.hidden) {
-      // Create cards for any other domain.
-      // Collect device entities of the current area.
-      const areaDevices = Helper.devices.filter((device) => device.area_id === area.area_id)
-        .map((device) => device.id);
 
-      // Collect the remaining entities of which all conditions below are met:
-      // 1. The entity is not hidden.
-      // 2. The entity's domain isn't exposed (entities of exposed domains are already included).
-      // 3. The entity is linked to a device which is linked to the current area,
-      //    or the entity itself is linked to the current area.
-      const miscellaneousEntities = Helper.entities.filter((entity) => {
-        const entityLinked = areaDevices.includes(entity.device_id ?? "null") || entity.area_id === area.area_id;
-        const entityUnhidden = entity.hidden_by === null && entity.disabled_by === null;
-        const domainExposed = exposedDomainIds.includes(entity.entity_id.split(".", 1)[0]);
-
-        return entityUnhidden && !domainExposed && entityLinked;
-      });
-
-      // Create a column of miscellaneous entity cards.
-      if (miscellaneousEntities.length) {
-        let miscellaneousCards: (LovelaceBadgeConfig | EntityCardConfig | SwipeCardConfig)[] = [];
-
-        try {
-          miscellaneousCards = await import("./cards/MiscellaneousCard").then(cardModule => {
-            const miscellaneousCards: (LovelaceBadgeConfig | EntityCardConfig)[] = [
-              new ControllerCard(target, Helper.strategyOptions.domains.default).createCard(),
-            ];
-
-            const swipeCard = [] as SwipeCardConfig[];
-
-            for (const entity of miscellaneousEntities) {
-              let cardOptions = Helper.strategyOptions.card_options?.[entity.entity_id];
-              let deviceOptions = Helper.strategyOptions.card_options?.[entity.device_id ?? "null"];
-
-              // Don't include the entity if hidden in the strategy options.
-              if (cardOptions?.hidden || deviceOptions?.hidden) {
-                continue;
-              }
-
-              // Don't include the config-entity if hidden in the strategy options
-              if (entity.entity_category === "config" && Helper.strategyOptions.domains["_"].hide_config_entities) {
-                continue;
-              }
-
-              swipeCard.push(new cardModule.MiscellaneousCard(entity, cardOptions).getCard());
-
-            }
-
-            return [...miscellaneousCards, new SwipeCard(swipeCard).getCard()];
-          });
-        } catch (e) {
-          Helper.logError("An error occurred while creating the domain cards!", e);
-        }
-
-        viewCards.push({
-          type: "vertical-stack",
-          cards: miscellaneousCards,
-        });
-      }
-    }
-
-    // Return cards.
-    return {
-      cards: viewCards,
-    };
+    // Return the created view.
+    return view;
   }
 }
 

@@ -111,7 +111,7 @@ abstract class AbstractView {
           continue;
         }
 
-        console.log("AbstractView ", this.#domain, area)
+        console.log("AbstractView ", this.#domain, area, entities)
 
         // Set the target for controller cards to the current area.
         let target: HassServiceTarget = {
@@ -146,7 +146,6 @@ abstract class AbstractView {
         const swipeCard = []
 
         // Create a card for each domain-entity of the current area.
-        console.log("entities", entities)
         for (const entity of entities) {
           let cardOptions = Helper.strategyOptions.card_options?.[entity.entity_id];
           let deviceOptions = Helper.strategyOptions.card_options?.[entity.device_id ?? "null"];
@@ -160,6 +159,7 @@ abstract class AbstractView {
           }
           swipeCard.push(new cardModule[className](entity, cardOptions).getCard());
         }
+        console.log('swipeCard', swipeCard)
         if (swipeCard.length) {
           areaCards.push(new SwipeCard(swipeCard).getCard())
         }

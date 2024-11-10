@@ -1610,7 +1610,8 @@ class ControllerCard {
         }
         if (__classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").showControls || __classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").extraControls) {
             const areaId = Array.isArray(__classPrivateFieldGet(this, _ControllerCard_target, "f").area_id) ? __classPrivateFieldGet(this, _ControllerCard_target, "f").area_id[0] : __classPrivateFieldGet(this, _ControllerCard_target, "f").area_id;
-            const linusDevice = areaId ? _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices[areaId] : undefined;
+            const areaSlug = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas.find(area => area.area_id === areaId)?.slug;
+            const linusDevice = areaSlug ? _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices[areaSlug] : undefined;
             const magicAreasEntity = linusDevice && __classPrivateFieldGet(this, _ControllerCard_domain, "f") && (0,_utils__WEBPACK_IMPORTED_MODULE_1__.getMAEntity)(linusDevice, __classPrivateFieldGet(this, _ControllerCard_domain, "f"));
             const badges = [];
             if (__classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").showControls) {
@@ -6469,8 +6470,8 @@ class AreaView {
                             domainCards.push(new cardModule[className](entity, cardOptions).getCard());
                         }
                         if (domainCards.length) {
-                            domainCards.unshift(...titleCard);
                             // domainCards.push(new SwipeCard(domainCards).getCard());
+                            domainCards.unshift(...titleCard);
                         }
                     }
                     return {

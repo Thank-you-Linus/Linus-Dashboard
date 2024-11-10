@@ -179,8 +179,8 @@ class AreaView {
             }
 
             if (domainCards.length) {
-              domainCards.unshift(...titleCard);
               // domainCards.push(new SwipeCard(domainCards).getCard());
+              domainCards.unshift(...titleCard);
             }
           }
 

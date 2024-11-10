@@ -104,9 +104,8 @@ class ControllerCard {
 
     if (this.#defaultConfig.showControls || this.#defaultConfig.extraControls) {
       const areaId = Array.isArray(this.#target.area_id) ? this.#target.area_id[0] : this.#target.area_id;
-      const linusDevice = areaId ? Helper.magicAreasDevices[areaId] : undefined;
-
-
+      const areaSlug = Helper.areas.find(area => area.area_id === areaId)?.slug;
+      const linusDevice = areaSlug ? Helper.magicAreasDevices[areaSlug] : undefined;
       const magicAreasEntity = linusDevice && this.#domain && getMAEntity(linusDevice, this.#domain);
 
       const badges: LovelaceBadgeConfig[] = [];

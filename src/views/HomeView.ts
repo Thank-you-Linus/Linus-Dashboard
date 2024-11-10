@@ -11,7 +11,7 @@ import { PersonCardConfig } from "../types/lovelace-mushroom/cards/person-card-c
 import { SettingsChip } from "../chips/SettingsChip";
 import { LinusSettings } from "../popups/LinusSettingsPopup";
 import { UnavailableChip } from "../chips/UnavailableChip";
-import { UNAVAILABLE_STATES } from "../variables";
+import { EXPOSED_CHIPS, UNAVAILABLE_STATES } from "../variables";
 import { groupBy } from "../utils";
 import { generic } from "../types/strategy/generic";
 import isCallServiceActionConfig = generic.isCallServiceActionConfig;
@@ -161,8 +161,6 @@ class HomeView extends AbstractView {
     const chips: LovelaceChipConfig[] = [];
     const chipOptions = Helper.strategyOptions.chips;
 
-    // TODO: Get domains from config.
-    const exposedChips = ["light", "fan", "cover", "switch", "climate", "safety", "motion", "door", "window"];
     // Create a list of area-ids, used for switching all devices via chips
     const areaIds = Helper.areas.map(area => area.area_id ?? "");
 
@@ -215,7 +213,7 @@ class HomeView extends AbstractView {
     }
 
     // Numeric chips.
-    for (let chipType of exposedChips) {
+    for (let chipType of EXPOSED_CHIPS) {
       if (chipOptions?.[`${chipType}_count` as string] ?? true) {
         const className = Helper.sanitizeClassName(chipType + "Chip");
         try {
@@ -240,7 +238,7 @@ class HomeView extends AbstractView {
     // Unavailable chip.
     const unavailableEntities = Object.values(Helper.magicAreasDevices["global"]?.entities ?? [])?.filter((e) => {
       const entityState = Helper.getEntityState(e.entity_id);
-      return (exposedChips.includes(e.entity_id.split(".", 1)[0]) || exposedChips.includes(entityState?.attributes.device_class || '')) &&
+      return (EXPOSED_CHIPS.includes(e.entity_id.split(".", 1)[0]) || EXPOSED_CHIPS.includes(entityState?.attributes.device_class || '')) &&
         UNAVAILABLE_STATES.includes(entityState?.state);
     });
 

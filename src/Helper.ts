@@ -486,10 +486,7 @@ class Helper {
     // Get the ID of the devices which are linked to the given area.
     const areaDeviceIds = this.#devices.filter((device) => {
       return (device.area_id ?? "undisclosed") === area.area_id;
-    }).map((device: DeviceRegistryEntry) => {
-
-      return device.id;
-    });
+    }).map((device: DeviceRegistryEntry) => device.id);
 
     // Return the entities of which all conditions of the callback function are met. @see areaFilterCallback.
     let device_entities = this.#entities.filter(

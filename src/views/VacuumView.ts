@@ -1,8 +1,8 @@
-import {Helper} from "../Helper";
-import {ControllerCard} from "../cards/ControllerCard";
-import {AbstractView} from "./AbstractView";
-import {views} from "../types/strategy/views";
-import {cards} from "../types/strategy/cards";
+import { Helper } from "../Helper";
+import { ControllerCard } from "../cards/ControllerCard";
+import { AbstractView } from "./AbstractView";
+import { views } from "../types/strategy/views";
+import { cards } from "../types/strategy/cards";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**
@@ -50,7 +50,7 @@ class VacuumView extends AbstractView {
    */
   #viewControllerCardConfig: cards.ControllerCardOptions = {
     title: `${Helper.localize(`component.vacuum.entity_component._.name`)}s`,
-    subtitle: Helper.getCountTemplate(VacuumView.#domain, "ne", "off") +  ` ${Helper.localize(`component.vacuum.entity_component._.state.on`)}`,
+    subtitle: Helper.getCountTemplate(VacuumView.#domain, "ne", "off") + ` ${Helper.localize(`component.vacuum.entity_component._.state.on`)}`,
   };
 
   /**
@@ -69,8 +69,8 @@ class VacuumView extends AbstractView {
       {
         ...this.#viewControllerCardConfig,
         ...("controllerCardOptions" in this.config ? this.config.controllerCardOptions : {}) as cards.ControllerCardConfig,
-      }).createCard();
+      }, VacuumView.#domain).createCard();
   }
 }
 
-export {VacuumView};
+export { VacuumView };

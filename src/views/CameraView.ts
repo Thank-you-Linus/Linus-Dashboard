@@ -66,7 +66,7 @@ class CameraView extends AbstractView {
       {
         ...this.#viewControllerCardConfig,
         ...("controllerCardOptions" in this.config ? this.config.controllerCardOptions : {}) as cards.ControllerCardConfig,
-      }).createCard();
+      }, CameraView.#domain).createCard();
   }
 }
 

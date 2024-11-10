@@ -1,8 +1,8 @@
-import {Helper} from "../Helper";
-import {ControllerCard} from "../cards/ControllerCard";
-import {AbstractView} from "./AbstractView";
-import {views} from "../types/strategy/views";
-import {cards} from "../types/strategy/cards";
+import { Helper } from "../Helper";
+import { ControllerCard } from "../cards/ControllerCard";
+import { AbstractView } from "./AbstractView";
+import { views } from "../types/strategy/views";
+import { cards } from "../types/strategy/cards";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**
@@ -66,8 +66,8 @@ class MediaPlayerView extends AbstractView {
       {
         ...this.#viewControllerCardConfig,
         ...("controllerCardOptions" in this.config ? this.config.controllerCardOptions : {}) as cards.ControllerCardConfig,
-      }).createCard();
+      }, MediaPlayerView.#domain).createCard();
   }
 }
 
-export {MediaPlayerView};
+export { MediaPlayerView };

@@ -11,6 +11,7 @@ import { MagicAreaRegistryEntry } from "../types/homeassistant/data/device_regis
 import { generic } from "../types/strategy/generic";
 import StrategyArea = generic.StrategyArea;
 import { slugify } from "../utils";
+import { EntityRegistryEntry } from "../types/homeassistant/data/entity_registry";
 
 // Utility function to generate badge icon and color
 const getBadgeIcon = (entityId: string) => `
@@ -64,13 +65,21 @@ class AreaCard extends AbstractCard {
     const { area_state, all_lights, aggregate_temperature, aggregate_battery, aggregate_health, aggregate_window, aggregate_door, aggregate_cover, aggregate_climate, light_control } = device?.entities || {};
     const icon = area.icon || "mdi:home-outline";
 
+    const cards = [
+      this.getMainCard(area, icon, aggregate_temperature, aggregate_battery, area_state),
+    ];
+
+    if (device) {
+      cards.push(this.getChipsCard(area, device, area_state, aggregate_health, aggregate_window, aggregate_door, aggregate_cover, aggregate_climate, all_lights, light_control))
+    }
+
+    if (all_lights) {
+      cards.push(this.getLightCard(all_lights));
+    }
+
     return {
       type: "custom:stack-in-card",
-      cards: [
-        this.getMainCard(area, icon, aggregate_temperature, aggregate_battery, area_state),
-        this.getChipsCard(area, device, area_state, aggregate_health, aggregate_window, aggregate_door, aggregate_cover, aggregate_climate, all_lights, light_control),
-        this.getLightCard(all_lights)
-      ]
+      cards: cards
     };
   }
 
@@ -87,7 +96,7 @@ class AreaCard extends AbstractCard {
     };
   }
 
-  getMainCard(area: StrategyArea, icon: string, aggregate_temperature: any, aggregate_battery: any, area_state: any): any {
+  getMainCard(area: StrategyArea, icon: string, aggregate_temperature: EntityRegistryEntry, aggregate_battery: EntityRegistryEntry, area_state: EntityRegistryEntry): any {
     return {
       type: "custom:mushroom-template-card",
       primary: area.name,
@@ -103,7 +112,7 @@ class AreaCard extends AbstractCard {
     };
   }
 
-  getChipsCard(area: StrategyArea, device: MagicAreaRegistryEntry, area_state: any, aggregate_health: any, aggregate_window: any, aggregate_door: any, aggregate_cover: any, aggregate_climate: any, all_lights: any, light_control: any): any {
+  getChipsCard(area: StrategyArea, device: MagicAreaRegistryEntry, area_state: EntityRegistryEntry, aggregate_health: EntityRegistryEntry, aggregate_window: EntityRegistryEntry, aggregate_door: EntityRegistryEntry, aggregate_cover: EntityRegistryEntry, aggregate_climate: EntityRegistryEntry, all_lights: EntityRegistryEntry, light_control: EntityRegistryEntry): any {
     return {
       type: "custom:mushroom-chips-card",
       alignment: "end",
@@ -121,20 +130,17 @@ class AreaCard extends AbstractCard {
     };
   }
 
-  getLightCard(all_lights: any): any {
+  getLightCard(all_lights: EntityRegistryEntry): any {
     return {
-      type: "custom:mushroom-light-card",
-      entity: all_lights?.entity_id,
-      show_brightness_control: true,
-      icon_type: "none",
-      primary_info: "none",
-      secondary_info: "none",
-      use_light_color: true,
+      type: "tile",
+      features: [{ type: "light-brightness" }],
+      hide_state: true,
+      entity: all_lights.entity_id,
       card_mod: { style: this.getLightCardModStyle() }
     };
   }
 
-  getTemperatureTemplate(aggregate_temperature: any): string {
+  getTemperatureTemplate(aggregate_temperature: EntityRegistryEntry): string {
     if (!aggregate_temperature) return Helper.getAverageStateTemplate("temperature");
     return `
       {% set t = states('${aggregate_temperature?.entity_id}') %}
@@ -144,7 +150,7 @@ class AreaCard extends AbstractCard {
     `;
   }
 
-  getIconColorTemplate(area_state: any): string {
+  getIconColorTemplate(area_state: EntityRegistryEntry): string {
     return `
       {{ "indigo" if "dark" in state_attr('${area_state?.entity_id}', 'states') else "amber" }}
     `;
@@ -173,7 +179,7 @@ class AreaCard extends AbstractCard {
         border: none;
       }
       ha-state-icon {
-        --icon-symbol-size: 30px;
+        --icon-symbol-size: 40px;
       }
 
     `;
@@ -185,6 +191,7 @@ class AreaCard extends AbstractCard {
         --chip-box-shadow: none;
         --chip-spacing: 0px;
         width: -webkit-fill-available;
+        margin-top: -12px;
       }
     `;
   }
@@ -194,40 +201,14 @@ class AreaCard extends AbstractCard {
       ha-card {
         box-shadow: none!important;
         border: none;
+        margin-top: -12px;
       }
-
-      #TODO: Fix this
-      mushroom-light-brightness-control$:
-        mushroom-slider$: |
-          .slider {
-            width: 16px !important;
-            height: 16px !important;
-          }
-      mushroom-light-color-control$:
-        mushroom-slider$: |
-          .slider {
-            width: 16px !important;
-            height: 16px !important;
-          }
-      mushroom-light-color-temp-control$:
-        mushroom-slider$: |
-          .slider {
-            width: 16px !important;
-            height: 16px !important;
-          }
-      .: |
-        mushroom-light-brightness-control {
-          height: 16px;
-        }
-        mushroom-light-color-control {
-          height: 16px;
-        }
-        mushroom-light-color-temp-control {
-          height: 16px;
-        }
+      ha-tile-icon {
+        display: none;
       }
-
-
+      ha-tile-info {
+        display: none;
+      }
     `;
   }
 }

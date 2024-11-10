@@ -29,6 +29,8 @@ export const HOUSE_INFORMATION_DOMAINS = ["camera", "cover", "vacuum", "media_pl
 
 export const OTHER_DOMAINS = ["camera", "cover", "vacuum", "media_player", "lock", "scene", "plant"];
 
+export const EXPOSED_CHIPS = ["light", "fan", "cover", "switch", "climate", "safety", "motion", "door", "window"];
+
 export const AREA_CARDS_DOMAINS = [...TOGGLE_DOMAINS, ...CLIMATE_DOMAINS, ...OTHER_DOMAINS, "binary_sensor", "sensor"];
 
 export const DEVICE_CLASSES = {

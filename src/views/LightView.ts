@@ -68,7 +68,7 @@ class LightView extends AbstractView {
       {
         ...this.#viewControllerCardConfig,
         ...("controllerCardOptions" in this.config ? this.config.controllerCardOptions : {}) as cards.ControllerCardConfig,
-      }).createCard();
+      }, LightView.#domain).createCard();
   }
 }
 

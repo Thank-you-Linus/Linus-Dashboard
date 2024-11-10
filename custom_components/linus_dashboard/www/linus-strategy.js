@@ -513,9 +513,7 @@ class Helper {
         // Get the ID of the devices which are linked to the given area.
         const areaDeviceIds = __classPrivateFieldGet(this, _a, "f", _Helper_devices).filter((device) => {
             return (device.area_id ?? "undisclosed") === area.area_id;
-        }).map((device) => {
-            return device.id;
-        });
+        }).map((device) => device.id);
         // Return the entities of which all conditions of the callback function are met. @see areaFilterCallback.
         let device_entities = __classPrivateFieldGet(this, _a, "f", _Helper_entities).filter(__classPrivateFieldGet(this, _a, "m", _Helper_areaFilterCallback), {
             area: area,
@@ -5989,6 +5987,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   DOMAIN: () => (/* binding */ DOMAIN),
 /* harmony export */   DOMAIN_ICONS: () => (/* binding */ DOMAIN_ICONS),
 /* harmony export */   DOMAIN_STATE_ICONS: () => (/* binding */ DOMAIN_STATE_ICONS),
+/* harmony export */   EXPOSED_CHIPS: () => (/* binding */ EXPOSED_CHIPS),
 /* harmony export */   HOUSE_INFORMATION_DOMAINS: () => (/* binding */ HOUSE_INFORMATION_DOMAINS),
 /* harmony export */   MAGIC_AREAS_AGGREGATE_DOMAINS: () => (/* binding */ MAGIC_AREAS_AGGREGATE_DOMAINS),
 /* harmony export */   MAGIC_AREAS_DOMAINS: () => (/* binding */ MAGIC_AREAS_DOMAINS),
@@ -6019,6 +6018,7 @@ const TOGGLE_DOMAINS = ["light", "switch"];
 const CLIMATE_DOMAINS = ["climate", "fan"];
 const HOUSE_INFORMATION_DOMAINS = ["camera", "cover", "vacuum", "media_player", "lock", "plant"];
 const OTHER_DOMAINS = ["camera", "cover", "vacuum", "media_player", "lock", "scene", "plant"];
+const EXPOSED_CHIPS = ["light", "fan", "cover", "switch", "climate", "safety", "motion", "door", "window"];
 const AREA_CARDS_DOMAINS = [...TOGGLE_DOMAINS, ...CLIMATE_DOMAINS, ...OTHER_DOMAINS, "binary_sensor", "sensor"];
 const DEVICE_CLASSES = {
     sensor: ["illuminance", "temperature", "humidity", "battery", "energy", "power"],
@@ -6620,7 +6620,7 @@ class CameraView extends _AbstractView__WEBPACK_IMPORTED_MODULE_1__.AbstractView
         this.viewControllerCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_0__.ControllerCard(this.targetDomain(__classPrivateFieldGet(_a, _a, "f", _CameraView_domain)), {
             ...__classPrivateFieldGet(this, _CameraView_viewControllerCardConfig, "f"),
             ...("controllerCardOptions" in this.config ? this.config.controllerCardOptions : {}),
-        }).createCard();
+        }, __classPrivateFieldGet(_a, _a, "f", _CameraView_domain)).createCard();
     }
 }
 _a = CameraView, _CameraView_defaultConfig = new WeakMap(), _CameraView_viewControllerCardConfig = new WeakMap();
@@ -6707,7 +6707,7 @@ class ClimateView extends _AbstractView__WEBPACK_IMPORTED_MODULE_2__.AbstractVie
         this.viewControllerCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_1__.ControllerCard(this.targetDomain(__classPrivateFieldGet(_a, _a, "f", _ClimateView_domain)), {
             ...__classPrivateFieldGet(this, _ClimateView_viewControllerCardConfig, "f"),
             ...("controllerCardOptions" in this.config ? this.config.controllerCardOptions : {}),
-        }).createCard();
+        }, __classPrivateFieldGet(_a, _a, "f", _ClimateView_domain)).createCard();
     }
 }
 _a = ClimateView, _ClimateView_defaultConfig = new WeakMap(), _ClimateView_viewControllerCardConfig = new WeakMap();
@@ -6797,7 +6797,7 @@ class CoverView extends _AbstractView__WEBPACK_IMPORTED_MODULE_2__.AbstractView 
         this.viewControllerCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_1__.ControllerCard(this.targetDomain(__classPrivateFieldGet(_a, _a, "f", _CoverView_domain)), {
             ...__classPrivateFieldGet(this, _CoverView_viewControllerCardConfig, "f"),
             ...("controllerCardOptions" in this.config ? this.config.controllerCardOptions : {}),
-        }).createCard();
+        }, __classPrivateFieldGet(_a, _a, "f", _CoverView_domain)).createCard();
     }
 }
 _a = CoverView, _CoverView_defaultConfig = new WeakMap(), _CoverView_viewControllerCardConfig = new WeakMap();
@@ -6887,7 +6887,7 @@ class FanView extends _AbstractView__WEBPACK_IMPORTED_MODULE_2__.AbstractView {
         this.viewControllerCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_1__.ControllerCard(this.targetDomain(__classPrivateFieldGet(_a, _a, "f", _FanView_domain)), {
             ...__classPrivateFieldGet(this, _FanView_viewControllerCardConfig, "f"),
             ...("controllerCardOptions" in this.config ? this.config.controllerCardOptions : {}),
-        }).createCard();
+        }, __classPrivateFieldGet(_a, _a, "f", _FanView_domain)).createCard();
     }
 }
 _a = FanView, _FanView_defaultConfig = new WeakMap(), _FanView_viewControllerCardConfig = new WeakMap();
@@ -7068,8 +7068,6 @@ async function _HomeView_createChips() {
     }
     const chips = [];
     const chipOptions = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.chips;
-    // TODO: Get domains from config.
-    const exposedChips = ["light", "fan", "cover", "switch", "climate", "safety", "motion", "door", "window"];
     // Create a list of area-ids, used for switching all devices via chips
     const areaIds = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas.map(area => area.area_id ?? "");
     let chipModule;
@@ -7110,7 +7108,7 @@ async function _HomeView_createChips() {
         }
     }
     // Numeric chips.
-    for (let chipType of exposedChips) {
+    for (let chipType of _variables__WEBPACK_IMPORTED_MODULE_5__.EXPOSED_CHIPS) {
         if (chipOptions?.[`${chipType}_count`] ?? true) {
             const className = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.sanitizeClassName(chipType + "Chip");
             try {
@@ -7133,7 +7131,7 @@ async function _HomeView_createChips() {
     // Unavailable chip.
     const unavailableEntities = Object.values(_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices["global"]?.entities ?? [])?.filter((e) => {
         const entityState = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getEntityState(e.entity_id);
-        return (exposedChips.includes(e.entity_id.split(".", 1)[0]) || exposedChips.includes(entityState?.attributes.device_class || '')) &&
+        return (_variables__WEBPACK_IMPORTED_MODULE_5__.EXPOSED_CHIPS.includes(e.entity_id.split(".", 1)[0]) || _variables__WEBPACK_IMPORTED_MODULE_5__.EXPOSED_CHIPS.includes(entityState?.attributes.device_class || '')) &&
             _variables__WEBPACK_IMPORTED_MODULE_5__.UNAVAILABLE_STATES.includes(entityState?.state);
     });
     if (unavailableEntities.length) {
@@ -7312,7 +7310,7 @@ class LightView extends _AbstractView__WEBPACK_IMPORTED_MODULE_2__.AbstractView 
         this.viewControllerCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_1__.ControllerCard(this.targetDomain(__classPrivateFieldGet(_a, _a, "f", _LightView_domain)), {
             ...__classPrivateFieldGet(this, _LightView_viewControllerCardConfig, "f"),
             ...("controllerCardOptions" in this.config ? this.config.controllerCardOptions : {}),
-        }).createCard();
+        }, __classPrivateFieldGet(_a, _a, "f", _LightView_domain)).createCard();
     }
 }
 _a = LightView, _LightView_defaultConfig = new WeakMap(), _LightView_viewControllerCardConfig = new WeakMap();
@@ -7399,7 +7397,7 @@ class MediaPlayerView extends _AbstractView__WEBPACK_IMPORTED_MODULE_2__.Abstrac
         this.viewControllerCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_1__.ControllerCard(this.targetDomain(__classPrivateFieldGet(_a, _a, "f", _MediaPlayerView_domain)), {
             ...__classPrivateFieldGet(this, _MediaPlayerView_viewControllerCardConfig, "f"),
             ...("controllerCardOptions" in this.config ? this.config.controllerCardOptions : {}),
-        }).createCard();
+        }, __classPrivateFieldGet(_a, _a, "f", _MediaPlayerView_domain)).createCard();
     }
 }
 _a = MediaPlayerView, _MediaPlayerView_defaultConfig = new WeakMap(), _MediaPlayerView_viewControllerCardConfig = new WeakMap();
@@ -7486,7 +7484,7 @@ class SceneView extends _AbstractView__WEBPACK_IMPORTED_MODULE_2__.AbstractView 
         this.viewControllerCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_1__.ControllerCard(this.targetDomain(__classPrivateFieldGet(_a, _a, "f", _SceneView_domain)), {
             ...__classPrivateFieldGet(this, _SceneView_viewControllerCardConfig, "f"),
             ...("controllerCardOptions" in this.config ? this.config.controllerCardOptions : {}),
-        }).createCard();
+        }, __classPrivateFieldGet(_a, _a, "f", _SceneView_domain)).createCard();
     }
 }
 _a = SceneView, _SceneView_defaultConfig = new WeakMap(), _SceneView_viewControllerCardConfig = new WeakMap();
@@ -7814,7 +7812,7 @@ class SwitchView extends _AbstractView__WEBPACK_IMPORTED_MODULE_2__.AbstractView
         this.viewControllerCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_1__.ControllerCard(this.targetDomain(__classPrivateFieldGet(_a, _a, "f", _SwitchView_domain)), {
             ...__classPrivateFieldGet(this, _SwitchView_viewControllerCardConfig, "f"),
             ...("controllerCardOptions" in this.config ? this.config.controllerCardOptions : {}),
-        }).createCard();
+        }, __classPrivateFieldGet(_a, _a, "f", _SwitchView_domain)).createCard();
     }
 }
 _a = SwitchView, _SwitchView_defaultConfig = new WeakMap(), _SwitchView_viewControllerCardConfig = new WeakMap();
@@ -7904,7 +7902,7 @@ class VacuumView extends _AbstractView__WEBPACK_IMPORTED_MODULE_2__.AbstractView
         this.viewControllerCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_1__.ControllerCard(this.targetDomain(__classPrivateFieldGet(_a, _a, "f", _VacuumView_domain)), {
             ...__classPrivateFieldGet(this, _VacuumView_viewControllerCardConfig, "f"),
             ...("controllerCardOptions" in this.config ? this.config.controllerCardOptions : {}),
-        }).createCard();
+        }, __classPrivateFieldGet(_a, _a, "f", _VacuumView_domain)).createCard();
     }
 }
 _a = VacuumView, _VacuumView_defaultConfig = new WeakMap(), _VacuumView_viewControllerCardConfig = new WeakMap();

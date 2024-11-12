@@ -7,6 +7,7 @@ import { HassServiceTarget } from "home-assistant-js-websocket";
 import { groupBy } from "../utils";
 import { TemplateCardConfig } from '../types/lovelace-mushroom/cards/template-card-config';
 import { ChipsCardConfig } from '../types/lovelace-mushroom/cards/chips-card';
+import { SwipeCard } from '../cards/SwipeCard';
 
 /**
  * Abstract View Class.
@@ -151,9 +152,13 @@ abstract class AbstractView {
           }
           entityCards.push(new cardModule[className](entity, cardOptions).getCard());
         }
+
         if (entityCards.length) {
-          // areaCards.push(new SwipeCard(entityCards).getCard())
-          areaCards.push(...entityCards)
+          if (entityCards.length > 2) {
+            areaCards.push(new SwipeCard(entityCards).getCard());
+          } else {
+            areaCards.push(...entityCards);
+          }
         }
 
         // Vertical stack the area cards if it has entities.

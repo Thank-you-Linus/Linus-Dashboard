@@ -6093,6 +6093,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _Helper__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../Helper */ "./src/Helper.ts");
 /* harmony import */ var _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../cards/ControllerCard */ "./src/cards/ControllerCard.ts");
 /* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../utils */ "./src/utils.ts");
+/* harmony import */ var _cards_SwipeCard__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../cards/SwipeCard */ "./src/cards/SwipeCard.ts");
 var __classPrivateFieldSet = (undefined && undefined.__classPrivateFieldSet) || function (receiver, state, value, kind, f) {
     if (kind === "m") throw new TypeError("Private method is not writable");
     if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a setter");
@@ -6105,6 +6106,7 @@ var __classPrivateFieldGet = (undefined && undefined.__classPrivateFieldGet) || 
     return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
 };
 var _AbstractView_domain;
+
 
 
 
@@ -6233,8 +6235,12 @@ class AbstractView {
                     entityCards.push(new cardModule[className](entity, cardOptions).getCard());
                 }
                 if (entityCards.length) {
-                    // areaCards.push(new SwipeCard(entityCards).getCard())
-                    areaCards.push(...entityCards);
+                    if (entityCards.length > 2) {
+                        areaCards.push(new _cards_SwipeCard__WEBPACK_IMPORTED_MODULE_4__.SwipeCard(entityCards).getCard());
+                    }
+                    else {
+                        areaCards.push(...entityCards);
+                    }
                 }
                 // Vertical stack the area cards if it has entities.
                 if (areaCards.length) {
@@ -6307,11 +6313,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var _Helper__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../Helper */ "./src/Helper.ts");
 /* harmony import */ var _cards_SwipeCard__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../cards/SwipeCard */ "./src/cards/SwipeCard.ts");
-/* harmony import */ var _cards_SensorCard__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../cards/SensorCard */ "./src/cards/SensorCard.ts");
-/* harmony import */ var _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../cards/ControllerCard */ "./src/cards/ControllerCard.ts");
-/* harmony import */ var _cards_MainAreaCard__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../cards/MainAreaCard */ "./src/cards/MainAreaCard.ts");
-/* harmony import */ var _variables__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../variables */ "./src/variables.ts");
-
+/* harmony import */ var _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../cards/ControllerCard */ "./src/cards/ControllerCard.ts");
+/* harmony import */ var _cards_MainAreaCard__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../cards/MainAreaCard */ "./src/cards/MainAreaCard.ts");
+/* harmony import */ var _variables__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../variables */ "./src/variables.ts");
 
 
 
@@ -6365,103 +6369,71 @@ class AreaView {
     async createSectionCards() {
         const viewSections = [];
         const exposedDomainIds = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getExposedDomainIds();
-        // Create a global section for the main area card
+        // Create global section card if area is not undisclosed
         const globalSection = {
             type: "grid",
             column_span: 1,
-            cards: []
+            cards: this.area.area_id !== "undisclosed" ? [new _cards_MainAreaCard__WEBPACK_IMPORTED_MODULE_3__.MainAreaCard(this.area).getCard()] : []
         };
-        if (this.area.area_id !== "undisclosed") {
-            globalSection.cards.push(new _cards_MainAreaCard__WEBPACK_IMPORTED_MODULE_4__.MainAreaCard(this.area).getCard());
-        }
         if (globalSection.cards.length) {
             viewSections.push(globalSection);
         }
-        // Set the target for controller cards to the current area
         let target = {
             area_id: [this.area.area_id],
         };
-        // Create cards for each domain
         for (const domain of exposedDomainIds) {
             if (domain === "default")
                 continue;
             const className = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.sanitizeClassName(domain + "Card");
             try {
-                const domainSections = await __webpack_require__("./src/cards lazy recursive ^\\.\\/.*$")(`./${className}`).then(cardModule => {
-                    const entities = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getDeviceEntities(this.area, domain);
-                    const configEntityHidden = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain]?.hide_config_entities || _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains["_"].hide_config_entities;
-                    // Set the target for controller cards to entities without an area
-                    if (this.area.area_id === "undisclosed") {
-                        target = {
-                            entity_id: entities.map(entity => entity.entity_id),
-                        };
-                    }
-                    const domainCards = [];
-                    if (entities.length) {
-                        // Create a Controller card for the current domain
-                        const titleCardOptions = ("controllerCardOptions" in this.config) ? this.config.controllerCardOptions : {};
-                        titleCardOptions.subtitle = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize(domain === 'scene' ? 'ui.dialogs.quick-bar.commands.navigation.scene' : `component.${domain}.entity_component._.name`);
-                        titleCardOptions.domain = domain;
-                        titleCardOptions.subtitleIcon = _variables__WEBPACK_IMPORTED_MODULE_5__.DOMAIN_ICONS[domain];
-                        titleCardOptions.navigate = domain + "s";
-                        titleCardOptions.showControls = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain].showControls;
-                        titleCardOptions.extraControls = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain].extraControls;
-                        const titleCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_3__.ControllerCard(target, titleCardOptions, domain).createCard();
-                        if (domain === "sensor") {
-                            // Create a card for each entity-sensor of the current area
-                            const sensorStates = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getStateEntities(this.area, "sensor");
-                            const sensorCards = [];
-                            for (const sensor of entities) {
-                                const sensorState = sensorStates.find(state => state.entity_id === sensor.entity_id);
-                                let cardOptions = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.card_options?.[sensor.entity_id];
-                                let deviceOptions = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.card_options?.[sensor.device_id ?? "null"];
-                                if (!cardOptions?.hidden && !deviceOptions?.hidden) {
-                                    if (sensorState?.attributes.unit_of_measurement) {
-                                        cardOptions = {
-                                            type: "custom:mini-graph-card",
-                                            entities: [sensor.entity_id],
-                                            ...cardOptions,
-                                        };
-                                    }
-                                    sensorCards.push(new _cards_SensorCard__WEBPACK_IMPORTED_MODULE_2__.SensorCard(sensor, cardOptions).getCard());
-                                }
-                            }
-                            if (sensorCards.length) {
-                                domainCards.push(new _cards_SwipeCard__WEBPACK_IMPORTED_MODULE_1__.SwipeCard(sensorCards).getCard());
-                                domainCards.unshift(...titleCard);
-                            }
-                            return {
-                                type: "grid",
-                                column_span: 1,
-                                cards: domainCards
+                const cardModule = await __webpack_require__("./src/cards lazy recursive ^\\.\\/.*$")(`./${className}`);
+                const entities = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getDeviceEntities(this.area, domain);
+                const configEntityHidden = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain]?.hide_config_entities || _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains["_"].hide_config_entities;
+                if (this.area.area_id === "undisclosed") {
+                    target = {
+                        entity_id: entities.map(entity => entity.entity_id),
+                    };
+                }
+                const domainCards = [];
+                if (entities.length) {
+                    const titleCardOptions = ("controllerCardOptions" in this.config) ? this.config.controllerCardOptions : {};
+                    titleCardOptions.subtitle = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize(domain === 'scene' ? 'ui.dialogs.quick-bar.commands.navigation.scene' : `component.${domain}.entity_component._.name`);
+                    titleCardOptions.domain = domain;
+                    titleCardOptions.subtitleIcon = _variables__WEBPACK_IMPORTED_MODULE_4__.DOMAIN_ICONS[domain];
+                    titleCardOptions.navigate = domain + "s";
+                    titleCardOptions.showControls = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain].showControls;
+                    titleCardOptions.extraControls = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain].extraControls;
+                    const titleCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_2__.ControllerCard(target, titleCardOptions, domain).createCard();
+                    const entityCards = [];
+                    for (const entity of entities) {
+                        let cardOptions = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.card_options?.[entity.entity_id];
+                        let deviceOptions = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.card_options?.[entity.device_id ?? "null"];
+                        if (cardOptions?.hidden || deviceOptions?.hidden)
+                            continue;
+                        if (entity.entity_category === "config" && configEntityHidden)
+                            continue;
+                        if (domain === "sensor" && _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getEntityState(entity.entity_id)?.attributes.unit_of_measurement) {
+                            cardOptions = {
+                                type: "custom:mini-graph-card",
+                                entities: [entity.entity_id],
+                                ...cardOptions,
                             };
                         }
-                        // Create a card for each other domain-entity of the current area
-                        for (const entity of entities) {
-                            let cardOptions = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.card_options?.[entity.entity_id];
-                            let deviceOptions = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.card_options?.[entity.device_id ?? "null"];
-                            if (cardOptions?.hidden || deviceOptions?.hidden)
-                                continue;
-                            if (entity.entity_category === "config" && configEntityHidden)
-                                continue;
-                            domainCards.push(new cardModule[className](entity, cardOptions).getCard());
-                        }
-                        if (domainCards.length) {
-                            // domainCards.push(new SwipeCard(domainCards).getCard());
-                            domainCards.unshift(...titleCard);
-                        }
+                        entityCards.push(new cardModule[className](entity, cardOptions).getCard());
                     }
-                    return {
-                        type: "grid",
-                        column_span: 1,
-                        cards: domainCards
-                    };
-                });
-                if (domainSections.cards.length) {
+                    if (entityCards.length) {
+                        if (entityCards.length > 2) {
+                            domainCards.push(new _cards_SwipeCard__WEBPACK_IMPORTED_MODULE_1__.SwipeCard(entityCards).getCard());
+                        }
+                        else {
+                            domainCards.push(...entityCards);
+                        }
+                        domainCards.unshift(...titleCard);
+                    }
                     viewSections.push({
                         type: "grid",
                         column_span: 1,
-                        cards: domainSections.cards
+                        cards: domainCards
                     });
                 }
             }
@@ -6469,7 +6441,7 @@ class AreaView {
                 _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.logError("An error occurred while creating the domain cards!", e);
             }
         }
-        // Create cards for any other domain
+        // Handle default domain if not hidden
         if (!_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains.default.hidden) {
             const areaDevices = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.devices.filter(device => device.area_id === this.area.area_id).map(device => device.id);
             const miscellaneousEntities = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.entities.filter(entity => {
@@ -6480,26 +6452,24 @@ class AreaView {
             });
             if (miscellaneousEntities.length) {
                 try {
-                    const miscellaneousCards = await Promise.resolve(/*! import() */).then(__webpack_require__.bind(__webpack_require__, /*! ../cards/MiscellaneousCard */ "./src/cards/MiscellaneousCard.ts")).then(cardModule => {
-                        const cards = [
-                            new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_3__.ControllerCard(target, _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains.default).createCard(),
-                        ];
-                        const swipeCard = [];
-                        for (const entity of miscellaneousEntities) {
-                            let cardOptions = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.card_options?.[entity.entity_id];
-                            let deviceOptions = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.card_options?.[entity.device_id ?? "null"];
-                            if (cardOptions?.hidden || deviceOptions?.hidden)
-                                continue;
-                            if (entity.entity_category === "config" && _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains["_"].hide_config_entities)
-                                continue;
-                            swipeCard.push(new cardModule.MiscellaneousCard(entity, cardOptions).getCard());
-                        }
-                        return [...cards, new _cards_SwipeCard__WEBPACK_IMPORTED_MODULE_1__.SwipeCard(swipeCard).getCard()];
-                    });
+                    const cardModule = await Promise.resolve(/*! import() */).then(__webpack_require__.bind(__webpack_require__, /*! ../cards/MiscellaneousCard */ "./src/cards/MiscellaneousCard.ts"));
+                    const cards = [
+                        new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_2__.ControllerCard(target, _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains.default).createCard(),
+                    ];
+                    const swipeCard = [];
+                    for (const entity of miscellaneousEntities) {
+                        let cardOptions = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.card_options?.[entity.entity_id];
+                        let deviceOptions = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.card_options?.[entity.device_id ?? "null"];
+                        if (cardOptions?.hidden || deviceOptions?.hidden)
+                            continue;
+                        if (entity.entity_category === "config" && _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains["_"].hide_config_entities)
+                            continue;
+                        swipeCard.push(new cardModule.MiscellaneousCard(entity, cardOptions).getCard());
+                    }
                     viewSections.push({
                         type: "grid",
                         column_span: 1,
-                        cards: miscellaneousCards
+                        cards: [...cards, new _cards_SwipeCard__WEBPACK_IMPORTED_MODULE_1__.SwipeCard(swipeCard).getCard()]
                     });
                 }
                 catch (e) {
@@ -8043,10 +8013,12 @@ var map = {
 		"main"
 	],
 	"./SensorCard": [
-		"./src/cards/SensorCard.ts"
+		"./src/cards/SensorCard.ts",
+		"main"
 	],
 	"./SensorCard.ts": [
-		"./src/cards/SensorCard.ts"
+		"./src/cards/SensorCard.ts",
+		"main"
 	],
 	"./SwipeCard": [
 		"./src/cards/SwipeCard.ts"

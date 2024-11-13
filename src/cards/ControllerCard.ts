@@ -65,7 +65,7 @@ class ControllerCard {
     if (this.#defaultConfig.title) {
       cards.push({
         type: "heading",
-        heading: this.#defaultConfig.title,
+        heading: this.#defaultConfig.title ?? "No title",
         icon: this.#defaultConfig.titleIcon,
         heading_style: "title",
         badges: [],

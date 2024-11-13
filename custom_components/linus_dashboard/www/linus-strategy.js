@@ -1550,7 +1550,7 @@ class ControllerCard {
         if (__classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").title) {
             cards.push({
                 type: "heading",
-                heading: __classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").title,
+                heading: __classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").title ?? "No title",
                 icon: __classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").titleIcon,
                 heading_style: "title",
                 badges: [],
@@ -2340,9 +2340,6 @@ class PersonCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractCard
          */
         _PersonCard_defaultConfig.set(this, {
             type: "custom:mushroom-person-card",
-            layout: "vertical",
-            primary_info: "none",
-            secondary_info: "none",
             icon_type: "entity-picture",
         });
         this.config = Object.assign(this.config, __classPrivateFieldGet(this, _PersonCard_defaultConfig, "f"), options);
@@ -6172,6 +6169,15 @@ class AbstractView {
     /**
      * Create the cards to include in the view.
      *
+     * @return {Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig)[]>} Promise a View Card array.
+     * @override
+     */
+    async createSectionBadges() {
+        return [];
+    }
+    /**
+     * Create the cards to include in the view.
+     *
      * @return {Promise<LovelaceGridCardConfig[]>} Promise a View Card array.
      * @override
      */
@@ -6278,6 +6284,7 @@ class AbstractView {
             ...this.config,
             cards: await this.createViewCards(),
             sections: await this.createSectionCards(),
+            badges: await this.createSectionBadges(),
         };
     }
     /**
@@ -6931,6 +6938,16 @@ class HomeView extends _AbstractView__WEBPACK_IMPORTED_MODULE_1__.AbstractView {
     /**
      * Create the cards to include in the view.
      *
+     * @return {Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig)[]>} Promise a View Card array.
+     * @override
+     */
+    async createSectionBadges() {
+        const chips = await __classPrivateFieldGet(this, _HomeView_instances, "m", _HomeView_createChips).call(this);
+        return __classPrivateFieldGet(this, _HomeView_instances, "m", _HomeView_createChips).call(this);
+    }
+    /**
+     * Create the cards to include in the view.
+     *
      * @return {Promise<LovelaceGridCardConfig[]>} Promise a View Card array.
      * @override
      */
@@ -6974,6 +6991,10 @@ class HomeView extends _AbstractView__WEBPACK_IMPORTED_MODULE_1__.AbstractView {
           {% endif %}`,
                     icon: "mdi:hand-wave",
                     icon_color: "orange",
+                    layout_options: {
+                        grid_columns: 4,
+                        grid_rows: 1,
+                    },
                     tap_action: {
                         action: "none",
                     },
@@ -7007,7 +7028,7 @@ _HomeView_defaultConfig = new WeakMap(), _HomeView_instances = new WeakSet(), _H
 /**
  * Create the chips to include in the view.
  *
- * @return {Promise<LovelaceChipConfig[]>} Promise a chip array.
+ * @return {Promise<ChipsCardConfig[]>} Promise a chip array.
  */
 async function _HomeView_createChips() {
     if (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.home_view.hidden.includes("chips")) {
@@ -7088,7 +7109,11 @@ async function _HomeView_createChips() {
     }
     const linusSettings = new _chips_SettingsChip__WEBPACK_IMPORTED_MODULE_2__.SettingsChip({ tap_action: new _popups_LinusSettingsPopup__WEBPACK_IMPORTED_MODULE_3__.LinusSettings().getPopup() });
     chips.push(linusSettings.getChip());
-    return chips;
+    return chips.map(chip => ({
+        type: "custom:mushroom-chips-card",
+        alignment: "center",
+        chips: [chip],
+    }));
 }, _HomeView_createPersonCards = function _HomeView_createPersonCards() {
     if (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.home_view.hidden.includes("persons")) {
         // Person section is hidden.
@@ -7169,14 +7194,18 @@ async function _HomeView_createAreaSection() {
     }
     groupedCards.push({
         type: "custom:mushroom-template-card",
-        primary: "Ajouter une nouvelle pièce",
-        secondary: `Cliquer ici pour vous rendre sur la page des pièces`,
+        primary: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("custom_components.linus-dashboard.ui.newAreaTitle"),
+        secondary: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("custom_components.linus-dashboard.ui.newAreaSubtitle"),
         multiline_secondary: true,
-        icon: `mdi:view-dashboard-variant`,
+        icon: "mdi:view-dashboard-variant",
         fill_container: true,
+        layout_options: {
+            grid_columns: 4,
+            grid_rows: 1,
+        },
         tap_action: {
             action: "navigate",
-            navigation_path: '/config/areas/dashboard'
+            navigation_path: "/config/areas/dashboard",
         },
     });
     return groupedCards;
@@ -7562,6 +7591,12 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _cards_PersonCard__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../cards/PersonCard */ "./src/cards/PersonCard.ts");
 /* harmony import */ var _cards_BinarySensorCard__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../cards/BinarySensorCard */ "./src/cards/BinarySensorCard.ts");
 /* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../utils */ "./src/utils.ts");
+/* harmony import */ var _cards_SwipeCard__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../cards/SwipeCard */ "./src/cards/SwipeCard.ts");
+/* harmony import */ var _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../cards/ControllerCard */ "./src/cards/ControllerCard.ts");
+/* harmony import */ var _variables__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../variables */ "./src/variables.ts");
+
+
+
 
 
 
@@ -7666,7 +7701,107 @@ class SecurityView {
             if (aggregate_window?.entity_id)
                 globalSection.cards.push(new _cards_BinarySensorCard__WEBPACK_IMPORTED_MODULE_3__.BinarySensorCard(aggregate_window, { tap_action: (0,_utils__WEBPACK_IMPORTED_MODULE_4__.navigateTo)('security-details') }).getCard());
         }
-        return [globalSection];
+        const sections = [globalSection];
+        if (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getCamerasEntity()?.length)
+            sections.push(await this.createCamerasSection());
+        return sections;
+    }
+    /**
+     * Create the cards to include in the view.
+     *
+     * @return {Promise<LovelaceGridCardConfig >} An array of card objects.
+     */
+    async createCamerasSection() {
+        const domain = "camera";
+        const camerasSection = {
+            type: "grid",
+            column_span: 1,
+            cards: [
+                {
+                    type: "heading",
+                    heading: `${_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize(`component.${domain}.entity_component._.name`)}s`,
+                    heading_style: "title",
+                    badges: [],
+                    layout_options: {
+                        grid_columns: "full",
+                        grid_rows: 1
+                    },
+                    icon: _variables__WEBPACK_IMPORTED_MODULE_7__.DOMAIN_ICONS[domain],
+                }
+            ]
+        };
+        const areasByFloor = (0,_utils__WEBPACK_IMPORTED_MODULE_4__.groupBy)(_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas, (e) => e.floor_id ?? "undisclosed");
+        for (const floor of [..._Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.floors, _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.floors.undisclosed]) {
+            if (!(floor.floor_id in areasByFloor) || areasByFloor[floor.floor_id].length === 0)
+                continue;
+            let floorCards = [
+                {
+                    type: "heading",
+                    heading: floor.name,
+                    heading_style: "title",
+                    badges: [],
+                    layout_options: {
+                        grid_columns: "full",
+                        grid_rows: 1
+                    },
+                    icon: floor.icon ?? "mdi:floor-plan",
+                }
+            ];
+            // Create cards for each area.
+            for (const [i, area] of areasByFloor[floor.floor_id].entries()) {
+                const entities = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getDeviceEntities(area, domain ?? "");
+                const className = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.sanitizeClassName(domain + "Card");
+                const cardModule = await __webpack_require__("./src/cards lazy recursive ^\\.\\/.*$")(`./${className}`);
+                if (entities.length === 0 || !cardModule) {
+                    continue;
+                }
+                // Set the target for controller cards to the current area.
+                let target = {
+                    area_id: [area.area_id],
+                };
+                let areaCards = [];
+                const entityCards = [];
+                // Create a card for each domain-entity of the current area.
+                for (const entity of entities) {
+                    let cardOptions = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.card_options?.[entity.entity_id];
+                    let deviceOptions = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.card_options?.[entity.device_id ?? "null"];
+                    if (cardOptions?.hidden || deviceOptions?.hidden) {
+                        continue;
+                    }
+                    const configEntityHidden = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain ?? "_"].hide_config_entities
+                        || _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains["_"].hide_config_entities;
+                    if (entity.entity_category === "config" && configEntityHidden) {
+                        continue;
+                    }
+                    entityCards.push(new cardModule[className](entity, cardOptions).getCard());
+                }
+                if (entityCards.length) {
+                    if (entityCards.length > 2) {
+                        areaCards.push(new _cards_SwipeCard__WEBPACK_IMPORTED_MODULE_5__.SwipeCard(entityCards).getCard());
+                    }
+                    else {
+                        areaCards.push(...entityCards);
+                    }
+                }
+                // Vertical stack the area cards if it has entities.
+                if (areaCards.length) {
+                    const titleCardOptions = ("controllerCardOptions" in this.config) ? this.config.controllerCardOptions : {};
+                    titleCardOptions.subtitle = area.name;
+                    titleCardOptions.subtitleIcon = area.icon ?? "mdi:floor-plan";
+                    titleCardOptions.navigate = area.slug;
+                    if (domain) {
+                        titleCardOptions.showControls = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain].showControls;
+                        titleCardOptions.extraControls = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain].extraControls;
+                    }
+                    // Create and insert a Controller card.
+                    areaCards.unshift(...new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_6__.ControllerCard(target, titleCardOptions, domain).createCard());
+                    floorCards.push(...areaCards);
+                }
+            }
+            if (floorCards.length > 1)
+                camerasSection.cards.push(...floorCards);
+        }
+        return camerasSection;
     }
     /**
      * Get a view object.

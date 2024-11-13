@@ -76,6 +76,16 @@ abstract class AbstractView {
   /**
    * Create the cards to include in the view.
    *
+   * @return {Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig)[]>} Promise a View Card array.
+   * @override
+   */
+  async createSectionBadges(): Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig)[]> {
+    return []
+  }
+
+  /**
+   * Create the cards to include in the view.
+   *
    * @return {Promise<LovelaceGridCardConfig[]>} Promise a View Card array.
    * @override
    */
@@ -203,6 +213,7 @@ abstract class AbstractView {
       ...this.config,
       cards: await this.createViewCards(),
       sections: await this.createSectionCards(),
+      badges: await this.createSectionBadges(),
     };
   }
 

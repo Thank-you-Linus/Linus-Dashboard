@@ -65,6 +65,18 @@ class HomeView extends AbstractView {
   /**
    * Create the cards to include in the view.
    *
+   * @return {Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig)[]>} Promise a View Card array.
+   * @override
+   */
+  async createSectionBadges(): Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig)[]> {
+
+    const chips = await this.#createChips();
+    return this.#createChips()
+  }
+
+  /**
+   * Create the cards to include in the view.
+   *
    * @return {Promise<LovelaceGridCardConfig[]>} Promise a View Card array.
    * @override
    */
@@ -112,6 +124,10 @@ class HomeView extends AbstractView {
           {% endif %}`,
           icon: "mdi:hand-wave",
           icon_color: "orange",
+          layout_options: {
+            grid_columns: 4,
+            grid_rows: 1,
+          },
           tap_action: {
             action: "none",
           } as ActionConfig,
@@ -149,9 +165,9 @@ class HomeView extends AbstractView {
   /**
    * Create the chips to include in the view.
    *
-   * @return {Promise<LovelaceChipConfig[]>} Promise a chip array.
+   * @return {Promise<ChipsCardConfig[]>} Promise a chip array.
    */
-  async #createChips(): Promise<LovelaceChipConfig[]> {
+  async #createChips(): Promise<ChipsCardConfig[]> {
     if (Helper.strategyOptions.home_view.hidden.includes("chips")) {
       // Chips section is hidden.
 
@@ -252,7 +268,11 @@ class HomeView extends AbstractView {
 
     chips.push(linusSettings.getChip());
 
-    return chips;
+    return chips.map(chip => ({
+      type: "custom:mushroom-chips-card",
+      alignment: "center",
+      chips: [chip],
+    }));
   }
 
   /**
@@ -363,16 +383,20 @@ class HomeView extends AbstractView {
 
     groupedCards.push({
       type: "custom:mushroom-template-card",
-      primary: "Ajouter une nouvelle pièce",
-      secondary: `Cliquer ici pour vous rendre sur la page des pièces`,
+      primary: Helper.localize("custom_components.linus-dashboard.ui.newAreaTitle"),
+      secondary: Helper.localize("custom_components.linus-dashboard.ui.newAreaSubtitle"),
       multiline_secondary: true,
-      icon: `mdi:view-dashboard-variant`,
+      icon: "mdi:view-dashboard-variant",
       fill_container: true,
+      layout_options: {
+        grid_columns: 4,
+        grid_rows: 1,
+      },
       tap_action: {
         action: "navigate",
-        navigation_path: '/config/areas/dashboard'
+        navigation_path: "/config/areas/dashboard",
       },
-    } as any)
+    } as any);
 
     return groupedCards;
   }

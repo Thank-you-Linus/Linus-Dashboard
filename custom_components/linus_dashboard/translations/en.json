@@ -14,5 +14,16 @@
             "connection": "Unable to connect to the server.",
             "unknown": "Unknown error occurred."
         }
+    },
+    "entity": {
+        "switch": {
+            "pre-release": {
+                "name": "Pre-release",
+                "state": {
+                    "off": "No pre-releases",
+                    "on": "Pre-releases preferred"
+                }
+            }
+        }
     }
 }

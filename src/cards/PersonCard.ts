@@ -1,7 +1,7 @@
-import {AbstractCard} from "./AbstractCard";
-import {cards} from "../types/strategy/cards";
-import {EntityRegistryEntry} from "../types/homeassistant/data/entity_registry";
-import {PersonCardConfig} from "../types/lovelace-mushroom/cards/person-card-config";
+import { AbstractCard } from "./AbstractCard";
+import { cards } from "../types/strategy/cards";
+import { EntityRegistryEntry } from "../types/homeassistant/data/entity_registry";
+import { PersonCardConfig } from "../types/lovelace-mushroom/cards/person-card-config";
 
 /**
  * Person Card Class
@@ -20,9 +20,6 @@ class PersonCard extends AbstractCard {
    */
   #defaultConfig: PersonCardConfig = {
     type: "custom:mushroom-person-card",
-    layout: "vertical",
-    primary_info: "none",
-    secondary_info: "none",
     icon_type: "entity-picture",
   };
 
@@ -40,4 +37,4 @@ class PersonCard extends AbstractCard {
   }
 }
 
-export {PersonCard};
+export { PersonCard };

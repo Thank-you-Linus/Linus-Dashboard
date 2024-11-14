@@ -79,7 +79,7 @@ export namespace generic {
   export interface ViewInfo {
     view: LovelaceViewConfig & {
       strategy?: {
-        options?: StrategyConfig & { area: StrategyArea }
+        options?: StrategyConfig & { area: StrategyArea, floor: StrategyFloor }
       }
     };
     config: LovelaceConfig

@@ -5,6 +5,7 @@ import { LovelaceGridCardConfig, StackCardConfig } from "../types/homeassistant/
 import { TemplateCardConfig } from "../types/lovelace-mushroom/cards/template-card-config";
 import { LovelaceBadgeConfig, LovelaceViewConfig } from "../types/homeassistant/data/lovelace";
 import { generic } from "../types/strategy/generic";
+import isCallServiceActionConfig = generic.isCallServiceActionConfig;
 import StrategyArea = generic.StrategyArea;
 import { SwipeCard } from "../cards/SwipeCard";
 import { SensorCard } from "../cards/SensorCard";
@@ -13,7 +14,10 @@ import { ControllerCard } from "../cards/ControllerCard";
 import { HassServiceTarget } from "home-assistant-js-websocket";
 import { MainAreaCard } from "../cards/MainAreaCard";
 import { SwipeCardConfig } from "../types/lovelace-mushroom/cards/swipe-card-config";
-import { DOMAIN_ICONS } from "../variables";
+import { AREA_CARDS_DOMAINS, DOMAIN_ICONS, EXPOSED_CHIPS, UNAVAILABLE_STATES } from "../variables";
+import { UnavailableChip } from "../chips/UnavailableChip";
+import { LovelaceChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
+import { AreaStateChip } from "../chips/AreaStateChip";
 
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
@@ -67,6 +71,80 @@ class AreaView {
    */
   async createViewCards(): Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig)[]> {
     return []
+  }
+
+
+  /**
+   * Create the cards to include in the view.
+   *
+   * @return {Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig)[]>} Promise a View Card array.
+   * @override
+   */
+  async createSectionBadges(): Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig)[]> {
+
+    if (Helper.strategyOptions.home_view.hidden.includes("chips")) {
+      // Chips section is hidden.
+
+      return [];
+    }
+
+    const chips: LovelaceChipConfig[] = [];
+    const chipOptions = Helper.strategyOptions.chips;
+
+    // Create a list of area-ids, used for switching all devices via chips
+    const areaIds = Helper.areas.map(area => area.area_id ?? "");
+
+    let chipModule;
+
+    const device = Helper.magicAreasDevices[this.area.slug];
+
+    if (device) {
+      chips.push(new AreaStateChip(device, true).getChip());
+    }
+
+
+
+    // Numeric chips.
+    for (let chipType of AREA_CARDS_DOMAINS) {
+      if (chipOptions?.[`${chipType}_count` as string] ?? true) {
+        const className = Helper.sanitizeClassName(chipType + "Chip");
+        try {
+          chipModule = await import((`../chips/${className}`));
+          const chip = new chipModule[className](Helper.magicAreasDevices[this.area.area_id]);
+
+          if ("tap_action" in this.config && isCallServiceActionConfig(this.config.tap_action)) {
+            chip.setTapActionTarget({ area_id: areaIds });
+          }
+          chips.push(chip.getChip());
+        } catch (e) {
+          Helper.logError(`An error occurred while creating the ${chipType} chip!`, e);
+        }
+      }
+    }
+
+    // Extra chips.
+    if (chipOptions?.extra_chips) {
+      chips.push(...chipOptions.extra_chips);
+    }
+
+    // Unavailable chip.
+    const unavailableEntities = Object.values(Helper.magicAreasDevices[this.area.area_id]?.entities ?? [])?.filter((e) => {
+      const entityState = Helper.getEntityState(e.entity_id);
+      return (EXPOSED_CHIPS.includes(e.entity_id.split(".", 1)[0]) || EXPOSED_CHIPS.includes(entityState?.attributes.device_class || '')) &&
+        UNAVAILABLE_STATES.includes(entityState?.state);
+    });
+
+
+    if (unavailableEntities.length) {
+      const unavailableChip = new UnavailableChip(unavailableEntities);
+      chips.push(unavailableChip.getChip());
+    }
+
+    return chips.map(chip => ({
+      type: "custom:mushroom-chips-card",
+      alignment: "center",
+      chips: [chip],
+    }));
   }
 
   /**
@@ -218,6 +296,7 @@ class AreaView {
   async getView(): Promise<LovelaceViewConfig> {
     return {
       ...this.config,
+      badges: await this.createSectionBadges(),
       sections: await this.createSectionCards(),
     };
   }

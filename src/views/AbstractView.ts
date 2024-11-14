@@ -211,9 +211,9 @@ abstract class AbstractView {
   async getView(): Promise<LovelaceViewConfig | LovelaceSectionConfig> {
     return {
       ...this.config,
-      cards: await this.createViewCards(),
-      sections: await this.createSectionCards(),
       badges: await this.createSectionBadges(),
+      sections: await this.createSectionCards(),
+      cards: await this.createViewCards(),
     };
   }
 

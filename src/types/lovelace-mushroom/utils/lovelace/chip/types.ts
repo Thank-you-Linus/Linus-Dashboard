@@ -1,5 +1,5 @@
-import {ActionConfig} from "../../../../homeassistant/data/lovelace";
-import {Info} from "../../info";
+import { ActionConfig } from "../../../../homeassistant/data/lovelace";
+import { Info } from "../../info";
 
 /**
  * Action Chip Config
@@ -81,6 +81,7 @@ export type EntityChipConfig = {
   tap_action?: ActionConfig;
   hold_action?: ActionConfig;
   double_tap_action?: ActionConfig;
+  card_mod?: any;
 };
 
 /**

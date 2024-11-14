@@ -1,9 +1,11 @@
 import { Helper } from "./Helper";
 import { generic } from "./types/strategy/generic";
-import { LovelaceCardConfig, LovelaceConfig, LovelaceViewConfig } from "./types/homeassistant/data/lovelace";
+import { LovelaceConfig, LovelaceViewConfig } from "./types/homeassistant/data/lovelace";
 import StrategyArea = generic.StrategyArea;
+import StrategyFloor = generic.StrategyFloor;
 import { AREA_CARDS_DOMAINS } from "./variables";
 import { AreaView } from "./views/AreaView";
+import { slugify } from "./utils";
 
 /**
  * Mushroom Dashboard Strategy.<br>
@@ -58,12 +60,28 @@ class MushroomStrategy extends HTMLTemplateElement {
         views.push({
           title: area.name,
           path: area.slug ?? area.name,
-          // type: "sections",
           subview: true,
           strategy: {
             type: "custom:linus-strategy",
             options: {
               area,
+            },
+          },
+        });
+      }
+    }
+
+    // Create subviews for each area.
+    for (let floor of Helper.floors) {
+      if (!floor.hidden) {
+        views.push({
+          title: floor.name,
+          path: slugify(floor.name),
+          subview: true,
+          strategy: {
+            type: "custom:linus-strategy",
+            options: {
+              floor,
             },
           },
         });
@@ -91,14 +109,14 @@ class MushroomStrategy extends HTMLTemplateElement {
    */
   static async generateView(info: generic.ViewInfo): Promise<LovelaceViewConfig> {
 
+    const floor = info.view.strategy?.options?.floor ?? {} as StrategyFloor;
     const area = info.view.strategy?.options?.area ?? {} as StrategyArea;
-    const viewCards: LovelaceCardConfig[] = [...(area.extra_cards ?? [])];
 
     let view = {} as LovelaceViewConfig
 
     // Create a view for each exposed domain.
     try {
-      view = await new AreaView(area).getView();
+      view = await new AreaView(area, floor).getView();
     } catch (e) {
       Helper.logError(`View for area '${area.name}' couldn't be loaded!`, e);
     }

@@ -21,7 +21,7 @@ export const SENSOR_DOMAINS = ["sensor"];
 
 export const ALERT_DOMAINS = ["binary_sensor", "health"];
 
-export const TOGGLE_DOMAINS = ["light", "switch"];
+export const TOGGLE_DOMAINS = [MAGIC_AREAS_LIGHT_DOMAINS, "switch"];
 
 export const CLIMATE_DOMAINS = ["climate", "fan"];
 
@@ -29,7 +29,8 @@ export const HOUSE_INFORMATION_DOMAINS = ["camera", "cover", "vacuum", "media_pl
 
 export const OTHER_DOMAINS = ["camera", "cover", "vacuum", "media_player", "lock", "scene", "plant"];
 
-export const EXPOSED_CHIPS = ["light", "fan", "cover", "switch", "climate", "safety", "motion", "door", "window"];
+export const EXPOSED_CHIPS = [MAGIC_AREAS_LIGHT_DOMAINS, "fan", "cover", "switch", "climate", "safety", "motion", "door", "window"];
+export const AREA_EXPOSED_CHIPS = [MAGIC_AREAS_LIGHT_DOMAINS, "fan", "cover", "switch", "climate", "safety", "motion", "door", "window"];
 
 export const AREA_CARDS_DOMAINS = [...TOGGLE_DOMAINS, ...CLIMATE_DOMAINS, ...OTHER_DOMAINS, "binary_sensor", "sensor"];
 

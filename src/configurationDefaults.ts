@@ -1,6 +1,6 @@
 import { generic } from "./types/strategy/generic";
 import StrategyDefaults = generic.StrategyDefaults;
-import { LightControlChip } from "./chips/LightControlChip";
+import { ControlChip } from "./chips/ControlChip";
 import { SettingsChip } from "./chips/SettingsChip";
 import { LightSettings } from "./popups/LightSettingsPopup";
 import { ToggleSceneChip } from "./chips/ToggleSceneChip";
@@ -44,7 +44,7 @@ export const configurationDefaults: StrategyDefaults = {
       showControls: true,
       extraControls: (device: MagicAreaRegistryEntry) => {
         return [
-          new LightControlChip(device?.entities.light_control?.entity_id).getChip(),
+          new ControlChip(device?.entities.light_control?.entity_id).getChip(),
           new SettingsChip({ tap_action: new LightSettings(device).getPopup() }).getChip()
         ]
       },
@@ -124,13 +124,23 @@ export const configurationDefaults: StrategyDefaults = {
       title: "Climates",
       showControls: true,
       hidden: false,
-      order: 3
+      order: 3,
+      extraControls: (device: MagicAreaRegistryEntry) => {
+        return [
+          new ControlChip(device?.entities.climate_control?.entity_id).getChip()
+        ]
+      },
     },
     media_player: {
       title: "Media Players",
       showControls: true,
       hidden: false,
-      order: 9
+      order: 9,
+      extraControls: (device: MagicAreaRegistryEntry) => {
+        return [
+          new ControlChip(device?.entities.media_player_control?.entity_id).getChip()
+        ]
+      },
     },
     sensor: {
       title: "Sensors",

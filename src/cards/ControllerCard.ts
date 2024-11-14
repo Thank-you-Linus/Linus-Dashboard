@@ -116,8 +116,9 @@ class ControllerCard {
           alignment: "end",
           chips: [magicAreasEntity ?
             {
-              type: "entity",
+              type: this.#domain === "light" ? "light" : "entity",
               entity: magicAreasEntity.entity_id,
+              icon_color: "",
               content_info: "none",
               tap_action: {
                 action: "toggle"

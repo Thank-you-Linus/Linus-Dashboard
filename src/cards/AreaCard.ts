@@ -7,9 +7,9 @@ import { LinusLightChip } from "../chips/LinusLightChip";
 import { LinusClimateChip } from "../chips/LinusClimateChip";
 import { LinusAggregateChip } from "../chips/LinusAggregateChip";
 import { AreaStateChip } from "../chips/AreaStateChip";
-import { MagicAreaRegistryEntry } from "../types/homeassistant/data/device_registry";
 import { generic } from "../types/strategy/generic";
 import StrategyArea = generic.StrategyArea;
+import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
 import { getConditionalChip, slugify } from "../utils";
 import { EntityRegistryEntry } from "../types/homeassistant/data/entity_registry";
 
@@ -51,16 +51,18 @@ const getBadgeColor = (entityId: string) => `
 
 class AreaCard extends AbstractCard {
   constructor(area: StrategyArea, options: cards.TemplateCardOptions = {}) {
+
     super(area);
-    const device = Helper.magicAreasDevices[area.slug];
-    const defaultConfig = this.getDefaultConfig(area, device);
+    const defaultConfig = this.getDefaultConfig(area);
     this.config = { ...this.config, ...defaultConfig, ...options };
   }
 
-  getDefaultConfig(area: StrategyArea, device: MagicAreaRegistryEntry): TemplateCardConfig {
+  getDefaultConfig(area: StrategyArea): TemplateCardConfig {
     if (area.area_id === "undisclosed") {
       return this.getUndisclosedAreaConfig(area);
     }
+
+    const device = Helper.magicAreasDevices[area.slug];
 
     const { area_state, all_lights, aggregate_temperature, aggregate_battery, aggregate_health, aggregate_window, aggregate_door, aggregate_cover, aggregate_climate, light_control } = device?.entities || {};
     const icon = area.icon || "mdi:home-outline";

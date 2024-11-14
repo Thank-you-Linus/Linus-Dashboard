@@ -38,8 +38,3 @@ export interface DeviceRegistryEntry {
   disabled_by: "user" | "integration" | "config_entry" | null;
   configuration_url: string | null;
 }
-
-export interface MagicAreaRegistryEntry extends DeviceRegistryEntry {
-  entities: Record<string, EntityRegistryEntry>;
-  area_name: string;
-}

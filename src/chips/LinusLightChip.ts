@@ -1,9 +1,8 @@
-import { Helper } from "../Helper";
-import { chips } from "../types/strategy/chips";
 import { AbstractChip } from "./AbstractChip";
 import { TemplateChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
 import { AggregateListPopup } from "../popups/AggregateListPopup";
-import { MagicAreaRegistryEntry } from "../types/homeassistant/data/device_registry";
+import { generic } from "../types/strategy/generic";
+import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
 import { DOMAIN } from "../variables";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.

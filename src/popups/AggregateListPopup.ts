@@ -3,7 +3,6 @@ import { PopupActionConfig } from "../types/homeassistant/data/lovelace";
 import { StackCardConfig } from "../types/homeassistant/lovelace/cards/types";
 import { TemplateCardConfig } from "../types/lovelace-mushroom/cards/template-card-config";
 import { TitleCardConfig } from "../types/lovelace-mushroom/cards/title-card-config";
-import { groupBy } from "../utils";
 import { AbstractPopup } from "./AbstractPopup";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
@@ -18,11 +17,9 @@ class AggregateListPopup extends AbstractPopup {
 
     const groupedCards: (TitleCardConfig | StackCardConfig)[] = [];
 
-    const areasByFloor = groupBy(Helper.areas, (e) => e.floor_id ?? "undisclosed");
+    for (const floor of [...Helper.orderedFloors, Helper.strategyOptions.floors.undisclosed]) {
 
-    for (const floor of [...Helper.floors, Helper.strategyOptions.floors.undisclosed]) {
-
-      if (!(floor.floor_id in areasByFloor) || areasByFloor[floor.floor_id].length === 0) continue
+      if (floor.areas.length === 0) continue
 
       groupedCards.push({
         type: "custom:mushroom-title-card",
@@ -38,7 +35,7 @@ class AggregateListPopup extends AbstractPopup {
 
       let areaCards: (TemplateCardConfig)[] = [];
 
-      for (const [i, area] of areasByFloor[floor.floor_id].entries()) {
+      for (const [i, area] of floor.areas.map(areaId => Helper.areas[areaId]).entries()) {
 
         const entity = Helper.magicAreasDevices[area.slug]?.entities[`aggregate_${aggregate_entity.attributes?.device_class}`]
 
@@ -57,7 +54,7 @@ class AggregateListPopup extends AbstractPopup {
         }
 
         // Horizontally group every two area cards if all cards are created.
-        if (i === areasByFloor[floor.floor_id].length - 1) {
+        if (i === floor.areas.length - 1) {
           for (let i = 0; i < areaCards.length; i += 2) {
             groupedCards.push({
               type: "horizontal-stack",

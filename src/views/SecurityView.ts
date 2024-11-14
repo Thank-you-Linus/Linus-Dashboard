@@ -1,11 +1,11 @@
 import { Helper } from "../Helper";
 import { LovelaceGridCardConfig, StackCardConfig } from "../types/homeassistant/lovelace/cards/types";
-import { LovelaceCardConfig, LovelaceSectionConfig, LovelaceViewConfig } from "../types/homeassistant/data/lovelace";
+import { LovelaceCardConfig, LovelaceViewConfig } from "../types/homeassistant/data/lovelace";
 import { TitleCardConfig } from "../types/lovelace-mushroom/cards/title-card-config";
 import { AlarmCard } from "../cards/AlarmCard";
 import { PersonCard } from "../cards/PersonCard";
 import { BinarySensorCard } from "../cards/BinarySensorCard";
-import { groupBy, navigateTo } from "../utils";
+import { navigateTo } from "../utils";
 import { HassServiceTarget } from "home-assistant-js-websocket";
 import { SwipeCard } from "../cards/SwipeCard";
 import { ControllerCard } from "../cards/ControllerCard";
@@ -66,7 +66,7 @@ abstract class SecurityView {
       cards: []
     };
 
-    const alarmEntity = Helper.getAlarmEntity();
+    const alarmEntity = Helper.domains.alarm_control_panel[0]
     if (alarmEntity?.entity_id) {
       globalSection.cards.push(
         {
@@ -84,7 +84,7 @@ abstract class SecurityView {
       globalSection.cards.push(new AlarmCard(alarmEntity).getCard())
     }
 
-    const persons = Helper.getPersonsEntity()
+    const persons = Helper.domains.person
     if (persons?.length) {
       globalSection.cards.push(
         {
@@ -128,7 +128,7 @@ abstract class SecurityView {
     }
 
     const sections = [globalSection]
-    if (Helper.getCamerasEntity()?.length) sections.push(await this.createCamerasSection())
+    if (Helper.domains.camera?.length) sections.push(await this.createCamerasSection())
 
     return sections;
   }
@@ -157,11 +157,18 @@ abstract class SecurityView {
         }]
     };
 
-    const areasByFloor = groupBy(Helper.areas, (e) => e.floor_id ?? "undisclosed");
+    const orderedFloors = Object.values(Helper.floors).sort((a, b) => {
+      // Check if 'level' is undefined in either object
+      if (a.level === undefined) return 1; // a should come after b
+      if (b.level === undefined) return -1; // b should come after a
 
-    for (const floor of [...Helper.floors, Helper.strategyOptions.floors.undisclosed]) {
+      // Both 'level' values are defined, compare them
+      return a.level - b.level;
+    });
 
-      if (!(floor.floor_id in areasByFloor) || areasByFloor[floor.floor_id].length === 0) continue
+    for (const floor of [...orderedFloors, Helper.strategyOptions.floors.undisclosed]) {
+
+      if (floor.areas.length === 0) continue
 
       let floorCards: LovelaceCardConfig[] = [
         {
@@ -178,7 +185,7 @@ abstract class SecurityView {
       ]
 
       // Create cards for each area.
-      for (const [i, area] of areasByFloor[floor.floor_id].entries()) {
+      for (const [i, area] of floor.areas.map(areaId => Helper.areas[areaId]).entries()) {
         const entities = Helper.getDeviceEntities(area, domain ?? "");
         const className = Helper.sanitizeClassName(domain + "Card");
 

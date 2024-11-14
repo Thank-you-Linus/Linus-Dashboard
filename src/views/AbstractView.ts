@@ -4,7 +4,6 @@ import { ControllerCard } from "../cards/ControllerCard";
 import { LovelaceGridCardConfig, StackCardConfig } from "../types/homeassistant/lovelace/cards/types";
 import { LovelaceBadgeConfig, LovelaceCardConfig, LovelaceSectionConfig, LovelaceViewConfig } from "../types/homeassistant/data/lovelace";
 import { HassServiceTarget } from "home-assistant-js-websocket";
-import { groupBy } from "../utils";
 import { TemplateCardConfig } from '../types/lovelace-mushroom/cards/template-card-config';
 import { ChipsCardConfig } from '../types/lovelace-mushroom/cards/chips-card';
 import { SwipeCard } from '../cards/SwipeCard';
@@ -95,13 +94,11 @@ abstract class AbstractView {
       Helper.strategyOptions.domains[this.#domain ?? "_"].hide_config_entities
       || Helper.strategyOptions.domains["_"].hide_config_entities;
 
-    const areasByFloor = groupBy(Helper.areas, (e) => e.floor_id ?? "undisclosed");
 
-
-    for (const floor of [...Helper.floors, Helper.strategyOptions.floors.undisclosed]) {
-
+    for (const floor of [...Helper.orderedFloors, Helper.strategyOptions.floors.undisclosed]) {
+      if (floor.areas.length === 0) continue
       if (!AREA_CARDS_DOMAINS.includes(this.#domain ?? "")) continue
-      if (!(floor.floor_id in areasByFloor) || areasByFloor[floor.floor_id].length === 0) continue
+
 
       let floorCards = {
         type: "grid",
@@ -121,7 +118,7 @@ abstract class AbstractView {
       } as LovelaceGridCardConfig
 
       // Create cards for each area.
-      for (const [i, area] of areasByFloor[floor.floor_id].entries()) {
+      for (const [i, area] of floor.areas.map(areaId => Helper.areas[areaId]).entries()) {
         const entities = Helper.getDeviceEntities(area, this.#domain ?? "");
         const className = Helper.sanitizeClassName(this.#domain + "Card");
         const cardModule = await import(`../cards/${className}`);
@@ -225,10 +222,9 @@ abstract class AbstractView {
    */
   targetDomain(domain: string): HassServiceTarget {
     return {
-      entity_id: Helper.entities.filter(
+      entity_id: Helper.domains[domain].filter(
         entity =>
-          entity.entity_id.startsWith(domain + ".")
-          && !entity.hidden_by
+          !entity.hidden_by
           && !Helper.strategyOptions.card_options?.[entity.entity_id]?.hidden
       ).map(entity => entity.entity_id),
     };

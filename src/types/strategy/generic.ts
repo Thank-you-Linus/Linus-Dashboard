@@ -11,6 +11,7 @@ import { EntityRegistryEntry } from "../homeassistant/data/entity_registry";
 import { LovelaceChipConfig } from "../lovelace-mushroom/utils/lovelace/chip/types";
 import { HassServiceTarget } from "home-assistant-js-websocket";
 import { FloorRegistryEntry } from "../homeassistant/data/floor_registry";
+import { DeviceRegistryEntry } from "../homeassistant/data/device_registry";
 
 export namespace generic {
   /**
@@ -141,6 +142,28 @@ export namespace generic {
   }
 
   /**
+   * Strategy Device.
+   *
+   */
+  export interface StrategyDevice extends DeviceRegistryEntry {
+    floor_id: string | null;
+    entities: string[];
+  }
+
+  export interface MagicAreaRegistryEntry extends DeviceRegistryEntry {
+    entities: Record<string, EntityRegistryEntry>;
+    area_name: string;
+  }
+
+  /**
+   * Strategy Entity.
+   *
+   */
+  export interface StrategyEntity extends EntityRegistryEntry {
+    floor_id: string | null;
+  }
+
+  /**
    * Strategy Area.
    *
    * @property {number} [order] Ordering position of the area in the list of available areas.
@@ -151,10 +174,14 @@ export namespace generic {
    */
   export interface StrategyArea extends AreaRegistryEntry {
     slug: string;
+    domains: Record<string, string[]>;
     order?: number;
     hidden?: boolean;
     extra_cards?: LovelaceCardConfig[];
     type?: string;
+    devices: string[];
+    entities: string[];
+    magicAreaDevice?: StrategyDevice;
   }
 
   /**
@@ -167,6 +194,7 @@ export namespace generic {
     order?: number;
     hidden?: boolean;
     type?: string;
+    areas: string[];
   }
 
   /**

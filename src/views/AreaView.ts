@@ -14,7 +14,7 @@ import { ControllerCard } from "../cards/ControllerCard";
 import { HassServiceTarget } from "home-assistant-js-websocket";
 import { MainAreaCard } from "../cards/MainAreaCard";
 import { SwipeCardConfig } from "../types/lovelace-mushroom/cards/swipe-card-config";
-import { AREA_CARDS_DOMAINS, DOMAIN_ICONS, EXPOSED_CHIPS, UNAVAILABLE_STATES } from "../variables";
+import { AREA_CARDS_DOMAINS, AREA_EXPOSED_CHIPS, DOMAIN_ICONS, HOME_EXPOSED_CHIPS, UNAVAILABLE_STATES } from "../variables";
 import { UnavailableChip } from "../chips/UnavailableChip";
 import { LovelaceChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
 import { AreaStateChip } from "../chips/AreaStateChip";
@@ -91,9 +91,6 @@ class AreaView {
     const chips: LovelaceChipConfig[] = [];
     const chipOptions = Helper.strategyOptions.chips;
 
-    // Create a list of area-ids, used for switching all devices via chips
-    const areaIds = Helper.areas.map(area => area.area_id ?? "");
-
     let chipModule;
 
     const device = Helper.magicAreasDevices[this.area.slug];
@@ -102,18 +99,18 @@ class AreaView {
       chips.push(new AreaStateChip(device, true).getChip());
     }
 
-
-
     // Numeric chips.
-    for (let chipType of AREA_CARDS_DOMAINS) {
+    for (let chipType of AREA_EXPOSED_CHIPS) {
+      if ((this.area.domains[chipType] ?? []).length === 0) continue
+
       if (chipOptions?.[`${chipType}_count` as string] ?? true) {
         const className = Helper.sanitizeClassName(chipType + "Chip");
         try {
           chipModule = await import((`../chips/${className}`));
-          const chip = new chipModule[className](Helper.magicAreasDevices[this.area.area_id]);
+          const chip = new chipModule[className](device);
 
           if ("tap_action" in this.config && isCallServiceActionConfig(this.config.tap_action)) {
-            chip.setTapActionTarget({ area_id: areaIds });
+            chip.setTapActionTarget({ area_id: this.area.area_id });
           }
           chips.push(chip.getChip());
         } catch (e) {
@@ -128,17 +125,17 @@ class AreaView {
     }
 
     // Unavailable chip.
-    const unavailableEntities = Object.values(Helper.magicAreasDevices[this.area.area_id]?.entities ?? [])?.filter((e) => {
-      const entityState = Helper.getEntityState(e.entity_id);
-      return (EXPOSED_CHIPS.includes(e.entity_id.split(".", 1)[0]) || EXPOSED_CHIPS.includes(entityState?.attributes.device_class || '')) &&
-        UNAVAILABLE_STATES.includes(entityState?.state);
-    });
+    // const unavailableEntities = Object.values(Helper.magicAreasDevices[this.area.area_id]?.entities ?? [])?.filter((e) => {
+    //   const entityState = Helper.getEntityState(e.entity_id);
+    //   return (HOME_EXPOSED_CHIPS.includes(e.entity_id.split(".", 1)[0]) || HOME_EXPOSED_CHIPS.includes(entityState?.attributes.device_class || '')) &&
+    //     UNAVAILABLE_STATES.includes(entityState?.state);
+    // });
 
 
-    if (unavailableEntities.length) {
-      const unavailableChip = new UnavailableChip(unavailableEntities);
-      chips.push(unavailableChip.getChip());
-    }
+    // if (unavailableEntities.length) {
+    //   const unavailableChip = new UnavailableChip(unavailableEntities);
+    //   chips.push(unavailableChip.getChip());
+    // }
 
     return chips.map(chip => ({
       type: "custom:mushroom-chips-card",
@@ -243,8 +240,9 @@ class AreaView {
 
     // Handle default domain if not hidden
     if (!Helper.strategyOptions.domains.default.hidden) {
-      const areaDevices = Helper.devices.filter(device => device.area_id === this.area.area_id).map(device => device.id);
-      const miscellaneousEntities = Helper.entities.filter(entity => {
+      const areaDevices = this.area.devices.filter(device_id => Helper.devices[device_id].area_id === this.area.area_id);
+      const miscellaneousEntities = this.area.entities.filter(entity_id => {
+        const entity = Helper.entities[entity_id];
         const entityLinked = areaDevices.includes(entity.device_id ?? "null") || entity.area_id === this.area.area_id;
         const entityUnhidden = entity.hidden_by === null && entity.disabled_by === null;
         const domainExposed = exposedDomainIds.includes(entity.entity_id.split(".", 1)[0]);
@@ -261,7 +259,8 @@ class AreaView {
 
           const swipeCard: SwipeCardConfig[] = [];
 
-          for (const entity of miscellaneousEntities) {
+          for (const entity_id of miscellaneousEntities) {
+            const entity = Helper.entities[entity_id];
             let cardOptions = Helper.strategyOptions.card_options?.[entity.entity_id];
             let deviceOptions = Helper.strategyOptions.card_options?.[entity.device_id ?? "null"];
 

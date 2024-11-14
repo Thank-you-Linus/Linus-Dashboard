@@ -1,11 +1,11 @@
 import { generic } from "./types/strategy/generic";
 import StrategyDefaults = generic.StrategyDefaults;
+import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
 import { ControlChip } from "./chips/ControlChip";
 import { SettingsChip } from "./chips/SettingsChip";
 import { LightSettings } from "./popups/LightSettingsPopup";
 import { ToggleSceneChip } from "./chips/ToggleSceneChip";
 import { SceneSettings } from "./popups/SceneSettingsPopup";
-import { MagicAreaRegistryEntry } from "./types/homeassistant/data/device_registry";
 
 /**
  * Default configuration for the mushroom strategy.
@@ -19,6 +19,9 @@ export const configurationDefaults: StrategyDefaults = {
       name: "Non assigné",
       picture: null,
       hidden: false,
+      domains: {},
+      devices: [],
+      entities: [],
     }
   },
   floors: {
@@ -27,6 +30,7 @@ export const configurationDefaults: StrategyDefaults = {
       floor_id: "undisclosed",
       name: "Non assigné",
       hidden: false,
+      areas: ["undisclosed"]
     }
   },
   debug: true,

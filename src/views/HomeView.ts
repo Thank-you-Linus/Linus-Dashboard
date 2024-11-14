@@ -11,7 +11,7 @@ import { PersonCardConfig } from "../types/lovelace-mushroom/cards/person-card-c
 import { SettingsChip } from "../chips/SettingsChip";
 import { LinusSettings } from "../popups/LinusSettingsPopup";
 import { UnavailableChip } from "../chips/UnavailableChip";
-import { EXPOSED_CHIPS, UNAVAILABLE_STATES } from "../variables";
+import { AREA_CARDS_DOMAINS, HOME_EXPOSED_CHIPS, UNAVAILABLE_STATES } from "../variables";
 import { groupBy, navigateTo, slugify } from "../utils";
 import { generic } from "../types/strategy/generic";
 import isCallServiceActionConfig = generic.isCallServiceActionConfig;
@@ -80,14 +80,12 @@ class HomeView extends AbstractView {
     const chipOptions = Helper.strategyOptions.chips;
 
     // Create a list of area-ids, used for switching all devices via chips
-    const areaIds = Helper.areas.map(area => area.area_id ?? "");
+    const areaIds = Helper.orderedAreas.map(area => area.area_id ?? "");
 
     let chipModule;
 
     // Weather chip.
-    const weatherEntityId = chipOptions?.weather_entity ?? Helper.entities.find(
-      (entity) => entity.entity_id.startsWith("weather.") && entity.disabled_by === null && entity.hidden_by === null,
-    )?.entity_id;
+    const weatherEntityId = chipOptions?.weather_entity ?? Helper.domains.weather[0]?.entity_id;
 
     if (weatherEntityId) {
       try {
@@ -101,7 +99,7 @@ class HomeView extends AbstractView {
     }
 
     // Alarm chip.
-    const alarmEntityId = chipOptions?.alarm_entity ?? Helper.getAlarmEntity()?.entity_id;
+    const alarmEntityId = chipOptions?.alarm_entity ?? Helper.domains.alarm_control_panel[0]?.entity_id;
 
     if (alarmEntityId) {
       try {
@@ -115,7 +113,7 @@ class HomeView extends AbstractView {
     }
 
     // Spotify chip.
-    const spotifyEntityId = chipOptions?.spotify_entity ?? Helper.entities.find(
+    const spotifyEntityId = chipOptions?.spotify_entity ?? Helper.domains.media_player.find(
       (entity) => entity.entity_id.startsWith("media_player.spotify_") && entity.disabled_by === null && entity.hidden_by === null,
     )?.entity_id;
 
@@ -131,7 +129,9 @@ class HomeView extends AbstractView {
     }
 
     // Numeric chips.
-    for (let chipType of EXPOSED_CHIPS) {
+    for (let chipType of HOME_EXPOSED_CHIPS) {
+      if ((Helper.domains[chipType] ?? []).length === 0) continue
+
       if (chipOptions?.[`${chipType}_count` as string] ?? true) {
         const className = Helper.sanitizeClassName(chipType + "Chip");
         try {
@@ -156,7 +156,7 @@ class HomeView extends AbstractView {
     // Unavailable chip.
     const unavailableEntities = Object.values(Helper.magicAreasDevices["global"]?.entities ?? [])?.filter((e) => {
       const entityState = Helper.getEntityState(e.entity_id);
-      return (EXPOSED_CHIPS.includes(e.entity_id.split(".", 1)[0]) || EXPOSED_CHIPS.includes(entityState?.attributes.device_class || '')) &&
+      return (HOME_EXPOSED_CHIPS.includes(e.entity_id.split(".", 1)[0]) || HOME_EXPOSED_CHIPS.includes(entityState?.attributes.device_class || '')) &&
         UNAVAILABLE_STATES.includes(entityState?.state);
     });
 
@@ -270,9 +270,8 @@ class HomeView extends AbstractView {
     const cards: PersonCardConfig[] = [];
 
     import("../cards/PersonCard").then(personModule => {
-      for (const person of Helper.entities.filter((entity) => {
-        return entity.entity_id.startsWith("person.")
-          && entity.hidden_by == null
+      for (const person of Helper.domains.person.filter((entity) => {
+        return entity.hidden_by == null
           && entity.disabled_by == null;
       })) {
         cards.push(new personModule.PersonCard(person).getCard());
@@ -308,10 +307,9 @@ class HomeView extends AbstractView {
       );
     }
 
-    const areasByFloor = groupBy(Helper.areas, (e) => e.floor_id ?? "undisclosed");
 
-    for (const floor of [...Helper.floors, Helper.strategyOptions.floors.undisclosed]) {
-      if (!(floor.floor_id in areasByFloor)) continue
+    for (const floor of [...Helper.orderedFloors, Helper.strategyOptions.floors.undisclosed]) {
+      if (floor.areas.length === 0) continue
 
       groupedCards.push(
         {
@@ -323,7 +321,7 @@ class HomeView extends AbstractView {
         }
       );
 
-      for (const [i, area] of areasByFloor[floor.floor_id].entries()) {
+      for (const [i, area] of floor.areas.map(areaId => Helper.areas[areaId]).entries()) {
 
         type ModuleType = typeof import("../cards/AreaCard");
 

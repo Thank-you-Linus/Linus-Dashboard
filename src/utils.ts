@@ -1,7 +1,9 @@
-import { MagicAreaRegistryEntry } from "./types/homeassistant/data/device_registry";
+import { Helper } from "./Helper";
 import { EntityRegistryEntry } from "./types/homeassistant/data/entity_registry";
+import { generic } from "./types/strategy/generic";
+import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
 import { ActionConfig } from "./types/homeassistant/data/lovelace";
-import { MAGIC_AREAS_AGGREGATE_DOMAINS, MAGIC_AREAS_GROUP_DOMAINS } from "./variables";
+import { DEVICE_CLASSES, MAGIC_AREAS_AGGREGATE_DOMAINS, MAGIC_AREAS_GROUP_DOMAINS, SENSOR_DOMAINS } from "./variables";
 
 /**
  * Groups the elements of an array based on a provided function
@@ -85,4 +87,24 @@ export function getConditionalChip(entityId: string, state: string, chip: any): 
 export function getMAEntity(device: MagicAreaRegistryEntry, domain: string, deviceClass?: string): EntityRegistryEntry {
     const magicAreasKey = domain === "light" ? 'all_lights' : deviceClass ? `aggregate_${deviceClass}` : `${domain}_group`;
     return device?.entities[magicAreasKey]
+}
+
+export function groupEntitiesByDomain(entity_ids: string[]): Record<string, string[]> {
+    return entity_ids
+        .reduce((acc: Record<string, string[]>, entity_id) => {
+            let domain = entity_id.split(".")[0];
+
+            if (Object.keys(DEVICE_CLASSES).includes(domain)) {
+                const entityState = Helper.getEntityState(entity_id);
+
+                if (entityState?.attributes?.device_class) {
+                    domain = entityState.attributes.device_class
+                }
+            }
+            if (!acc[domain]) {
+                acc[domain] = [];
+            }
+            acc[domain].push(entity_id);
+            return acc;
+        }, {});
 }

@@ -55,7 +55,7 @@ class MushroomStrategy extends HTMLTemplateElement {
     }
 
     // Create subviews for each area.
-    for (let area of Helper.areas) {
+    for (let area of Helper.orderedAreas) {
       if (!area.hidden) {
         views.push({
           title: area.name,
@@ -72,7 +72,7 @@ class MushroomStrategy extends HTMLTemplateElement {
     }
 
     // Create subviews for each area.
-    for (let floor of Helper.floors) {
+    for (let floor of Helper.orderedFloors) {
       if (!floor.hidden) {
         views.push({
           title: floor.name,

@@ -3,6 +3,9 @@ import { AbstractChip } from "./AbstractChip";
 import { chips } from "../types/strategy/chips";
 import { TemplateChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
 import { DOMAIN_STATE_ICONS } from "../variables";
+import { generic } from "../types/strategy/generic";
+import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
+import { getMAEntity } from "../utils";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**
@@ -35,8 +38,15 @@ class MotionChip extends AbstractChip {
    *
    * @param {chips.TemplateChipOptions} options The chip options.
    */
-  constructor(options: chips.TemplateChipOptions = {}) {
+  constructor(device: MagicAreaRegistryEntry, options: chips.TemplateChipOptions = {}) {
     super();
+
+    const aggregate_motion = getMAEntity(device, "binary_sensor", "motion");
+
+    if (aggregate_motion) {
+      this.#defaultConfig.entity = aggregate_motion.entity_id;
+      this.#defaultConfig.hold_action = { action: "more-info" };
+    }
 
     this.config = Object.assign(this.config, this.#defaultConfig, options);
   }

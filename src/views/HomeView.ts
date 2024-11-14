@@ -12,7 +12,7 @@ import { SettingsChip } from "../chips/SettingsChip";
 import { LinusSettings } from "../popups/LinusSettingsPopup";
 import { UnavailableChip } from "../chips/UnavailableChip";
 import { EXPOSED_CHIPS, UNAVAILABLE_STATES } from "../variables";
-import { groupBy } from "../utils";
+import { groupBy, navigateTo, slugify } from "../utils";
 import { generic } from "../types/strategy/generic";
 import isCallServiceActionConfig = generic.isCallServiceActionConfig;
 
@@ -70,104 +70,6 @@ class HomeView extends AbstractView {
    */
   async createSectionBadges(): Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig)[]> {
 
-    const chips = await this.#createChips();
-    return this.#createChips()
-  }
-
-  /**
-   * Create the cards to include in the view.
-   *
-   * @return {Promise<LovelaceGridCardConfig[]>} Promise a View Card array.
-   * @override
-   */
-  async createSectionCards(): Promise<LovelaceGridCardConfig[]> {
-    return await Promise.all([
-      this.#createChips(),
-      this.#createPersonCards(),
-      this.#createAreaSection(),
-    ]).then(([chips, personCards, areaCards]) => {
-      const options = Helper.strategyOptions;
-      const firstSection: LovelaceGridCardConfig = {
-        type: "grid",
-        column_span: 1,
-        cards: []
-      };
-
-      if (chips.length) {
-        // TODO: Create the Chip card at this.#createChips()
-        firstSection.cards.push({
-          type: "custom:mushroom-chips-card",
-          alignment: "center",
-          chips: chips,
-        } as ChipsCardConfig)
-      }
-
-      if (personCards.length) {
-        // TODO: Create the stack at this.#createPersonCards()
-        firstSection.cards.push({
-          type: "horizontal-stack",
-          cards: personCards,
-        } as StackCardConfig);
-      }
-
-      if (!Helper.strategyOptions.home_view.hidden.includes("greeting")) {
-        const tod = Helper.magicAreasDevices.global?.entities.time_of_the_day;
-
-        firstSection.cards.push({
-          type: "custom:mushroom-template-card",
-          primary: `
-          {% set tod = states("${tod?.entity_id}") %}
-          {% if (tod == "evening") %} Bonne soirée, {{user}} !
-          {% elif (tod == "daytime") %} Bonne après-midi, {{user}} !
-          {% elif (tod == "night") %} Bonne nuit, {{user}} !
-          {% else %} Bonjour, {{user}} !
-          {% endif %}`,
-          icon: "mdi:hand-wave",
-          icon_color: "orange",
-          layout_options: {
-            grid_columns: 4,
-            grid_rows: 1,
-          },
-          tap_action: {
-            action: "none",
-          } as ActionConfig,
-          double_tap_action: {
-            action: "none",
-          } as ActionConfig,
-          hold_action: {
-            action: "none",
-          } as ActionConfig,
-        } as TemplateCardConfig);
-      }
-
-
-      // Add quick access cards.
-      if (options.quick_access_cards) {
-        firstSection.cards.push(...options.quick_access_cards);
-      }
-
-      // Add custom cards.
-      if (options.extra_cards) {
-        firstSection.cards.push(...options.extra_cards);
-      }
-
-      // Add area cards.
-      const secondSection: LovelaceGridCardConfig = {
-        type: "grid",
-        column_span: 1,
-        cards: areaCards,
-      };
-
-      return [firstSection, secondSection];
-    });
-  }
-
-  /**
-   * Create the chips to include in the view.
-   *
-   * @return {Promise<ChipsCardConfig[]>} Promise a chip array.
-   */
-  async #createChips(): Promise<ChipsCardConfig[]> {
     if (Helper.strategyOptions.home_view.hidden.includes("chips")) {
       // Chips section is hidden.
 
@@ -276,6 +178,84 @@ class HomeView extends AbstractView {
   }
 
   /**
+   * Create the cards to include in the view.
+   *
+   * @return {Promise<LovelaceGridCardConfig[]>} Promise a View Card array.
+   * @override
+   */
+  async createSectionCards(): Promise<LovelaceGridCardConfig[]> {
+    return await Promise.all([
+      this.#createPersonCards(),
+      this.#createAreaSection(),
+    ]).then(([personCards, areaCards]) => {
+      const options = Helper.strategyOptions;
+      const firstSection: LovelaceGridCardConfig = {
+        type: "grid",
+        column_span: 1,
+        cards: []
+      };
+
+      if (personCards.length) {
+        // TODO: Create the stack at this.#createPersonCards()
+        firstSection.cards.push({
+          type: "horizontal-stack",
+          cards: personCards,
+        } as StackCardConfig);
+      }
+
+      if (!Helper.strategyOptions.home_view.hidden.includes("greeting")) {
+        const tod = Helper.magicAreasDevices.global?.entities.time_of_the_day;
+
+        firstSection.cards.push({
+          type: "custom:mushroom-template-card",
+          primary: `
+          {% set tod = states("${tod?.entity_id}") %}
+          {% if (tod == "evening") %} Bonne soirée, {{user}} !
+          {% elif (tod == "daytime") %} Bonne après-midi, {{user}} !
+          {% elif (tod == "night") %} Bonne nuit, {{user}} !
+          {% else %} Bonjour, {{user}} !
+          {% endif %}`,
+          icon: "mdi:hand-wave",
+          icon_color: "orange",
+          layout_options: {
+            grid_columns: 4,
+            grid_rows: 1,
+          },
+          tap_action: {
+            action: "none",
+          } as ActionConfig,
+          double_tap_action: {
+            action: "none",
+          } as ActionConfig,
+          hold_action: {
+            action: "none",
+          } as ActionConfig,
+        } as TemplateCardConfig);
+      }
+
+
+      // Add quick access cards.
+      if (options.quick_access_cards) {
+        firstSection.cards.push(...options.quick_access_cards);
+      }
+
+      // Add custom cards.
+      if (options.extra_cards) {
+        firstSection.cards.push(...options.extra_cards);
+      }
+
+      // Add area cards.
+      const secondSection: LovelaceGridCardConfig = {
+        type: "grid",
+        column_span: 1,
+        cards: areaCards,
+      };
+
+      return [firstSection, secondSection];
+    });
+  }
+
+  /**
    * Create the person cards to include in the view.
    *
    * @return {PersonCardConfig[]} A Person Card array.
@@ -339,6 +319,7 @@ class HomeView extends AbstractView {
           heading: floor.name,
           heading_style: "subtitle",
           icon: floor.icon ?? "mdi:floor-plan",
+          tap_action: floor.floor_id !== "undisclosed" ? navigateTo(slugify(floor.name)) : undefined,
         }
       );
 

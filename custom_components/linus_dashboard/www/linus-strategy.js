@@ -1057,7 +1057,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var _AbstractCard__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./AbstractCard */ "./src/cards/AbstractCard.ts");
 /* harmony import */ var _Helper__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../Helper */ "./src/Helper.ts");
-/* harmony import */ var _chips_LightControlChip__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../chips/LightControlChip */ "./src/chips/LightControlChip.ts");
+/* harmony import */ var _chips_ControlChip__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../chips/ControlChip */ "./src/chips/ControlChip.ts");
 /* harmony import */ var _chips_LinusLightChip__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../chips/LinusLightChip */ "./src/chips/LinusLightChip.ts");
 /* harmony import */ var _chips_LinusClimateChip__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../chips/LinusClimateChip */ "./src/chips/LinusClimateChip.ts");
 /* harmony import */ var _chips_LinusAggregateChip__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../chips/LinusAggregateChip */ "./src/chips/LinusAggregateChip.ts");
@@ -1171,7 +1171,7 @@ class AreaCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractCard {
                 this.getConditionalChip(aggregate_cover?.entity_id, "on", new _chips_LinusAggregateChip__WEBPACK_IMPORTED_MODULE_5__.LinusAggregateChip(device, "cover").getChip()),
                 this.getConditionalChip(aggregate_climate?.entity_id, "unavailable", new _chips_LinusClimateChip__WEBPACK_IMPORTED_MODULE_4__.LinusClimateChip(device).getChip()),
                 this.getConditionalChip(all_lights?.entity_id, "unavailable", new _chips_LinusLightChip__WEBPACK_IMPORTED_MODULE_3__.LinusLightChip(device, area.slug).getChip()),
-                this.getConditionalChip(all_lights?.entity_id, "unavailable", new _chips_LightControlChip__WEBPACK_IMPORTED_MODULE_2__.LightControlChip(light_control?.entity_id).getChip())
+                this.getConditionalChip(all_lights?.entity_id, "unavailable", new _chips_ControlChip__WEBPACK_IMPORTED_MODULE_2__.ControlChip(light_control?.entity_id).getChip())
             ].filter(Boolean),
             card_mod: { style: this.getChipsCardModStyle() }
         };
@@ -1597,8 +1597,9 @@ class ControllerCard {
                     alignment: "end",
                     chips: [magicAreasEntity ?
                             {
-                                type: "entity",
+                                type: __classPrivateFieldGet(this, _ControllerCard_domain, "f") === "light" ? "light" : "entity",
                                 entity: magicAreasEntity.entity_id,
+                                icon_color: "",
                                 content_info: "none",
                                 tap_action: {
                                     action: "toggle"
@@ -3082,6 +3083,84 @@ _ClimateChip_defaultConfig = new WeakMap();
 
 /***/ }),
 
+/***/ "./src/chips/ControlChip.ts":
+/*!**********************************!*\
+  !*** ./src/chips/ControlChip.ts ***!
+  \**********************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   ControlChip: () => (/* binding */ ControlChip)
+/* harmony export */ });
+/* harmony import */ var _AbstractChip__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./AbstractChip */ "./src/chips/AbstractChip.ts");
+var __classPrivateFieldGet = (undefined && undefined.__classPrivateFieldGet) || function (receiver, state, kind, f) {
+    if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a getter");
+    if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
+    return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
+};
+var _ControlChip_defaultConfig;
+
+// noinspection JSUnusedGlobalSymbols Class is dynamically imported.
+/**
+ * Control Chip class.
+ *
+ * Used to create a chip to indicate how many lights are on and to turn all off.
+ */
+class ControlChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_0__.AbstractChip {
+    /**
+     * Class Constructor.
+     *
+     * @param {chips.TemplateChipOptions} options The chip options.
+     */
+    constructor(entity_id) {
+        super();
+        /**
+         * Default configuration of the chip.
+         *
+         * @type {EntityChipConfig}
+         *
+         * @readonly
+         * @private
+         */
+        _ControlChip_defaultConfig.set(this, {
+            type: "entity",
+            entity: undefined,
+            content_info: "none",
+            // icon_color: "{% if is_state('switch.magic_areas_climate_groups_salon_climate_control', 'on') %}green{% else %}red{% endif %}",
+            icon_color: `
+      {% if states('switch.magic_areas_climate_groups_salon_climate_control') === 'off' %}
+        green
+      {% else %}
+        blue
+      {% endif %}
+    `,
+            tap_action: {
+                action: "more-info"
+            },
+            // card_mod: {
+            //   style: `
+            //     ha-card {
+            //       {% if states('switch.magic_areas_climate_groups_salon_climate_control') == 'on' %}
+            //         --card-mod-icon-color: blue;
+            //       {% else %}
+            //         --card-mod-icon-color: green;
+            //       {% endif %}
+            //     }
+            //   `
+            // }
+        });
+        __classPrivateFieldGet(this, _ControlChip_defaultConfig, "f").entity = entity_id;
+        this.config = Object.assign(this.config, __classPrivateFieldGet(this, _ControlChip_defaultConfig, "f"));
+    }
+}
+_ControlChip_defaultConfig = new WeakMap();
+
+
+
+/***/ }),
+
 /***/ "./src/chips/CoverChip.ts":
 /*!********************************!*\
   !*** ./src/chips/CoverChip.ts ***!
@@ -3327,73 +3406,6 @@ class LightChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.AbstractChip 
     }
 }
 _LightChip_defaultConfig = new WeakMap();
-
-
-
-/***/ }),
-
-/***/ "./src/chips/LightControlChip.ts":
-/*!***************************************!*\
-  !*** ./src/chips/LightControlChip.ts ***!
-  \***************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   LightControlChip: () => (/* binding */ LightControlChip)
-/* harmony export */ });
-/* harmony import */ var _AbstractChip__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./AbstractChip */ "./src/chips/AbstractChip.ts");
-var __classPrivateFieldGet = (undefined && undefined.__classPrivateFieldGet) || function (receiver, state, kind, f) {
-    if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a getter");
-    if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
-    return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
-};
-var _LightControlChip_defaultConfig;
-
-// noinspection JSUnusedGlobalSymbols Class is dynamically imported.
-/**
- * Light Chip class.
- *
- * Used to create a chip to indicate how many lights are on and to turn all off.
- */
-class LightControlChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_0__.AbstractChip {
-    /**
-     * Class Constructor.
-     *
-     * @param {chips.TemplateChipOptions} options The chip options.
-     */
-    constructor(entity_id) {
-        super();
-        /**
-         * Default configuration of the chip.
-         *
-         * @type {TemplateChipConfig}
-         *
-         * @readonly
-         * @private
-         */
-        _LightControlChip_defaultConfig.set(this, {
-            type: "template",
-            entity: undefined,
-            icon: "mdi:lightbulb-auto",
-            icon_color: "{% if is_state(config.entity, 'on') %}green{% else %}red{% endif %}",
-            tap_action: {
-                action: "more-info"
-            },
-            // double_tap_action: {
-            //   action: "call-service",
-            //   service: "switch.toggle",
-            //   data: {
-            //     entity_id: undefined
-            //   }
-            // }
-        });
-        __classPrivateFieldGet(this, _LightControlChip_defaultConfig, "f").entity = entity_id;
-        this.config = Object.assign(this.config, __classPrivateFieldGet(this, _LightControlChip_defaultConfig, "f"));
-    }
-}
-_LightControlChip_defaultConfig = new WeakMap();
 
 
 
@@ -4344,7 +4356,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   configurationDefaults: () => (/* binding */ configurationDefaults)
 /* harmony export */ });
-/* harmony import */ var _chips_LightControlChip__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./chips/LightControlChip */ "./src/chips/LightControlChip.ts");
+/* harmony import */ var _chips_ControlChip__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./chips/ControlChip */ "./src/chips/ControlChip.ts");
 /* harmony import */ var _chips_SettingsChip__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./chips/SettingsChip */ "./src/chips/SettingsChip.ts");
 /* harmony import */ var _popups_LightSettingsPopup__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./popups/LightSettingsPopup */ "./src/popups/LightSettingsPopup.ts");
 /* harmony import */ var _chips_ToggleSceneChip__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./chips/ToggleSceneChip */ "./src/chips/ToggleSceneChip.ts");
@@ -4391,7 +4403,7 @@ const configurationDefaults = {
             showControls: true,
             extraControls: (device) => {
                 return [
-                    new _chips_LightControlChip__WEBPACK_IMPORTED_MODULE_0__.LightControlChip(device?.entities.light_control?.entity_id).getChip(),
+                    new _chips_ControlChip__WEBPACK_IMPORTED_MODULE_0__.ControlChip(device?.entities.light_control?.entity_id).getChip(),
                     new _chips_SettingsChip__WEBPACK_IMPORTED_MODULE_1__.SettingsChip({ tap_action: new _popups_LightSettingsPopup__WEBPACK_IMPORTED_MODULE_2__.LightSettings(device).getPopup() }).getChip()
                 ];
             },
@@ -4470,13 +4482,23 @@ const configurationDefaults = {
             title: "Climates",
             showControls: true,
             hidden: false,
-            order: 3
+            order: 3,
+            extraControls: (device) => {
+                return [
+                    new _chips_ControlChip__WEBPACK_IMPORTED_MODULE_0__.ControlChip(device?.entities.climate_control?.entity_id).getChip()
+                ];
+            },
         },
         media_player: {
             title: "Media Players",
             showControls: true,
             hidden: false,
-            order: 9
+            order: 9,
+            extraControls: (device) => {
+                return [
+                    new _chips_ControlChip__WEBPACK_IMPORTED_MODULE_0__.ControlChip(device?.entities.media_player_control?.entity_id).getChip()
+                ];
+            },
         },
         sensor: {
             title: "Sensors",
@@ -4571,6 +4593,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _Helper__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./Helper */ "./src/Helper.ts");
 /* harmony import */ var _variables__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./variables */ "./src/variables.ts");
 /* harmony import */ var _views_AreaView__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./views/AreaView */ "./src/views/AreaView.ts");
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./utils */ "./src/utils.ts");
+
 
 
 
@@ -4623,12 +4647,27 @@ class MushroomStrategy extends HTMLTemplateElement {
                 views.push({
                     title: area.name,
                     path: area.slug ?? area.name,
-                    // type: "sections",
                     subview: true,
                     strategy: {
                         type: "custom:linus-strategy",
                         options: {
                             area,
+                        },
+                    },
+                });
+            }
+        }
+        // Create subviews for each area.
+        for (let floor of _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.floors) {
+            if (!floor.hidden) {
+                views.push({
+                    title: floor.name,
+                    path: (0,_utils__WEBPACK_IMPORTED_MODULE_3__.slugify)(floor.name),
+                    subview: true,
+                    strategy: {
+                        type: "custom:linus-strategy",
+                        options: {
+                            floor,
                         },
                     },
                 });
@@ -4652,12 +4691,12 @@ class MushroomStrategy extends HTMLTemplateElement {
      * @return {Promise<LovelaceViewConfig>}
      */
     static async generateView(info) {
+        const floor = info.view.strategy?.options?.floor ?? {};
         const area = info.view.strategy?.options?.area ?? {};
-        const viewCards = [...(area.extra_cards ?? [])];
         let view = {};
         // Create a view for each exposed domain.
         try {
-            view = await new _views_AreaView__WEBPACK_IMPORTED_MODULE_2__.AreaView(area).getView();
+            view = await new _views_AreaView__WEBPACK_IMPORTED_MODULE_2__.AreaView(area, floor).getView();
         }
         catch (e) {
             _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.logError(`View for area '${area.name}' couldn't be loaded!`, e);
@@ -5955,6 +5994,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   ALERT_DOMAINS: () => (/* binding */ ALERT_DOMAINS),
 /* harmony export */   AREA_CARDS_DOMAINS: () => (/* binding */ AREA_CARDS_DOMAINS),
 /* harmony export */   AREA_CARD_SENSORS_CLASS: () => (/* binding */ AREA_CARD_SENSORS_CLASS),
+/* harmony export */   AREA_EXPOSED_CHIPS: () => (/* binding */ AREA_EXPOSED_CHIPS),
 /* harmony export */   AREA_STATE_ICONS: () => (/* binding */ AREA_STATE_ICONS),
 /* harmony export */   CLIMATE_DOMAINS: () => (/* binding */ CLIMATE_DOMAINS),
 /* harmony export */   DEVICE_CLASSES: () => (/* binding */ DEVICE_CLASSES),
@@ -5989,11 +6029,12 @@ const MAGIC_AREAS_AGGREGATE_DOMAINS = ["binary_sensor", "sensor"];
 const MAGIC_AREAS_DOMAINS = [MAGIC_AREAS_LIGHT_DOMAINS, ...MAGIC_AREAS_GROUP_DOMAINS, ...MAGIC_AREAS_AGGREGATE_DOMAINS];
 const SENSOR_DOMAINS = ["sensor"];
 const ALERT_DOMAINS = ["binary_sensor", "health"];
-const TOGGLE_DOMAINS = ["light", "switch"];
+const TOGGLE_DOMAINS = [MAGIC_AREAS_LIGHT_DOMAINS, "switch"];
 const CLIMATE_DOMAINS = ["climate", "fan"];
 const HOUSE_INFORMATION_DOMAINS = ["camera", "cover", "vacuum", "media_player", "lock", "plant"];
 const OTHER_DOMAINS = ["camera", "cover", "vacuum", "media_player", "lock", "scene", "plant"];
-const EXPOSED_CHIPS = ["light", "fan", "cover", "switch", "climate", "safety", "motion", "door", "window"];
+const EXPOSED_CHIPS = [MAGIC_AREAS_LIGHT_DOMAINS, "fan", "cover", "switch", "climate", "safety", "motion", "door", "window"];
+const AREA_EXPOSED_CHIPS = [MAGIC_AREAS_LIGHT_DOMAINS, "fan", "cover", "switch", "climate", "safety", "motion", "door", "window"];
 const AREA_CARDS_DOMAINS = [...TOGGLE_DOMAINS, ...CLIMATE_DOMAINS, ...OTHER_DOMAINS, "binary_sensor", "sensor"];
 const DEVICE_CLASSES = {
     sensor: ["illuminance", "temperature", "humidity", "battery", "energy", "power"],
@@ -6282,9 +6323,9 @@ class AbstractView {
     async getView() {
         return {
             ...this.config,
-            cards: await this.createViewCards(),
-            sections: await this.createSectionCards(),
             badges: await this.createSectionBadges(),
+            sections: await this.createSectionCards(),
+            cards: await this.createViewCards(),
         };
     }
     /**
@@ -6319,10 +6360,17 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   AreaView: () => (/* binding */ AreaView)
 /* harmony export */ });
 /* harmony import */ var _Helper__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../Helper */ "./src/Helper.ts");
-/* harmony import */ var _cards_SwipeCard__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../cards/SwipeCard */ "./src/cards/SwipeCard.ts");
-/* harmony import */ var _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../cards/ControllerCard */ "./src/cards/ControllerCard.ts");
-/* harmony import */ var _cards_MainAreaCard__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../cards/MainAreaCard */ "./src/cards/MainAreaCard.ts");
-/* harmony import */ var _variables__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../variables */ "./src/variables.ts");
+/* harmony import */ var _types_strategy_generic__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../types/strategy/generic */ "./src/types/strategy/generic.ts");
+/* harmony import */ var _cards_SwipeCard__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../cards/SwipeCard */ "./src/cards/SwipeCard.ts");
+/* harmony import */ var _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../cards/ControllerCard */ "./src/cards/ControllerCard.ts");
+/* harmony import */ var _cards_MainAreaCard__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../cards/MainAreaCard */ "./src/cards/MainAreaCard.ts");
+/* harmony import */ var _variables__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../variables */ "./src/variables.ts");
+/* harmony import */ var _chips_UnavailableChip__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../chips/UnavailableChip */ "./src/chips/UnavailableChip.ts");
+/* harmony import */ var _chips_AreaStateChip__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../chips/AreaStateChip */ "./src/chips/AreaStateChip.ts");
+
+
+var isCallServiceActionConfig = _types_strategy_generic__WEBPACK_IMPORTED_MODULE_1__.generic.isCallServiceActionConfig;
+
 
 
 
@@ -6370,6 +6418,63 @@ class AreaView {
     /**
      * Create the cards to include in the view.
      *
+     * @return {Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig)[]>} Promise a View Card array.
+     * @override
+     */
+    async createSectionBadges() {
+        if (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.home_view.hidden.includes("chips")) {
+            // Chips section is hidden.
+            return [];
+        }
+        const chips = [];
+        const chipOptions = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.chips;
+        // Create a list of area-ids, used for switching all devices via chips
+        const areaIds = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas.map(area => area.area_id ?? "");
+        let chipModule;
+        const device = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices[this.area.slug];
+        if (device) {
+            chips.push(new _chips_AreaStateChip__WEBPACK_IMPORTED_MODULE_7__.AreaStateChip(device, true).getChip());
+        }
+        // Numeric chips.
+        for (let chipType of _variables__WEBPACK_IMPORTED_MODULE_5__.AREA_CARDS_DOMAINS) {
+            if (chipOptions?.[`${chipType}_count`] ?? true) {
+                const className = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.sanitizeClassName(chipType + "Chip");
+                try {
+                    chipModule = await __webpack_require__("./src/chips lazy recursive ^\\.\\/.*$")(`./${className}`);
+                    const chip = new chipModule[className](_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices[this.area.area_id]);
+                    if ("tap_action" in this.config && isCallServiceActionConfig(this.config.tap_action)) {
+                        chip.setTapActionTarget({ area_id: areaIds });
+                    }
+                    chips.push(chip.getChip());
+                }
+                catch (e) {
+                    _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.logError(`An error occurred while creating the ${chipType} chip!`, e);
+                }
+            }
+        }
+        // Extra chips.
+        if (chipOptions?.extra_chips) {
+            chips.push(...chipOptions.extra_chips);
+        }
+        // Unavailable chip.
+        const unavailableEntities = Object.values(_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices[this.area.area_id]?.entities ?? [])?.filter((e) => {
+            const entityState = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getEntityState(e.entity_id);
+            return (_variables__WEBPACK_IMPORTED_MODULE_5__.EXPOSED_CHIPS.includes(e.entity_id.split(".", 1)[0]) || _variables__WEBPACK_IMPORTED_MODULE_5__.EXPOSED_CHIPS.includes(entityState?.attributes.device_class || '')) &&
+                _variables__WEBPACK_IMPORTED_MODULE_5__.UNAVAILABLE_STATES.includes(entityState?.state);
+        });
+        if (unavailableEntities.length) {
+            const unavailableChip = new _chips_UnavailableChip__WEBPACK_IMPORTED_MODULE_6__.UnavailableChip(unavailableEntities);
+            chips.push(unavailableChip.getChip());
+        }
+        return chips.map(chip => ({
+            type: "custom:mushroom-chips-card",
+            alignment: "center",
+            chips: [chip],
+        }));
+    }
+    /**
+     * Create the cards to include in the view.
+     *
      * @return {Promise<LovelaceGridCardConfig[]>} Promise a View Card array.
      * @override
      */
@@ -6380,7 +6485,7 @@ class AreaView {
         const globalSection = {
             type: "grid",
             column_span: 1,
-            cards: this.area.area_id !== "undisclosed" ? [new _cards_MainAreaCard__WEBPACK_IMPORTED_MODULE_3__.MainAreaCard(this.area).getCard()] : []
+            cards: this.area.area_id !== "undisclosed" ? [new _cards_MainAreaCard__WEBPACK_IMPORTED_MODULE_4__.MainAreaCard(this.area).getCard()] : []
         };
         if (globalSection.cards.length) {
             viewSections.push(globalSection);
@@ -6406,11 +6511,11 @@ class AreaView {
                     const titleCardOptions = ("controllerCardOptions" in this.config) ? this.config.controllerCardOptions : {};
                     titleCardOptions.subtitle = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize(domain === 'scene' ? 'ui.dialogs.quick-bar.commands.navigation.scene' : `component.${domain}.entity_component._.name`);
                     titleCardOptions.domain = domain;
-                    titleCardOptions.subtitleIcon = _variables__WEBPACK_IMPORTED_MODULE_4__.DOMAIN_ICONS[domain];
+                    titleCardOptions.subtitleIcon = _variables__WEBPACK_IMPORTED_MODULE_5__.DOMAIN_ICONS[domain];
                     titleCardOptions.navigate = domain + "s";
                     titleCardOptions.showControls = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain].showControls;
                     titleCardOptions.extraControls = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain].extraControls;
-                    const titleCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_2__.ControllerCard(target, titleCardOptions, domain).createCard();
+                    const titleCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_3__.ControllerCard(target, titleCardOptions, domain).createCard();
                     const entityCards = [];
                     for (const entity of entities) {
                         let cardOptions = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.card_options?.[entity.entity_id];
@@ -6430,7 +6535,7 @@ class AreaView {
                     }
                     if (entityCards.length) {
                         if (entityCards.length > 2) {
-                            domainCards.push(new _cards_SwipeCard__WEBPACK_IMPORTED_MODULE_1__.SwipeCard(entityCards).getCard());
+                            domainCards.push(new _cards_SwipeCard__WEBPACK_IMPORTED_MODULE_2__.SwipeCard(entityCards).getCard());
                         }
                         else {
                             domainCards.push(...entityCards);
@@ -6461,7 +6566,7 @@ class AreaView {
                 try {
                     const cardModule = await Promise.resolve(/*! import() */).then(__webpack_require__.bind(__webpack_require__, /*! ../cards/MiscellaneousCard */ "./src/cards/MiscellaneousCard.ts"));
                     const cards = [
-                        new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_2__.ControllerCard(target, _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains.default).createCard(),
+                        new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_3__.ControllerCard(target, _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains.default).createCard(),
                     ];
                     const swipeCard = [];
                     for (const entity of miscellaneousEntities) {
@@ -6476,7 +6581,7 @@ class AreaView {
                     viewSections.push({
                         type: "grid",
                         column_span: 1,
-                        cards: [...cards, new _cards_SwipeCard__WEBPACK_IMPORTED_MODULE_1__.SwipeCard(swipeCard).getCard()]
+                        cards: [...cards, new _cards_SwipeCard__WEBPACK_IMPORTED_MODULE_2__.SwipeCard(swipeCard).getCard()]
                     });
                 }
                 catch (e) {
@@ -6496,6 +6601,7 @@ class AreaView {
     async getView() {
         return {
             ...this.config,
+            badges: await this.createSectionBadges(),
             sections: await this.createSectionCards(),
         };
     }
@@ -6883,7 +6989,7 @@ var __classPrivateFieldGet = (undefined && undefined.__classPrivateFieldGet) || 
     if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
     return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
 };
-var _HomeView_instances, _HomeView_defaultConfig, _HomeView_createChips, _HomeView_createPersonCards, _HomeView_createAreaSection;
+var _HomeView_instances, _HomeView_defaultConfig, _HomeView_createPersonCards, _HomeView_createAreaSection;
 
 
 
@@ -6942,8 +7048,89 @@ class HomeView extends _AbstractView__WEBPACK_IMPORTED_MODULE_1__.AbstractView {
      * @override
      */
     async createSectionBadges() {
-        const chips = await __classPrivateFieldGet(this, _HomeView_instances, "m", _HomeView_createChips).call(this);
-        return __classPrivateFieldGet(this, _HomeView_instances, "m", _HomeView_createChips).call(this);
+        if (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.home_view.hidden.includes("chips")) {
+            // Chips section is hidden.
+            return [];
+        }
+        const chips = [];
+        const chipOptions = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.chips;
+        // Create a list of area-ids, used for switching all devices via chips
+        const areaIds = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas.map(area => area.area_id ?? "");
+        let chipModule;
+        // Weather chip.
+        const weatherEntityId = chipOptions?.weather_entity ?? _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.entities.find((entity) => entity.entity_id.startsWith("weather.") && entity.disabled_by === null && entity.hidden_by === null)?.entity_id;
+        if (weatherEntityId) {
+            try {
+                chipModule = await Promise.resolve(/*! import() */).then(__webpack_require__.bind(__webpack_require__, /*! ../chips/WeatherChip */ "./src/chips/WeatherChip.ts"));
+                const weatherChip = new chipModule.WeatherChip(weatherEntityId);
+                chips.push(weatherChip.getChip());
+            }
+            catch (e) {
+                _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.logError("An error occurred while creating the weather chip!", e);
+            }
+        }
+        // Alarm chip.
+        const alarmEntityId = chipOptions?.alarm_entity ?? _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getAlarmEntity()?.entity_id;
+        if (alarmEntityId) {
+            try {
+                chipModule = await Promise.resolve(/*! import() */).then(__webpack_require__.bind(__webpack_require__, /*! ../chips/AlarmChip */ "./src/chips/AlarmChip.ts"));
+                const alarmChip = new chipModule.AlarmChip(alarmEntityId);
+                chips.push(alarmChip.getChip());
+            }
+            catch (e) {
+                _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.logError("An error occurred while creating the alarm chip!", e);
+            }
+        }
+        // Spotify chip.
+        const spotifyEntityId = chipOptions?.spotify_entity ?? _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.entities.find((entity) => entity.entity_id.startsWith("media_player.spotify_") && entity.disabled_by === null && entity.hidden_by === null)?.entity_id;
+        if (spotifyEntityId) {
+            try {
+                chipModule = await Promise.resolve(/*! import() */).then(__webpack_require__.bind(__webpack_require__, /*! ../chips/SpotifyChip */ "./src/chips/SpotifyChip.ts"));
+                const spotifyChip = new chipModule.SpotifyChip(spotifyEntityId);
+                chips.push(spotifyChip.getChip());
+            }
+            catch (e) {
+                _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.logError("An error occurred while creating the spotify chip!", e);
+            }
+        }
+        // Numeric chips.
+        for (let chipType of _variables__WEBPACK_IMPORTED_MODULE_5__.EXPOSED_CHIPS) {
+            if (chipOptions?.[`${chipType}_count`] ?? true) {
+                const className = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.sanitizeClassName(chipType + "Chip");
+                try {
+                    chipModule = await __webpack_require__("./src/chips lazy recursive ^\\.\\/.*$")(`./${className}`);
+                    const chip = new chipModule[className](_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices["global"]);
+                    if ("tap_action" in this.config && isCallServiceActionConfig(this.config.tap_action)) {
+                        chip.setTapActionTarget({ area_id: areaIds });
+                    }
+                    chips.push(chip.getChip());
+                }
+                catch (e) {
+                    _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.logError(`An error occurred while creating the ${chipType} chip!`, e);
+                }
+            }
+        }
+        // Extra chips.
+        if (chipOptions?.extra_chips) {
+            chips.push(...chipOptions.extra_chips);
+        }
+        // Unavailable chip.
+        const unavailableEntities = Object.values(_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices["global"]?.entities ?? [])?.filter((e) => {
+            const entityState = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getEntityState(e.entity_id);
+            return (_variables__WEBPACK_IMPORTED_MODULE_5__.EXPOSED_CHIPS.includes(e.entity_id.split(".", 1)[0]) || _variables__WEBPACK_IMPORTED_MODULE_5__.EXPOSED_CHIPS.includes(entityState?.attributes.device_class || '')) &&
+                _variables__WEBPACK_IMPORTED_MODULE_5__.UNAVAILABLE_STATES.includes(entityState?.state);
+        });
+        if (unavailableEntities.length) {
+            const unavailableChip = new _chips_UnavailableChip__WEBPACK_IMPORTED_MODULE_4__.UnavailableChip(unavailableEntities);
+            chips.push(unavailableChip.getChip());
+        }
+        const linusSettings = new _chips_SettingsChip__WEBPACK_IMPORTED_MODULE_2__.SettingsChip({ tap_action: new _popups_LinusSettingsPopup__WEBPACK_IMPORTED_MODULE_3__.LinusSettings().getPopup() });
+        chips.push(linusSettings.getChip());
+        return chips.map(chip => ({
+            type: "custom:mushroom-chips-card",
+            alignment: "center",
+            chips: [chip],
+        }));
     }
     /**
      * Create the cards to include in the view.
@@ -6953,24 +7140,15 @@ class HomeView extends _AbstractView__WEBPACK_IMPORTED_MODULE_1__.AbstractView {
      */
     async createSectionCards() {
         return await Promise.all([
-            __classPrivateFieldGet(this, _HomeView_instances, "m", _HomeView_createChips).call(this),
             __classPrivateFieldGet(this, _HomeView_instances, "m", _HomeView_createPersonCards).call(this),
             __classPrivateFieldGet(this, _HomeView_instances, "m", _HomeView_createAreaSection).call(this),
-        ]).then(([chips, personCards, areaCards]) => {
+        ]).then(([personCards, areaCards]) => {
             const options = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions;
             const firstSection = {
                 type: "grid",
                 column_span: 1,
                 cards: []
             };
-            if (chips.length) {
-                // TODO: Create the Chip card at this.#createChips()
-                firstSection.cards.push({
-                    type: "custom:mushroom-chips-card",
-                    alignment: "center",
-                    chips: chips,
-                });
-            }
             if (personCards.length) {
                 // TODO: Create the stack at this.#createPersonCards()
                 firstSection.cards.push({
@@ -7024,97 +7202,7 @@ class HomeView extends _AbstractView__WEBPACK_IMPORTED_MODULE_1__.AbstractView {
         });
     }
 }
-_HomeView_defaultConfig = new WeakMap(), _HomeView_instances = new WeakSet(), _HomeView_createChips = 
-/**
- * Create the chips to include in the view.
- *
- * @return {Promise<ChipsCardConfig[]>} Promise a chip array.
- */
-async function _HomeView_createChips() {
-    if (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.home_view.hidden.includes("chips")) {
-        // Chips section is hidden.
-        return [];
-    }
-    const chips = [];
-    const chipOptions = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.chips;
-    // Create a list of area-ids, used for switching all devices via chips
-    const areaIds = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas.map(area => area.area_id ?? "");
-    let chipModule;
-    // Weather chip.
-    const weatherEntityId = chipOptions?.weather_entity ?? _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.entities.find((entity) => entity.entity_id.startsWith("weather.") && entity.disabled_by === null && entity.hidden_by === null)?.entity_id;
-    if (weatherEntityId) {
-        try {
-            chipModule = await Promise.resolve(/*! import() */).then(__webpack_require__.bind(__webpack_require__, /*! ../chips/WeatherChip */ "./src/chips/WeatherChip.ts"));
-            const weatherChip = new chipModule.WeatherChip(weatherEntityId);
-            chips.push(weatherChip.getChip());
-        }
-        catch (e) {
-            _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.logError("An error occurred while creating the weather chip!", e);
-        }
-    }
-    // Alarm chip.
-    const alarmEntityId = chipOptions?.alarm_entity ?? _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getAlarmEntity()?.entity_id;
-    if (alarmEntityId) {
-        try {
-            chipModule = await Promise.resolve(/*! import() */).then(__webpack_require__.bind(__webpack_require__, /*! ../chips/AlarmChip */ "./src/chips/AlarmChip.ts"));
-            const alarmChip = new chipModule.AlarmChip(alarmEntityId);
-            chips.push(alarmChip.getChip());
-        }
-        catch (e) {
-            _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.logError("An error occurred while creating the alarm chip!", e);
-        }
-    }
-    // Spotify chip.
-    const spotifyEntityId = chipOptions?.spotify_entity ?? _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.entities.find((entity) => entity.entity_id.startsWith("media_player.spotify_") && entity.disabled_by === null && entity.hidden_by === null)?.entity_id;
-    if (spotifyEntityId) {
-        try {
-            chipModule = await Promise.resolve(/*! import() */).then(__webpack_require__.bind(__webpack_require__, /*! ../chips/SpotifyChip */ "./src/chips/SpotifyChip.ts"));
-            const spotifyChip = new chipModule.SpotifyChip(spotifyEntityId);
-            chips.push(spotifyChip.getChip());
-        }
-        catch (e) {
-            _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.logError("An error occurred while creating the spotify chip!", e);
-        }
-    }
-    // Numeric chips.
-    for (let chipType of _variables__WEBPACK_IMPORTED_MODULE_5__.EXPOSED_CHIPS) {
-        if (chipOptions?.[`${chipType}_count`] ?? true) {
-            const className = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.sanitizeClassName(chipType + "Chip");
-            try {
-                chipModule = await __webpack_require__("./src/chips lazy recursive ^\\.\\/.*$")(`./${className}`);
-                const chip = new chipModule[className](_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices["global"]);
-                if ("tap_action" in this.config && isCallServiceActionConfig(this.config.tap_action)) {
-                    chip.setTapActionTarget({ area_id: areaIds });
-                }
-                chips.push(chip.getChip());
-            }
-            catch (e) {
-                _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.logError(`An error occurred while creating the ${chipType} chip!`, e);
-            }
-        }
-    }
-    // Extra chips.
-    if (chipOptions?.extra_chips) {
-        chips.push(...chipOptions.extra_chips);
-    }
-    // Unavailable chip.
-    const unavailableEntities = Object.values(_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices["global"]?.entities ?? [])?.filter((e) => {
-        const entityState = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getEntityState(e.entity_id);
-        return (_variables__WEBPACK_IMPORTED_MODULE_5__.EXPOSED_CHIPS.includes(e.entity_id.split(".", 1)[0]) || _variables__WEBPACK_IMPORTED_MODULE_5__.EXPOSED_CHIPS.includes(entityState?.attributes.device_class || '')) &&
-            _variables__WEBPACK_IMPORTED_MODULE_5__.UNAVAILABLE_STATES.includes(entityState?.state);
-    });
-    if (unavailableEntities.length) {
-        const unavailableChip = new _chips_UnavailableChip__WEBPACK_IMPORTED_MODULE_4__.UnavailableChip(unavailableEntities);
-        chips.push(unavailableChip.getChip());
-    }
-    const linusSettings = new _chips_SettingsChip__WEBPACK_IMPORTED_MODULE_2__.SettingsChip({ tap_action: new _popups_LinusSettingsPopup__WEBPACK_IMPORTED_MODULE_3__.LinusSettings().getPopup() });
-    chips.push(linusSettings.getChip());
-    return chips.map(chip => ({
-        type: "custom:mushroom-chips-card",
-        alignment: "center",
-        chips: [chip],
-    }));
-}, _HomeView_createPersonCards = function _HomeView_createPersonCards() {
+_HomeView_defaultConfig = new WeakMap(), _HomeView_instances = new WeakSet(), _HomeView_createPersonCards = function _HomeView_createPersonCards() {
     if (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.home_view.hidden.includes("persons")) {
         // Person section is hidden.
         return [];
@@ -7160,6 +7248,7 @@ async function _HomeView_createAreaSection() {
             heading: floor.name,
             heading_style: "subtitle",
             icon: floor.icon ?? "mdi:floor-plan",
+            tap_action: floor.floor_id !== "undisclosed" ? (0,_utils__WEBPACK_IMPORTED_MODULE_6__.navigateTo)((0,_utils__WEBPACK_IMPORTED_MODULE_6__.slugify)(floor.name)) : undefined,
         });
         for (const [i, area] of areasByFloor[floor.floor_id].entries()) {
             let module;
@@ -8239,6 +8328,12 @@ var map = {
 		"./src/chips/ClimateChip.ts",
 		"main"
 	],
+	"./ControlChip": [
+		"./src/chips/ControlChip.ts"
+	],
+	"./ControlChip.ts": [
+		"./src/chips/ControlChip.ts"
+	],
 	"./CoverChip": [
 		"./src/chips/CoverChip.ts",
 		"main"
@@ -8270,12 +8365,6 @@ var map = {
 	"./LightChip.ts": [
 		"./src/chips/LightChip.ts",
 		"main"
-	],
-	"./LightControlChip": [
-		"./src/chips/LightControlChip.ts"
-	],
-	"./LightControlChip.ts": [
-		"./src/chips/LightControlChip.ts"
 	],
 	"./LinusAggregateChip": [
 		"./src/chips/LinusAggregateChip.ts"

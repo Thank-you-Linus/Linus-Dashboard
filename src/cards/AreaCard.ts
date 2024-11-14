@@ -2,7 +2,7 @@ import { AbstractCard } from "./AbstractCard";
 import { cards } from "../types/strategy/cards";
 import { TemplateCardConfig } from "../types/lovelace-mushroom/cards/template-card-config";
 import { Helper } from "../Helper";
-import { LightControlChip } from "../chips/LightControlChip";
+import { ControlChip } from "../chips/ControlChip";
 import { LinusLightChip } from "../chips/LinusLightChip";
 import { LinusClimateChip } from "../chips/LinusClimateChip";
 import { LinusAggregateChip } from "../chips/LinusAggregateChip";
@@ -10,7 +10,7 @@ import { AreaStateChip } from "../chips/AreaStateChip";
 import { MagicAreaRegistryEntry } from "../types/homeassistant/data/device_registry";
 import { generic } from "../types/strategy/generic";
 import StrategyArea = generic.StrategyArea;
-import { slugify } from "../utils";
+import { getConditionalChip, slugify } from "../utils";
 import { EntityRegistryEntry } from "../types/homeassistant/data/entity_registry";
 
 // Utility function to generate badge icon and color
@@ -117,14 +117,14 @@ class AreaCard extends AbstractCard {
       type: "custom:mushroom-chips-card",
       alignment: "end",
       chips: [
-        this.getConditionalChip(area_state?.entity_id, "unavailable", new AreaStateChip(device).getChip()),
-        this.getConditionalChip(aggregate_health?.entity_id, "on", new LinusAggregateChip(device, "health").getChip()),
-        this.getConditionalChip(aggregate_window?.entity_id, "on", new LinusAggregateChip(device, "window").getChip()),
-        this.getConditionalChip(aggregate_door?.entity_id, "on", new LinusAggregateChip(device, "door").getChip()),
-        this.getConditionalChip(aggregate_cover?.entity_id, "on", new LinusAggregateChip(device, "cover").getChip()),
-        this.getConditionalChip(aggregate_climate?.entity_id, "unavailable", new LinusClimateChip(device).getChip()),
-        this.getConditionalChip(all_lights?.entity_id, "unavailable", new LinusLightChip(device, area.slug).getChip()),
-        this.getConditionalChip(all_lights?.entity_id, "unavailable", new LightControlChip(light_control?.entity_id).getChip())
+        getConditionalChip(area_state?.entity_id, "unavailable", new AreaStateChip(device).getChip()),
+        getConditionalChip(aggregate_health?.entity_id, "on", new LinusAggregateChip(device, "health").getChip()),
+        getConditionalChip(aggregate_window?.entity_id, "on", new LinusAggregateChip(device, "window").getChip()),
+        getConditionalChip(aggregate_door?.entity_id, "on", new LinusAggregateChip(device, "door").getChip()),
+        getConditionalChip(aggregate_cover?.entity_id, "on", new LinusAggregateChip(device, "cover").getChip()),
+        getConditionalChip(aggregate_climate?.entity_id, "unavailable", new LinusClimateChip(device).getChip()),
+        getConditionalChip(all_lights?.entity_id, "unavailable", new LinusLightChip(device, area.slug).getChip()),
+        getConditionalChip(all_lights?.entity_id, "unavailable", new ControlChip(light_control?.entity_id).getChip())
       ].filter(Boolean),
       card_mod: { style: this.getChipsCardModStyle() }
     };

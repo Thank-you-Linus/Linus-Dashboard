@@ -1,6 +1,7 @@
 import { AggregateAreaListPopup } from "../popups/AggregateAreaListPopup";
 import { AggregateListPopup } from "../popups/AggregateListPopup";
-import { MagicAreaRegistryEntry } from "../types/homeassistant/data/device_registry";
+import { generic } from "../types/strategy/generic";
+import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
 import { ConditionalChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
 import { DOMAIN_ICONS } from "../variables";
 import { AbstractChip } from "./AbstractChip";

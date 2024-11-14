@@ -29,15 +29,15 @@ export const HOUSE_INFORMATION_DOMAINS = ["camera", "cover", "vacuum", "media_pl
 
 export const OTHER_DOMAINS = ["camera", "cover", "vacuum", "media_player", "lock", "scene", "plant"];
 
-export const EXPOSED_CHIPS = [MAGIC_AREAS_LIGHT_DOMAINS, "fan", "cover", "switch", "climate", "safety", "motion", "door", "window"];
-export const AREA_EXPOSED_CHIPS = [MAGIC_AREAS_LIGHT_DOMAINS, "fan", "cover", "switch", "climate", "safety", "motion", "door", "window"];
-
 export const AREA_CARDS_DOMAINS = [...TOGGLE_DOMAINS, ...CLIMATE_DOMAINS, ...OTHER_DOMAINS, "binary_sensor", "sensor"];
 
 export const DEVICE_CLASSES = {
   sensor: ["illuminance", "temperature", "humidity", "battery", "energy", "power"],
   binary_sensor: ["motion", "door", "window", "vibration", "moisture", "smoke"],
 };
+
+export const HOME_EXPOSED_CHIPS = [MAGIC_AREAS_LIGHT_DOMAINS, "fan", "cover", "switch", "climate", "safety", "motion", "door", "window"];
+export const AREA_EXPOSED_CHIPS = [MAGIC_AREAS_LIGHT_DOMAINS, ...MAGIC_AREAS_GROUP_DOMAINS, "fan", "switch", "safety", ...DEVICE_CLASSES.binary_sensor, ...DEVICE_CLASSES.sensor];
 
 export const AREA_CARD_SENSORS_CLASS = ["temperature"];
 

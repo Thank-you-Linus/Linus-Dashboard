@@ -74,11 +74,10 @@ class AggregateCard {
       });
     }
 
-    const areasByFloor = groupBy(Helper.areas, (e) => e.floor_id ?? "undisclosed");
 
-    for (const floor of [...Helper.floors, Helper.strategyOptions.floors.undisclosed]) {
 
-      if (!(floor.floor_id in areasByFloor) || areasByFloor[floor.floor_id].length === 0) continue
+    for (const floor of [...Helper.orderedFloors, Helper.strategyOptions.floors.undisclosed]) {
+      if (floor.areas.length === 0) continue
 
       let floorCards: (TemplateCardConfig)[] = [];
       floorCards.push({
@@ -95,9 +94,9 @@ class AggregateCard {
 
       let areaCards: (TemplateCardConfig)[] = [];
 
-      for (const [i, area] of areasByFloor[floor.floor_id].entries()) {
+      for (const [i, area] of floor.areas.map(areaId => Helper.areas[areaId]).entries()) {
 
-        if (Helper.strategyOptions.areas[area.area_id]?.hidden) continue
+        if (Helper.strategyOptions.areas[area?.area_id]?.hidden) continue
 
         if (area.slug !== "undisclosed") {
           const areaEntities = getAggregateEntity(Helper.magicAreasDevices[area.slug], domains, deviceClasses).map(e => e.entity_id).filter(Boolean)
@@ -114,7 +113,7 @@ class AggregateCard {
         }
 
         // Horizontally group every two area cards if all cards are created.
-        if (i === areasByFloor[floor.floor_id].length - 1) {
+        if (i === floor.areas.length - 1) {
           for (let i = 0; i < areaCards.length; i += 2) {
             floorCards.push({
               type: "horizontal-stack",

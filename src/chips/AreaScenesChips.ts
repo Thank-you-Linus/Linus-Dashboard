@@ -1,6 +1,7 @@
-import { shiftIterator } from "superstruct/dist/utils";
+
 import { Helper } from "../Helper";
-import { MagicAreaRegistryEntry } from "../types/homeassistant/data/device_registry";
+import { generic } from "../types/strategy/generic";
+import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
 import { LovelaceChipConfig, TemplateChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
 import { DOMAIN, todOrder } from "../variables";
 import { slugify } from "../utils";

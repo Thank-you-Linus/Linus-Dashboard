@@ -1,5 +1,6 @@
 import { Helper } from "../Helper";
-import { MagicAreaRegistryEntry } from "../types/homeassistant/data/device_registry";
+import { generic } from "../types/strategy/generic";
+import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
 import { PopupActionConfig } from "../types/homeassistant/data/lovelace";
 import { slugify } from "../utils";
 import { AbstractPopup } from "./AbstractPopup";

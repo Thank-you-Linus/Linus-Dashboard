@@ -104,7 +104,7 @@ class ControllerCard {
 
     if (this.#defaultConfig.showControls || this.#defaultConfig.extraControls) {
       const areaId = Array.isArray(this.#target.area_id) ? this.#target.area_id[0] : this.#target.area_id;
-      const areaSlug = Helper.areas.find(area => area.area_id === areaId)?.slug;
+      const areaSlug = Helper.areas[areaId!]?.slug;
       const linusDevice = areaSlug ? Helper.magicAreasDevices[areaSlug] : undefined;
       const magicAreasEntity = linusDevice && this.#domain && getMAEntity(linusDevice, this.#domain);
 

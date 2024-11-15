@@ -19,7 +19,7 @@ export interface StackCardConfig extends LovelaceCardConfig {
  *
  * @see https://www.home-assistant.io/dashboards/area/
  */
-export interface AreaCardConfig extends LovelaceCardConfig {
+export interface HomeAreaCardConfig extends LovelaceCardConfig {
   area: string;
   navigation_path?: string;
   show_camera?: boolean;

@@ -244,6 +244,7 @@ class Helper {
   static async initialize(info: generic.DashBoardInfo): Promise<void> {
     // Initialize properties.
     this.#hassStates = info.hass.states;
+    console.log('info.hass', info.hass)
     this.#hassLocalize = info.hass.localize;
     console.log('info.hass.resources', info.hass.resources)
     this.#strategyOptions = deepmerge(configurationDefaults, info.config?.strategy?.options ?? {});
@@ -569,7 +570,7 @@ class Helper {
 
 
     if (area_id) {
-      const newStates = this.#areas[area_id].domains["sensor"]?.map((entity_id) => `states['${entity_id}']`);
+      const newStates = this.#areas[area_id].domains[device_class]?.map((entity_id) => `states['${entity_id}']`);
       if (newStates) {
         states.push(...newStates);
       }
@@ -579,11 +580,13 @@ class Helper {
     for (const area of Object.values(this.#areas)) {
       if (area.area_id === "undisclosed") continue
 
-      const newStates = this.#areas[area.area_id].domains["sensor"]?.map((entity_id) => `states['${entity_id}']`);
+      const newStates = this.#areas[area.area_id].domains[device_class]?.map((entity_id) => `states['${entity_id}']`);
       if (newStates) {
         states.push(...newStates);
       }
     }
+
+    console.log('states', device_class, states)
 
 
     // Todo: fix that because the temperature not working

@@ -2,6 +2,7 @@ import { Helper } from "../Helper";
 import { AbstractChip } from "./AbstractChip";
 import { chips } from "../types/strategy/chips";
 import { TemplateChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
+import { getMAEntity } from "../utils";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**
@@ -22,7 +23,7 @@ class ClimateChip extends AbstractChip {
     type: "template",
     icon: "mdi:thermostat",
     icon_color: "orange",
-    content: Helper.getCountTemplate("climate", "ne", "off"),
+    content: "none",
     tap_action: {
       action: "navigate",
       navigation_path: "climates",
@@ -32,10 +33,19 @@ class ClimateChip extends AbstractChip {
   /**
    * Class Constructor.
    *
-   * @param {chips.TemplateChipOptions} options The chip options.
+   * @param {chips.ChipOptions} options The chip options.
    */
-  constructor(options: chips.TemplateChipOptions = {}) {
+  constructor(options: chips.ChipOptions = {}) {
     super();
+
+    this.#defaultConfig.content = Helper.getCountTemplate("climate", "ne", "off", options?.area_id);
+
+    const magicAreaDevice = Helper.magicAreasDevices[options?.area_id ?? options?.floor_id ?? "global"]
+    const magicAreasLight = getMAEntity(magicAreaDevice, "climate");
+
+    if (magicAreasLight) {
+      this.#defaultConfig.entity = magicAreasLight.entity_id;
+    }
 
     this.config = Object.assign(this.config, this.#defaultConfig, options);
   }

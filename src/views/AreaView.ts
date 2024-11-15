@@ -18,6 +18,7 @@ import { AREA_CARDS_DOMAINS, AREA_EXPOSED_CHIPS, DOMAIN_ICONS, HOME_EXPOSED_CHIP
 import { UnavailableChip } from "../chips/UnavailableChip";
 import { LovelaceChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
 import { AreaStateChip } from "../chips/AreaStateChip";
+import { createChipsFromList } from "../utils";
 
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
@@ -99,44 +100,11 @@ class AreaView {
       chips.push(new AreaStateChip(device, true).getChip());
     }
 
-    // Numeric chips.
-    for (let chipType of AREA_EXPOSED_CHIPS) {
-      if ((this.area.domains[chipType] ?? []).length === 0) continue
 
-      if (chipOptions?.[`${chipType}_count` as string] ?? true) {
-        const className = Helper.sanitizeClassName(chipType + "Chip");
-        const options = { area_id: this.area.area_id };
-        try {
-          chipModule = await import((`../chips/${className}`));
-          const chip = new chipModule[className](options);
-
-          if ("tap_action" in this.config && isCallServiceActionConfig(this.config.tap_action)) {
-            chip.setTapActionTarget({ area_id: this.area.area_id });
-          }
-          chips.push(chip.getChip());
-        } catch (e) {
-          Helper.logError(`An error occurred while creating the ${chipType} chip!`, e);
-        }
-      }
+    const areaChips = await createChipsFromList(AREA_EXPOSED_CHIPS, chipOptions, this.area.slug);
+    if (areaChips) {
+      chips.push(...areaChips);
     }
-
-    // Extra chips.
-    if (chipOptions?.extra_chips) {
-      chips.push(...chipOptions.extra_chips);
-    }
-
-    // Unavailable chip.
-    // const unavailableEntities = Object.values(Helper.magicAreasDevices[this.area.area_id]?.entities ?? [])?.filter((e) => {
-    //   const entityState = Helper.getEntityState(e.entity_id);
-    //   return (HOME_EXPOSED_CHIPS.includes(e.entity_id.split(".", 1)[0]) || HOME_EXPOSED_CHIPS.includes(entityState?.attributes.device_class || '')) &&
-    //     UNAVAILABLE_STATES.includes(entityState?.state);
-    // });
-
-
-    // if (unavailableEntities.length) {
-    //   const unavailableChip = new UnavailableChip(unavailableEntities);
-    //   chips.push(unavailableChip.getChip());
-    // }
 
     return chips.map(chip => ({
       type: "custom:mushroom-chips-card",

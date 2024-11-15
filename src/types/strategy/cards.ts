@@ -9,7 +9,7 @@ import { PictureEntityCardConfig } from "../homeassistant/panels/lovelave/cards/
 import { ClimateCardConfig } from "../lovelace-mushroom/cards/climate-card-config";
 import { CoverCardConfig } from "../lovelace-mushroom/cards/cover-card-config";
 import { FanCardConfig } from "../lovelace-mushroom/cards/fan-card-config";
-import { AreaCardConfig } from "../homeassistant/lovelace/cards/types";
+import { HomeAreaCardConfig } from "../homeassistant/lovelace/cards/types";
 import { LightCardConfig } from "../lovelace-mushroom/cards/light-card-config";
 import { LockCardConfig } from "../lovelace-mushroom/cards/lock-card-config";
 import { MediaPlayerCardConfig } from "../lovelace-mushroom/cards/media-player-card-config";
@@ -46,7 +46,7 @@ export namespace cards {
     offService?: string;
   }
 
-  export type AreaCardOptions = { area_id: string } & Omit<AreaCardConfig, "type">;
+  export type HomeAreaCardOptions = { area_id: string } & Omit<HomeAreaCardConfig, "type">;
   export type ClimateCardOptions = Omit<ClimateCardConfig, "type">;
   export type ControllerCardOptions = Omit<ControllerCardConfig, "type">;
   export type CoverCardOptions = Omit<CoverCardConfig, "type">;

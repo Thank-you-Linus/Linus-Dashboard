@@ -11,10 +11,12 @@ import { PersonCardConfig } from "../types/lovelace-mushroom/cards/person-card-c
 import { SettingsChip } from "../chips/SettingsChip";
 import { LinusSettings } from "../popups/LinusSettingsPopup";
 import { UnavailableChip } from "../chips/UnavailableChip";
-import { AREA_CARDS_DOMAINS, HOME_EXPOSED_CHIPS, UNAVAILABLE_STATES } from "../variables";
-import { groupBy, navigateTo, slugify } from "../utils";
+import { AREA_CARDS_DOMAINS, DEVICE_CLASSES, HOME_EXPOSED_CHIPS, UNAVAILABLE_STATES } from "../variables";
+import { createChipsFromList, groupBy, navigateTo, slugify } from "../utils";
 import { generic } from "../types/strategy/generic";
 import isCallServiceActionConfig = generic.isCallServiceActionConfig;
+import { AggregateChip } from "../chips/AggregateChip";
+import { WeatherChip } from "../chips/WeatherChip";
 
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
@@ -89,9 +91,7 @@ class HomeView extends AbstractView {
 
     if (weatherEntityId) {
       try {
-        chipModule = await import("../chips/WeatherChip");
-        const weatherChip = new chipModule.WeatherChip(weatherEntityId);
-
+        const weatherChip = new WeatherChip(weatherEntityId);
         chips.push(weatherChip.getChip());
       } catch (e) {
         Helper.logError("An error occurred while creating the weather chip!", e);
@@ -128,42 +128,9 @@ class HomeView extends AbstractView {
       }
     }
 
-    // Numeric chips.
-    for (let chipType of HOME_EXPOSED_CHIPS) {
-      if ((Helper.domains[chipType] ?? []).length === 0) continue
-
-      if (chipOptions?.[`${chipType}_count` as string] ?? true) {
-        const className = Helper.sanitizeClassName(chipType + "Chip");
-        try {
-          chipModule = await import((`../chips/${className}`));
-          const chip = new chipModule[className]();
-
-          if ("tap_action" in this.config && isCallServiceActionConfig(this.config.tap_action)) {
-            chip.setTapActionTarget({ area_id: areaIds });
-          }
-          chips.push(chip.getChip());
-        } catch (e) {
-          Helper.logError(`An error occurred while creating the ${chipType} chip!`, e);
-        }
-      }
-    }
-
-    // Extra chips.
-    if (chipOptions?.extra_chips) {
-      chips.push(...chipOptions.extra_chips);
-    }
-
-    // Unavailable chip.
-    const unavailableEntities = Object.values(Helper.magicAreasDevices["global"]?.entities ?? [])?.filter((e) => {
-      const entityState = Helper.getEntityState(e.entity_id);
-      return (HOME_EXPOSED_CHIPS.includes(e.entity_id.split(".", 1)[0]) || HOME_EXPOSED_CHIPS.includes(entityState?.attributes.device_class || '')) &&
-        UNAVAILABLE_STATES.includes(entityState?.state);
-    });
-
-
-    if (unavailableEntities.length) {
-      const unavailableChip = new UnavailableChip(unavailableEntities);
-      chips.push(unavailableChip.getChip());
+    const homeChips = await createChipsFromList(HOME_EXPOSED_CHIPS, chipOptions);
+    if (homeChips) {
+      chips.push(...homeChips);
     }
 
     const linusSettings = new SettingsChip({ tap_action: new LinusSettings().getPopup() })
@@ -323,7 +290,7 @@ class HomeView extends AbstractView {
 
       for (const area of floor.areas.map(areaId => Helper.areas[areaId]).values()) {
 
-        type ModuleType = typeof import("../cards/AreaCard");
+        type ModuleType = typeof import("../cards/HomeAreaCard");
 
         let module: ModuleType;
         let moduleName =
@@ -336,7 +303,7 @@ class HomeView extends AbstractView {
           module = await import((`../cards/${moduleName}`));
         } catch (e) {
           // Fallback to the default strategy card.
-          module = await import("../cards/AreaCard");
+          module = await import("../cards/HomeAreaCard");
 
           if (Helper.strategyOptions.debug && moduleName !== "default") {
             console.error(e);
@@ -352,7 +319,7 @@ class HomeView extends AbstractView {
           };
 
           groupedCards.push({
-            ...new module.AreaCard(options).getCard(),
+            ...new module.HomeAreaCard(options).getCard(),
             layout_options: {
               grid_columns: 2
             }

@@ -59,6 +59,38 @@ export const configurationDefaults: StrategyDefaults = {
       hidden: false,
       order: 1
     },
+    climate: {
+      title: "Climates",
+      showControls: true,
+      hidden: false,
+      order: 2,
+      extraControls: (device: MagicAreaRegistryEntry) => {
+        return [
+          new ControlChip(device?.entities.climate_control?.entity_id).getChip()
+        ]
+      },
+    },
+    media_player: {
+      title: "Media Players",
+      showControls: true,
+      hidden: false,
+      order: 3,
+      extraControls: (device: MagicAreaRegistryEntry) => {
+        return [
+          new ControlChip(device?.entities.media_player_control?.entity_id).getChip()
+        ]
+      },
+    },
+    cover: {
+      title: "Covers",
+      showControls: true,
+      iconOn: "mdi:arrow-up",
+      iconOff: "mdi:arrow-down",
+      onService: "cover.open_cover",
+      offService: "cover.close_cover",
+      hidden: false,
+      order: 4
+    },
     scene: {
       title: "Scènes",
       showControls: false,
@@ -80,7 +112,7 @@ export const configurationDefaults: StrategyDefaults = {
       iconOff: "mdi:lightbulb-off",
       onService: "scene.turn_on",
       hidden: false,
-      order: 2
+      order: 5
     },
     fan: {
       title: "Fans",
@@ -90,17 +122,7 @@ export const configurationDefaults: StrategyDefaults = {
       onService: "fan.turn_on",
       offService: "fan.turn_off",
       hidden: false,
-      order: 4
-    },
-    cover: {
-      title: "Covers",
-      showControls: true,
-      iconOn: "mdi:arrow-up",
-      iconOff: "mdi:arrow-down",
-      onService: "cover.open_cover",
-      offService: "cover.close_cover",
-      hidden: false,
-      order: 8
+      order: 6
     },
     switch: {
       title: "Switches",
@@ -110,41 +132,25 @@ export const configurationDefaults: StrategyDefaults = {
       onService: "switch.turn_on",
       offService: "switch.turn_off",
       hidden: false,
-      order: 5
+      order: 7
     },
     camera: {
       title: "Cameras",
       showControls: false,
       hidden: false,
-      order: 6
+      order: 8
     },
     lock: {
       title: "Locks",
       showControls: false,
       hidden: false,
-      order: 7
+      order: 9
     },
-    climate: {
-      title: "Climates",
+    vacuum: {
+      title: "Vacuums",
       showControls: true,
       hidden: false,
-      order: 3,
-      extraControls: (device: MagicAreaRegistryEntry) => {
-        return [
-          new ControlChip(device?.entities.climate_control?.entity_id).getChip()
-        ]
-      },
-    },
-    media_player: {
-      title: "Media Players",
-      showControls: true,
-      hidden: false,
-      order: 9,
-      extraControls: (device: MagicAreaRegistryEntry) => {
-        return [
-          new ControlChip(device?.entities.media_player_control?.entity_id).getChip()
-        ]
-      },
+      order: 10
     },
     sensor: {
       title: "Sensors",
@@ -160,12 +166,6 @@ export const configurationDefaults: StrategyDefaults = {
       title: "Numbers",
       showControls: false,
       hidden: false,
-    },
-    vacuum: {
-      title: "Vacuums",
-      showControls: true,
-      hidden: false,
-      order: 10
     },
   },
   home_view: {
@@ -184,23 +184,23 @@ export const configurationDefaults: StrategyDefaults = {
       order: 3,
       hidden: false,
     },
-    media_player: {
+    climate: {
       order: 4,
       hidden: false,
     },
-    climate: {
+    media_player: {
       order: 5,
       hidden: false,
     },
-    fan: {
+    cover: {
       order: 6,
       hidden: false,
     },
-    cover: {
+    scene: {
       order: 7,
       hidden: false,
     },
-    camera: {
+    fan: {
       order: 8,
       hidden: false,
     },
@@ -208,11 +208,11 @@ export const configurationDefaults: StrategyDefaults = {
       order: 9,
       hidden: false,
     },
-    vacuum: {
+    camera: {
       order: 10,
       hidden: false,
     },
-    scene: {
+    vacuum: {
       order: 11,
       hidden: false,
     },

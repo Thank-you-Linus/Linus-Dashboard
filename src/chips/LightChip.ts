@@ -2,6 +2,7 @@ import { Helper } from "../Helper";
 import { chips } from "../types/strategy/chips";
 import { AbstractChip } from "./AbstractChip";
 import { TemplateChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
+import { getMAEntity } from "../utils";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**
@@ -22,7 +23,7 @@ class LightChip extends AbstractChip {
     type: "template",
     icon: "mdi:lightbulb-group",
     icon_color: "amber",
-    content: Helper.getCountTemplate("light", "eq", "on"),
+    content: "none",
     tap_action: {
       action: "navigate",
       navigation_path: "lights",
@@ -32,10 +33,19 @@ class LightChip extends AbstractChip {
   /**
    * Class Constructor.
    *
-   * @param {chips.TemplateChipOptions} options The chip options.
+   * @param {chips.ChipOptions} options The chip options.
    */
-  constructor(areaId: string, options: chips.TemplateChipOptions = {}) {
+  constructor(options: chips.ChipOptions) {
     super();
+
+    this.#defaultConfig.content = Helper.getCountTemplate("light", "eq", "on", options?.area_id);
+
+    const magicAreaDevice = Helper.magicAreasDevices[options?.area_id ?? options?.floor_id ?? "global"]
+    const magicAreasLight = getMAEntity(magicAreaDevice, "light");
+
+    if (magicAreasLight) {
+      this.#defaultConfig.entity = magicAreasLight.entity_id;
+    }
 
     this.config = Object.assign(this.config, this.#defaultConfig, options);
 

@@ -105,9 +105,10 @@ class AreaView {
 
       if (chipOptions?.[`${chipType}_count` as string] ?? true) {
         const className = Helper.sanitizeClassName(chipType + "Chip");
+        const options = { area_id: this.area.area_id };
         try {
           chipModule = await import((`../chips/${className}`));
-          const chip = new chipModule[className](device);
+          const chip = new chipModule[className](options);
 
           if ("tap_action" in this.config && isCallServiceActionConfig(this.config.tap_action)) {
             chip.setTapActionTarget({ area_id: this.area.area_id });
@@ -176,7 +177,7 @@ class AreaView {
 
       try {
         const cardModule = await import(`../cards/${className}`);
-        const entities = Helper.getDeviceEntities(this.area, domain);
+        const entities = Helper.getAreaEntities(this.area, domain);
         const configEntityHidden = Helper.strategyOptions.domains[domain]?.hide_config_entities || Helper.strategyOptions.domains["_"].hide_config_entities;
 
         if (this.area.area_id === "undisclosed") {

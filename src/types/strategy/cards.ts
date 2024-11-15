@@ -1,21 +1,21 @@
-import {LovelaceCardConfig} from "../homeassistant/data/lovelace";
-import {TitleCardConfig} from "../lovelace-mushroom/cards/title-card-config";
-import {EntitySharedConfig} from "../lovelace-mushroom/shared/config/entity-config";
-import {AppearanceSharedConfig} from "../lovelace-mushroom/shared/config/appearance-config";
-import {ActionsSharedConfig} from "../lovelace-mushroom/shared/config/actions-config";
-import {TemplateCardConfig} from "../lovelace-mushroom/cards/template-card-config";
-import {EntityCardConfig} from "../lovelace-mushroom/cards/entity-card-config";
-import {PictureEntityCardConfig} from "../homeassistant/panels/lovelave/cards/types";
-import {ClimateCardConfig} from "../lovelace-mushroom/cards/climate-card-config";
-import {CoverCardConfig} from "../lovelace-mushroom/cards/cover-card-config";
-import {FanCardConfig} from "../lovelace-mushroom/cards/fan-card-config";
-import {AreaCardConfig} from "../homeassistant/lovelace/cards/types";
-import {LightCardConfig} from "../lovelace-mushroom/cards/light-card-config";
-import {LockCardConfig} from "../lovelace-mushroom/cards/lock-card-config";
-import {MediaPlayerCardConfig} from "../lovelace-mushroom/cards/media-player-card-config";
-import {NumberCardConfig} from "../lovelace-mushroom/cards/number-card-config";
-import {PersonCardConfig} from "../lovelace-mushroom/cards/person-card-config";
-import {VacuumCardConfig} from "../lovelace-mushroom/cards/vacuum-card-config";
+import { LovelaceCardConfig } from "../homeassistant/data/lovelace";
+import { TitleCardConfig } from "../lovelace-mushroom/cards/title-card-config";
+import { EntitySharedConfig } from "../lovelace-mushroom/shared/config/entity-config";
+import { AppearanceSharedConfig } from "../lovelace-mushroom/shared/config/appearance-config";
+import { ActionsSharedConfig } from "../lovelace-mushroom/shared/config/actions-config";
+import { TemplateCardConfig } from "../lovelace-mushroom/cards/template-card-config";
+import { EntityCardConfig } from "../lovelace-mushroom/cards/entity-card-config";
+import { PictureEntityCardConfig } from "../homeassistant/panels/lovelave/cards/types";
+import { ClimateCardConfig } from "../lovelace-mushroom/cards/climate-card-config";
+import { CoverCardConfig } from "../lovelace-mushroom/cards/cover-card-config";
+import { FanCardConfig } from "../lovelace-mushroom/cards/fan-card-config";
+import { AreaCardConfig } from "../homeassistant/lovelace/cards/types";
+import { LightCardConfig } from "../lovelace-mushroom/cards/light-card-config";
+import { LockCardConfig } from "../lovelace-mushroom/cards/lock-card-config";
+import { MediaPlayerCardConfig } from "../lovelace-mushroom/cards/media-player-card-config";
+import { NumberCardConfig } from "../lovelace-mushroom/cards/number-card-config";
+import { PersonCardConfig } from "../lovelace-mushroom/cards/person-card-config";
+import { VacuumCardConfig } from "../lovelace-mushroom/cards/vacuum-card-config";
 import { SwipeCardConfig } from "../lovelace-mushroom/cards/swipe-card-config";
 import { SceneCardConfig } from "../lovelace-mushroom/cards/scene-card-config";
 
@@ -46,7 +46,7 @@ export namespace cards {
     offService?: string;
   }
 
-  export type AreaCardOptions = Omit<AreaCardConfig, "type">;
+  export type AreaCardOptions = { area_id: string } & Omit<AreaCardConfig, "type">;
   export type ClimateCardOptions = Omit<ClimateCardConfig, "type">;
   export type ControllerCardOptions = Omit<ControllerCardConfig, "type">;
   export type CoverCardOptions = Omit<CoverCardConfig, "type">;

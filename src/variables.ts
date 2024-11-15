@@ -1,4 +1,5 @@
 export const DOMAIN = "magic_areas";
+export const NAME = "Magic Areas";
 
 export const UNAVAILABLE = "unavailable";
 export const UNKNOWN = "unknown";
@@ -36,7 +37,7 @@ export const DEVICE_CLASSES = {
   binary_sensor: ["motion", "door", "window", "vibration", "moisture", "smoke"],
 };
 
-export const HOME_EXPOSED_CHIPS = [MAGIC_AREAS_LIGHT_DOMAINS, "fan", "cover", "switch", "climate", "safety", "motion", "door", "window"];
+export const HOME_EXPOSED_CHIPS = [MAGIC_AREAS_LIGHT_DOMAINS, ...MAGIC_AREAS_GROUP_DOMAINS, "fan", "switch", "safety", "motion", "door", "window"];
 export const AREA_EXPOSED_CHIPS = [MAGIC_AREAS_LIGHT_DOMAINS, ...MAGIC_AREAS_GROUP_DOMAINS, "fan", "switch", "safety", ...DEVICE_CLASSES.binary_sensor, ...DEVICE_CLASSES.sensor];
 
 export const AREA_CARD_SENSORS_CLASS = ["temperature"];

@@ -113,7 +113,7 @@ class HomeView extends AbstractView {
     }
 
     // Spotify chip.
-    const spotifyEntityId = chipOptions?.spotify_entity ?? Helper.domains.media_player.find(
+    const spotifyEntityId = chipOptions?.spotify_entity ?? Helper.domains.media_player?.find(
       (entity) => entity.entity_id.startsWith("media_player.spotify_") && entity.disabled_by === null && entity.hidden_by === null,
     )?.entity_id;
 
@@ -136,7 +136,7 @@ class HomeView extends AbstractView {
         const className = Helper.sanitizeClassName(chipType + "Chip");
         try {
           chipModule = await import((`../chips/${className}`));
-          const chip = new chipModule[className](Helper.magicAreasDevices["global"]);
+          const chip = new chipModule[className]();
 
           if ("tap_action" in this.config && isCallServiceActionConfig(this.config.tap_action)) {
             chip.setTapActionTarget({ area_id: areaIds });
@@ -308,7 +308,7 @@ class HomeView extends AbstractView {
     }
 
 
-    for (const floor of [...Helper.orderedFloors, Helper.strategyOptions.floors.undisclosed]) {
+    for (const floor of Helper.orderedFloors) {
       if (floor.areas.length === 0) continue
 
       groupedCards.push(
@@ -321,7 +321,7 @@ class HomeView extends AbstractView {
         }
       );
 
-      for (const [i, area] of floor.areas.map(areaId => Helper.areas[areaId]).entries()) {
+      for (const area of floor.areas.map(areaId => Helper.areas[areaId]).values()) {
 
         type ModuleType = typeof import("../cards/AreaCard");
 
@@ -348,10 +348,11 @@ class HomeView extends AbstractView {
           let options = {
             ...Helper.strategyOptions.areas["_"],
             ...Helper.strategyOptions.areas[area.area_id],
+            area_id: area.area_id,
           };
 
           groupedCards.push({
-            ...new module.AreaCard(area, options).getCard(),
+            ...new module.AreaCard(options).getCard(),
             layout_options: {
               grid_columns: 2
             }

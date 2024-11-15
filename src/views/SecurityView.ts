@@ -166,7 +166,7 @@ abstract class SecurityView {
       return a.level - b.level;
     });
 
-    for (const floor of [...orderedFloors, Helper.strategyOptions.floors.undisclosed]) {
+    for (const floor of orderedFloors) {
 
       if (floor.areas.length === 0) continue
 
@@ -186,7 +186,7 @@ abstract class SecurityView {
 
       // Create cards for each area.
       for (const [i, area] of floor.areas.map(areaId => Helper.areas[areaId]).entries()) {
-        const entities = Helper.getDeviceEntities(area, domain ?? "");
+        const entities = Helper.getAreaEntities(area, domain ?? "");
         const className = Helper.sanitizeClassName(domain + "Card");
 
         const cardModule = await import(`../cards/${className}`);

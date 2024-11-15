@@ -172,7 +172,7 @@ var __classPrivateFieldSet = (undefined && undefined.__classPrivateFieldSet) || 
     if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot write private member to an object whose class did not declare it");
     return (kind === "a" ? f.call(receiver, value) : f ? f.value = value : state.set(receiver, value)), value;
 };
-var _a, _Helper_entities, _Helper_domains, _Helper_devices, _Helper_areas, _Helper_floors, _Helper_hassStates, _Helper_hassLocalize, _Helper_initialized, _Helper_strategyOptions, _Helper_magicAreasDevices, _Helper_debug, _Helper_areaFilterCallback, _Helper_getObjectKeysByPropertyValue;
+var _a, _Helper_entities, _Helper_domains, _Helper_devices, _Helper_areas, _Helper_floors, _Helper_hassStates, _Helper_hassLocalize, _Helper_initialized, _Helper_strategyOptions, _Helper_magicAreasDevices, _Helper_debug, _Helper_getObjectKeysByPropertyValue;
 
 
 
@@ -311,7 +311,7 @@ class Helper {
         // Initialize properties.
         __classPrivateFieldSet(this, _a, info.hass.states, "f", _Helper_hassStates);
         __classPrivateFieldSet(this, _a, info.hass.localize, "f", _Helper_hassLocalize);
-        console.log('info.hass.resources.fr', info.hass.resources.fr);
+        console.log('info.hass.resources', info.hass.resources);
         __classPrivateFieldSet(this, _a, deepmerge__WEBPACK_IMPORTED_MODULE_1___default()(_configurationDefaults__WEBPACK_IMPORTED_MODULE_0__.configurationDefaults, info.config?.strategy?.options ?? {}), "f", _Helper_strategyOptions);
         __classPrivateFieldSet(this, _a, __classPrivateFieldGet(this, _a, "f", _Helper_strategyOptions).debug, "f", _Helper_debug);
         let homeAssistantRegistries = [];
@@ -332,6 +332,7 @@ class Helper {
         // Dictionnaires pour un accès rapide
         const areasById = Object.fromEntries(areas.map(a => [a.area_id, a]));
         const floorsById = Object.fromEntries(floors.map(f => [f.floor_id, f]));
+        const devicesByAreaIdMap = Object.fromEntries(devices.map(device => [device.id, device.area_id]));
         const entitiesByDeviceId = {};
         const entitiesByAreaId = {};
         const devicesByAreaId = {};
@@ -343,10 +344,12 @@ class Helper {
                 floor_id: floor.floor_id || null,
             };
             acc[entity.entity_id] = enrichedEntity;
-            const areaId = entity.area_id ?? "undisclosed";
-            if (!entitiesByAreaId[areaId])
-                entitiesByAreaId[areaId] = [];
-            entitiesByAreaId[areaId].push(enrichedEntity);
+            if (entity.platform !== _variables__WEBPACK_IMPORTED_MODULE_2__.DOMAIN) {
+                const areaId = entity.area_id ?? devicesByAreaIdMap[entity.device_id ?? ""] ?? "undisclosed";
+                if (!entitiesByAreaId[areaId])
+                    entitiesByAreaId[areaId] = [];
+                entitiesByAreaId[areaId].push(enrichedEntity);
+            }
             if (entity.device_id) {
                 if (!entitiesByDeviceId[entity.device_id])
                     entitiesByDeviceId[entity.device_id] = [];
@@ -374,11 +377,13 @@ class Helper {
                 entities: entitiesInDevice.map(entity => entity.entity_id),
             };
             acc[device.id] = enrichedDevice;
-            const areaId = device.area_id ?? "undisclosed";
-            if (!devicesByAreaId[areaId])
-                devicesByAreaId[areaId] = [];
-            devicesByAreaId[areaId].push(enrichedDevice);
-            if (device.manufacturer === 'Magic Areas') {
+            if (device.manufacturer !== _variables__WEBPACK_IMPORTED_MODULE_2__.NAME) {
+                const areaId = device.area_id ?? "undisclosed";
+                if (!devicesByAreaId[areaId])
+                    devicesByAreaId[areaId] = [];
+                devicesByAreaId[areaId].push(enrichedDevice);
+            }
+            if (device.manufacturer === _variables__WEBPACK_IMPORTED_MODULE_2__.NAME) {
                 __classPrivateFieldGet(this, _a, "f", _Helper_magicAreasDevices)[(0,_utils__WEBPACK_IMPORTED_MODULE_3__.slugify)(device.name)] = {
                     ...device,
                     area_name: device.name,
@@ -402,21 +407,29 @@ class Helper {
         // Enrichir les zones
         __classPrivateFieldSet(this, _a, areas.reduce((acc, area) => {
             const areaEntities = entitiesByAreaId[area.area_id]?.map(entity => entity.entity_id) || [];
-            devicesByAreaId[area.area_id]?.forEach(device => areaEntities.push(...device.entities));
             const enrichedArea = {
                 ...area,
+                floor_id: area.floor_id || "undisclosed",
                 slug: (0,_utils__WEBPACK_IMPORTED_MODULE_3__.slugify)(area.name),
                 domains: (0,_utils__WEBPACK_IMPORTED_MODULE_3__.groupEntitiesByDomain)(areaEntities) ?? {},
                 devices: devicesByAreaId[area.area_id]?.map(device => device.id) || [],
-                magicAreaDevice: Object.values(__classPrivateFieldGet(this, _a, "f", _Helper_devices)).find(device => device.manufacturer === "Magic Areas" && device.name === area.name),
+                magicAreaDevice: Object.values(__classPrivateFieldGet(this, _a, "f", _Helper_devices)).find(device => device.manufacturer === _variables__WEBPACK_IMPORTED_MODULE_2__.NAME && device.name === area.name),
                 entities: areaEntities,
             };
             acc[area.area_id] = enrichedArea;
             return acc;
         }, {}), "f", _Helper_areas);
+        // Create and add the undisclosed floor if not hidden in the strategy options.
+        if (!__classPrivateFieldGet(this, _a, "f", _Helper_strategyOptions).areas.undisclosed?.hidden) {
+            __classPrivateFieldGet(this, _a, "f", _Helper_strategyOptions).floors.undisclosed = {
+                ..._configurationDefaults__WEBPACK_IMPORTED_MODULE_0__.configurationDefaults.floors.undisclosed,
+                ...__classPrivateFieldGet(this, _a, "f", _Helper_strategyOptions).floors.undisclosed,
+            };
+            floors.push(__classPrivateFieldGet(this, _a, "f", _Helper_strategyOptions).floors.undisclosed);
+        }
         // Enrichir les étages
         __classPrivateFieldSet(this, _a, floors.reduce((acc, floor) => {
-            const areasInFloor = areas.filter(area => area.floor_id === floor.floor_id);
+            const areasInFloor = Object.values(__classPrivateFieldGet(this, _a, "f", _Helper_areas)).filter(area => area.floor_id === floor.floor_id);
             acc[floor.floor_id] = {
                 ...floor,
                 areas: areasInFloor.map(area => area.area_id),
@@ -473,26 +486,22 @@ class Helper {
         if (!this.isInitialized()) {
             console.warn("Helper class should be initialized before calling this method!");
         }
-        // Get the ID of the devices which are linked to the given area.
-        for (const area of Object.values(__classPrivateFieldGet(this, _a, "f", _Helper_areas))) {
-            if (area_id && area.area_id !== area_id)
-                continue;
-            // const areaDeviceIds = this.#devices.filter((device) => {
-            //   return device.area_id === area.area_id;
-            // }).map((device) => {
-            //   return device.id;
-            // });
-            // // Get the entities of which all conditions of the callback function are met. @see areaFilterCallback.
-            // const newStates = this.#areas[area.area_id].domains[domain].filter(
-            //   this.#areaFilterCallback, {
-            //   area: area,
-            //   domain: domain,
-            //   areaDeviceIds: areaDeviceIds,
-            // })
-            //   .map((entity) => `states['${entity.entity_id}']`);
-            const newStates = __classPrivateFieldGet(this, _a, "f", _Helper_areas)[area.area_id].domains[domain]?.map((entity_id) => `states['${entity_id}']`);
-            if (newStates)
+        if (area_id) {
+            const newStates = __classPrivateFieldGet(this, _a, "f", _Helper_areas)[area_id].domains[domain]?.map((entity_id) => `states['${entity_id}']`);
+            if (newStates) {
                 states.push(...newStates);
+            }
+        }
+        else {
+            // Get the ID of the devices which are linked to the given area.
+            for (const area of Object.values(__classPrivateFieldGet(this, _a, "f", _Helper_areas))) {
+                if (area.area_id === "undisclosed")
+                    continue;
+                const newStates = __classPrivateFieldGet(this, _a, "f", _Helper_areas)[area.area_id].domains[domain]?.map((entity_id) => `states['${entity_id}']`);
+                if (newStates) {
+                    states.push(...newStates);
+                }
+            }
         }
         return `{% set entities = [${states}] %} {{ entities | selectattr('state','${operator}','${value}') | list | count }}`;
     }
@@ -511,27 +520,37 @@ class Helper {
      * @static
      */
     static getDeviceClassCountTemplate(domain, device_class, operator, value, area_id) {
+        // noinspection JSMismatchedCollectionQueryUpdate (False positive per 17-04-2023)
+        /**
+         * Array of entity state-entries, filtered by domain.
+         *
+         * Each element contains a template-string which is used to access home assistant's state machine (state object) in
+         * a template.
+         * E.g. "states['light.kitchen']"
+         *
+         * The array excludes hidden and disabled entities.
+         *
+         * @type {string[]}
+         */
+        const states = [];
         if (!this.isInitialized()) {
             console.warn("Helper class should be initialized before calling this method!");
         }
-        // const states: string[] = this.#areas
-        //   .filter(area => !area_id || area.area_id === area_id)
-        //   .flatMap(area => {
-        //     const areaDeviceIds = this.#devices
-        //       .filter(device => device.area_id === area.area_id)
-        //       .map(device => device.id);
-        //     return this.#entities
-        //       .filter(entity =>
-        //         entity.entity_id.startsWith(`${domain}.`) &&
-        //         entity.hidden_by === null &&
-        //         entity.disabled_by === null &&
-        //         (area.area_id === "undisclosed"
-        //           ? !entity.area_id && (areaDeviceIds.includes(entity.device_id ?? "") || !entity.device_id)
-        //           : areaDeviceIds.includes(entity.device_id ?? "") || entity.area_id === area.area_id)
-        //       )
-        //       .map(entity => `states['${entity.entity_id}']`);
-        //   });
-        const states = area_id ? __classPrivateFieldGet(this, _a, "f", _Helper_areas)[area_id].domains[domain] : __classPrivateFieldGet(this, _a, "f", _Helper_domains)[domain]?.map(entity => entity.entity_id);
+        if (area_id) {
+            const newStates = __classPrivateFieldGet(this, _a, "f", _Helper_areas)[area_id].domains[domain]?.map((entity_id) => `states['${entity_id}']`);
+            if (newStates) {
+                states.push(...newStates);
+            }
+        }
+        // Get the ID of the devices which are linked to the given area.
+        for (const area of Object.values(__classPrivateFieldGet(this, _a, "f", _Helper_areas))) {
+            if (area.area_id === "undisclosed")
+                continue;
+            const newStates = __classPrivateFieldGet(this, _a, "f", _Helper_areas)[area.area_id].domains[domain]?.map((entity_id) => `states['${entity_id}']`);
+            if (newStates) {
+                states.push(...newStates);
+            }
+        }
         return `{% set entities = [${states}] %} {{ entities | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | selectattr('state','${operator}','${value}') | list | count }}`;
     }
     /**
@@ -546,27 +565,37 @@ class Helper {
      * @static
      */
     static getAverageStateTemplate(device_class, area_id) {
+        // noinspection JSMismatchedCollectionQueryUpdate (False positive per 17-04-2023)
+        /**
+         * Array of entity state-entries, filtered by domain.
+         *
+         * Each element contains a template-string which is used to access home assistant's state machine (state object) in
+         * a template.
+         * E.g. "states['light.kitchen']"
+         *
+         * The array excludes hidden and disabled entities.
+         *
+         * @type {string[]}
+         */
+        const states = [];
         if (!this.isInitialized()) {
             console.warn("Helper class should be initialized before calling this method!");
         }
-        // const states: string[] = this.#areas
-        //   .filter(area => !area_id || area.area_id === area_id)
-        //   .flatMap(area => {
-        //     const areaDeviceIds = this.#devices
-        //       .filter(device => device.area_id === area.area_id)
-        //       .map(device => device.id);
-        //     return this.#entities
-        //       .filter(entity =>
-        //         entity.entity_id.startsWith("sensor.") &&
-        //         entity.hidden_by === null &&
-        //         entity.disabled_by === null &&
-        //         (area.area_id === "undisclosed"
-        //           ? !entity.area_id && (areaDeviceIds.includes(entity.device_id ?? "") || !entity.device_id)
-        //           : areaDeviceIds.includes(entity.device_id ?? "") || entity.area_id === area.area_id)
-        //       )
-        //       .map(entity => `states['${entity.entity_id}']`);
-        //   });
-        const states = area_id ? __classPrivateFieldGet(this, _a, "f", _Helper_areas)[area_id].domains["sensor"] : __classPrivateFieldGet(this, _a, "f", _Helper_domains)["sensor"].map(entity => entity.entity_id);
+        if (area_id) {
+            const newStates = __classPrivateFieldGet(this, _a, "f", _Helper_areas)[area_id].domains["sensor"]?.map((entity_id) => `states['${entity_id}']`);
+            if (newStates) {
+                states.push(...newStates);
+            }
+        }
+        // Get the ID of the devices which are linked to the given area.
+        for (const area of Object.values(__classPrivateFieldGet(this, _a, "f", _Helper_areas))) {
+            if (area.area_id === "undisclosed")
+                continue;
+            const newStates = __classPrivateFieldGet(this, _a, "f", _Helper_areas)[area.area_id].domains["sensor"]?.map((entity_id) => `states['${entity_id}']`);
+            if (newStates) {
+                states.push(...newStates);
+            }
+        }
         // Todo: fix that because the temperature not working
         return `{% set entities = [${states}] %} {{ entities | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | sum / entities | length }} {{ state_attr('sensor.outside_temperature', 'unit_of_measurement')}}`;
     }
@@ -584,36 +613,16 @@ class Helper {
      * @return {StrategyEntity[]} Array of device entities.
      * @static
      */
-    static getDeviceEntities(area, domain) {
+    static getAreaEntities(area, domain) {
         if (!this.isInitialized()) {
             console.warn("Helper class should be initialized before calling this method!");
         }
-        // // Get the ID of the devices which are linked to the given area.
-        // const areaDeviceIds = this.#devices.filter((device) => {
-        //   return (device.area_id ?? "undisclosed") === area.area_id;
-        // }).map((device: DeviceRegistryEntry) => device.id);
-        // // Return the entities of which all conditions of the callback function are met. @see areaFilterCallback.
-        // let device_entities = this.#entities.filter(
-        //   this.#areaFilterCallback, {
-        //   area: area,
-        //   domain: domain,
-        //   areaDeviceIds: areaDeviceIds,
-        // })
-        //   .sort((a, b) => {
-        //     return (a.original_name ?? "undefined").localeCompare(b.original_name ?? "undefined");
-        //   });
-        // if (domain === "light") {
-        //   const deviceLights = Object.values(this.#magicAreasDevices[area.name]?.entities ?? [])
-        //     .filter(e => e.translation_key !== 'all_lights' && e.entity_id.endsWith('_lights'));
-        //   deviceLights.forEach(light => {
-        //     const childLights = Helper.#hassStates[light.entity_id]?.attributes?.entity_id ?? [];
-        //     device_entities = device_entities.filter(entity => !childLights.includes(entity.entity_id));
-        //     device_entities.unshift(light);
-        //   });
-        // }
-        // const device_entities = getMAEntity(this.#areas[area.area_id].magicAreaDevice, domain) ?? [];
-        const device_entities = __classPrivateFieldGet(this, _a, "f", _Helper_areas)[area.area_id].domains[domain]?.map(entity_id => __classPrivateFieldGet(this, _a, "f", _Helper_entities)[entity_id]) ?? [];
-        return device_entities;
+        if (domain) {
+            return __classPrivateFieldGet(this, _a, "f", _Helper_areas)[area.area_id].domains[domain]?.map(entity_id => __classPrivateFieldGet(this, _a, "f", _Helper_entities)[entity_id]) ?? [];
+        }
+        else {
+            return __classPrivateFieldGet(this, _a, "f", _Helper_areas)[area.area_id].entities.map(entity_id => __classPrivateFieldGet(this, _a, "f", _Helper_entities)[entity_id]) ?? [];
+        }
     }
     /**
      * Get state entities, filtered by area and domain.
@@ -629,22 +638,8 @@ class Helper {
         if (!this.isInitialized()) {
             console.warn("Helper class should be initialized before calling this method!");
         }
-        const states = [];
         // Get states whose entity-id starts with the given string.
         const stateEntities = __classPrivateFieldGet(this, _a, "f", _Helper_areas)[area.area_id].domains[domain]?.map(entity_id => __classPrivateFieldGet(this, _a, "f", _Helper_hassStates)[entity_id]);
-        // for (const state of stateEntities) {
-        //   const hassEntity = this.#entities[state.entity_id];
-        //   const device = this.#devices[hassEntity?.device_id ?? ""];
-        //   // Collect states of which any (whichever comes first) of the conditions below are met:
-        //   // 1. The linked entity is linked to the given area.
-        //   // 2. The entity is linked to a device, and the linked device is linked to the given area.
-        //   if (
-        //     (hassEntity?.area_id === area.area_id)
-        //     || (device && device.area_id === area.area_id)
-        //   ) {
-        //     states.push(state);
-        //   }
-        // }
         return stateEntities;
     }
     /**
@@ -733,21 +728,7 @@ class Helper {
         return entity.disabled_by === null && entity.hidden_by === null;
     }
 }
-_a = Helper, _Helper_areaFilterCallback = function _Helper_areaFilterCallback(entity) {
-    const entityUnhidden = entity.hidden_by === null && entity.disabled_by === null;
-    const domainMatches = entity.entity_id.startsWith(`${this.domain}.`);
-    // const linusDeviceIds = Helper.#devices.filter(d => [DOMAIN, "adaptive_lighting"].includes(d.identifiers[0]?.[0])).map(e => e.id)
-    const linusDeviceIds = ["linus", "linus2"];
-    const isLinusEntity = linusDeviceIds.includes(entity.device_id ?? "") || entity.platform === _variables__WEBPACK_IMPORTED_MODULE_2__.DOMAIN;
-    const entityLinked = this.area.area_id === "undisclosed"
-        // Undisclosed area;
-        // nor the entity itself, neither the entity's linked device (if any) is linked to any area.
-        ? !entity.area_id && (this.areaDeviceIds.includes(entity.device_id ?? "") || !entity.device_id)
-        // Area is a hass entity;
-        // The entity's linked device or the entity itself is linked to the given area.
-        : this.areaDeviceIds.includes(entity.device_id ?? "") || entity.area_id === this.area.area_id;
-    return (!isLinusEntity && entityUnhidden && domainMatches && entityLinked);
-}, _Helper_getObjectKeysByPropertyValue = function _Helper_getObjectKeysByPropertyValue(object, property, value) {
+_a = Helper, _Helper_getObjectKeysByPropertyValue = function _Helper_getObjectKeysByPropertyValue(object, property, value) {
     const keys = [];
     for (const key of Object.keys(object)) {
         if (object[key][property] === value) {
@@ -979,7 +960,7 @@ class AggregateCard {
                 icon_tap_action: __classPrivateFieldGet(this, _AggregateCard_domain, "f") === "light" ? "more-info" : "toggle",
             });
         }
-        for (const floor of [..._Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.orderedFloors, _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.strategyOptions.floors.undisclosed]) {
+        for (const floor of _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.orderedFloors) {
             if (floor.areas.length === 0)
                 continue;
             let floorCards = [];
@@ -1162,15 +1143,15 @@ const getBadgeColor = (entityId) => `
   {% endif %}
 `;
 class AreaCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractCard {
-    constructor(area, options = {}) {
-        super(area);
-        const defaultConfig = this.getDefaultConfig(area);
+    constructor(options) {
+        const magicAreaDevice = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.magicAreasDevices[options.area_id];
+        const areaState = (0,_utils__WEBPACK_IMPORTED_MODULE_7__.getMAEntity)(magicAreaDevice, "area_state") ?? {};
+        const area = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.areas[options.area_id];
+        super(areaState);
+        const defaultConfig = options?.area_id === "undisclosed" ? this.getUndisclosedAreaConfig(area) : this.getDefaultConfig(area);
         this.config = { ...this.config, ...defaultConfig, ...options };
     }
     getDefaultConfig(area) {
-        if (area.area_id === "undisclosed") {
-            return this.getUndisclosedAreaConfig(area);
-        }
         const device = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.magicAreasDevices[area.slug];
         const { area_state, all_lights, aggregate_temperature, aggregate_battery, aggregate_health, aggregate_window, aggregate_door, aggregate_cover, aggregate_climate, light_control } = device?.entities || {};
         const icon = area.icon || "mdi:home-outline";
@@ -3542,12 +3523,14 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var _Helper__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../Helper */ "./src/Helper.ts");
 /* harmony import */ var _AbstractChip__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./AbstractChip */ "./src/chips/AbstractChip.ts");
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../utils */ "./src/utils.ts");
 var __classPrivateFieldGet = (undefined && undefined.__classPrivateFieldGet) || function (receiver, state, kind, f) {
     if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a getter");
     if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
     return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
 };
 var _LightChip_defaultConfig;
+
 
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
@@ -3560,9 +3543,9 @@ class LightChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.AbstractChip 
     /**
      * Class Constructor.
      *
-     * @param {chips.TemplateChipOptions} options The chip options.
+     * @param {chips.ChipOptions} options The chip options.
      */
-    constructor(areaId, options = {}) {
+    constructor(options) {
         super();
         /**
          * Default configuration of the chip.
@@ -3576,12 +3559,18 @@ class LightChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.AbstractChip 
             type: "template",
             icon: "mdi:lightbulb-group",
             icon_color: "amber",
-            content: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getCountTemplate("light", "eq", "on"),
+            content: "none",
             tap_action: {
                 action: "navigate",
                 navigation_path: "lights",
             },
         });
+        __classPrivateFieldGet(this, _LightChip_defaultConfig, "f").content = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getCountTemplate("light", "eq", "on", options?.area_id);
+        const magicAreaDevice = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices[options?.area_id ?? options?.floor_id ?? "global"];
+        const magicAreasLight = (0,_utils__WEBPACK_IMPORTED_MODULE_2__.getMAEntity)(magicAreaDevice, "light");
+        if (magicAreasLight) {
+            __classPrivateFieldGet(this, _LightChip_defaultConfig, "f").entity = magicAreasLight.entity_id;
+        }
         this.config = Object.assign(this.config, __classPrivateFieldGet(this, _LightChip_defaultConfig, "f"), options);
     }
 }
@@ -5210,7 +5199,7 @@ __webpack_require__.r(__webpack_exports__);
 class AggregateListPopup extends _AbstractPopup__WEBPACK_IMPORTED_MODULE_1__.AbstractPopup {
     getDefaultConfig(aggregate_entity, deviceClass, is_binary_sensor) {
         const groupedCards = [];
-        for (const floor of [..._Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.orderedFloors, _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.floors.undisclosed]) {
+        for (const floor of _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.orderedFloors) {
             if (floor.areas.length === 0)
                 continue;
             groupedCards.push({
@@ -6302,8 +6291,13 @@ function getConditionalChip(entityId, state, chip) {
     };
 }
 function getMAEntity(device, domain, deviceClass) {
-    const magicAreasKey = domain === "light" ? 'all_lights' : deviceClass ? `aggregate_${deviceClass}` : `${domain}_group`;
-    return device?.entities[magicAreasKey];
+    if (_variables__WEBPACK_IMPORTED_MODULE_1__.MAGIC_AREAS_LIGHT_DOMAINS === domain)
+        return device?.entities?.['all_lights'];
+    if (_variables__WEBPACK_IMPORTED_MODULE_1__.MAGIC_AREAS_GROUP_DOMAINS.includes(domain))
+        return device?.entities?.[`${domain}_group`];
+    if (_variables__WEBPACK_IMPORTED_MODULE_1__.MAGIC_AREAS_AGGREGATE_DOMAINS.includes(domain))
+        return device?.entities?.[`aggregate_${deviceClass}`];
+    return device?.entities?.[domain];
 }
 function groupEntitiesByDomain(entity_ids) {
     return entity_ids
@@ -6352,6 +6346,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   MAGIC_AREAS_DOMAINS: () => (/* binding */ MAGIC_AREAS_DOMAINS),
 /* harmony export */   MAGIC_AREAS_GROUP_DOMAINS: () => (/* binding */ MAGIC_AREAS_GROUP_DOMAINS),
 /* harmony export */   MAGIC_AREAS_LIGHT_DOMAINS: () => (/* binding */ MAGIC_AREAS_LIGHT_DOMAINS),
+/* harmony export */   NAME: () => (/* binding */ NAME),
 /* harmony export */   OTHER_DOMAINS: () => (/* binding */ OTHER_DOMAINS),
 /* harmony export */   SENSOR_DOMAINS: () => (/* binding */ SENSOR_DOMAINS),
 /* harmony export */   STATES_OFF: () => (/* binding */ STATES_OFF),
@@ -6362,6 +6357,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   todOrder: () => (/* binding */ todOrder)
 /* harmony export */ });
 const DOMAIN = "magic_areas";
+const NAME = "Magic Areas";
 const UNAVAILABLE = "unavailable";
 const UNKNOWN = "unknown";
 const todOrder = ["morning", "daytime", "evening", "night"];
@@ -6382,7 +6378,7 @@ const DEVICE_CLASSES = {
     sensor: ["illuminance", "temperature", "humidity", "battery", "energy", "power"],
     binary_sensor: ["motion", "door", "window", "vibration", "moisture", "smoke"],
 };
-const HOME_EXPOSED_CHIPS = [MAGIC_AREAS_LIGHT_DOMAINS, "fan", "cover", "switch", "climate", "safety", "motion", "door", "window"];
+const HOME_EXPOSED_CHIPS = [MAGIC_AREAS_LIGHT_DOMAINS, ...MAGIC_AREAS_GROUP_DOMAINS, "fan", "switch", "safety", "motion", "door", "window"];
 const AREA_EXPOSED_CHIPS = [MAGIC_AREAS_LIGHT_DOMAINS, ...MAGIC_AREAS_GROUP_DOMAINS, "fan", "switch", "safety", ...DEVICE_CLASSES.binary_sensor, ...DEVICE_CLASSES.sensor];
 const AREA_CARD_SENSORS_CLASS = ["temperature"];
 const DEVICE_ICONS = {
@@ -6568,7 +6564,7 @@ class AbstractView {
         const viewSections = [];
         const configEntityHidden = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.strategyOptions.domains[__classPrivateFieldGet(this, _AbstractView_domain, "f") ?? "_"].hide_config_entities
             || _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.strategyOptions.domains["_"].hide_config_entities;
-        for (const floor of [..._Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.orderedFloors, _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.strategyOptions.floors.undisclosed]) {
+        for (const floor of _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.orderedFloors) {
             if (floor.areas.length === 0)
                 continue;
             if (!_variables__WEBPACK_IMPORTED_MODULE_0__.AREA_CARDS_DOMAINS.includes(__classPrivateFieldGet(this, _AbstractView_domain, "f") ?? ""))
@@ -6590,8 +6586,8 @@ class AbstractView {
                 ]
             };
             // Create cards for each area.
-            for (const [i, area] of floor.areas.map(areaId => _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.areas[areaId]).entries()) {
-                const entities = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.getDeviceEntities(area, __classPrivateFieldGet(this, _AbstractView_domain, "f") ?? "");
+            for (const area of floor.areas.map(areaId => _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.areas[areaId]).values()) {
+                const entities = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.getAreaEntities(area, __classPrivateFieldGet(this, _AbstractView_domain, "f") ?? "");
                 const className = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.sanitizeClassName(__classPrivateFieldGet(this, _AbstractView_domain, "f") + "Card");
                 const cardModule = await __webpack_require__("./src/cards lazy recursive ^\\.\\/.*$")(`./${className}`);
                 if (entities.length === 0 || !cardModule) {
@@ -6605,7 +6601,7 @@ class AbstractView {
                 if (area.area_id === "undisclosed") {
                     if (__classPrivateFieldGet(this, _AbstractView_domain, "f") === 'light')
                         target = {
-                            entity_id: entities.map(entity => entity.entity_id),
+                            entity_id: entities?.map(entity => entity.entity_id),
                         };
                 }
                 let areaCards = [];
@@ -6777,9 +6773,10 @@ class AreaView {
                 continue;
             if (chipOptions?.[`${chipType}_count`] ?? true) {
                 const className = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.sanitizeClassName(chipType + "Chip");
+                const options = { area_id: this.area.area_id };
                 try {
                     chipModule = await __webpack_require__("./src/chips lazy recursive ^\\.\\/.*$")(`./${className}`);
-                    const chip = new chipModule[className](device);
+                    const chip = new chipModule[className](options);
                     if ("tap_action" in this.config && isCallServiceActionConfig(this.config.tap_action)) {
                         chip.setTapActionTarget({ area_id: this.area.area_id });
                     }
@@ -6837,7 +6834,7 @@ class AreaView {
             const className = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.sanitizeClassName(domain + "Card");
             try {
                 const cardModule = await __webpack_require__("./src/cards lazy recursive ^\\.\\/.*$")(`./${className}`);
-                const entities = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getDeviceEntities(this.area, domain);
+                const entities = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getAreaEntities(this.area, domain);
                 const configEntityHidden = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain]?.hide_config_entities || _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains["_"].hide_config_entities;
                 if (this.area.area_id === "undisclosed") {
                     target = {
@@ -7422,7 +7419,7 @@ class HomeView extends _AbstractView__WEBPACK_IMPORTED_MODULE_1__.AbstractView {
             }
         }
         // Spotify chip.
-        const spotifyEntityId = chipOptions?.spotify_entity ?? _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.domains.media_player.find((entity) => entity.entity_id.startsWith("media_player.spotify_") && entity.disabled_by === null && entity.hidden_by === null)?.entity_id;
+        const spotifyEntityId = chipOptions?.spotify_entity ?? _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.domains.media_player?.find((entity) => entity.entity_id.startsWith("media_player.spotify_") && entity.disabled_by === null && entity.hidden_by === null)?.entity_id;
         if (spotifyEntityId) {
             try {
                 chipModule = await Promise.resolve(/*! import() */).then(__webpack_require__.bind(__webpack_require__, /*! ../chips/SpotifyChip */ "./src/chips/SpotifyChip.ts"));
@@ -7441,7 +7438,7 @@ class HomeView extends _AbstractView__WEBPACK_IMPORTED_MODULE_1__.AbstractView {
                 const className = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.sanitizeClassName(chipType + "Chip");
                 try {
                     chipModule = await __webpack_require__("./src/chips lazy recursive ^\\.\\/.*$")(`./${className}`);
-                    const chip = new chipModule[className](_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices["global"]);
+                    const chip = new chipModule[className]();
                     if ("tap_action" in this.config && isCallServiceActionConfig(this.config.tap_action)) {
                         chip.setTapActionTarget({ area_id: areaIds });
                     }
@@ -7580,7 +7577,7 @@ async function _HomeView_createAreaSection() {
             heading_style: "title",
         });
     }
-    for (const floor of [..._Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.orderedFloors, _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.floors.undisclosed]) {
+    for (const floor of _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.orderedFloors) {
         if (floor.areas.length === 0)
             continue;
         groupedCards.push({
@@ -7590,7 +7587,7 @@ async function _HomeView_createAreaSection() {
             icon: floor.icon ?? "mdi:floor-plan",
             tap_action: floor.floor_id !== "undisclosed" ? (0,_utils__WEBPACK_IMPORTED_MODULE_6__.navigateTo)((0,_utils__WEBPACK_IMPORTED_MODULE_6__.slugify)(floor.name)) : undefined,
         });
-        for (const [i, area] of floor.areas.map(areaId => _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas[areaId]).entries()) {
+        for (const area of floor.areas.map(areaId => _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas[areaId]).values()) {
             let module;
             let moduleName = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.areas[area.area_id]?.type ??
                 _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.areas["_"]?.type ??
@@ -7611,9 +7608,10 @@ async function _HomeView_createAreaSection() {
                 let options = {
                     ..._Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.areas["_"],
                     ..._Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.areas[area.area_id],
+                    area_id: area.area_id,
                 };
                 groupedCards.push({
-                    ...new module.AreaCard(area, options).getCard(),
+                    ...new module.AreaCard(options).getCard(),
                     layout_options: {
                         grid_columns: 2
                     }
@@ -8168,7 +8166,7 @@ class SecurityView {
             // Both 'level' values are defined, compare them
             return a.level - b.level;
         });
-        for (const floor of [...orderedFloors, _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.floors.undisclosed]) {
+        for (const floor of orderedFloors) {
             if (floor.areas.length === 0)
                 continue;
             let floorCards = [
@@ -8186,7 +8184,7 @@ class SecurityView {
             ];
             // Create cards for each area.
             for (const [i, area] of floor.areas.map(areaId => _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas[areaId]).entries()) {
-                const entities = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getDeviceEntities(area, domain ?? "");
+                const entities = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getAreaEntities(area, domain ?? "");
                 const className = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.sanitizeClassName(domain + "Card");
                 const cardModule = await __webpack_require__("./src/cards lazy recursive ^\\.\\/.*$")(`./${className}`);
                 if (entities.length === 0 || !cardModule) {

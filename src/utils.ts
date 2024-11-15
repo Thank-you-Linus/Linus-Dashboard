@@ -3,7 +3,7 @@ import { EntityRegistryEntry } from "./types/homeassistant/data/entity_registry"
 import { generic } from "./types/strategy/generic";
 import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
 import { ActionConfig } from "./types/homeassistant/data/lovelace";
-import { DEVICE_CLASSES, MAGIC_AREAS_AGGREGATE_DOMAINS, MAGIC_AREAS_GROUP_DOMAINS, SENSOR_DOMAINS } from "./variables";
+import { DEVICE_CLASSES, MAGIC_AREAS_AGGREGATE_DOMAINS, MAGIC_AREAS_GROUP_DOMAINS, MAGIC_AREAS_LIGHT_DOMAINS, SENSOR_DOMAINS } from "./variables";
 
 /**
  * Groups the elements of an array based on a provided function
@@ -85,8 +85,10 @@ export function getConditionalChip(entityId: string, state: string, chip: any): 
 }
 
 export function getMAEntity(device: MagicAreaRegistryEntry, domain: string, deviceClass?: string): EntityRegistryEntry {
-    const magicAreasKey = domain === "light" ? 'all_lights' : deviceClass ? `aggregate_${deviceClass}` : `${domain}_group`;
-    return device?.entities[magicAreasKey]
+    if (MAGIC_AREAS_LIGHT_DOMAINS === domain) return device?.entities?.['all_lights']
+    if (MAGIC_AREAS_GROUP_DOMAINS.includes(domain)) return device?.entities?.[`${domain}_group` as 'cover_group']
+    if (MAGIC_AREAS_AGGREGATE_DOMAINS.includes(domain)) return device?.entities?.[`aggregate_${deviceClass}` as 'aggregate_motion']
+    return device?.entities?.[domain]
 }
 
 export function groupEntitiesByDomain(entity_ids: string[]): Record<string, string[]> {

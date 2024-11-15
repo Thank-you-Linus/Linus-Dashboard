@@ -10,7 +10,7 @@ import StrategyEntity = generic.StrategyEntity;
 import StrategyDevice = generic.StrategyDevice;
 import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
 import { FloorRegistryEntry } from "./types/homeassistant/data/floor_registry";
-import { DEVICE_CLASSES, DOMAIN } from "./variables";
+import { DEVICE_CLASSES, DOMAIN, NAME } from "./variables";
 import { groupEntitiesByDomain, slugify } from "./utils";
 import { EntityRegistryEntry } from "./types/homeassistant/data/entity_registry";
 
@@ -245,7 +245,7 @@ class Helper {
     // Initialize properties.
     this.#hassStates = info.hass.states;
     this.#hassLocalize = info.hass.localize;
-    console.log('info.hass.resources.fr', info.hass.resources.fr)
+    console.log('info.hass.resources', info.hass.resources)
     this.#strategyOptions = deepmerge(configurationDefaults, info.config?.strategy?.options ?? {});
     this.#debug = this.#strategyOptions.debug;
 
@@ -271,6 +271,7 @@ class Helper {
     // Dictionnaires pour un accès rapide
     const areasById = Object.fromEntries(areas.map(a => [a.area_id, a]));
     const floorsById = Object.fromEntries(floors.map(f => [f.floor_id, f]));
+    const devicesByAreaIdMap = Object.fromEntries(devices.map(device => [device.id, device.area_id]));
     const entitiesByDeviceId: Record<string, StrategyEntity[]> = {};
     const entitiesByAreaId: Record<string, StrategyEntity[]> = {};
     const devicesByAreaId: Record<string, StrategyDevice[]> = {};
@@ -286,9 +287,11 @@ class Helper {
 
       acc[entity.entity_id] = enrichedEntity;
 
-      const areaId = entity.area_id ?? "undisclosed";
-      if (!entitiesByAreaId[areaId]) entitiesByAreaId[areaId] = [];
-      entitiesByAreaId[areaId].push(enrichedEntity);
+      if (entity.platform !== DOMAIN) {
+        const areaId = entity.area_id ?? devicesByAreaIdMap[entity.device_id ?? ""] ?? "undisclosed";
+        if (!entitiesByAreaId[areaId]) entitiesByAreaId[areaId] = [];
+        entitiesByAreaId[areaId].push(enrichedEntity);
+      }
 
       if (entity.device_id) {
         if (!entitiesByDeviceId[entity.device_id]) entitiesByDeviceId[entity.device_id] = [];
@@ -321,12 +324,13 @@ class Helper {
 
       acc[device.id] = enrichedDevice;
 
+      if (device.manufacturer !== NAME) {
+        const areaId = device.area_id ?? "undisclosed";
+        if (!devicesByAreaId[areaId]) devicesByAreaId[areaId] = [];
+        devicesByAreaId[areaId].push(enrichedDevice);
+      }
 
-      const areaId = device.area_id ?? "undisclosed";
-      if (!devicesByAreaId[areaId]) devicesByAreaId[areaId] = [];
-      devicesByAreaId[areaId].push(enrichedDevice);
-
-      if (device.manufacturer === 'Magic Areas') {
+      if (device.manufacturer === NAME) {
         this.#magicAreasDevices[slugify(device.name)] = {
           ...device,
           area_name: device.name!,
@@ -357,14 +361,14 @@ class Helper {
     this.#areas = areas.reduce((acc, area) => {
 
       const areaEntities = entitiesByAreaId[area.area_id]?.map(entity => entity.entity_id) || [];
-      devicesByAreaId[area.area_id]?.forEach(device => areaEntities.push(...device.entities));
 
       const enrichedArea = {
         ...area,
+        floor_id: area.floor_id || "undisclosed",
         slug: slugify(area.name),
         domains: groupEntitiesByDomain(areaEntities) ?? {},
         devices: devicesByAreaId[area.area_id]?.map(device => device.id) || [],
-        magicAreaDevice: Object.values(this.#devices).find(device => device.manufacturer === "Magic Areas" && device.name === area.name),
+        magicAreaDevice: Object.values(this.#devices).find(device => device.manufacturer === NAME && device.name === area.name),
         entities: areaEntities,
       };
 
@@ -372,9 +376,21 @@ class Helper {
       return acc;
     }, {} as Record<string, StrategyArea>);
 
+
+    // Create and add the undisclosed floor if not hidden in the strategy options.
+    if (!this.#strategyOptions.areas.undisclosed?.hidden) {
+
+      this.#strategyOptions.floors.undisclosed = {
+        ...configurationDefaults.floors.undisclosed,
+        ...this.#strategyOptions.floors.undisclosed,
+      };
+
+      floors.push(this.#strategyOptions.floors.undisclosed);
+    }
+
     // Enrichir les étages
     this.#floors = floors.reduce((acc, floor) => {
-      const areasInFloor = areas.filter(area => area.floor_id === floor.floor_id);
+      const areasInFloor = Object.values(this.#areas).filter(area => area.floor_id === floor.floor_id);
 
       acc[floor.floor_id] = {
         ...floor,
@@ -446,29 +462,23 @@ class Helper {
       console.warn("Helper class should be initialized before calling this method!");
     }
 
-    // Get the ID of the devices which are linked to the given area.
-    for (const area of Object.values(this.#areas)) {
-      if (area_id && area.area_id !== area_id) continue
-
-      // const areaDeviceIds = this.#devices.filter((device) => {
-      //   return device.area_id === area.area_id;
-      // }).map((device) => {
-      //   return device.id;
-      // });
-
-      // // Get the entities of which all conditions of the callback function are met. @see areaFilterCallback.
-      // const newStates = this.#areas[area.area_id].domains[domain].filter(
-      //   this.#areaFilterCallback, {
-      //   area: area,
-      //   domain: domain,
-      //   areaDeviceIds: areaDeviceIds,
-      // })
-      //   .map((entity) => `states['${entity.entity_id}']`);
-
-      const newStates = this.#areas[area.area_id].domains[domain]?.map((entity_id) => `states['${entity_id}']`);
-      if (newStates)
+    if (area_id) {
+      const newStates = this.#areas[area_id].domains[domain]?.map((entity_id) => `states['${entity_id}']`);
+      if (newStates) {
         states.push(...newStates);
+      }
+    } else {
+      // Get the ID of the devices which are linked to the given area.
+      for (const area of Object.values(this.#areas)) {
+        if (area.area_id === "undisclosed") continue
+
+        const newStates = this.#areas[area.area_id].domains[domain]?.map((entity_id) => `states['${entity_id}']`);
+        if (newStates) {
+          states.push(...newStates);
+        }
+      }
     }
+
 
     return `{% set entities = [${states}] %} {{ entities | selectattr('state','${operator}','${value}') | list | count }}`;
   }
@@ -488,29 +498,41 @@ class Helper {
    * @static
    */
   static getDeviceClassCountTemplate(domain: string, device_class: string, operator: string, value: string, area_id?: string): string {
+    // noinspection JSMismatchedCollectionQueryUpdate (False positive per 17-04-2023)
+    /**
+     * Array of entity state-entries, filtered by domain.
+     *
+     * Each element contains a template-string which is used to access home assistant's state machine (state object) in
+     * a template.
+     * E.g. "states['light.kitchen']"
+     *
+     * The array excludes hidden and disabled entities.
+     *
+     * @type {string[]}
+     */
+    const states: string[] = [];
+
     if (!this.isInitialized()) {
       console.warn("Helper class should be initialized before calling this method!");
     }
-    // const states: string[] = this.#areas
-    //   .filter(area => !area_id || area.area_id === area_id)
-    //   .flatMap(area => {
-    //     const areaDeviceIds = this.#devices
-    //       .filter(device => device.area_id === area.area_id)
-    //       .map(device => device.id);
 
-    //     return this.#entities
-    //       .filter(entity =>
-    //         entity.entity_id.startsWith(`${domain}.`) &&
-    //         entity.hidden_by === null &&
-    //         entity.disabled_by === null &&
-    //         (area.area_id === "undisclosed"
-    //           ? !entity.area_id && (areaDeviceIds.includes(entity.device_id ?? "") || !entity.device_id)
-    //           : areaDeviceIds.includes(entity.device_id ?? "") || entity.area_id === area.area_id)
-    //       )
-    //       .map(entity => `states['${entity.entity_id}']`);
-    //   });
 
-    const states = area_id ? this.#areas[area_id].domains[domain] : this.#domains[domain]?.map(entity => entity.entity_id);
+    if (area_id) {
+      const newStates = this.#areas[area_id].domains[domain]?.map((entity_id) => `states['${entity_id}']`);
+      if (newStates) {
+        states.push(...newStates);
+      }
+    }
+
+    // Get the ID of the devices which are linked to the given area.
+    for (const area of Object.values(this.#areas)) {
+      if (area.area_id === "undisclosed") continue
+
+      const newStates = this.#areas[area.area_id].domains[domain]?.map((entity_id) => `states['${entity_id}']`);
+      if (newStates) {
+        states.push(...newStates);
+      }
+    }
 
     return `{% set entities = [${states}] %} {{ entities | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | selectattr('state','${operator}','${value}') | list | count }}`;
   }
@@ -527,31 +549,41 @@ class Helper {
    * @static
    */
   static getAverageStateTemplate(device_class: string, area_id?: string): string {
+    // noinspection JSMismatchedCollectionQueryUpdate (False positive per 17-04-2023)
+    /**
+     * Array of entity state-entries, filtered by domain.
+     *
+     * Each element contains a template-string which is used to access home assistant's state machine (state object) in
+     * a template.
+     * E.g. "states['light.kitchen']"
+     *
+     * The array excludes hidden and disabled entities.
+     *
+     * @type {string[]}
+     */
+    const states: string[] = [];
 
     if (!this.isInitialized()) {
       console.warn("Helper class should be initialized before calling this method!");
     }
 
-    // const states: string[] = this.#areas
-    //   .filter(area => !area_id || area.area_id === area_id)
-    //   .flatMap(area => {
-    //     const areaDeviceIds = this.#devices
-    //       .filter(device => device.area_id === area.area_id)
-    //       .map(device => device.id);
 
-    //     return this.#entities
-    //       .filter(entity =>
-    //         entity.entity_id.startsWith("sensor.") &&
-    //         entity.hidden_by === null &&
-    //         entity.disabled_by === null &&
-    //         (area.area_id === "undisclosed"
-    //           ? !entity.area_id && (areaDeviceIds.includes(entity.device_id ?? "") || !entity.device_id)
-    //           : areaDeviceIds.includes(entity.device_id ?? "") || entity.area_id === area.area_id)
-    //       )
-    //       .map(entity => `states['${entity.entity_id}']`);
-    //   });
+    if (area_id) {
+      const newStates = this.#areas[area_id].domains["sensor"]?.map((entity_id) => `states['${entity_id}']`);
+      if (newStates) {
+        states.push(...newStates);
+      }
+    }
 
-    const states = area_id ? this.#areas[area_id].domains["sensor"] : this.#domains["sensor"].map(entity => entity.entity_id);
+    // Get the ID of the devices which are linked to the given area.
+    for (const area of Object.values(this.#areas)) {
+      if (area.area_id === "undisclosed") continue
+
+      const newStates = this.#areas[area.area_id].domains["sensor"]?.map((entity_id) => `states['${entity_id}']`);
+      if (newStates) {
+        states.push(...newStates);
+      }
+    }
 
 
     // Todo: fix that because the temperature not working
@@ -572,43 +604,18 @@ class Helper {
    * @return {StrategyEntity[]} Array of device entities.
    * @static
    */
-  static getDeviceEntities(area: AreaRegistryEntry, domain: string): StrategyEntity[] {
+  static getAreaEntities(area: AreaRegistryEntry, domain?: string): StrategyEntity[] {
 
     if (!this.isInitialized()) {
       console.warn("Helper class should be initialized before calling this method!");
     }
 
-    // // Get the ID of the devices which are linked to the given area.
-    // const areaDeviceIds = this.#devices.filter((device) => {
-    //   return (device.area_id ?? "undisclosed") === area.area_id;
-    // }).map((device: DeviceRegistryEntry) => device.id);
+    if (domain) {
+      return this.#areas[area.area_id].domains[domain]?.map(entity_id => this.#entities[entity_id]) ?? []
+    } else {
+      return this.#areas[area.area_id].entities.map(entity_id => this.#entities[entity_id]) ?? []
+    }
 
-    // // Return the entities of which all conditions of the callback function are met. @see areaFilterCallback.
-    // let device_entities = this.#entities.filter(
-    //   this.#areaFilterCallback, {
-    //   area: area,
-    //   domain: domain,
-    //   areaDeviceIds: areaDeviceIds,
-    // })
-    //   .sort((a, b) => {
-    //     return (a.original_name ?? "undefined").localeCompare(b.original_name ?? "undefined");
-    //   });
-
-    // if (domain === "light") {
-    //   const deviceLights = Object.values(this.#magicAreasDevices[area.name]?.entities ?? [])
-    //     .filter(e => e.translation_key !== 'all_lights' && e.entity_id.endsWith('_lights'));
-
-    //   deviceLights.forEach(light => {
-    //     const childLights = Helper.#hassStates[light.entity_id]?.attributes?.entity_id ?? [];
-    //     device_entities = device_entities.filter(entity => !childLights.includes(entity.entity_id));
-    //     device_entities.unshift(light);
-    //   });
-    // }
-
-    // const device_entities = getMAEntity(this.#areas[area.area_id].magicAreaDevice, domain) ?? [];
-    const device_entities = this.#areas[area.area_id].domains[domain]?.map(entity_id => this.#entities[entity_id]) ?? [];
-
-    return device_entities;
   }
 
   /**
@@ -626,25 +633,8 @@ class Helper {
       console.warn("Helper class should be initialized before calling this method!");
     }
 
-    const states: HassEntity[] = [];
-
     // Get states whose entity-id starts with the given string.
     const stateEntities = this.#areas[area.area_id].domains[domain]?.map(entity_id => this.#hassStates[entity_id]);
-
-    // for (const state of stateEntities) {
-    //   const hassEntity = this.#entities[state.entity_id];
-    //   const device = this.#devices[hassEntity?.device_id ?? ""];
-
-    //   // Collect states of which any (whichever comes first) of the conditions below are met:
-    //   // 1. The linked entity is linked to the given area.
-    //   // 2. The entity is linked to a device, and the linked device is linked to the given area.
-    //   if (
-    //     (hassEntity?.area_id === area.area_id)
-    //     || (device && device.area_id === area.area_id)
-    //   ) {
-    //     states.push(state);
-    //   }
-    // }
 
     return stateEntities;
   }
@@ -692,44 +682,6 @@ class Helper {
     }
 
     return this.#getObjectKeysByPropertyValue(this.#strategyOptions.domains, "hidden", false);
-  }
-
-  /**
-   * Callback function for filtering entities.
-   *
-   * Entities of which all the conditions below are met are kept:
-   * 1. The entity is not hidden and is not disabled.
-   * 2. The entity's domain matches the given domain.
-   * 3. Or/Neither the entity's linked device (if any) or/nor the entity itself is linked to the given area.
-   *    (See variable areaMatch)
-   *
-   * @param {StrategyEntity} entity The current hass entity to evaluate.
-   * @this {AreaFilterContext}
-   *
-   * @return {boolean} True to keep the entity.
-   * @static
-   */
-  static #areaFilterCallback(
-    this: {
-      area: StrategyArea,
-      areaDeviceIds: string[],
-      domain: string,
-    },
-    entity: StrategyEntity): boolean {
-    const entityUnhidden = entity.hidden_by === null && entity.disabled_by === null;
-    const domainMatches = entity.entity_id.startsWith(`${this.domain}.`);
-    // const linusDeviceIds = Helper.#devices.filter(d => [DOMAIN, "adaptive_lighting"].includes(d.identifiers[0]?.[0])).map(e => e.id)
-    const linusDeviceIds = ["linus", "linus2"]
-    const isLinusEntity = linusDeviceIds.includes(entity.device_id ?? "") || entity.platform === DOMAIN
-    const entityLinked = this.area.area_id === "undisclosed"
-      // Undisclosed area;
-      // nor the entity itself, neither the entity's linked device (if any) is linked to any area.
-      ? !entity.area_id && (this.areaDeviceIds.includes(entity.device_id ?? "") || !entity.device_id)
-      // Area is a hass entity;
-      // The entity's linked device or the entity itself is linked to the given area.
-      : this.areaDeviceIds.includes(entity.device_id ?? "") || entity.area_id === this.area.area_id;
-
-    return (!isLinusEntity && entityUnhidden && domainMatches && entityLinked);
   }
 
   /**

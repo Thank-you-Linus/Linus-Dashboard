@@ -76,7 +76,7 @@ class AggregateCard {
 
 
 
-    for (const floor of [...Helper.orderedFloors, Helper.strategyOptions.floors.undisclosed]) {
+    for (const floor of Helper.orderedFloors) {
       if (floor.areas.length === 0) continue
 
       let floorCards: (TemplateCardConfig)[] = [];

@@ -95,7 +95,7 @@ abstract class AbstractView {
       || Helper.strategyOptions.domains["_"].hide_config_entities;
 
 
-    for (const floor of [...Helper.orderedFloors, Helper.strategyOptions.floors.undisclosed]) {
+    for (const floor of Helper.orderedFloors) {
       if (floor.areas.length === 0) continue
       if (!AREA_CARDS_DOMAINS.includes(this.#domain ?? "")) continue
 
@@ -118,8 +118,8 @@ abstract class AbstractView {
       } as LovelaceGridCardConfig
 
       // Create cards for each area.
-      for (const [i, area] of floor.areas.map(areaId => Helper.areas[areaId]).entries()) {
-        const entities = Helper.getDeviceEntities(area, this.#domain ?? "");
+      for (const area of floor.areas.map(areaId => Helper.areas[areaId]).values()) {
+        const entities = Helper.getAreaEntities(area, this.#domain ?? "");
         const className = Helper.sanitizeClassName(this.#domain + "Card");
         const cardModule = await import(`../cards/${className}`);
 
@@ -137,7 +137,7 @@ abstract class AbstractView {
 
           if (this.#domain === 'light')
             target = {
-              entity_id: entities.map(entity => entity.entity_id),
+              entity_id: entities?.map(entity => entity.entity_id),
             }
         }
 

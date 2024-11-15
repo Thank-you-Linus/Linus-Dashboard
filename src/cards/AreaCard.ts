@@ -10,7 +10,7 @@ import { AreaStateChip } from "../chips/AreaStateChip";
 import { generic } from "../types/strategy/generic";
 import StrategyArea = generic.StrategyArea;
 import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
-import { getConditionalChip, slugify } from "../utils";
+import { getConditionalChip, getMAEntity, slugify } from "../utils";
 import { EntityRegistryEntry } from "../types/homeassistant/data/entity_registry";
 
 // Utility function to generate badge icon and color
@@ -50,17 +50,19 @@ const getBadgeColor = (entityId: string) => `
 `;
 
 class AreaCard extends AbstractCard {
-  constructor(area: StrategyArea, options: cards.TemplateCardOptions = {}) {
+  constructor(options: cards.AreaCardOptions) {
 
-    super(area);
-    const defaultConfig = this.getDefaultConfig(area);
+    const magicAreaDevice = Helper.magicAreasDevices[options.area_id];
+    const areaState = getMAEntity(magicAreaDevice, "area_state") ?? {};
+
+    const area = Helper.areas[options.area_id];
+
+    super(areaState);
+    const defaultConfig = options?.area_id === "undisclosed" ? this.getUndisclosedAreaConfig(area) : this.getDefaultConfig(area);
     this.config = { ...this.config, ...defaultConfig, ...options };
   }
 
   getDefaultConfig(area: StrategyArea): TemplateCardConfig {
-    if (area.area_id === "undisclosed") {
-      return this.getUndisclosedAreaConfig(area);
-    }
 
     const device = Helper.magicAreasDevices[area.slug];
 

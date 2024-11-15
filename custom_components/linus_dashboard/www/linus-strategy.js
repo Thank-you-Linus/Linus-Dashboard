@@ -310,6 +310,7 @@ class Helper {
     static async initialize(info) {
         // Initialize properties.
         __classPrivateFieldSet(this, _a, info.hass.states, "f", _Helper_hassStates);
+        console.log('info.hass', info.hass);
         __classPrivateFieldSet(this, _a, info.hass.localize, "f", _Helper_hassLocalize);
         console.log('info.hass.resources', info.hass.resources);
         __classPrivateFieldSet(this, _a, deepmerge__WEBPACK_IMPORTED_MODULE_1___default()(_configurationDefaults__WEBPACK_IMPORTED_MODULE_0__.configurationDefaults, info.config?.strategy?.options ?? {}), "f", _Helper_strategyOptions);
@@ -582,7 +583,7 @@ class Helper {
             console.warn("Helper class should be initialized before calling this method!");
         }
         if (area_id) {
-            const newStates = __classPrivateFieldGet(this, _a, "f", _Helper_areas)[area_id].domains["sensor"]?.map((entity_id) => `states['${entity_id}']`);
+            const newStates = __classPrivateFieldGet(this, _a, "f", _Helper_areas)[area_id].domains[device_class]?.map((entity_id) => `states['${entity_id}']`);
             if (newStates) {
                 states.push(...newStates);
             }
@@ -591,11 +592,12 @@ class Helper {
         for (const area of Object.values(__classPrivateFieldGet(this, _a, "f", _Helper_areas))) {
             if (area.area_id === "undisclosed")
                 continue;
-            const newStates = __classPrivateFieldGet(this, _a, "f", _Helper_areas)[area.area_id].domains["sensor"]?.map((entity_id) => `states['${entity_id}']`);
+            const newStates = __classPrivateFieldGet(this, _a, "f", _Helper_areas)[area.area_id].domains[device_class]?.map((entity_id) => `states['${entity_id}']`);
             if (newStates) {
                 states.push(...newStates);
             }
         }
+        console.log('states', device_class, states);
         // Todo: fix that because the temperature not working
         return `{% set entities = [${states}] %} {{ entities | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | sum / entities | length }} {{ state_attr('sensor.outside_temperature', 'unit_of_measurement')}}`;
     }
@@ -1076,220 +1078,6 @@ class AlarmCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractCard 
     }
 }
 _AlarmCard_defaultConfig = new WeakMap();
-
-
-
-/***/ }),
-
-/***/ "./src/cards/AreaCard.ts":
-/*!*******************************!*\
-  !*** ./src/cards/AreaCard.ts ***!
-  \*******************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   AreaCard: () => (/* binding */ AreaCard)
-/* harmony export */ });
-/* harmony import */ var _AbstractCard__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./AbstractCard */ "./src/cards/AbstractCard.ts");
-/* harmony import */ var _Helper__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../Helper */ "./src/Helper.ts");
-/* harmony import */ var _chips_ControlChip__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../chips/ControlChip */ "./src/chips/ControlChip.ts");
-/* harmony import */ var _chips_LinusLightChip__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../chips/LinusLightChip */ "./src/chips/LinusLightChip.ts");
-/* harmony import */ var _chips_LinusClimateChip__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../chips/LinusClimateChip */ "./src/chips/LinusClimateChip.ts");
-/* harmony import */ var _chips_LinusAggregateChip__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../chips/LinusAggregateChip */ "./src/chips/LinusAggregateChip.ts");
-/* harmony import */ var _chips_AreaStateChip__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../chips/AreaStateChip */ "./src/chips/AreaStateChip.ts");
-/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../utils */ "./src/utils.ts");
-
-
-
-
-
-
-
-
-// Utility function to generate badge icon and color
-const getBadgeIcon = (entityId) => `
-  {% set bl = states('${entityId}') %}
-  {% if bl == 'unknown' or bl == 'unavailable' %}
-  {% elif bl | int() < 10 %} mdi:battery-outline
-  {% elif bl | int() < 20 %} mdi:battery-10
-  {% elif bl | int() < 30 %} mdi:battery-20
-  {% elif bl | int() < 40 %} mdi:battery-30
-  {% elif bl | int() < 50 %} mdi:battery-40
-  {% elif bl | int() < 60 %} mdi:battery-50
-  {% elif bl | int() < 70 %} mdi:battery-60
-  {% elif bl | int() < 80 %} mdi:battery-70
-  {% elif bl | int() < 90 %} mdi:battery-80
-  {% elif bl | int() < 100 %} mdi:battery-90
-  {% elif bl | int() == 100 %} mdi:battery
-  {% else %} mdi:battery-unknown
-  {% endif %}
-`;
-const getBadgeColor = (entityId) => `
-  {% set bl = states('${entityId}') %}
-  {% if bl == 'unknown' or bl == 'unavailable' %} disabled
-  {% elif bl | int() < 10 %} red
-  {% elif bl | int() < 20 %} red
-  {% elif bl | int() < 30 %} red
-  {% elif bl | int() < 40 %} orange
-  {% elif bl | int() < 50 %} orange
-  {% elif bl | int() < 60 %} green
-  {% elif bl | int() < 70 %} green
-  {% elif bl | int() < 80 %} green
-  {% elif bl | int() < 90 %} green
-  {% elif bl | int() == 100 %} green
-  {% else %} disabled
-  {% endif %}
-`;
-class AreaCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractCard {
-    constructor(options) {
-        const magicAreaDevice = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.magicAreasDevices[options.area_id];
-        const areaState = (0,_utils__WEBPACK_IMPORTED_MODULE_7__.getMAEntity)(magicAreaDevice, "area_state") ?? {};
-        const area = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.areas[options.area_id];
-        super(areaState);
-        const defaultConfig = options?.area_id === "undisclosed" ? this.getUndisclosedAreaConfig(area) : this.getDefaultConfig(area);
-        this.config = { ...this.config, ...defaultConfig, ...options };
-    }
-    getDefaultConfig(area) {
-        const device = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.magicAreasDevices[area.slug];
-        const { area_state, all_lights, aggregate_temperature, aggregate_battery, aggregate_health, aggregate_window, aggregate_door, aggregate_cover, aggregate_climate, light_control } = device?.entities || {};
-        const icon = area.icon || "mdi:home-outline";
-        const cards = [
-            this.getMainCard(area, icon, aggregate_temperature, aggregate_battery, area_state),
-        ];
-        if (device) {
-            cards.push(this.getChipsCard(area, device, area_state, aggregate_health, aggregate_window, aggregate_door, aggregate_cover, aggregate_climate, all_lights, light_control));
-        }
-        if (all_lights) {
-            cards.push(this.getLightCard(all_lights));
-        }
-        return {
-            type: "custom:stack-in-card",
-            cards: cards
-        };
-    }
-    getUndisclosedAreaConfig(area) {
-        return {
-            type: "custom:mushroom-template-card",
-            primary: area.name,
-            icon: "mdi:devices",
-            icon_color: "grey",
-            fill_container: true,
-            layout: "horizontal",
-            tap_action: { action: "navigate", navigation_path: area.slug },
-            card_mod: { style: this.getCardModStyle() }
-        };
-    }
-    getMainCard(area, icon, aggregate_temperature, aggregate_battery, area_state) {
-        return {
-            type: "custom:mushroom-template-card",
-            primary: area.name,
-            secondary: this.getTemperatureTemplate(aggregate_temperature),
-            icon: icon,
-            icon_color: this.getIconColorTemplate(area_state),
-            fill_container: true,
-            layout: "horizontal",
-            badge_icon: getBadgeIcon(aggregate_battery?.entity_id),
-            badge_color: getBadgeColor(aggregate_battery?.entity_id),
-            tap_action: { action: "navigate", navigation_path: (0,_utils__WEBPACK_IMPORTED_MODULE_7__.slugify)(area.name) },
-            card_mod: { style: this.getCardModStyle() }
-        };
-    }
-    getChipsCard(area, device, area_state, aggregate_health, aggregate_window, aggregate_door, aggregate_cover, aggregate_climate, all_lights, light_control) {
-        return {
-            type: "custom:mushroom-chips-card",
-            alignment: "end",
-            chips: [
-                (0,_utils__WEBPACK_IMPORTED_MODULE_7__.getConditionalChip)(area_state?.entity_id, "unavailable", new _chips_AreaStateChip__WEBPACK_IMPORTED_MODULE_6__.AreaStateChip(device).getChip()),
-                (0,_utils__WEBPACK_IMPORTED_MODULE_7__.getConditionalChip)(aggregate_health?.entity_id, "on", new _chips_LinusAggregateChip__WEBPACK_IMPORTED_MODULE_5__.LinusAggregateChip(device, "health").getChip()),
-                (0,_utils__WEBPACK_IMPORTED_MODULE_7__.getConditionalChip)(aggregate_window?.entity_id, "on", new _chips_LinusAggregateChip__WEBPACK_IMPORTED_MODULE_5__.LinusAggregateChip(device, "window").getChip()),
-                (0,_utils__WEBPACK_IMPORTED_MODULE_7__.getConditionalChip)(aggregate_door?.entity_id, "on", new _chips_LinusAggregateChip__WEBPACK_IMPORTED_MODULE_5__.LinusAggregateChip(device, "door").getChip()),
-                (0,_utils__WEBPACK_IMPORTED_MODULE_7__.getConditionalChip)(aggregate_cover?.entity_id, "on", new _chips_LinusAggregateChip__WEBPACK_IMPORTED_MODULE_5__.LinusAggregateChip(device, "cover").getChip()),
-                (0,_utils__WEBPACK_IMPORTED_MODULE_7__.getConditionalChip)(aggregate_climate?.entity_id, "unavailable", new _chips_LinusClimateChip__WEBPACK_IMPORTED_MODULE_4__.LinusClimateChip(device).getChip()),
-                (0,_utils__WEBPACK_IMPORTED_MODULE_7__.getConditionalChip)(all_lights?.entity_id, "unavailable", new _chips_LinusLightChip__WEBPACK_IMPORTED_MODULE_3__.LinusLightChip(device, area.slug).getChip()),
-                (0,_utils__WEBPACK_IMPORTED_MODULE_7__.getConditionalChip)(all_lights?.entity_id, "unavailable", new _chips_ControlChip__WEBPACK_IMPORTED_MODULE_2__.ControlChip(light_control?.entity_id).getChip())
-            ].filter(Boolean),
-            card_mod: { style: this.getChipsCardModStyle() }
-        };
-    }
-    getLightCard(all_lights) {
-        return {
-            type: "tile",
-            features: [{ type: "light-brightness" }],
-            hide_state: true,
-            entity: all_lights.entity_id,
-            card_mod: { style: this.getLightCardModStyle() }
-        };
-    }
-    getTemperatureTemplate(aggregate_temperature) {
-        if (!aggregate_temperature)
-            return _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.getAverageStateTemplate("temperature");
-        return `
-      {% set t = states('${aggregate_temperature?.entity_id}') %}
-      {% if t != 'unknown' and t != 'unavailable' %}
-        {{ t | float | round(1) }}{{ state_attr('${aggregate_temperature?.entity_id}', 'unit_of_measurement')}}
-      {% endif %}
-    `;
-    }
-    getIconColorTemplate(area_state) {
-        return `
-      {{ "indigo" if "dark" in state_attr('${area_state?.entity_id}', 'states') else "amber" }}
-    `;
-    }
-    getConditionalChip(entityId, state, chip) {
-        return entityId && {
-            type: "conditional",
-            conditions: [{ entity: entityId, state_not: state }],
-            chip: chip
-        };
-    }
-    getCardModStyle() {
-        return `
-      :host {
-        background: #1f1f1f;
-        height: 66px;
-      }
-      mushroom-badge-icon {
-        left: 24px;
-        top: 0px;
-      }
-      ha-card {
-        box-shadow: none!important;
-        border: none;
-      }
-      ha-state-icon {
-        --icon-symbol-size: 40px;
-      }
-
-    `;
-    }
-    getChipsCardModStyle() {
-        return `
-      ha-card {
-        --chip-box-shadow: none;
-        --chip-spacing: 0px;
-        width: -webkit-fill-available;
-        margin-top: -12px;
-      }
-    `;
-    }
-    getLightCardModStyle() {
-        return `
-      ha-card {
-        box-shadow: none!important;
-        border: none;
-        margin-top: -12px;
-      }
-      ha-tile-icon {
-        display: none;
-      }
-      ha-tile-info {
-        display: none;
-      }
-    `;
-    }
-}
 
 
 
@@ -1805,6 +1593,220 @@ _FanCard_defaultConfig = new WeakMap();
 
 /***/ }),
 
+/***/ "./src/cards/HomeAreaCard.ts":
+/*!***********************************!*\
+  !*** ./src/cards/HomeAreaCard.ts ***!
+  \***********************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   HomeAreaCard: () => (/* binding */ HomeAreaCard)
+/* harmony export */ });
+/* harmony import */ var _AbstractCard__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./AbstractCard */ "./src/cards/AbstractCard.ts");
+/* harmony import */ var _Helper__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../Helper */ "./src/Helper.ts");
+/* harmony import */ var _chips_ControlChip__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../chips/ControlChip */ "./src/chips/ControlChip.ts");
+/* harmony import */ var _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../chips/AggregateChip */ "./src/chips/AggregateChip.ts");
+/* harmony import */ var _chips_AreaStateChip__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../chips/AreaStateChip */ "./src/chips/AreaStateChip.ts");
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../utils */ "./src/utils.ts");
+/* harmony import */ var _chips_ClimateChip__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../chips/ClimateChip */ "./src/chips/ClimateChip.ts");
+/* harmony import */ var _chips_LightChip__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../chips/LightChip */ "./src/chips/LightChip.ts");
+
+
+
+
+
+
+
+
+// Utility function to generate badge icon and color
+const getBadgeIcon = (entityId) => `
+  {% set bl = states('${entityId}') %}
+  {% if bl == 'unknown' or bl == 'unavailable' %}
+  {% elif bl | int() < 10 %} mdi:battery-outline
+  {% elif bl | int() < 20 %} mdi:battery-10
+  {% elif bl | int() < 30 %} mdi:battery-20
+  {% elif bl | int() < 40 %} mdi:battery-30
+  {% elif bl | int() < 50 %} mdi:battery-40
+  {% elif bl | int() < 60 %} mdi:battery-50
+  {% elif bl | int() < 70 %} mdi:battery-60
+  {% elif bl | int() < 80 %} mdi:battery-70
+  {% elif bl | int() < 90 %} mdi:battery-80
+  {% elif bl | int() < 100 %} mdi:battery-90
+  {% elif bl | int() == 100 %} mdi:battery
+  {% else %} mdi:battery-unknown
+  {% endif %}
+`;
+const getBadgeColor = (entityId) => `
+  {% set bl = states('${entityId}') %}
+  {% if bl == 'unknown' or bl == 'unavailable' %} disabled
+  {% elif bl | int() < 10 %} red
+  {% elif bl | int() < 20 %} red
+  {% elif bl | int() < 30 %} red
+  {% elif bl | int() < 40 %} orange
+  {% elif bl | int() < 50 %} orange
+  {% elif bl | int() < 60 %} green
+  {% elif bl | int() < 70 %} green
+  {% elif bl | int() < 80 %} green
+  {% elif bl | int() < 90 %} green
+  {% elif bl | int() == 100 %} green
+  {% else %} disabled
+  {% endif %}
+`;
+class HomeAreaCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractCard {
+    constructor(options) {
+        const magicAreaDevice = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.magicAreasDevices[options.area_id];
+        const areaState = (0,_utils__WEBPACK_IMPORTED_MODULE_5__.getMAEntity)(magicAreaDevice, "area_state") ?? {};
+        const area = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.areas[options.area_id];
+        super(areaState);
+        const defaultConfig = options?.area_id === "undisclosed" ? this.getUndisclosedAreaConfig(area) : this.getDefaultConfig(area);
+        this.config = { ...this.config, ...defaultConfig, ...options };
+    }
+    getDefaultConfig(area) {
+        const device = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.magicAreasDevices[area.slug];
+        const { area_state, all_lights, aggregate_temperature, aggregate_battery, aggregate_health, aggregate_window, aggregate_door, aggregate_cover, aggregate_climate, light_control } = device?.entities || {};
+        const icon = area.icon || "mdi:home-outline";
+        const cards = [
+            this.getMainCard(area, icon, aggregate_temperature, aggregate_battery, area_state),
+        ];
+        if (device) {
+            cards.push(this.getChipsCard(area, device, area_state, aggregate_health, aggregate_window, aggregate_door, aggregate_cover, aggregate_climate, all_lights, light_control));
+        }
+        if (all_lights) {
+            cards.push(this.getLightCard(all_lights));
+        }
+        return {
+            type: "custom:stack-in-card",
+            cards: cards
+        };
+    }
+    getUndisclosedAreaConfig(area) {
+        return {
+            type: "custom:mushroom-template-card",
+            primary: area.name,
+            icon: "mdi:devices",
+            icon_color: "grey",
+            fill_container: true,
+            layout: "horizontal",
+            tap_action: { action: "navigate", navigation_path: area.slug },
+            card_mod: { style: this.getCardModStyle() }
+        };
+    }
+    getMainCard(area, icon, aggregate_temperature, aggregate_battery, area_state) {
+        return {
+            type: "custom:mushroom-template-card",
+            primary: area.name,
+            secondary: this.getTemperatureTemplate(aggregate_temperature),
+            icon: icon,
+            icon_color: this.getIconColorTemplate(area_state),
+            fill_container: true,
+            layout: "horizontal",
+            badge_icon: getBadgeIcon(aggregate_battery?.entity_id),
+            badge_color: getBadgeColor(aggregate_battery?.entity_id),
+            tap_action: { action: "navigate", navigation_path: (0,_utils__WEBPACK_IMPORTED_MODULE_5__.slugify)(area.name) },
+            card_mod: { style: this.getCardModStyle() }
+        };
+    }
+    getChipsCard(area, device, area_state, aggregate_health, aggregate_window, aggregate_door, aggregate_cover, aggregate_climate, all_lights, light_control) {
+        return {
+            type: "custom:mushroom-chips-card",
+            alignment: "end",
+            chips: [
+                (0,_utils__WEBPACK_IMPORTED_MODULE_5__.getConditionalChip)(area_state?.entity_id, "unavailable", new _chips_AreaStateChip__WEBPACK_IMPORTED_MODULE_4__.AreaStateChip(device).getChip()),
+                (0,_utils__WEBPACK_IMPORTED_MODULE_5__.getConditionalChip)(aggregate_health?.entity_id, "on", new _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_3__.AggregateChip({ device_class: "health" }).getChip()),
+                (0,_utils__WEBPACK_IMPORTED_MODULE_5__.getConditionalChip)(aggregate_window?.entity_id, "on", new _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_3__.AggregateChip({ device_class: "window" }).getChip()),
+                (0,_utils__WEBPACK_IMPORTED_MODULE_5__.getConditionalChip)(aggregate_door?.entity_id, "on", new _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_3__.AggregateChip({ device_class: "door" }).getChip()),
+                (0,_utils__WEBPACK_IMPORTED_MODULE_5__.getConditionalChip)(aggregate_cover?.entity_id, "on", new _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_3__.AggregateChip({ device_class: "cover" }).getChip()),
+                (0,_utils__WEBPACK_IMPORTED_MODULE_5__.getConditionalChip)(aggregate_climate?.entity_id, "unavailable", new _chips_ClimateChip__WEBPACK_IMPORTED_MODULE_6__.ClimateChip().getChip()),
+                (0,_utils__WEBPACK_IMPORTED_MODULE_5__.getConditionalChip)(all_lights?.entity_id, "unavailable", new _chips_LightChip__WEBPACK_IMPORTED_MODULE_7__.LightChip({ area_id: area.slug }).getChip()),
+                (0,_utils__WEBPACK_IMPORTED_MODULE_5__.getConditionalChip)(all_lights?.entity_id, "unavailable", new _chips_ControlChip__WEBPACK_IMPORTED_MODULE_2__.ControlChip(light_control?.entity_id).getChip())
+            ].filter(Boolean),
+            card_mod: { style: this.getChipsCardModStyle() }
+        };
+    }
+    getLightCard(all_lights) {
+        return {
+            type: "tile",
+            features: [{ type: "light-brightness" }],
+            hide_state: true,
+            entity: all_lights.entity_id,
+            card_mod: { style: this.getLightCardModStyle() }
+        };
+    }
+    getTemperatureTemplate(aggregate_temperature) {
+        if (!aggregate_temperature)
+            return _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.getAverageStateTemplate("temperature");
+        return `
+      {% set t = states('${aggregate_temperature?.entity_id}') %}
+      {% if t != 'unknown' and t != 'unavailable' %}
+        {{ t | float | round(1) }}{{ state_attr('${aggregate_temperature?.entity_id}', 'unit_of_measurement')}}
+      {% endif %}
+    `;
+    }
+    getIconColorTemplate(area_state) {
+        return `
+      {{ "indigo" if "dark" in state_attr('${area_state?.entity_id}', 'states') else "amber" }}
+    `;
+    }
+    getConditionalChip(entityId, state, chip) {
+        return entityId && {
+            type: "conditional",
+            conditions: [{ entity: entityId, state_not: state }],
+            chip: chip
+        };
+    }
+    getCardModStyle() {
+        return `
+      :host {
+        background: #1f1f1f;
+        height: 66px;
+      }
+      mushroom-badge-icon {
+        left: 24px;
+        top: 0px;
+      }
+      ha-card {
+        box-shadow: none!important;
+        border: none;
+      }
+      ha-state-icon {
+        --icon-symbol-size: 40px;
+      }
+
+    `;
+    }
+    getChipsCardModStyle() {
+        return `
+      ha-card {
+        --chip-box-shadow: none;
+        --chip-spacing: 0px;
+        width: -webkit-fill-available;
+        margin-top: -12px;
+      }
+    `;
+    }
+    getLightCardModStyle() {
+        return `
+      ha-card {
+        box-shadow: none!important;
+        border: none;
+        margin-top: -12px;
+      }
+      ha-tile-icon {
+        display: none;
+      }
+      ha-tile-info {
+        display: none;
+      }
+    `;
+    }
+}
+
+
+
+/***/ }),
+
 /***/ "./src/cards/LightCard.ts":
 /*!********************************!*\
   !*** ./src/cards/LightCard.ts ***!
@@ -1933,7 +1935,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var _AbstractCard__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./AbstractCard */ "./src/cards/AbstractCard.ts");
 /* harmony import */ var _Helper__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../Helper */ "./src/Helper.ts");
-/* harmony import */ var _chips_LinusAggregateChip__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../chips/LinusAggregateChip */ "./src/chips/LinusAggregateChip.ts");
+/* harmony import */ var _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../chips/AggregateChip */ "./src/chips/AggregateChip.ts");
 /* harmony import */ var _chips_AreaStateChip__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../chips/AreaStateChip */ "./src/chips/AreaStateChip.ts");
 /* harmony import */ var _chips_AreaScenesChips__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../chips/AreaScenesChips */ "./src/chips/AreaScenesChips.ts");
 
@@ -1994,7 +1996,7 @@ class MainAreaCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractCa
                                                 state_not: "unavailable"
                                             }
                                         ],
-                                        chip: new _chips_LinusAggregateChip__WEBPACK_IMPORTED_MODULE_2__.LinusAggregateChip(device, "temperature", true, true).getChip(),
+                                        chip: new _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_2__.AggregateChip({ device_class: "temperature", show_content: false, area_id: area.slug }).getChip(),
                                     },
                                     aggregate_humidity?.entity_id && {
                                         type: "conditional",
@@ -2004,7 +2006,7 @@ class MainAreaCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractCa
                                                 state_not: "unavailable"
                                             }
                                         ],
-                                        chip: new _chips_LinusAggregateChip__WEBPACK_IMPORTED_MODULE_2__.LinusAggregateChip(device, "humidity", true, true).getChip(),
+                                        chip: new _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_2__.AggregateChip({ device_class: "humidity", show_content: false, area_id: area.slug }).getChip(),
                                     },
                                     aggregate_illuminance?.entity_id && {
                                         type: "conditional",
@@ -2014,7 +2016,7 @@ class MainAreaCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractCa
                                                 state_not: "unavailable"
                                             }
                                         ],
-                                        chip: new _chips_LinusAggregateChip__WEBPACK_IMPORTED_MODULE_2__.LinusAggregateChip(device, "illuminance", true, true).getChip(),
+                                        chip: new _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_2__.AggregateChip({ device_class: "illuminance", show_content: false, area_id: area.slug }).getChip(),
                                     },
                                 ].filter(Boolean),
                                 card_mod: {
@@ -2041,7 +2043,7 @@ class MainAreaCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractCa
                                                 state_not: "unavailable"
                                             }
                                         ],
-                                        chip: new _chips_LinusAggregateChip__WEBPACK_IMPORTED_MODULE_2__.LinusAggregateChip(device, "window", true, true).getChip(),
+                                        chip: new _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_2__.AggregateChip({ device_class: "window", show_content: false, area_id: area.slug }).getChip(),
                                     },
                                     aggregate_door?.entity_id && {
                                         type: "conditional",
@@ -2051,7 +2053,7 @@ class MainAreaCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractCa
                                                 state_not: "unavailable"
                                             }
                                         ],
-                                        chip: new _chips_LinusAggregateChip__WEBPACK_IMPORTED_MODULE_2__.LinusAggregateChip(device, "door", true, true).getChip(),
+                                        chip: new _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_2__.AggregateChip({ device_class: "door", show_content: false, area_id: area.slug }).getChip(),
                                     },
                                     aggregate_health?.entity_id && {
                                         type: "conditional",
@@ -2061,7 +2063,7 @@ class MainAreaCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractCa
                                                 state_not: "unavailable"
                                             }
                                         ],
-                                        chip: new _chips_LinusAggregateChip__WEBPACK_IMPORTED_MODULE_2__.LinusAggregateChip(device, "health", true, true).getChip(),
+                                        chip: new _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_2__.AggregateChip({ device_class: "health", show_content: false, area_id: area.slug }).getChip(),
                                     },
                                     aggregate_cover?.entity_id && {
                                         type: "conditional",
@@ -2071,7 +2073,7 @@ class MainAreaCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractCa
                                                 state_not: "unavailable"
                                             }
                                         ],
-                                        chip: new _chips_LinusAggregateChip__WEBPACK_IMPORTED_MODULE_2__.LinusAggregateChip(device, "cover", true, true).getChip(),
+                                        chip: new _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_2__.AggregateChip({ device_class: "cover", show_content: false, area_id: area.slug }).getChip(),
                                     },
                                     area_state?.entity_id && {
                                         type: "conditional",
@@ -2767,6 +2769,120 @@ class AbstractChip {
 
 /***/ }),
 
+/***/ "./src/chips/AggregateChip.ts":
+/*!************************************!*\
+  !*** ./src/chips/AggregateChip.ts ***!
+  \************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   AggregateChip: () => (/* binding */ AggregateChip)
+/* harmony export */ });
+/* harmony import */ var _popups_AggregateAreaListPopup__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../popups/AggregateAreaListPopup */ "./src/popups/AggregateAreaListPopup.ts");
+/* harmony import */ var _popups_AggregateListPopup__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../popups/AggregateListPopup */ "./src/popups/AggregateListPopup.ts");
+/* harmony import */ var _variables__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../variables */ "./src/variables.ts");
+/* harmony import */ var _AbstractChip__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./AbstractChip */ "./src/chips/AbstractChip.ts");
+/* harmony import */ var _Helper__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../Helper */ "./src/Helper.ts");
+
+
+
+
+
+// noinspection JSUnusedGlobalSymbols Class is dynamically imported.
+/**
+ * Climate Chip class.
+ *
+ * Used to create a chip to indicate climate level.
+ */
+class AggregateChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_3__.AbstractChip {
+    /**
+     * Default configuration of the chip.
+     *
+     * @type {TemplateChipConfig | undefined}
+     *
+     */
+    getDefaultConfig({ device_class, show_content = true, area_id }) {
+        const domain = _variables__WEBPACK_IMPORTED_MODULE_2__.DEVICE_CLASSES.sensor.includes(device_class) ? "sensor" : "binary_sensor";
+        let icon = _variables__WEBPACK_IMPORTED_MODULE_2__.DOMAIN_ICONS[device_class];
+        let icon_color = "";
+        let content = "";
+        const device = _Helper__WEBPACK_IMPORTED_MODULE_4__.Helper.magicAreasDevices[area_id ?? "global"];
+        const magicEntity = device?.entities[`aggregate_${device_class}`];
+        if (!magicEntity)
+            return undefined;
+        if (domain === "binary_sensor") {
+            content = _Helper__WEBPACK_IMPORTED_MODULE_4__.Helper.getDeviceClassCountTemplate(domain, device_class, "ne", "off", area_id);
+            icon_color = `{{ 'red' if expand(states.${magicEntity.entity_id}.attributes.sensors is defined and states.${magicEntity.entity_id}.attributes.sensors) | selectattr( 'state', 'eq', 'on') | list | count > 0 else 'grey' }}`;
+            content = show_content ? `{{ expand(states.${magicEntity.entity_id}.attributes.sensors is defined and states.${magicEntity.entity_id}.attributes.sensors) | selectattr( 'state', 'eq', 'on') | list | count }}` : "";
+        }
+        if (domain === "sensor") {
+            content = _Helper__WEBPACK_IMPORTED_MODULE_4__.Helper.getAverageStateTemplate("temperature", area_id);
+            if (device_class === "battery") {
+                icon_color = `{% set bl = states('${magicEntity.entity_id}') %}
+        {% if bl == 'unknown' or bl == 'unavailable' %}
+        {% elif bl | int() < 30 %} red
+        {% elif bl | int() < 50 %} orange
+        {% elif bl | int() <= 100 %} green
+        {% else %} disabled{% endif %}`;
+                icon = `{% set bl = states('${magicEntity.entity_id}') %}
+        {% if bl == 'unknown' or bl == 'unavailable' %}
+        {% elif bl | int() < 10 %}mdi:battery-outline
+        {% elif bl | int() < 20 %}  mdi:battery1
+        {% elif bl | int() < 30 %}  mdi:battery-20
+        {% elif bl | int() < 40 %}  mdi:battery-30
+        {% elif bl | int() < 50 %}  mdi:battery-40
+        {% elif bl | int() < 60 %}  mdi:battery-50
+        {% elif bl | int() < 70 %}  mdi:battery-60
+        {% elif bl | int() < 80 %}  mdi:battery-70
+        {% elif bl | int() < 90 %}  mdi:battery-80
+        {% elif bl | int() < 100 %}  mdi:battery-90
+        {% elif bl | int() == 100 %}  mdi:battery
+        {% else %}  mdi:battery{% endif %}`;
+                content = show_content ? `{{ states('${magicEntity.entity_id}') | int | round(1) }} %` : "";
+            }
+            if (device_class === "temperature")
+                icon_color = `{% set bl = states('${magicEntity.entity_id}') | int() %} {% if bl < 20 %} blue
+      {% elif bl < 30 %} orange
+      {% elif bl >= 30 %} red{% else %} disabled{% endif %}`;
+            if (device_class === "illuminance")
+                icon_color = `{{ 'blue' if 'dark' in state_attr('${device?.entities.area_state?.entity_id}', 'states') else 'amber' }}`;
+            content = show_content ? `{{ states.${magicEntity.entity_id}.state | float | round(1) }} {{ states.${magicEntity.entity_id}.attributes.unit_of_measurement }}` : "";
+        }
+        if (device_class === "cover") {
+            icon_color = `{{ 'red' if is_state('${magicEntity.entity_id}', 'open') else 'grey' }}`;
+            content = show_content ? `{{ expand(states.${magicEntity.entity_id}.attributes.entity_id) | selectattr( 'state', 'eq', 'open') | list | count }}` : "";
+        }
+        if (device_class === "health") {
+            icon_color = `{{ 'red' if is_state(entity, 'on') else 'green' }}`;
+        }
+        const tap_action = area_id ? new _popups_AggregateAreaListPopup__WEBPACK_IMPORTED_MODULE_0__.AggregateAreaListPopup(magicEntity.entity_id, device_class).getPopup() : new _popups_AggregateListPopup__WEBPACK_IMPORTED_MODULE_1__.AggregateListPopup(magicEntity.entity_id, device_class).getPopup();
+        return {
+            entity: magicEntity.entity_id,
+            icon_color: icon_color,
+            icon: icon,
+            content: content,
+            tap_action: tap_action
+        };
+    }
+    /**
+     * Class Constructor.
+     *
+     * @param {chips.AggregateChipOptions} options The chip options.
+     */
+    constructor(options) {
+        super();
+        const { device_class, show_content = true, area_id } = options;
+        const defaultConfig = this.getDefaultConfig({ device_class, show_content, area_id });
+        this.config = Object.assign(this.config, defaultConfig);
+    }
+}
+
+
+
+/***/ }),
+
 /***/ "./src/chips/AlarmChip.ts":
 /*!********************************!*\
   !*** ./src/chips/AlarmChip.ts ***!
@@ -3058,70 +3174,6 @@ class AreaStateChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_2__.AbstractC
 
 /***/ }),
 
-/***/ "./src/chips/BinarySensorChip.ts":
-/*!***************************************!*\
-  !*** ./src/chips/BinarySensorChip.ts ***!
-  \***************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   BinarySensorChip: () => (/* binding */ BinarySensorChip)
-/* harmony export */ });
-/* harmony import */ var _Helper__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../Helper */ "./src/Helper.ts");
-/* harmony import */ var _AbstractChip__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./AbstractChip */ "./src/chips/AbstractChip.ts");
-/* harmony import */ var _variables__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../variables */ "./src/variables.ts");
-var __classPrivateFieldGet = (undefined && undefined.__classPrivateFieldGet) || function (receiver, state, kind, f) {
-    if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a getter");
-    if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
-    return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
-};
-var _BinarySensorChip_defaultConfig;
-
-
-
-// noinspection JSUnusedGlobalSymbols Class is dynamically imported.
-/**
- * BinarySensor Chip class.
- *
- * Used to create a chip to indicate how many climates are operating.
- */
-class BinarySensorChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.AbstractChip {
-    /**
-     * Class Constructor.
-     *
-     * @param {chips.TemplateChipOptions} options The chip options.
-     */
-    constructor(options = {}) {
-        super();
-        /**
-         * Default configuration of the chip.
-         *
-         * @type {TemplateChipConfig}
-         *
-         * @readonly
-         * @private
-         */
-        _BinarySensorChip_defaultConfig.set(this, {
-            type: "template",
-            icon: _variables__WEBPACK_IMPORTED_MODULE_2__.DOMAIN_ICONS["binary_sensor"],
-            icon_color: "orange",
-            content: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getCountTemplate("binary_sensor", "eq", "on"),
-            tap_action: {
-                action: "navigate",
-                navigation_path: "binary_sensors",
-            },
-        });
-        this.config = Object.assign(this.config, __classPrivateFieldGet(this, _BinarySensorChip_defaultConfig, "f"), options);
-    }
-}
-_BinarySensorChip_defaultConfig = new WeakMap();
-
-
-
-/***/ }),
-
 /***/ "./src/chips/ClimateChip.ts":
 /*!**********************************!*\
   !*** ./src/chips/ClimateChip.ts ***!
@@ -3135,12 +3187,14 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var _Helper__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../Helper */ "./src/Helper.ts");
 /* harmony import */ var _AbstractChip__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./AbstractChip */ "./src/chips/AbstractChip.ts");
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../utils */ "./src/utils.ts");
 var __classPrivateFieldGet = (undefined && undefined.__classPrivateFieldGet) || function (receiver, state, kind, f) {
     if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a getter");
     if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
     return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
 };
 var _ClimateChip_defaultConfig;
+
 
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
@@ -3153,7 +3207,7 @@ class ClimateChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.AbstractChi
     /**
      * Class Constructor.
      *
-     * @param {chips.TemplateChipOptions} options The chip options.
+     * @param {chips.ChipOptions} options The chip options.
      */
     constructor(options = {}) {
         super();
@@ -3169,12 +3223,18 @@ class ClimateChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.AbstractChi
             type: "template",
             icon: "mdi:thermostat",
             icon_color: "orange",
-            content: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getCountTemplate("climate", "ne", "off"),
+            content: "none",
             tap_action: {
                 action: "navigate",
                 navigation_path: "climates",
             },
         });
+        __classPrivateFieldGet(this, _ClimateChip_defaultConfig, "f").content = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getCountTemplate("climate", "ne", "off", options?.area_id);
+        const magicAreaDevice = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices[options?.area_id ?? options?.floor_id ?? "global"];
+        const magicAreasLight = (0,_utils__WEBPACK_IMPORTED_MODULE_2__.getMAEntity)(magicAreaDevice, "climate");
+        if (magicAreasLight) {
+            __classPrivateFieldGet(this, _ClimateChip_defaultConfig, "f").entity = magicAreasLight.entity_id;
+        }
         this.config = Object.assign(this.config, __classPrivateFieldGet(this, _ClimateChip_defaultConfig, "f"), options);
     }
 }
@@ -3384,70 +3444,6 @@ _CoverChip_defaultConfig = new WeakMap();
 
 /***/ }),
 
-/***/ "./src/chips/DoorChip.ts":
-/*!*******************************!*\
-  !*** ./src/chips/DoorChip.ts ***!
-  \*******************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   DoorChip: () => (/* binding */ DoorChip)
-/* harmony export */ });
-/* harmony import */ var _Helper__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../Helper */ "./src/Helper.ts");
-/* harmony import */ var _AbstractChip__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./AbstractChip */ "./src/chips/AbstractChip.ts");
-/* harmony import */ var _variables__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../variables */ "./src/variables.ts");
-var __classPrivateFieldGet = (undefined && undefined.__classPrivateFieldGet) || function (receiver, state, kind, f) {
-    if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a getter");
-    if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
-    return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
-};
-var _DoorChip_defaultConfig;
-
-
-
-// noinspection JSUnusedGlobalSymbols Class is dynamically imported.
-/**
- * Door Chip class.
- *
- * Used to create a chip to indicate how many doors are operating.
- */
-class DoorChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.AbstractChip {
-    /**
-     * Class Constructor.
-     *
-     * @param {chips.TemplateChipOptions} options The chip options.
-     */
-    constructor(options = {}) {
-        super();
-        /**
-         * Default configuration of the chip.
-         *
-         * @type {TemplateChipConfig}
-         *
-         * @readonly
-         * @private
-         */
-        _DoorChip_defaultConfig.set(this, {
-            type: "template",
-            icon: _variables__WEBPACK_IMPORTED_MODULE_2__.DOMAIN_STATE_ICONS.binary_sensor.door.on,
-            icon_color: "grey",
-            content: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getDeviceClassCountTemplate("binary_sensor", "door", "ne", "off"),
-            tap_action: {
-                action: "navigate",
-                navigation_path: "security-details",
-            },
-        });
-        this.config = Object.assign(this.config, __classPrivateFieldGet(this, _DoorChip_defaultConfig, "f"), options);
-    }
-}
-_DoorChip_defaultConfig = new WeakMap();
-
-
-
-/***/ }),
-
 /***/ "./src/chips/FanChip.ts":
 /*!******************************!*\
   !*** ./src/chips/FanChip.ts ***!
@@ -3580,280 +3576,6 @@ _LightChip_defaultConfig = new WeakMap();
 
 /***/ }),
 
-/***/ "./src/chips/LinusAggregateChip.ts":
-/*!*****************************************!*\
-  !*** ./src/chips/LinusAggregateChip.ts ***!
-  \*****************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   LinusAggregateChip: () => (/* binding */ LinusAggregateChip)
-/* harmony export */ });
-/* harmony import */ var _popups_AggregateAreaListPopup__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../popups/AggregateAreaListPopup */ "./src/popups/AggregateAreaListPopup.ts");
-/* harmony import */ var _popups_AggregateListPopup__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../popups/AggregateListPopup */ "./src/popups/AggregateListPopup.ts");
-/* harmony import */ var _variables__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../variables */ "./src/variables.ts");
-/* harmony import */ var _AbstractChip__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./AbstractChip */ "./src/chips/AbstractChip.ts");
-
-
-
-
-// noinspection JSUnusedGlobalSymbols Class is dynamically imported.
-/**
- * Climate Chip class.
- *
- * Used to create a chip to indicate climate level.
- */
-class LinusAggregateChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_3__.AbstractChip {
-    /**
-     * Default configuration of the chip.
-     *
-     * @type {ConditionalChipConfig | undefined}
-     *
-     */
-    getDefaultConfig(device, deviceClass, showContent, by_area = false) {
-        const entity = device?.entities[`aggregate_${deviceClass}`];
-        if (!entity?.entity_id)
-            return undefined;
-        const domain = entity?.entity_id.split(".")[0];
-        let icon = _variables__WEBPACK_IMPORTED_MODULE_2__.DOMAIN_ICONS[deviceClass];
-        let icon_color = '';
-        let content = '';
-        if (domain === "binary_sensor") {
-            icon_color = `{{ 'red' if expand(states.${entity?.entity_id}.attributes.sensors is defined and states.${entity?.entity_id}.attributes.sensors) | selectattr( 'state', 'eq', 'on') | list | count > 0 else 'grey' }}`;
-            content = showContent ? `{{ expand(states.${entity?.entity_id}.attributes.sensors is defined and states.${entity?.entity_id}.attributes.sensors) | selectattr( 'state', 'eq', 'on') | list | count }}` : "";
-        }
-        if (domain === "sensor") {
-            if (deviceClass === "battery") {
-                icon_color = `{% set bl = states('${entity?.entity_id}') %}
-        {% if bl == 'unknown' or bl == 'unavailable' %}
-        {% elif bl | int() < 30 %} red
-        {% elif bl | int() < 50 %} orange
-        {% elif bl | int() <= 100 %} green
-        {% else %} disabled{% endif %}`;
-                icon = `{% set bl = states('${entity?.entity_id}') %}
-        {% if bl == 'unknown' or bl == 'unavailable' %}
-        {% elif bl | int() < 10 %}mdi:battery-outline
-        {% elif bl | int() < 20 %}  mdi:battery1
-        {% elif bl | int() < 30 %}  mdi:battery-20
-        {% elif bl | int() < 40 %}  mdi:battery-30
-        {% elif bl | int() < 50 %}  mdi:battery-40
-        {% elif bl | int() < 60 %}  mdi:battery-50
-        {% elif bl | int() < 70 %}  mdi:battery-60
-        {% elif bl | int() < 80 %}  mdi:battery-70
-        {% elif bl | int() < 90 %}  mdi:battery-80
-        {% elif bl | int() < 100 %}  mdi:battery-90
-        {% elif bl | int() == 100 %}  mdi:battery
-        {% else %}  mdi:battery{% endif %} `;
-                content = showContent ? `{{ states('${entity?.entity_id}') | int | round(1) }} %` : "";
-            }
-            if (deviceClass === "temperature")
-                icon_color = `{% set bl = states('${entity?.entity_id}') | int() %} {% if bl < 20 %} blue
-      {% elif bl < 30 %} orange
-      {% elif bl >= 30 %} red{% else %} disabled{% endif %}`;
-            if (deviceClass === "illuminance")
-                icon_color = `{{ 'blue' if 'dark' in state_attr('${device?.entities.area_state?.entity_id}', 'states') else 'amber' }}`;
-            content = showContent ? `{{ states.${entity?.entity_id}.state | float | round(1) }} {{ states.${entity?.entity_id}.attributes.unit_of_measurement }}` : "";
-        }
-        if (deviceClass === "cover") {
-            icon_color = `{{ 'red' if is_state('${entity?.entity_id}', 'open') else 'grey' }}`;
-            content = showContent ? `{{ expand(states.${entity?.entity_id}.attributes.entity_id) | selectattr( 'state', 'eq', 'open') | list | count }}` : "";
-        }
-        if (deviceClass === "health") {
-            icon_color = `{{ 'red' if is_state(entity, 'on') else 'green' }}`;
-        }
-        const tap_action = by_area ? new _popups_AggregateAreaListPopup__WEBPACK_IMPORTED_MODULE_0__.AggregateAreaListPopup(entity?.entity_id, deviceClass).getPopup() : new _popups_AggregateListPopup__WEBPACK_IMPORTED_MODULE_1__.AggregateListPopup(entity?.entity_id, deviceClass).getPopup();
-        return {
-            type: "conditional",
-            conditions: [
-                {
-                    entity: entity?.entity_id ?? "",
-                    state_not: "unavailable"
-                }
-            ],
-            chip: {
-                type: "template",
-                entity: entity?.entity_id,
-                icon_color: icon_color,
-                icon: icon,
-                content: content,
-                tap_action: tap_action
-            },
-        };
-    }
-    /**
-     * Class Constructor.
-     *
-     * @param {chips.TemplateChipOptions} options The chip options.
-     */
-    constructor(device, deviceClass, showContent = false, by_area = false) {
-        super();
-        const defaultConfig = this.getDefaultConfig(device, deviceClass, showContent, by_area);
-        this.config = Object.assign(this.config, defaultConfig);
-    }
-}
-
-
-
-/***/ }),
-
-/***/ "./src/chips/LinusAlarmChip.ts":
-/*!*************************************!*\
-  !*** ./src/chips/LinusAlarmChip.ts ***!
-  \*************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   LinusAlarmChip: () => (/* binding */ LinusAlarmChip)
-/* harmony export */ });
-/* harmony import */ var _AbstractChip__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./AbstractChip */ "./src/chips/AbstractChip.ts");
-
-// noinspection JSUnusedGlobalSymbols Class is dynamically imported.
-/**
- * Climate Chip class.
- *
- * Used to create a chip to indicate climate level.
- */
-class LinusAlarmChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_0__.AbstractChip {
-    /**
-     * Default configuration of the chip.
-     *
-     * @type {ConditionalChipConfig}
-     *
-     */
-    getDefaultConfig(entity_id) {
-        return {
-            type: "alarm-control-panel",
-            entity: entity_id,
-            tap_action: {
-                action: "more-info"
-            },
-        };
-    }
-    /**
-     * Class Constructor.
-     *
-     * @param {chips.TemplateChipOptions} options The chip options.
-     */
-    constructor(entityId) {
-        super();
-        const defaultConfig = this.getDefaultConfig(entityId);
-        this.config = Object.assign(this.config, defaultConfig);
-    }
-}
-
-
-
-/***/ }),
-
-/***/ "./src/chips/LinusClimateChip.ts":
-/*!***************************************!*\
-  !*** ./src/chips/LinusClimateChip.ts ***!
-  \***************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   LinusClimateChip: () => (/* binding */ LinusClimateChip)
-/* harmony export */ });
-/* harmony import */ var _AbstractChip__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./AbstractChip */ "./src/chips/AbstractChip.ts");
-
-// noinspection JSUnusedGlobalSymbols Class is dynamically imported.
-/**
- * Climate Chip class.
- *
- * Used to create a chip to indicate climate level.
- */
-class LinusClimateChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_0__.AbstractChip {
-    /**
-     * Default configuration of the chip.
-     *
-     * @type {ConditionalChipConfig}
-     *
-     */
-    getDefaultConfig(device, showContent) {
-        return {
-            "type": "template",
-            "entity": device?.entities.aggregate_climate?.entity_id,
-            "icon_color": `{{ 'orange' if is_state('${device?.entities.aggregate_climate?.entity_id}', 'heat') else 'grey' }}`,
-            "icon": "mdi:thermostat",
-            "content": showContent ? `{{ states.${device?.entities.aggregate_climate?.entity_id}.attributes.preset_mode }}` : "",
-            // "tap_action": climateList(hass, area)
-        };
-    }
-    /**
-     * Class Constructor.
-     *
-     * @param {chips.TemplateChipOptions} options The chip options.
-     */
-    constructor(device, showContent = false) {
-        super();
-        const defaultConfig = this.getDefaultConfig(device, showContent);
-        this.config = Object.assign(this.config, defaultConfig);
-    }
-}
-
-
-
-/***/ }),
-
-/***/ "./src/chips/LinusLightChip.ts":
-/*!*************************************!*\
-  !*** ./src/chips/LinusLightChip.ts ***!
-  \*************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   LinusLightChip: () => (/* binding */ LinusLightChip)
-/* harmony export */ });
-/* harmony import */ var _AbstractChip__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./AbstractChip */ "./src/chips/AbstractChip.ts");
-/* harmony import */ var _popups_AggregateListPopup__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../popups/AggregateListPopup */ "./src/popups/AggregateListPopup.ts");
-/* harmony import */ var _variables__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../variables */ "./src/variables.ts");
-
-
-
-// noinspection JSUnusedGlobalSymbols Class is dynamically imported.
-/**
- * Light Chip class.
- *
- * Used to create a chip to indicate how many lights are on and to turn all off.
- */
-class LinusLightChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_0__.AbstractChip {
-    /**
-     * Class Constructor.
-     *
-     * @param {chips.TemplateChipOptions} options The chip options.
-     */
-    constructor(device, area_id, show_content, show_group) {
-        super();
-        const defaultConfig = {
-            type: "template",
-            entity: device?.entities.all_lights?.entity_id,
-            icon_color: `{{ 'amber' if expand(states.${device?.entities.all_lights?.entity_id}.attributes.entity_id) | selectattr( 'state', 'eq', 'on') | list | count > 0 else 'grey' }}`,
-            icon: "mdi:lightbulb-group",
-            content: show_content ? `{{ expand(states.${device?.entities.all_lights?.entity_id}.attributes.entity_id) | selectattr( 'state', 'eq', 'on') | list | count }}` : "",
-            tap_action: show_group ? new _popups_AggregateListPopup__WEBPACK_IMPORTED_MODULE_1__.AggregateListPopup(device?.entities.all_lights?.entity_id, "light").getPopup() : {
-                action: "call-service",
-                service: `${_variables__WEBPACK_IMPORTED_MODULE_2__.DOMAIN}.area_light_toggle`,
-                data: {
-                    area: area_id
-                }
-            }
-        };
-        this.config = Object.assign(this.config, defaultConfig);
-    }
-}
-
-
-
-/***/ }),
-
 /***/ "./src/chips/MediaPlayerChip.ts":
 /*!**************************************!*\
   !*** ./src/chips/MediaPlayerChip.ts ***!
@@ -3868,12 +3590,14 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _Helper__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../Helper */ "./src/Helper.ts");
 /* harmony import */ var _AbstractChip__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./AbstractChip */ "./src/chips/AbstractChip.ts");
 /* harmony import */ var _variables__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../variables */ "./src/variables.ts");
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../utils */ "./src/utils.ts");
 var __classPrivateFieldGet = (undefined && undefined.__classPrivateFieldGet) || function (receiver, state, kind, f) {
     if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a getter");
     if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
     return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
 };
 var _MediaPlayerChip_defaultConfig;
+
 
 
 
@@ -3887,9 +3611,9 @@ class MediaPlayerChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.Abstrac
     /**
      * Class Constructor.
      *
-     * @param {chips.TemplateChipOptions} options The chip options.
+     * @param {chips.ChipOptions} options The chip options.
      */
-    constructor(options = {}) {
+    constructor(options) {
         super();
         /**
          * Default configuration of the chip.
@@ -3903,87 +3627,22 @@ class MediaPlayerChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.Abstrac
             type: "template",
             icon: _variables__WEBPACK_IMPORTED_MODULE_2__.DOMAIN_ICONS["media_player"],
             icon_color: "orange",
-            content: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getCountTemplate("media_player", "eq", "playing"),
+            content: "none",
             tap_action: {
                 action: "navigate",
                 navigation_path: "media_players",
             },
         });
+        __classPrivateFieldGet(this, _MediaPlayerChip_defaultConfig, "f").content = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getCountTemplate("media_player", "eq", "playing", options?.area_id);
+        const magicAreaDevice = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices[options?.area_id ?? options?.floor_id ?? "global"];
+        const magicAreasLight = (0,_utils__WEBPACK_IMPORTED_MODULE_3__.getMAEntity)(magicAreaDevice, "media_player");
+        if (magicAreasLight) {
+            __classPrivateFieldGet(this, _MediaPlayerChip_defaultConfig, "f").entity = magicAreasLight.entity_id;
+        }
         this.config = Object.assign(this.config, __classPrivateFieldGet(this, _MediaPlayerChip_defaultConfig, "f"), options);
     }
 }
 _MediaPlayerChip_defaultConfig = new WeakMap();
-
-
-
-/***/ }),
-
-/***/ "./src/chips/MotionChip.ts":
-/*!*********************************!*\
-  !*** ./src/chips/MotionChip.ts ***!
-  \*********************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   MotionChip: () => (/* binding */ MotionChip)
-/* harmony export */ });
-/* harmony import */ var _Helper__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../Helper */ "./src/Helper.ts");
-/* harmony import */ var _AbstractChip__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./AbstractChip */ "./src/chips/AbstractChip.ts");
-/* harmony import */ var _variables__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../variables */ "./src/variables.ts");
-/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../utils */ "./src/utils.ts");
-var __classPrivateFieldGet = (undefined && undefined.__classPrivateFieldGet) || function (receiver, state, kind, f) {
-    if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a getter");
-    if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
-    return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
-};
-var _MotionChip_defaultConfig;
-
-
-
-
-// noinspection JSUnusedGlobalSymbols Class is dynamically imported.
-/**
- * Motion Chip class.
- *
- * Used to create a chip to indicate how many motions are operating.
- */
-class MotionChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.AbstractChip {
-    /**
-     * Class Constructor.
-     *
-     * @param {chips.TemplateChipOptions} options The chip options.
-     */
-    constructor(device, options = {}) {
-        super();
-        /**
-         * Default configuration of the chip.
-         *
-         * @type {TemplateChipConfig}
-         *
-         * @readonly
-         * @private
-         */
-        _MotionChip_defaultConfig.set(this, {
-            type: "template",
-            icon: _variables__WEBPACK_IMPORTED_MODULE_2__.DOMAIN_STATE_ICONS.binary_sensor.motion.on,
-            icon_color: "grey",
-            content: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getDeviceClassCountTemplate("binary_sensor", "motion", "ne", "off"),
-            tap_action: {
-                action: "navigate",
-                navigation_path: "security-details",
-            },
-        });
-        const aggregate_motion = (0,_utils__WEBPACK_IMPORTED_MODULE_3__.getMAEntity)(device, "binary_sensor", "motion");
-        if (aggregate_motion) {
-            __classPrivateFieldGet(this, _MotionChip_defaultConfig, "f").entity = aggregate_motion.entity_id;
-            __classPrivateFieldGet(this, _MotionChip_defaultConfig, "f").hold_action = { action: "more-info" };
-        }
-        this.config = Object.assign(this.config, __classPrivateFieldGet(this, _MotionChip_defaultConfig, "f"), options);
-    }
-}
-_MotionChip_defaultConfig = new WeakMap();
 
 
 
@@ -4051,70 +3710,6 @@ class SafetyChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.AbstractChip
     }
 }
 _SafetyChip_defaultConfig = new WeakMap();
-
-
-
-/***/ }),
-
-/***/ "./src/chips/SensorChip.ts":
-/*!*********************************!*\
-  !*** ./src/chips/SensorChip.ts ***!
-  \*********************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   BinarySensorChip: () => (/* binding */ BinarySensorChip)
-/* harmony export */ });
-/* harmony import */ var _Helper__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../Helper */ "./src/Helper.ts");
-/* harmony import */ var _AbstractChip__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./AbstractChip */ "./src/chips/AbstractChip.ts");
-/* harmony import */ var _variables__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../variables */ "./src/variables.ts");
-var __classPrivateFieldGet = (undefined && undefined.__classPrivateFieldGet) || function (receiver, state, kind, f) {
-    if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a getter");
-    if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
-    return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
-};
-var _BinarySensorChip_defaultConfig;
-
-
-
-// noinspection JSUnusedGlobalSymbols Class is dynamically imported.
-/**
- * BinarySensor Chip class.
- *
- * Used to create a chip to indicate how many climates are operating.
- */
-class BinarySensorChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.AbstractChip {
-    /**
-     * Class Constructor.
-     *
-     * @param {chips.TemplateChipOptions} options The chip options.
-     */
-    constructor(options = {}) {
-        super();
-        /**
-         * Default configuration of the chip.
-         *
-         * @type {TemplateChipConfig}
-         *
-         * @readonly
-         * @private
-         */
-        _BinarySensorChip_defaultConfig.set(this, {
-            type: "template",
-            icon: _variables__WEBPACK_IMPORTED_MODULE_2__.DOMAIN_ICONS["binary_sensor"],
-            icon_color: "orange",
-            content: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getCountTemplate("binary_sensor", "eq", "on"),
-            tap_action: {
-                action: "navigate",
-                navigation_path: "binary_sensors",
-            },
-        });
-        this.config = Object.assign(this.config, __classPrivateFieldGet(this, _BinarySensorChip_defaultConfig, "f"), options);
-    }
-}
-_BinarySensorChip_defaultConfig = new WeakMap();
 
 
 
@@ -4483,6 +4078,16 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var _popups_GroupListPopup__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../popups/GroupListPopup */ "./src/popups/GroupListPopup.ts");
 /* harmony import */ var _AbstractChip__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./AbstractChip */ "./src/chips/AbstractChip.ts");
+/* harmony import */ var _Helper__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../Helper */ "./src/Helper.ts");
+/* harmony import */ var _variables__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../variables */ "./src/variables.ts");
+var __classPrivateFieldGet = (undefined && undefined.__classPrivateFieldGet) || function (receiver, state, kind, f) {
+    if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a getter");
+    if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
+    return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
+};
+var _UnavailableChip_defaultConfig;
+
+
 
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
@@ -4492,25 +4097,42 @@ __webpack_require__.r(__webpack_exports__);
  * Used to create a chip to indicate unable entities.
  */
 class UnavailableChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.AbstractChip {
-    getDefaultConfig(entities) {
-        return {
-            type: "template",
-            icon_color: "orange",
-            icon: 'mdi:help',
-            tap_action: new _popups_GroupListPopup__WEBPACK_IMPORTED_MODULE_0__.GroupListPopup(entities, "Unavailable entities").getPopup()
-        };
-    }
     /**
      * Class Constructor.
      *
      * @param {EntityRegistryEntry[]} entities The chip entities.
      */
-    constructor(entities) {
+    constructor(area_id) {
         super();
-        const defaultConfig = this.getDefaultConfig(entities);
-        this.config = Object.assign(this.config, defaultConfig);
+        /**
+         * Default configuration of the chip.
+         *
+         * @type {TemplateChipConfig}
+         *
+         * @readonly
+         * @private
+         */
+        _UnavailableChip_defaultConfig.set(this, {
+            type: "template",
+            icon: 'mdi:help',
+            icon_color: "orange",
+            content: _Helper__WEBPACK_IMPORTED_MODULE_2__.Helper.getCountTemplate("switch", "eq", "on"),
+            tap_action: {
+                action: "navigate",
+                navigation_path: "switches",
+            },
+        });
+        const entities = area_id ? _Helper__WEBPACK_IMPORTED_MODULE_2__.Helper.areas[area_id].entities : Object.values(_Helper__WEBPACK_IMPORTED_MODULE_2__.Helper.areas).reduce((acc, area) => {
+            if (area.slug === 'unavailable')
+                return acc;
+            return [...acc, ...area.entities];
+        }, []);
+        const unavailableEntities = entities.filter(entity_id => _variables__WEBPACK_IMPORTED_MODULE_3__.UNAVAILABLE_STATES.includes(_Helper__WEBPACK_IMPORTED_MODULE_2__.Helper.getEntityState(entity_id)?.state)).map(entity_id => _Helper__WEBPACK_IMPORTED_MODULE_2__.Helper.entities[entity_id]);
+        __classPrivateFieldGet(this, _UnavailableChip_defaultConfig, "f").tap_action = new _popups_GroupListPopup__WEBPACK_IMPORTED_MODULE_0__.GroupListPopup(unavailableEntities, "Unavailable entities").getPopup();
+        this.config = Object.assign(this.config, __classPrivateFieldGet(this, _UnavailableChip_defaultConfig, "f"));
     }
 }
+_UnavailableChip_defaultConfig = new WeakMap();
 
 
 
@@ -4580,70 +4202,6 @@ class WeatherChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_0__.AbstractChi
     }
 }
 _WeatherChip_defaultConfig = new WeakMap();
-
-
-
-/***/ }),
-
-/***/ "./src/chips/WindowChip.ts":
-/*!*********************************!*\
-  !*** ./src/chips/WindowChip.ts ***!
-  \*********************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   WindowChip: () => (/* binding */ WindowChip)
-/* harmony export */ });
-/* harmony import */ var _Helper__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../Helper */ "./src/Helper.ts");
-/* harmony import */ var _AbstractChip__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./AbstractChip */ "./src/chips/AbstractChip.ts");
-/* harmony import */ var _variables__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../variables */ "./src/variables.ts");
-var __classPrivateFieldGet = (undefined && undefined.__classPrivateFieldGet) || function (receiver, state, kind, f) {
-    if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a getter");
-    if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
-    return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
-};
-var _WindowChip_defaultConfig;
-
-
-
-// noinspection JSUnusedGlobalSymbols Class is dynamically imported.
-/**
- * Window Chip class.
- *
- * Used to create a chip to indicate how many windows are operating.
- */
-class WindowChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.AbstractChip {
-    /**
-     * Class Constructor.
-     *
-     * @param {chips.TemplateChipOptions} options The chip options.
-     */
-    constructor(options = {}) {
-        super();
-        /**
-         * Default configuration of the chip.
-         *
-         * @type {TemplateChipConfig}
-         *
-         * @readonly
-         * @private
-         */
-        _WindowChip_defaultConfig.set(this, {
-            type: "template",
-            icon: _variables__WEBPACK_IMPORTED_MODULE_2__.DOMAIN_STATE_ICONS.binary_sensor.window.on,
-            icon_color: "grey",
-            content: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getDeviceClassCountTemplate("binary_sensor", "window", "ne", "off"),
-            tap_action: {
-                action: "navigate",
-                navigation_path: "security-details",
-            },
-        });
-        this.config = Object.assign(this.config, __classPrivateFieldGet(this, _WindowChip_defaultConfig, "f"), options);
-    }
-}
-_WindowChip_defaultConfig = new WeakMap();
 
 
 
@@ -4722,6 +4280,38 @@ const configurationDefaults = {
             hidden: false,
             order: 1
         },
+        climate: {
+            title: "Climates",
+            showControls: true,
+            hidden: false,
+            order: 2,
+            extraControls: (device) => {
+                return [
+                    new _chips_ControlChip__WEBPACK_IMPORTED_MODULE_0__.ControlChip(device?.entities.climate_control?.entity_id).getChip()
+                ];
+            },
+        },
+        media_player: {
+            title: "Media Players",
+            showControls: true,
+            hidden: false,
+            order: 3,
+            extraControls: (device) => {
+                return [
+                    new _chips_ControlChip__WEBPACK_IMPORTED_MODULE_0__.ControlChip(device?.entities.media_player_control?.entity_id).getChip()
+                ];
+            },
+        },
+        cover: {
+            title: "Covers",
+            showControls: true,
+            iconOn: "mdi:arrow-up",
+            iconOff: "mdi:arrow-down",
+            onService: "cover.open_cover",
+            offService: "cover.close_cover",
+            hidden: false,
+            order: 4
+        },
         scene: {
             title: "Scènes",
             showControls: false,
@@ -4742,7 +4332,7 @@ const configurationDefaults = {
             iconOff: "mdi:lightbulb-off",
             onService: "scene.turn_on",
             hidden: false,
-            order: 2
+            order: 5
         },
         fan: {
             title: "Fans",
@@ -4752,17 +4342,7 @@ const configurationDefaults = {
             onService: "fan.turn_on",
             offService: "fan.turn_off",
             hidden: false,
-            order: 4
-        },
-        cover: {
-            title: "Covers",
-            showControls: true,
-            iconOn: "mdi:arrow-up",
-            iconOff: "mdi:arrow-down",
-            onService: "cover.open_cover",
-            offService: "cover.close_cover",
-            hidden: false,
-            order: 8
+            order: 6
         },
         switch: {
             title: "Switches",
@@ -4772,41 +4352,25 @@ const configurationDefaults = {
             onService: "switch.turn_on",
             offService: "switch.turn_off",
             hidden: false,
-            order: 5
+            order: 7
         },
         camera: {
             title: "Cameras",
             showControls: false,
             hidden: false,
-            order: 6
+            order: 8
         },
         lock: {
             title: "Locks",
             showControls: false,
             hidden: false,
-            order: 7
+            order: 9
         },
-        climate: {
-            title: "Climates",
+        vacuum: {
+            title: "Vacuums",
             showControls: true,
             hidden: false,
-            order: 3,
-            extraControls: (device) => {
-                return [
-                    new _chips_ControlChip__WEBPACK_IMPORTED_MODULE_0__.ControlChip(device?.entities.climate_control?.entity_id).getChip()
-                ];
-            },
-        },
-        media_player: {
-            title: "Media Players",
-            showControls: true,
-            hidden: false,
-            order: 9,
-            extraControls: (device) => {
-                return [
-                    new _chips_ControlChip__WEBPACK_IMPORTED_MODULE_0__.ControlChip(device?.entities.media_player_control?.entity_id).getChip()
-                ];
-            },
+            order: 10
         },
         sensor: {
             title: "Sensors",
@@ -4822,12 +4386,6 @@ const configurationDefaults = {
             title: "Numbers",
             showControls: false,
             hidden: false,
-        },
-        vacuum: {
-            title: "Vacuums",
-            showControls: true,
-            hidden: false,
-            order: 10
         },
     },
     home_view: {
@@ -4846,23 +4404,23 @@ const configurationDefaults = {
             order: 3,
             hidden: false,
         },
-        media_player: {
+        climate: {
             order: 4,
             hidden: false,
         },
-        climate: {
+        media_player: {
             order: 5,
             hidden: false,
         },
-        fan: {
+        cover: {
             order: 6,
             hidden: false,
         },
-        cover: {
+        scene: {
             order: 7,
             hidden: false,
         },
-        camera: {
+        fan: {
             order: 8,
             hidden: false,
         },
@@ -4870,11 +4428,11 @@ const configurationDefaults = {
             order: 9,
             hidden: false,
         },
-        vacuum: {
+        camera: {
             order: 10,
             hidden: false,
         },
-        scene: {
+        vacuum: {
             order: 11,
             hidden: false,
         },
@@ -6215,6 +5773,7 @@ var generic;
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   createChipsFromList: () => (/* binding */ createChipsFromList),
 /* harmony export */   getAggregateEntity: () => (/* binding */ getAggregateEntity),
 /* harmony export */   getConditionalChip: () => (/* binding */ getConditionalChip),
 /* harmony export */   getMAEntity: () => (/* binding */ getMAEntity),
@@ -6226,6 +5785,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var _Helper__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./Helper */ "./src/Helper.ts");
 /* harmony import */ var _variables__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./variables */ "./src/variables.ts");
+/* harmony import */ var _chips_UnavailableChip__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./chips/UnavailableChip */ "./src/chips/UnavailableChip.ts");
+
 
 
 /**
@@ -6295,7 +5856,7 @@ function getMAEntity(device, domain, deviceClass) {
         return device?.entities?.['all_lights'];
     if (_variables__WEBPACK_IMPORTED_MODULE_1__.MAGIC_AREAS_GROUP_DOMAINS.includes(domain))
         return device?.entities?.[`${domain}_group`];
-    if (_variables__WEBPACK_IMPORTED_MODULE_1__.MAGIC_AREAS_AGGREGATE_DOMAINS.includes(domain))
+    if (deviceClass && [..._variables__WEBPACK_IMPORTED_MODULE_1__.DEVICE_CLASSES.binary_sensor, ..._variables__WEBPACK_IMPORTED_MODULE_1__.DEVICE_CLASSES.sensor].includes(deviceClass))
         return device?.entities?.[`aggregate_${deviceClass}`];
     return device?.entities?.[domain];
 }
@@ -6315,6 +5876,42 @@ function groupEntitiesByDomain(entity_ids) {
         acc[domain].push(entity_id);
         return acc;
     }, {});
+}
+// Numeric chips.
+async function createChipsFromList(chipsList, chipOptions, area_id) {
+    const chips = [];
+    for (let chipType of chipsList) {
+        if (((area_id ? _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas[area_id] : _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper).domains[chipType] ?? []).length === 0)
+            continue;
+        if (chipOptions?.[`${chipType}_count`] ?? true) {
+            const className = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.sanitizeClassName(chipType + "Chip");
+            try {
+                let chipModule;
+                if ([..._variables__WEBPACK_IMPORTED_MODULE_1__.DEVICE_CLASSES.binary_sensor, ..._variables__WEBPACK_IMPORTED_MODULE_1__.DEVICE_CLASSES.sensor].includes(chipType)) {
+                    chipModule = await Promise.resolve(/*! import() */).then(__webpack_require__.bind(__webpack_require__, /*! ./chips/AggregateChip */ "./src/chips/AggregateChip.ts"));
+                    const chip = new chipModule.AggregateChip({ device_class: chipType, area_id });
+                    chips.push(chip.getChip());
+                }
+                else {
+                    chipModule = await __webpack_require__("./src/chips lazy recursive ^\\.\\/.*$")("./" + className);
+                    const chip = new chipModule[className]({ area_id });
+                    chips.push(chip.getChip());
+                }
+            }
+            catch (e) {
+                _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.logError(`An error occurred while creating the ${chipType} chip!`, e);
+            }
+        }
+    }
+    // Extra chips.
+    if (chipOptions?.extra_chips) {
+        chips.push(...chipOptions.extra_chips);
+    }
+    const entities = (area_id ? _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas[area_id] : _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper).entities;
+    const unavailableChip = new _chips_UnavailableChip__WEBPACK_IMPORTED_MODULE_2__.UnavailableChip(area_id).getChip();
+    if (unavailableChip)
+        chips.push(unavailableChip);
+    return chips;
 }
 
 
@@ -6364,7 +5961,7 @@ const todOrder = ["morning", "daytime", "evening", "night"];
 const STATES_OFF = ["closed", "locked", "off", "docked", "idle", "standby", "paused", "auto", "ok"];
 const UNAVAILABLE_STATES = ["unavailable", "unknown"];
 const MAGIC_AREAS_LIGHT_DOMAINS = "light";
-const MAGIC_AREAS_GROUP_DOMAINS = ["cover", "climate", "media_player"];
+const MAGIC_AREAS_GROUP_DOMAINS = ["climate", "media_player", "cover"];
 const MAGIC_AREAS_AGGREGATE_DOMAINS = ["binary_sensor", "sensor"];
 const MAGIC_AREAS_DOMAINS = [MAGIC_AREAS_LIGHT_DOMAINS, ...MAGIC_AREAS_GROUP_DOMAINS, ...MAGIC_AREAS_AGGREGATE_DOMAINS];
 const SENSOR_DOMAINS = ["sensor"];
@@ -6378,7 +5975,7 @@ const DEVICE_CLASSES = {
     sensor: ["illuminance", "temperature", "humidity", "battery", "energy", "power"],
     binary_sensor: ["motion", "door", "window", "vibration", "moisture", "smoke"],
 };
-const HOME_EXPOSED_CHIPS = [MAGIC_AREAS_LIGHT_DOMAINS, ...MAGIC_AREAS_GROUP_DOMAINS, "fan", "switch", "safety", "motion", "door", "window"];
+const HOME_EXPOSED_CHIPS = ["weather", "alarm", "spotify", MAGIC_AREAS_LIGHT_DOMAINS, ...MAGIC_AREAS_GROUP_DOMAINS, "fan", "switch", "safety", "motion", "door", "window"];
 const AREA_EXPOSED_CHIPS = [MAGIC_AREAS_LIGHT_DOMAINS, ...MAGIC_AREAS_GROUP_DOMAINS, "fan", "switch", "safety", ...DEVICE_CLASSES.binary_sensor, ...DEVICE_CLASSES.sensor];
 const AREA_CARD_SENSORS_CLASS = ["temperature"];
 const DEVICE_ICONS = {
@@ -6696,15 +6293,14 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   AreaView: () => (/* binding */ AreaView)
 /* harmony export */ });
 /* harmony import */ var _Helper__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../Helper */ "./src/Helper.ts");
-/* harmony import */ var _types_strategy_generic__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../types/strategy/generic */ "./src/types/strategy/generic.ts");
-/* harmony import */ var _cards_SwipeCard__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../cards/SwipeCard */ "./src/cards/SwipeCard.ts");
-/* harmony import */ var _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../cards/ControllerCard */ "./src/cards/ControllerCard.ts");
-/* harmony import */ var _cards_MainAreaCard__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../cards/MainAreaCard */ "./src/cards/MainAreaCard.ts");
-/* harmony import */ var _variables__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../variables */ "./src/variables.ts");
-/* harmony import */ var _chips_AreaStateChip__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../chips/AreaStateChip */ "./src/chips/AreaStateChip.ts");
+/* harmony import */ var _cards_SwipeCard__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../cards/SwipeCard */ "./src/cards/SwipeCard.ts");
+/* harmony import */ var _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../cards/ControllerCard */ "./src/cards/ControllerCard.ts");
+/* harmony import */ var _cards_MainAreaCard__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../cards/MainAreaCard */ "./src/cards/MainAreaCard.ts");
+/* harmony import */ var _variables__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../variables */ "./src/variables.ts");
+/* harmony import */ var _chips_AreaStateChip__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../chips/AreaStateChip */ "./src/chips/AreaStateChip.ts");
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../utils */ "./src/utils.ts");
 
 
-var isCallServiceActionConfig = _types_strategy_generic__WEBPACK_IMPORTED_MODULE_1__.generic.isCallServiceActionConfig;
 
 
 
@@ -6765,42 +6361,12 @@ class AreaView {
         let chipModule;
         const device = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices[this.area.slug];
         if (device) {
-            chips.push(new _chips_AreaStateChip__WEBPACK_IMPORTED_MODULE_6__.AreaStateChip(device, true).getChip());
+            chips.push(new _chips_AreaStateChip__WEBPACK_IMPORTED_MODULE_5__.AreaStateChip(device, true).getChip());
         }
-        // Numeric chips.
-        for (let chipType of _variables__WEBPACK_IMPORTED_MODULE_5__.AREA_EXPOSED_CHIPS) {
-            if ((this.area.domains[chipType] ?? []).length === 0)
-                continue;
-            if (chipOptions?.[`${chipType}_count`] ?? true) {
-                const className = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.sanitizeClassName(chipType + "Chip");
-                const options = { area_id: this.area.area_id };
-                try {
-                    chipModule = await __webpack_require__("./src/chips lazy recursive ^\\.\\/.*$")(`./${className}`);
-                    const chip = new chipModule[className](options);
-                    if ("tap_action" in this.config && isCallServiceActionConfig(this.config.tap_action)) {
-                        chip.setTapActionTarget({ area_id: this.area.area_id });
-                    }
-                    chips.push(chip.getChip());
-                }
-                catch (e) {
-                    _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.logError(`An error occurred while creating the ${chipType} chip!`, e);
-                }
-            }
+        const areaChips = await (0,_utils__WEBPACK_IMPORTED_MODULE_6__.createChipsFromList)(_variables__WEBPACK_IMPORTED_MODULE_4__.AREA_EXPOSED_CHIPS, chipOptions, this.area.slug);
+        if (areaChips) {
+            chips.push(...areaChips);
         }
-        // Extra chips.
-        if (chipOptions?.extra_chips) {
-            chips.push(...chipOptions.extra_chips);
-        }
-        // Unavailable chip.
-        // const unavailableEntities = Object.values(Helper.magicAreasDevices[this.area.area_id]?.entities ?? [])?.filter((e) => {
-        //   const entityState = Helper.getEntityState(e.entity_id);
-        //   return (HOME_EXPOSED_CHIPS.includes(e.entity_id.split(".", 1)[0]) || HOME_EXPOSED_CHIPS.includes(entityState?.attributes.device_class || '')) &&
-        //     UNAVAILABLE_STATES.includes(entityState?.state);
-        // });
-        // if (unavailableEntities.length) {
-        //   const unavailableChip = new UnavailableChip(unavailableEntities);
-        //   chips.push(unavailableChip.getChip());
-        // }
         return chips.map(chip => ({
             type: "custom:mushroom-chips-card",
             alignment: "center",
@@ -6820,7 +6386,7 @@ class AreaView {
         const globalSection = {
             type: "grid",
             column_span: 1,
-            cards: this.area.area_id !== "undisclosed" ? [new _cards_MainAreaCard__WEBPACK_IMPORTED_MODULE_4__.MainAreaCard(this.area).getCard()] : []
+            cards: this.area.area_id !== "undisclosed" ? [new _cards_MainAreaCard__WEBPACK_IMPORTED_MODULE_3__.MainAreaCard(this.area).getCard()] : []
         };
         if (globalSection.cards.length) {
             viewSections.push(globalSection);
@@ -6846,11 +6412,11 @@ class AreaView {
                     const titleCardOptions = ("controllerCardOptions" in this.config) ? this.config.controllerCardOptions : {};
                     titleCardOptions.subtitle = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize(domain === 'scene' ? 'ui.dialogs.quick-bar.commands.navigation.scene' : `component.${domain}.entity_component._.name`);
                     titleCardOptions.domain = domain;
-                    titleCardOptions.subtitleIcon = _variables__WEBPACK_IMPORTED_MODULE_5__.DOMAIN_ICONS[domain];
+                    titleCardOptions.subtitleIcon = _variables__WEBPACK_IMPORTED_MODULE_4__.DOMAIN_ICONS[domain];
                     titleCardOptions.navigate = domain + "s";
                     titleCardOptions.showControls = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain].showControls;
                     titleCardOptions.extraControls = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain].extraControls;
-                    const titleCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_3__.ControllerCard(target, titleCardOptions, domain).createCard();
+                    const titleCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_2__.ControllerCard(target, titleCardOptions, domain).createCard();
                     const entityCards = [];
                     for (const entity of entities) {
                         let cardOptions = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.card_options?.[entity.entity_id];
@@ -6870,7 +6436,7 @@ class AreaView {
                     }
                     if (entityCards.length) {
                         if (entityCards.length > 2) {
-                            domainCards.push(new _cards_SwipeCard__WEBPACK_IMPORTED_MODULE_2__.SwipeCard(entityCards).getCard());
+                            domainCards.push(new _cards_SwipeCard__WEBPACK_IMPORTED_MODULE_1__.SwipeCard(entityCards).getCard());
                         }
                         else {
                             domainCards.push(...entityCards);
@@ -6902,7 +6468,7 @@ class AreaView {
                 try {
                     const cardModule = await Promise.resolve(/*! import() */).then(__webpack_require__.bind(__webpack_require__, /*! ../cards/MiscellaneousCard */ "./src/cards/MiscellaneousCard.ts"));
                     const cards = [
-                        new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_3__.ControllerCard(target, _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains.default).createCard(),
+                        new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_2__.ControllerCard(target, _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains.default).createCard(),
                     ];
                     const swipeCard = [];
                     for (const entity_id of miscellaneousEntities) {
@@ -6918,7 +6484,7 @@ class AreaView {
                     viewSections.push({
                         type: "grid",
                         column_span: 1,
-                        cards: [...cards, new _cards_SwipeCard__WEBPACK_IMPORTED_MODULE_2__.SwipeCard(swipeCard).getCard()]
+                        cards: [...cards, new _cards_SwipeCard__WEBPACK_IMPORTED_MODULE_1__.SwipeCard(swipeCard).getCard()]
                     });
                 }
                 catch (e) {
@@ -7317,10 +6883,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _AbstractView__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./AbstractView */ "./src/views/AbstractView.ts");
 /* harmony import */ var _chips_SettingsChip__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../chips/SettingsChip */ "./src/chips/SettingsChip.ts");
 /* harmony import */ var _popups_LinusSettingsPopup__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../popups/LinusSettingsPopup */ "./src/popups/LinusSettingsPopup.ts");
-/* harmony import */ var _chips_UnavailableChip__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../chips/UnavailableChip */ "./src/chips/UnavailableChip.ts");
-/* harmony import */ var _variables__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../variables */ "./src/variables.ts");
-/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../utils */ "./src/utils.ts");
-/* harmony import */ var _types_strategy_generic__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../types/strategy/generic */ "./src/types/strategy/generic.ts");
+/* harmony import */ var _variables__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../variables */ "./src/variables.ts");
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../utils */ "./src/utils.ts");
+/* harmony import */ var _chips_WeatherChip__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../chips/WeatherChip */ "./src/chips/WeatherChip.ts");
 var __classPrivateFieldGet = (undefined && undefined.__classPrivateFieldGet) || function (receiver, state, kind, f) {
     if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a getter");
     if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
@@ -7334,8 +6899,6 @@ var _HomeView_instances, _HomeView_defaultConfig, _HomeView_createPersonCards, _
 
 
 
-
-var isCallServiceActionConfig = _types_strategy_generic__WEBPACK_IMPORTED_MODULE_7__.generic.isCallServiceActionConfig;
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**
  * Home View Class.
@@ -7398,8 +6961,7 @@ class HomeView extends _AbstractView__WEBPACK_IMPORTED_MODULE_1__.AbstractView {
         const weatherEntityId = chipOptions?.weather_entity ?? _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.domains.weather[0]?.entity_id;
         if (weatherEntityId) {
             try {
-                chipModule = await Promise.resolve(/*! import() */).then(__webpack_require__.bind(__webpack_require__, /*! ../chips/WeatherChip */ "./src/chips/WeatherChip.ts"));
-                const weatherChip = new chipModule.WeatherChip(weatherEntityId);
+                const weatherChip = new _chips_WeatherChip__WEBPACK_IMPORTED_MODULE_6__.WeatherChip(weatherEntityId);
                 chips.push(weatherChip.getChip());
             }
             catch (e) {
@@ -7430,38 +6992,9 @@ class HomeView extends _AbstractView__WEBPACK_IMPORTED_MODULE_1__.AbstractView {
                 _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.logError("An error occurred while creating the spotify chip!", e);
             }
         }
-        // Numeric chips.
-        for (let chipType of _variables__WEBPACK_IMPORTED_MODULE_5__.HOME_EXPOSED_CHIPS) {
-            if ((_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.domains[chipType] ?? []).length === 0)
-                continue;
-            if (chipOptions?.[`${chipType}_count`] ?? true) {
-                const className = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.sanitizeClassName(chipType + "Chip");
-                try {
-                    chipModule = await __webpack_require__("./src/chips lazy recursive ^\\.\\/.*$")(`./${className}`);
-                    const chip = new chipModule[className]();
-                    if ("tap_action" in this.config && isCallServiceActionConfig(this.config.tap_action)) {
-                        chip.setTapActionTarget({ area_id: areaIds });
-                    }
-                    chips.push(chip.getChip());
-                }
-                catch (e) {
-                    _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.logError(`An error occurred while creating the ${chipType} chip!`, e);
-                }
-            }
-        }
-        // Extra chips.
-        if (chipOptions?.extra_chips) {
-            chips.push(...chipOptions.extra_chips);
-        }
-        // Unavailable chip.
-        const unavailableEntities = Object.values(_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices["global"]?.entities ?? [])?.filter((e) => {
-            const entityState = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getEntityState(e.entity_id);
-            return (_variables__WEBPACK_IMPORTED_MODULE_5__.HOME_EXPOSED_CHIPS.includes(e.entity_id.split(".", 1)[0]) || _variables__WEBPACK_IMPORTED_MODULE_5__.HOME_EXPOSED_CHIPS.includes(entityState?.attributes.device_class || '')) &&
-                _variables__WEBPACK_IMPORTED_MODULE_5__.UNAVAILABLE_STATES.includes(entityState?.state);
-        });
-        if (unavailableEntities.length) {
-            const unavailableChip = new _chips_UnavailableChip__WEBPACK_IMPORTED_MODULE_4__.UnavailableChip(unavailableEntities);
-            chips.push(unavailableChip.getChip());
+        const homeChips = await (0,_utils__WEBPACK_IMPORTED_MODULE_5__.createChipsFromList)(_variables__WEBPACK_IMPORTED_MODULE_4__.HOME_EXPOSED_CHIPS, chipOptions);
+        if (homeChips) {
+            chips.push(...homeChips);
         }
         const linusSettings = new _chips_SettingsChip__WEBPACK_IMPORTED_MODULE_2__.SettingsChip({ tap_action: new _popups_LinusSettingsPopup__WEBPACK_IMPORTED_MODULE_3__.LinusSettings().getPopup() });
         chips.push(linusSettings.getChip());
@@ -7585,7 +7118,7 @@ async function _HomeView_createAreaSection() {
             heading: floor.name,
             heading_style: "subtitle",
             icon: floor.icon ?? "mdi:floor-plan",
-            tap_action: floor.floor_id !== "undisclosed" ? (0,_utils__WEBPACK_IMPORTED_MODULE_6__.navigateTo)((0,_utils__WEBPACK_IMPORTED_MODULE_6__.slugify)(floor.name)) : undefined,
+            tap_action: floor.floor_id !== "undisclosed" ? (0,_utils__WEBPACK_IMPORTED_MODULE_5__.navigateTo)((0,_utils__WEBPACK_IMPORTED_MODULE_5__.slugify)(floor.name)) : undefined,
         });
         for (const area of floor.areas.map(areaId => _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas[areaId]).values()) {
             let module;
@@ -7598,7 +7131,7 @@ async function _HomeView_createAreaSection() {
             }
             catch (e) {
                 // Fallback to the default strategy card.
-                module = await Promise.resolve(/*! import() */).then(__webpack_require__.bind(__webpack_require__, /*! ../cards/AreaCard */ "./src/cards/AreaCard.ts"));
+                module = await Promise.resolve(/*! import() */).then(__webpack_require__.bind(__webpack_require__, /*! ../cards/HomeAreaCard */ "./src/cards/HomeAreaCard.ts"));
                 if (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.debug && moduleName !== "default") {
                     console.error(e);
                 }
@@ -7611,7 +7144,7 @@ async function _HomeView_createAreaSection() {
                     area_id: area.area_id,
                 };
                 groupedCards.push({
-                    ...new module.AreaCard(options).getCard(),
+                    ...new module.HomeAreaCard(options).getCard(),
                     layout_options: {
                         grid_columns: 2
                     }
@@ -8466,14 +7999,6 @@ var map = {
 		"./src/cards/AlarmCard.ts",
 		"main"
 	],
-	"./AreaCard": [
-		"./src/cards/AreaCard.ts",
-		"main"
-	],
-	"./AreaCard.ts": [
-		"./src/cards/AreaCard.ts",
-		"main"
-	],
 	"./BinarySensorCard": [
 		"./src/cards/BinarySensorCard.ts",
 		"main"
@@ -8518,6 +8043,14 @@ var map = {
 	],
 	"./FanCard.ts": [
 		"./src/cards/FanCard.ts",
+		"main"
+	],
+	"./HomeAreaCard": [
+		"./src/cards/HomeAreaCard.ts",
+		"main"
+	],
+	"./HomeAreaCard.ts": [
+		"./src/cards/HomeAreaCard.ts",
 		"main"
 	],
 	"./LightCard": [
@@ -8646,6 +8179,12 @@ var map = {
 	"./AbstractChip.ts": [
 		"./src/chips/AbstractChip.ts"
 	],
+	"./AggregateChip": [
+		"./src/chips/AggregateChip.ts"
+	],
+	"./AggregateChip.ts": [
+		"./src/chips/AggregateChip.ts"
+	],
 	"./AlarmChip": [
 		"./src/chips/AlarmChip.ts",
 		"main"
@@ -8665,14 +8204,6 @@ var map = {
 	],
 	"./AreaStateChip.ts": [
 		"./src/chips/AreaStateChip.ts"
-	],
-	"./BinarySensorChip": [
-		"./src/chips/BinarySensorChip.ts",
-		"main"
-	],
-	"./BinarySensorChip.ts": [
-		"./src/chips/BinarySensorChip.ts",
-		"main"
 	],
 	"./ClimateChip": [
 		"./src/chips/ClimateChip.ts",
@@ -8704,14 +8235,6 @@ var map = {
 		"./src/chips/CoverChip.ts",
 		"main"
 	],
-	"./DoorChip": [
-		"./src/chips/DoorChip.ts",
-		"main"
-	],
-	"./DoorChip.ts": [
-		"./src/chips/DoorChip.ts",
-		"main"
-	],
 	"./FanChip": [
 		"./src/chips/FanChip.ts",
 		"main"
@@ -8728,36 +8251,6 @@ var map = {
 		"./src/chips/LightChip.ts",
 		"main"
 	],
-	"./LinusAggregateChip": [
-		"./src/chips/LinusAggregateChip.ts"
-	],
-	"./LinusAggregateChip.ts": [
-		"./src/chips/LinusAggregateChip.ts"
-	],
-	"./LinusAlarmChip": [
-		"./src/chips/LinusAlarmChip.ts",
-		"main"
-	],
-	"./LinusAlarmChip.ts": [
-		"./src/chips/LinusAlarmChip.ts",
-		"main"
-	],
-	"./LinusClimateChip": [
-		"./src/chips/LinusClimateChip.ts",
-		"main"
-	],
-	"./LinusClimateChip.ts": [
-		"./src/chips/LinusClimateChip.ts",
-		"main"
-	],
-	"./LinusLightChip": [
-		"./src/chips/LinusLightChip.ts",
-		"main"
-	],
-	"./LinusLightChip.ts": [
-		"./src/chips/LinusLightChip.ts",
-		"main"
-	],
 	"./MediaPlayerChip": [
 		"./src/chips/MediaPlayerChip.ts",
 		"main"
@@ -8766,28 +8259,12 @@ var map = {
 		"./src/chips/MediaPlayerChip.ts",
 		"main"
 	],
-	"./MotionChip": [
-		"./src/chips/MotionChip.ts",
-		"main"
-	],
-	"./MotionChip.ts": [
-		"./src/chips/MotionChip.ts",
-		"main"
-	],
 	"./SafetyChip": [
 		"./src/chips/SafetyChip.ts",
 		"main"
 	],
 	"./SafetyChip.ts": [
 		"./src/chips/SafetyChip.ts",
-		"main"
-	],
-	"./SensorChip": [
-		"./src/chips/SensorChip.ts",
-		"main"
-	],
-	"./SensorChip.ts": [
-		"./src/chips/SensorChip.ts",
 		"main"
 	],
 	"./SettingsChip": [
@@ -8819,12 +8296,10 @@ var map = {
 		"./src/chips/ToggleSceneChip.ts"
 	],
 	"./UnavailableChip": [
-		"./src/chips/UnavailableChip.ts",
-		"main"
+		"./src/chips/UnavailableChip.ts"
 	],
 	"./UnavailableChip.ts": [
-		"./src/chips/UnavailableChip.ts",
-		"main"
+		"./src/chips/UnavailableChip.ts"
 	],
 	"./WeatherChip": [
 		"./src/chips/WeatherChip.ts",
@@ -8832,14 +8307,6 @@ var map = {
 	],
 	"./WeatherChip.ts": [
 		"./src/chips/WeatherChip.ts",
-		"main"
-	],
-	"./WindowChip": [
-		"./src/chips/WindowChip.ts",
-		"main"
-	],
-	"./WindowChip.ts": [
-		"./src/chips/WindowChip.ts",
 		"main"
 	]
 };

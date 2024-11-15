@@ -13,7 +13,7 @@ export const STATES_OFF = ["closed", "locked", "off", "docked", "idle", "standby
 export const UNAVAILABLE_STATES = ["unavailable", "unknown"];
 
 export const MAGIC_AREAS_LIGHT_DOMAINS = "light";
-export const MAGIC_AREAS_GROUP_DOMAINS = ["cover", "climate", "media_player"];
+export const MAGIC_AREAS_GROUP_DOMAINS = ["climate", "media_player", "cover"];
 export const MAGIC_AREAS_AGGREGATE_DOMAINS = ["binary_sensor", "sensor"];
 
 export const MAGIC_AREAS_DOMAINS = [MAGIC_AREAS_LIGHT_DOMAINS, ...MAGIC_AREAS_GROUP_DOMAINS, ...MAGIC_AREAS_AGGREGATE_DOMAINS];
@@ -37,7 +37,7 @@ export const DEVICE_CLASSES = {
   binary_sensor: ["motion", "door", "window", "vibration", "moisture", "smoke"],
 };
 
-export const HOME_EXPOSED_CHIPS = [MAGIC_AREAS_LIGHT_DOMAINS, ...MAGIC_AREAS_GROUP_DOMAINS, "fan", "switch", "safety", "motion", "door", "window"];
+export const HOME_EXPOSED_CHIPS = ["weather", "alarm", "spotify", MAGIC_AREAS_LIGHT_DOMAINS, ...MAGIC_AREAS_GROUP_DOMAINS, "fan", "switch", "safety", "motion", "door", "window"];
 export const AREA_EXPOSED_CHIPS = [MAGIC_AREAS_LIGHT_DOMAINS, ...MAGIC_AREAS_GROUP_DOMAINS, "fan", "switch", "safety", ...DEVICE_CLASSES.binary_sensor, ...DEVICE_CLASSES.sensor];
 
 export const AREA_CARD_SENSORS_CLASS = ["temperature"];

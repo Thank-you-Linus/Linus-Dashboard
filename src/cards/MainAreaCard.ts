@@ -4,7 +4,7 @@ import { TemplateCardConfig } from "../types/lovelace-mushroom/cards/template-ca
 import { Helper } from "../Helper";
 import { generic } from "../types/strategy/generic";
 import StrategyArea = generic.StrategyArea;
-import { LinusAggregateChip } from "../chips/LinusAggregateChip";
+import { AggregateChip } from "../chips/AggregateChip";
 import { AreaStateChip } from "../chips/AreaStateChip";
 
 import { AreaScenesChips } from "../chips/AreaScenesChips";
@@ -78,7 +78,7 @@ class MainAreaCard extends AbstractCard {
                         state_not: "unavailable"
                       }
                     ],
-                    chip: new LinusAggregateChip(device, "temperature", true, true).getChip(),
+                    chip: new AggregateChip({ device_class: "temperature", show_content: false, area_id: area.slug }).getChip(),
                   },
                   aggregate_humidity?.entity_id && {
                     type: "conditional",
@@ -88,7 +88,7 @@ class MainAreaCard extends AbstractCard {
                         state_not: "unavailable"
                       }
                     ],
-                    chip: new LinusAggregateChip(device, "humidity", true, true).getChip(),
+                    chip: new AggregateChip({ device_class: "humidity", show_content: false, area_id: area.slug }).getChip(),
                   },
                   aggregate_illuminance?.entity_id && {
                     type: "conditional",
@@ -98,7 +98,7 @@ class MainAreaCard extends AbstractCard {
                         state_not: "unavailable"
                       }
                     ],
-                    chip: new LinusAggregateChip(device, "illuminance", true, true).getChip(),
+                    chip: new AggregateChip({ device_class: "illuminance", show_content: false, area_id: area.slug }).getChip(),
                   },
                 ].filter(Boolean),
                 card_mod: {
@@ -125,7 +125,7 @@ class MainAreaCard extends AbstractCard {
                         state_not: "unavailable"
                       }
                     ],
-                    chip: new LinusAggregateChip(device, "window", true, true).getChip(),
+                    chip: new AggregateChip({ device_class: "window", show_content: false, area_id: area.slug }).getChip(),
                   },
                   aggregate_door?.entity_id && {
                     type: "conditional",
@@ -135,7 +135,7 @@ class MainAreaCard extends AbstractCard {
                         state_not: "unavailable"
                       }
                     ],
-                    chip: new LinusAggregateChip(device, "door", true, true).getChip(),
+                    chip: new AggregateChip({ device_class: "door", show_content: false, area_id: area.slug }).getChip(),
                   },
                   aggregate_health?.entity_id && {
                     type: "conditional",
@@ -145,7 +145,7 @@ class MainAreaCard extends AbstractCard {
                         state_not: "unavailable"
                       }
                     ],
-                    chip: new LinusAggregateChip(device, "health", true, true).getChip(),
+                    chip: new AggregateChip({ device_class: "health", show_content: false, area_id: area.slug }).getChip(),
                   },
                   aggregate_cover?.entity_id && {
                     type: "conditional",
@@ -155,7 +155,7 @@ class MainAreaCard extends AbstractCard {
                         state_not: "unavailable"
                       }
                     ],
-                    chip: new LinusAggregateChip(device, "cover", true, true).getChip(),
+                    chip: new AggregateChip({ device_class: "cover", show_content: false, area_id: area.slug }).getChip(),
                   },
                   area_state?.entity_id && {
                     type: "conditional",

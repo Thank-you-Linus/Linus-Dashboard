@@ -1,6 +1,9 @@
 import { GroupListPopup } from "../popups/GroupListPopup";
 import { AbstractChip } from "./AbstractChip";
 import { EntityRegistryEntry } from '../types/homeassistant/data/entity_registry';
+import { TemplateChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
+import { Helper } from "../Helper";
+import { UNAVAILABLE_STATES } from "../variables";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**
@@ -9,23 +12,43 @@ import { EntityRegistryEntry } from '../types/homeassistant/data/entity_registry
  * Used to create a chip to indicate unable entities.
  */
 class UnavailableChip extends AbstractChip {
-    getDefaultConfig(entities: EntityRegistryEntry[]) {
-        return {
-            type: "template",
-            icon_color: "orange",
-            icon: 'mdi:help',
-            tap_action: new GroupListPopup(entities, "Unavailable entities").getPopup()
-        };
-    }
+    /**
+     * Default configuration of the chip.
+     *
+     * @type {TemplateChipConfig}
+     *
+     * @readonly
+     * @private
+     */
+    readonly #defaultConfig: TemplateChipConfig = {
+        type: "template",
+        icon: 'mdi:help',
+        icon_color: "orange",
+        content: Helper.getCountTemplate("switch", "eq", "on"),
+        tap_action: {
+            action: "navigate",
+            navigation_path: "switches",
+        },
+    };
+
     /**
      * Class Constructor.
      *
      * @param {EntityRegistryEntry[]} entities The chip entities.
      */
-    constructor(entities: EntityRegistryEntry[]) {
+    constructor(area_id?: string) {
         super();
-        const defaultConfig = this.getDefaultConfig(entities);
-        this.config = Object.assign(this.config, defaultConfig);
+
+        const entities = area_id ? Helper.areas[area_id].entities : Object.values(Helper.areas).reduce((acc: string[], area) => {
+            if (area.slug === 'unavailable') return acc;
+            return [...acc, ...area.entities] as string[];
+        }, [])
+
+        const unavailableEntities = entities.filter(entity_id => UNAVAILABLE_STATES.includes(Helper.getEntityState(entity_id)?.state)).map(entity_id => Helper.entities[entity_id]);
+
+
+        this.#defaultConfig.tap_action = new GroupListPopup(unavailableEntities, "Unavailable entities").getPopup()
+        this.config = Object.assign(this.config, this.#defaultConfig);
     }
 }
 

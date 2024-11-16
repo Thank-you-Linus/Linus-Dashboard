@@ -1,18 +1,29 @@
 {
     "config": {
         "step": {
-            "user": {
-                "description": "If you need help with the configuration have a look here: https://github.com/Thank-you-Linus/Linus-Dashboard",
+            "init": {
+                "title": "Linus Dashboard Settings",
+                "description": "",
                 "data": {
-                    "username": "Username",
-                    "password": "Password"
+                    "alarm_entity_id": "Select alarm entity",
+                    "weather_entity_id": "Select weather entity"
                 }
             }
         },
-        "error": {
-            "auth": "Username/Password is wrong.",
-            "connection": "Unable to connect to the server.",
-            "unknown": "Unknown error occurred."
+        "abort": {
+            "single_instance_allowed": "Only a single configuration of Linus Dashboard is allowed."
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Linus Dashboard Settings",
+                "description": "",
+                "data": {
+                    "alarm_entity_id": "Alarm entity",
+                    "weather_entity_id": "Weather entity"
+                }
+            }
         }
     },
     "entity": {

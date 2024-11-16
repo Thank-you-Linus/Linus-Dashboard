@@ -2,7 +2,7 @@ import { GroupListPopup } from "../popups/GroupListPopup";
 import { AbstractChip } from "./AbstractChip";
 import { TemplateChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
 import { Helper } from "../Helper";
-import { UNAVAILABLE_STATES } from "../variables";
+import { UNAVAILABLE, UNAVAILABLE_STATES } from "../variables";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**
@@ -23,11 +23,7 @@ class UnavailableChip extends AbstractChip {
         type: "template",
         icon: 'mdi:help',
         icon_color: "orange",
-        content: Helper.getCountTemplate("switch", "eq", "on"),
-        tap_action: {
-            action: "navigate",
-            navigation_path: "switches",
-        },
+        content: "",
     };
 
     /**
@@ -43,7 +39,7 @@ class UnavailableChip extends AbstractChip {
             return [...acc, ...area.entities] as string[];
         }, [])
 
-        const unavailableEntities = entities?.filter(entity_id => UNAVAILABLE_STATES.includes(Helper.getEntityState(entity_id)?.state)).map(entity_id => Helper.entities[entity_id]);
+        const unavailableEntities = entities?.filter(entity_id => UNAVAILABLE_STATES.includes(Helper.getEntityState(entity_id)?.state ?? UNAVAILABLE)).map(entity_id => Helper.entities[entity_id]);
 
         if (unavailableEntities?.length) {
             this.#defaultConfig.tap_action = new GroupListPopup(unavailableEntities, "Unavailable entities").getPopup()

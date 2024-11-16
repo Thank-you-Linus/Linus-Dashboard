@@ -1736,7 +1736,7 @@ class HomeAreaCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractCa
                     chip: new _chips_ClimateChip__WEBPACK_IMPORTED_MODULE_6__.ClimateChip().getChip()
                 }).getChip(),
                 new _chips_ConditionalChip__WEBPACK_IMPORTED_MODULE_8__.ConditionalChip({
-                    conditions: [{ entity: all_lights?.entity_id, state_not: _variables__WEBPACK_IMPORTED_MODULE_9__.UNAVAILABLE }],
+                    conditions: [{ entity: all_lights?.entity_id, state_not: _variables__WEBPACK_IMPORTED_MODULE_9__.UNAVAILABLE, }],
                     chip: new _chips_LightChip__WEBPACK_IMPORTED_MODULE_7__.LightChip({ area_id: area.slug }).getChip()
                 }).getChip(),
                 new _chips_ConditionalChip__WEBPACK_IMPORTED_MODULE_8__.ConditionalChip({
@@ -2719,7 +2719,7 @@ class AggregateChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_3__.AbstractC
      */
     constructor(options) {
         super();
-        const { device_class, show_content = true, area_id } = options;
+        const { device_class, show_content = false, area_id } = options;
         const defaultConfig = this.getDefaultConfig({ device_class, show_content, area_id });
         this.config = Object.assign(this.config, defaultConfig);
     }
@@ -3397,13 +3397,15 @@ class LightChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.AbstractChip 
             type: "template",
             icon: "mdi:lightbulb-group",
             icon_color: "amber",
-            content: "none",
+            content: "",
             tap_action: {
                 action: "navigate",
                 navigation_path: "lights",
             },
         });
-        __classPrivateFieldGet(this, _LightChip_defaultConfig, "f").content = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getCountTemplate("light", "eq", "on", options?.area_id);
+        if (options?.show_content) {
+            __classPrivateFieldGet(this, _LightChip_defaultConfig, "f").content = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getCountTemplate("light", "eq", "on", options?.area_id);
+        }
         const magicAreasEntity = (0,_utils__WEBPACK_IMPORTED_MODULE_2__.getMAEntity)(options?.area_id ?? options?.floor_id ?? "global", "light");
         if (magicAreasEntity) {
             __classPrivateFieldGet(this, _LightChip_defaultConfig, "f").entity = magicAreasEntity.entity_id;
@@ -3956,18 +3958,14 @@ class UnavailableChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.Abstrac
             type: "template",
             icon: 'mdi:help',
             icon_color: "orange",
-            content: _Helper__WEBPACK_IMPORTED_MODULE_2__.Helper.getCountTemplate("switch", "eq", "on"),
-            tap_action: {
-                action: "navigate",
-                navigation_path: "switches",
-            },
+            content: "",
         });
         const entities = area_id ? _Helper__WEBPACK_IMPORTED_MODULE_2__.Helper.areas[area_id]?.entities : Object.values(_Helper__WEBPACK_IMPORTED_MODULE_2__.Helper.areas).reduce((acc, area) => {
             if (area.slug === 'unavailable')
                 return acc;
             return [...acc, ...area.entities];
         }, []);
-        const unavailableEntities = entities?.filter(entity_id => _variables__WEBPACK_IMPORTED_MODULE_3__.UNAVAILABLE_STATES.includes(_Helper__WEBPACK_IMPORTED_MODULE_2__.Helper.getEntityState(entity_id)?.state)).map(entity_id => _Helper__WEBPACK_IMPORTED_MODULE_2__.Helper.entities[entity_id]);
+        const unavailableEntities = entities?.filter(entity_id => _variables__WEBPACK_IMPORTED_MODULE_3__.UNAVAILABLE_STATES.includes(_Helper__WEBPACK_IMPORTED_MODULE_2__.Helper.getEntityState(entity_id)?.state ?? _variables__WEBPACK_IMPORTED_MODULE_3__.UNAVAILABLE)).map(entity_id => _Helper__WEBPACK_IMPORTED_MODULE_2__.Helper.entities[entity_id]);
         if (unavailableEntities?.length) {
             __classPrivateFieldGet(this, _UnavailableChip_defaultConfig, "f").tap_action = new _popups_GroupListPopup__WEBPACK_IMPORTED_MODULE_0__.GroupListPopup(unavailableEntities, "Unavailable entities").getPopup();
         }
@@ -5244,93 +5242,6 @@ class LightSettings extends _AbstractPopup__WEBPACK_IMPORTED_MODULE_3__.Abstract
 
 /***/ }),
 
-/***/ "./src/popups/LinusSettingsPopup.ts":
-/*!******************************************!*\
-  !*** ./src/popups/LinusSettingsPopup.ts ***!
-  \******************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   LinusSettings: () => (/* binding */ LinusSettings)
-/* harmony export */ });
-/* harmony import */ var _Helper__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../Helper */ "./src/Helper.ts");
-/* harmony import */ var _linus_strategy__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../linus-strategy */ "./src/linus-strategy.ts");
-/* harmony import */ var _AbstractPopup__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./AbstractPopup */ "./src/popups/AbstractPopup.ts");
-
-
-
-// noinspection JSUnusedGlobalSymbols Class is dynamically imported.
-/**
- * Linus Chip class.
- *
- * Used to create a chip to indicate how many lights are on and to turn all off.
- */
-class LinusSettings extends _AbstractPopup__WEBPACK_IMPORTED_MODULE_2__.AbstractPopup {
-    getDefaultConfig() {
-        const linusDeviceIds = Object.values(_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices).map((area) => area?.id).flat();
-        return {
-            action: "fire-dom-event",
-            browser_mod: {
-                service: "browser_mod.popup",
-                data: {
-                    title: "Paramètre de Linus",
-                    content: {
-                        type: "vertical-stack",
-                        cards: [
-                            {
-                                type: "horizontal-stack",
-                                cards: [
-                                    {
-                                        type: "custom:mushroom-template-card",
-                                        primary: "Recharger Magic Areas",
-                                        icon: "mdi:refresh",
-                                        icon_color: "blue",
-                                        tap_action: {
-                                            action: "call-service",
-                                            service: `homeassistant.reload_config_entry`,
-                                            target: { "device_id": linusDeviceIds },
-                                        }
-                                    },
-                                    {
-                                        type: "custom:mushroom-template-card",
-                                        primary: "Redémarrer HA",
-                                        icon: "mdi:restart",
-                                        icon_color: "red",
-                                        tap_action: {
-                                            action: "call-service",
-                                            service: "homeassistant.restart",
-                                        }
-                                    },
-                                ]
-                            },
-                            {
-                                type: "markdown",
-                                content: `Linus dashboard est en version ${_linus_strategy__WEBPACK_IMPORTED_MODULE_1__.version}.`,
-                            },
-                        ].filter(Boolean)
-                    }
-                }
-            }
-        };
-    }
-    /**
-     * Class Constructor.
-     *
-     * @param {chips.PopupActionConfig} options The chip options.
-     */
-    constructor() {
-        super();
-        const defaultConfig = this.getDefaultConfig();
-        this.config = Object.assign(this.config, defaultConfig);
-    }
-}
-
-
-
-/***/ }),
-
 /***/ "./src/popups/SceneSettingsPopup.ts":
 /*!******************************************!*\
   !*** ./src/popups/SceneSettingsPopup.ts ***!
@@ -5477,6 +5388,93 @@ class SceneSettings extends _AbstractPopup__WEBPACK_IMPORTED_MODULE_2__.Abstract
     constructor(device) {
         super();
         const defaultConfig = this.getDefaultConfig(device);
+        this.config = Object.assign(this.config, defaultConfig);
+    }
+}
+
+
+
+/***/ }),
+
+/***/ "./src/popups/SettingsPopup.ts":
+/*!*************************************!*\
+  !*** ./src/popups/SettingsPopup.ts ***!
+  \*************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   SettingsPopup: () => (/* binding */ SettingsPopup)
+/* harmony export */ });
+/* harmony import */ var _Helper__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../Helper */ "./src/Helper.ts");
+/* harmony import */ var _linus_strategy__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../linus-strategy */ "./src/linus-strategy.ts");
+/* harmony import */ var _AbstractPopup__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./AbstractPopup */ "./src/popups/AbstractPopup.ts");
+
+
+
+// noinspection JSUnusedGlobalSymbols Class is dynamically imported.
+/**
+ * Linus Chip class.
+ *
+ * Used to create a chip to indicate how many lights are on and to turn all off.
+ */
+class SettingsPopup extends _AbstractPopup__WEBPACK_IMPORTED_MODULE_2__.AbstractPopup {
+    getDefaultConfig() {
+        const linusDeviceIds = Object.values(_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices).map((area) => area?.id).flat();
+        return {
+            action: "fire-dom-event",
+            browser_mod: {
+                service: "browser_mod.popup",
+                data: {
+                    title: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.entity.button.settings-chip.name"),
+                    content: {
+                        type: "vertical-stack",
+                        cards: [
+                            linusDeviceIds.length > 0 && {
+                                type: "horizontal-stack",
+                                cards: [
+                                    {
+                                        type: "custom:mushroom-template-card",
+                                        primary: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.entity.button.settings-chip.state.on"),
+                                        icon: "mdi:refresh",
+                                        icon_color: "blue",
+                                        tap_action: {
+                                            action: "call-service",
+                                            service: `homeassistant.reload_config_entry`,
+                                            target: { "device_id": linusDeviceIds },
+                                        }
+                                    },
+                                    {
+                                        type: "custom:mushroom-template-card",
+                                        primary: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.entity.button.settings-chip.state.off"),
+                                        icon: "mdi:restart",
+                                        icon_color: "red",
+                                        tap_action: {
+                                            action: "call-service",
+                                            service: "homeassistant.restart",
+                                        }
+                                    },
+                                ]
+                            },
+                            {
+                                type: "markdown",
+                                content: `Linus dashboard est en version ${_linus_strategy__WEBPACK_IMPORTED_MODULE_1__.version}.`,
+                            },
+                        ].filter(Boolean)
+                    }
+                }
+            }
+        };
+    }
+    /**
+     * Class Constructor.
+     *
+     * @param {chips.PopupActionConfig} options The chip options.
+     */
+    constructor() {
+        super();
+        const defaultConfig = this.getDefaultConfig();
         this.config = Object.assign(this.config, defaultConfig);
     }
 }
@@ -5717,29 +5715,23 @@ async function createChipsFromList(chipsList, chipOptions, area_id) {
     for (let chipType of chipsList) {
         if (((area_id ? _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas[area_id] : _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper)?.domains[chipType] ?? []).length === 0)
             continue;
-        if (chipOptions?.[`${chipType}_count`] ?? true) {
-            const className = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.sanitizeClassName(chipType + "Chip");
-            try {
-                let chipModule;
-                if ([..._variables__WEBPACK_IMPORTED_MODULE_1__.DEVICE_CLASSES.binary_sensor, ..._variables__WEBPACK_IMPORTED_MODULE_1__.DEVICE_CLASSES.sensor].includes(chipType)) {
-                    chipModule = await Promise.resolve(/*! import() */).then(__webpack_require__.bind(__webpack_require__, /*! ./chips/AggregateChip */ "./src/chips/AggregateChip.ts"));
-                    const chip = new chipModule.AggregateChip({ device_class: chipType, area_id });
-                    chips.push(chip.getChip());
-                }
-                else {
-                    chipModule = await __webpack_require__("./src/chips lazy recursive ^\\.\\/.*$")("./" + className);
-                    const chip = new chipModule[className]({ area_id });
-                    chips.push(chip.getChip());
-                }
+        const className = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.sanitizeClassName(chipType + "Chip");
+        try {
+            let chipModule;
+            if ([..._variables__WEBPACK_IMPORTED_MODULE_1__.DEVICE_CLASSES.binary_sensor, ..._variables__WEBPACK_IMPORTED_MODULE_1__.DEVICE_CLASSES.sensor].includes(chipType)) {
+                chipModule = await Promise.resolve(/*! import() */).then(__webpack_require__.bind(__webpack_require__, /*! ./chips/AggregateChip */ "./src/chips/AggregateChip.ts"));
+                const chip = new chipModule.AggregateChip({ ...chipOptions, device_class: chipType, area_id });
+                chips.push(chip.getChip());
             }
-            catch (e) {
-                _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.logError(`An error occurred while creating the ${chipType} chip!`, e);
+            else {
+                chipModule = await __webpack_require__("./src/chips lazy recursive ^\\.\\/.*$")("./" + className);
+                const chip = new chipModule[className]({ ...chipOptions, area_id });
+                chips.push(chip.getChip());
             }
         }
-    }
-    // Extra chips.
-    if (chipOptions?.extra_chips) {
-        chips.push(...chipOptions.extra_chips);
+        catch (e) {
+            _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.logError(`An error occurred while creating the ${chipType} chip!`, e);
+        }
     }
     const unavailableChip = new _chips_UnavailableChip__WEBPACK_IMPORTED_MODULE_2__.UnavailableChip(area_id).getChip();
     if (unavailableChip)
@@ -6195,7 +6187,7 @@ class AreaView {
         if (device) {
             chips.push(new _chips_AreaStateChip__WEBPACK_IMPORTED_MODULE_5__.AreaStateChip(device, true).getChip());
         }
-        const areaChips = await (0,_utils__WEBPACK_IMPORTED_MODULE_6__.createChipsFromList)(_variables__WEBPACK_IMPORTED_MODULE_4__.AREA_EXPOSED_CHIPS, chipOptions, this.area.slug);
+        const areaChips = await (0,_utils__WEBPACK_IMPORTED_MODULE_6__.createChipsFromList)(_variables__WEBPACK_IMPORTED_MODULE_4__.AREA_EXPOSED_CHIPS, { show_content: true }, this.area.slug);
         if (areaChips) {
             chips.push(...areaChips);
         }
@@ -6719,7 +6711,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _Helper__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../Helper */ "./src/Helper.ts");
 /* harmony import */ var _AbstractView__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./AbstractView */ "./src/views/AbstractView.ts");
 /* harmony import */ var _chips_SettingsChip__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../chips/SettingsChip */ "./src/chips/SettingsChip.ts");
-/* harmony import */ var _popups_LinusSettingsPopup__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../popups/LinusSettingsPopup */ "./src/popups/LinusSettingsPopup.ts");
+/* harmony import */ var _popups_SettingsPopup__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../popups/SettingsPopup */ "./src/popups/SettingsPopup.ts");
 /* harmony import */ var _variables__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../variables */ "./src/variables.ts");
 /* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../utils */ "./src/utils.ts");
 /* harmony import */ var _chips_WeatherChip__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../chips/WeatherChip */ "./src/chips/WeatherChip.ts");
@@ -6829,11 +6821,11 @@ class HomeView extends _AbstractView__WEBPACK_IMPORTED_MODULE_1__.AbstractView {
                 _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.logError("An error occurred while creating the spotify chip!", e);
             }
         }
-        const homeChips = await (0,_utils__WEBPACK_IMPORTED_MODULE_5__.createChipsFromList)(_variables__WEBPACK_IMPORTED_MODULE_4__.HOME_EXPOSED_CHIPS, chipOptions);
+        const homeChips = await (0,_utils__WEBPACK_IMPORTED_MODULE_5__.createChipsFromList)(_variables__WEBPACK_IMPORTED_MODULE_4__.HOME_EXPOSED_CHIPS, { show_content: true });
         if (homeChips) {
             chips.push(...homeChips);
         }
-        const linusSettings = new _chips_SettingsChip__WEBPACK_IMPORTED_MODULE_2__.SettingsChip({ tap_action: new _popups_LinusSettingsPopup__WEBPACK_IMPORTED_MODULE_3__.LinusSettings().getPopup() });
+        const linusSettings = new _chips_SettingsChip__WEBPACK_IMPORTED_MODULE_2__.SettingsChip({ tap_action: new _popups_SettingsPopup__WEBPACK_IMPORTED_MODULE_3__.SettingsPopup().getPopup() });
         chips.push(linusSettings.getChip());
         return chips.map(chip => ({
             type: "custom:mushroom-chips-card",

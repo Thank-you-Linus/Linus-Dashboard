@@ -9,7 +9,7 @@ import { ActionConfig } from "../types/homeassistant/data/lovelace";
 import { TitleCardConfig } from "../types/lovelace-mushroom/cards/title-card-config";
 import { PersonCardConfig } from "../types/lovelace-mushroom/cards/person-card-config";
 import { SettingsChip } from "../chips/SettingsChip";
-import { LinusSettings } from "../popups/LinusSettingsPopup";
+import { SettingsPopup } from "../popups/SettingsPopup";
 import { HOME_EXPOSED_CHIPS } from "../variables";
 import { createChipsFromList, navigateTo, slugify } from "../utils";
 import { WeatherChip } from "../chips/WeatherChip";
@@ -124,12 +124,12 @@ class HomeView extends AbstractView {
       }
     }
 
-    const homeChips = await createChipsFromList(HOME_EXPOSED_CHIPS, chipOptions);
+    const homeChips = await createChipsFromList(HOME_EXPOSED_CHIPS, { show_content: true });
     if (homeChips) {
       chips.push(...homeChips);
     }
 
-    const linusSettings = new SettingsChip({ tap_action: new LinusSettings().getPopup() })
+    const linusSettings = new SettingsChip({ tap_action: new SettingsPopup().getPopup() })
 
     chips.push(linusSettings.getChip());
 

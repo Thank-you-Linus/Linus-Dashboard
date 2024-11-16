@@ -147,7 +147,7 @@ class HomeAreaCard extends AbstractCard {
           chip: new ClimateChip().getChip()
         }).getChip(),
         new ConditionalChip({
-          conditions: [{ entity: all_lights?.entity_id, state_not: UNAVAILABLE }],
+          conditions: [{ entity: all_lights?.entity_id, state_not: UNAVAILABLE, }],
           chip: new LightChip({ area_id: area.slug }).getChip()
         }).getChip(),
         new ConditionalChip({

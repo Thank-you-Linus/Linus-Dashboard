@@ -23,7 +23,7 @@ class LightChip extends AbstractChip {
     type: "template",
     icon: "mdi:lightbulb-group",
     icon_color: "amber",
-    content: "none",
+    content: "",
     tap_action: {
       action: "navigate",
       navigation_path: "lights",
@@ -38,7 +38,9 @@ class LightChip extends AbstractChip {
   constructor(options: chips.ChipOptions) {
     super();
 
-    this.#defaultConfig.content = Helper.getCountTemplate("light", "eq", "on", options?.area_id);
+    if (options?.show_content) {
+      this.#defaultConfig.content = Helper.getCountTemplate("light", "eq", "on", options?.area_id);
+    }
 
     const magicAreasEntity = getMAEntity(options?.area_id ?? options?.floor_id ?? "global", "light");
 

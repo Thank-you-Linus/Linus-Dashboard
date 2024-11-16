@@ -1,13 +1,9 @@
 import { AggregateAreaListPopup } from "../popups/AggregateAreaListPopup";
 import { AggregateListPopup } from "../popups/AggregateListPopup";
 import { chips } from "../types/strategy/chips";
-import { generic } from "../types/strategy/generic";
-import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
-import { TemplateChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
-import { DEVICE_CLASSES, DOMAIN_ICONS, DOMAIN_STATE_ICONS, SENSOR_DOMAINS } from "../variables";
+import { DEVICE_CLASSES, DOMAIN_ICONS } from "../variables";
 import { AbstractChip } from "./AbstractChip";
 import { Helper } from "../Helper";
-import { getMAEntity } from "../utils";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**
@@ -103,7 +99,7 @@ class AggregateChip extends AbstractChip {
   constructor(options: chips.AggregateChipOptions) {
     super();
 
-    const { device_class, show_content = true, area_id } = options
+    const { device_class, show_content = false, area_id } = options
 
     const defaultConfig = this.getDefaultConfig({ device_class, show_content, area_id })
 

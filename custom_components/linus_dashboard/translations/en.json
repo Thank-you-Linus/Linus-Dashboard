@@ -34,6 +34,13 @@
                     "on": "Add a new area",
                     "off": "Click here to go to the areas page"
                 }
+            },
+            "settings-chip": {
+                "name": "Linus Settings",
+                "state": {
+                    "on": "Reload Magic Areas",
+                    "off": "Restart HA"
+                }
             }
         }
     }

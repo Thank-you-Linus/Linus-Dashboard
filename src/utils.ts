@@ -6,6 +6,7 @@ import { ActionConfig } from "./types/homeassistant/data/lovelace";
 import { DEVICE_CLASSES, MAGIC_AREAS_AGGREGATE_DOMAINS, MAGIC_AREAS_GROUP_DOMAINS, MAGIC_AREAS_LIGHT_DOMAINS, SENSOR_DOMAINS, UNAVAILABLE_STATES } from "./variables";
 import { LovelaceChipConfig } from "./types/lovelace-mushroom/utils/lovelace/chip/types";
 import { UnavailableChip } from "./chips/UnavailableChip";
+import { chips } from "./types/strategy/chips";
 
 /**
  * Groups the elements of an array based on a provided function
@@ -108,34 +109,29 @@ export function groupEntitiesByDomain(entity_ids: string[]): Record<string, stri
 }
 
 // Numeric chips.
-export async function createChipsFromList(chipsList: string[], chipOptions: generic.Chips | undefined, area_id?: string) {
+export async function createChipsFromList(chipsList: string[], chipOptions?: Partial<chips.AggregateChipOptions>, area_id?: string) {
     const chips: LovelaceChipConfig[] = [];
     for (let chipType of chipsList) {
         if (((area_id ? Helper.areas[area_id] : Helper)?.domains[chipType] ?? []).length === 0) continue;
 
-        if (chipOptions?.[`${chipType}_count` as string] ?? true) {
-            const className = Helper.sanitizeClassName(chipType + "Chip");
 
-            try {
-                let chipModule;
-                if ([...DEVICE_CLASSES.binary_sensor, ...DEVICE_CLASSES.sensor].includes(chipType)) {
-                    chipModule = await import("./chips/AggregateChip");
-                    const chip = new chipModule.AggregateChip({ device_class: chipType, area_id });
-                    chips.push(chip.getChip());
-                } else {
-                    chipModule = await import("./chips/" + className);
-                    const chip = new chipModule[className]({ area_id });
-                    chips.push(chip.getChip());
-                }
-            } catch (e) {
-                Helper.logError(`An error occurred while creating the ${chipType} chip!`, e);
+        const className = Helper.sanitizeClassName(chipType + "Chip");
+
+        try {
+            let chipModule;
+            if ([...DEVICE_CLASSES.binary_sensor, ...DEVICE_CLASSES.sensor].includes(chipType)) {
+                chipModule = await import("./chips/AggregateChip");
+                const chip = new chipModule.AggregateChip({ ...chipOptions, device_class: chipType, area_id });
+                chips.push(chip.getChip());
+            } else {
+                chipModule = await import("./chips/" + className);
+                const chip = new chipModule[className]({ ...chipOptions, area_id });
+                chips.push(chip.getChip());
             }
-        }
-    }
+        } catch (e) {
+            Helper.logError(`An error occurred while creating the ${chipType} chip!`, e);
 
-    // Extra chips.
-    if (chipOptions?.extra_chips) {
-        chips.push(...chipOptions.extra_chips);
+        }
     }
 
     const unavailableChip = new UnavailableChip(area_id).getChip();

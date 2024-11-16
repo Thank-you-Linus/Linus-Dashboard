@@ -9,7 +9,7 @@ import { AbstractPopup } from "./AbstractPopup";
  *
  * Used to create a chip to indicate how many lights are on and to turn all off.
  */
-class LinusSettings extends AbstractPopup {
+class SettingsPopup extends AbstractPopup {
 
   getDefaultConfig(): PopupActionConfig {
 
@@ -20,16 +20,16 @@ class LinusSettings extends AbstractPopup {
       browser_mod: {
         service: "browser_mod.popup",
         data: {
-          title: "Paramètre de Linus",
+          title: Helper.localize("component.linus_dashboard.entity.button.settings-chip.name"),
           content: {
             type: "vertical-stack",
             cards: [
-              {
+              linusDeviceIds.length > 0 && {
                 type: "horizontal-stack",
                 cards: [
                   {
                     type: "custom:mushroom-template-card",
-                    primary: "Recharger Magic Areas",
+                    primary: Helper.localize("component.linus_dashboard.entity.button.settings-chip.state.on"),
                     icon: "mdi:refresh",
                     icon_color: "blue",
                     tap_action: {
@@ -40,7 +40,7 @@ class LinusSettings extends AbstractPopup {
                   },
                   {
                     type: "custom:mushroom-template-card",
-                    primary: "Redémarrer HA",
+                    primary: Helper.localize("component.linus_dashboard.entity.button.settings-chip.state.off"),
                     icon: "mdi:restart",
                     icon_color: "red",
                     tap_action: {
@@ -77,4 +77,4 @@ class LinusSettings extends AbstractPopup {
   }
 }
 
-export { LinusSettings };
+export { SettingsPopup };

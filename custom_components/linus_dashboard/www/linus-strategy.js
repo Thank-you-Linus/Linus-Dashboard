@@ -3967,7 +3967,7 @@ class UnavailableChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.Abstrac
                 return acc;
             return [...acc, ...area.entities];
         }, []);
-        const unavailableEntities = entities.filter(entity_id => _variables__WEBPACK_IMPORTED_MODULE_3__.UNAVAILABLE_STATES.includes(_Helper__WEBPACK_IMPORTED_MODULE_2__.Helper.getEntityState(entity_id)?.state)).map(entity_id => _Helper__WEBPACK_IMPORTED_MODULE_2__.Helper.entities[entity_id]);
+        const unavailableEntities = entities?.filter(entity_id => _variables__WEBPACK_IMPORTED_MODULE_3__.UNAVAILABLE_STATES.includes(_Helper__WEBPACK_IMPORTED_MODULE_2__.Helper.getEntityState(entity_id)?.state)).map(entity_id => _Helper__WEBPACK_IMPORTED_MODULE_2__.Helper.entities[entity_id]);
         __classPrivateFieldGet(this, _UnavailableChip_defaultConfig, "f").tap_action = new _popups_GroupListPopup__WEBPACK_IMPORTED_MODULE_0__.GroupListPopup(unavailableEntities, "Unavailable entities").getPopup();
         this.config = Object.assign(this.config, __classPrivateFieldGet(this, _UnavailableChip_defaultConfig, "f"));
     }

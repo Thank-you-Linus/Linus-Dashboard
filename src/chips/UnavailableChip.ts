@@ -43,7 +43,7 @@ class UnavailableChip extends AbstractChip {
             return [...acc, ...area.entities] as string[];
         }, [])
 
-        const unavailableEntities = entities.filter(entity_id => UNAVAILABLE_STATES.includes(Helper.getEntityState(entity_id)?.state)).map(entity_id => Helper.entities[entity_id]);
+        const unavailableEntities = entities?.filter(entity_id => UNAVAILABLE_STATES.includes(Helper.getEntityState(entity_id)?.state)).map(entity_id => Helper.entities[entity_id]);
 
 
         this.#defaultConfig.tap_action = new GroupListPopup(unavailableEntities, "Unavailable entities").getPopup()

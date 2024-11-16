@@ -5713,7 +5713,7 @@ function groupEntitiesByDomain(entity_ids) {
 async function createChipsFromList(chipsList, chipOptions, area_id) {
     const chips = [];
     for (let chipType of chipsList) {
-        if (((area_id ? _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas[area_id] : _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper).domains[chipType] ?? []).length === 0)
+        if (((area_id ? _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas[area_id] : _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper)?.domains[chipType] ?? []).length === 0)
             continue;
         if (chipOptions?.[`${chipType}_count`] ?? true) {
             const className = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.sanitizeClassName(chipType + "Chip");

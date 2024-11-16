@@ -496,7 +496,7 @@ class Helper {
             for (const area of Object.values(__classPrivateFieldGet(this, _a, "f", _Helper_areas))) {
                 if (area.area_id === "undisclosed")
                     continue;
-                const newStates = __classPrivateFieldGet(this, _a, "f", _Helper_areas)[area.area_id].domains[domain]?.map((entity_id) => `states['${entity_id}']`);
+                const newStates = __classPrivateFieldGet(this, _a, "f", _Helper_areas)[area.area_id]?.domains[domain]?.map((entity_id) => `states['${entity_id}']`);
                 if (newStates) {
                     states.push(...newStates);
                 }
@@ -545,7 +545,7 @@ class Helper {
         for (const area of Object.values(__classPrivateFieldGet(this, _a, "f", _Helper_areas))) {
             if (area.area_id === "undisclosed")
                 continue;
-            const newStates = __classPrivateFieldGet(this, _a, "f", _Helper_areas)[area.area_id].domains[domain]?.map((entity_id) => `states['${entity_id}']`);
+            const newStates = __classPrivateFieldGet(this, _a, "f", _Helper_areas)[area.area_id]?.domains[domain]?.map((entity_id) => `states['${entity_id}']`);
             if (newStates) {
                 states.push(...newStates);
             }

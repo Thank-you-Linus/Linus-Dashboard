@@ -471,7 +471,7 @@ class Helper {
       for (const area of Object.values(this.#areas)) {
         if (area.area_id === "undisclosed") continue
 
-        const newStates = this.#areas[area.area_id].domains[domain]?.map((entity_id) => `states['${entity_id}']`);
+        const newStates = this.#areas[area.area_id]?.domains[domain]?.map((entity_id) => `states['${entity_id}']`);
         if (newStates) {
           states.push(...newStates);
         }
@@ -527,7 +527,7 @@ class Helper {
     for (const area of Object.values(this.#areas)) {
       if (area.area_id === "undisclosed") continue
 
-      const newStates = this.#areas[area.area_id].domains[domain]?.map((entity_id) => `states['${entity_id}']`);
+      const newStates = this.#areas[area.area_id]?.domains[domain]?.map((entity_id) => `states['${entity_id}']`);
       if (newStates) {
         states.push(...newStates);
       }

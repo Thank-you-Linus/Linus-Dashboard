@@ -10,3 +10,6 @@ VERSION = "0.0.1"
 ICON = "mdi:bow-tie"
 
 URL_PANEL = "linus_dashboard_panel"
+
+CONF_ALARM_ENTITY = "alarm_entity"
+CONF_WEATHER_ENTITY = "weather_entity"

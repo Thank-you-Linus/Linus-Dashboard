@@ -324,11 +324,6 @@ class HomeView extends AbstractView {
       }
     }
 
-    console.log("Helper.localize", Helper.localize("component.linus_dashboard.config.step.user.data.password"))
-    console.log("Helper.localize 1", Helper.localize("component.linus_dashboard.entity.switch.pre-release.name"))
-    console.log("Helper.localize 2", Helper.localize("component.magic_areas.entity.binary_sensor.area_state.name"))
-    console.log("Helper.localize 3", Helper.localize("component.fan.entity_component._.name"))
-
     groupedCards.push({
       type: "custom:mushroom-template-card",
       // primary: Helper.localize("components.linus-dashboard.ui.newAreaTitle"),

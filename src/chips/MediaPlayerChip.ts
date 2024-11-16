@@ -41,11 +41,10 @@ class MediaPlayerChip extends AbstractChip {
 
     this.#defaultConfig.content = Helper.getCountTemplate("media_player", "eq", "playing", options?.area_id);
 
-    const magicAreaDevice = Helper.magicAreasDevices[options?.area_id ?? options?.floor_id ?? "global"]
-    const magicAreasLight = getMAEntity(magicAreaDevice, "media_player");
+    const magicAreasEntity = getMAEntity(options?.area_id ?? options?.floor_id ?? "global", "media_player");
 
-    if (magicAreasLight) {
-      this.#defaultConfig.entity = magicAreasLight.entity_id;
+    if (magicAreasEntity) {
+      this.#defaultConfig.entity = magicAreasEntity.entity_id;
     }
 
     this.config = Object.assign(this.config, this.#defaultConfig, options);

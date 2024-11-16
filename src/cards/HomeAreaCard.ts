@@ -54,12 +54,11 @@ const getBadgeColor = (entityId: string) => `
 class HomeAreaCard extends AbstractCard {
   constructor(options: cards.HomeAreaCardOptions) {
 
-    const magicAreaDevice = Helper.magicAreasDevices[options.area_id];
-    const areaState = getMAEntity(magicAreaDevice, "area_state") ?? {};
+    const magicAreasEntity = getMAEntity(options.area_id, "area_state") ?? {};
 
     const area = Helper.areas[options.area_id];
 
-    super(areaState);
+    super(magicAreasEntity);
     const defaultConfig = options?.area_id === "undisclosed" ? this.getUndisclosedAreaConfig(area) : this.getDefaultConfig(area);
     this.config = { ...this.config, ...defaultConfig, ...options };
   }

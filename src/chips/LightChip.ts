@@ -40,11 +40,12 @@ class LightChip extends AbstractChip {
 
     this.#defaultConfig.content = Helper.getCountTemplate("light", "eq", "on", options?.area_id);
 
-    const magicAreaDevice = Helper.magicAreasDevices[options?.area_id ?? options?.floor_id ?? "global"]
-    const magicAreasLight = getMAEntity(magicAreaDevice, "light");
+    const magicAreasEntity = getMAEntity(options?.area_id ?? options?.floor_id ?? "global", "light");
 
-    if (magicAreasLight) {
-      this.#defaultConfig.entity = magicAreasLight.entity_id;
+    console.log('===> magicAreasEntity', Helper.magicAreasDevices["global"]);
+
+    if (magicAreasEntity) {
+      this.#defaultConfig.entity = magicAreasEntity.entity_id;
     }
 
     this.config = Object.assign(this.config, this.#defaultConfig, options);

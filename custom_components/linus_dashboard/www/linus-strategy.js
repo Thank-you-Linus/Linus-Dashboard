@@ -1409,8 +1409,7 @@ class ControllerCard {
         if (__classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").showControls || __classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").extraControls) {
             const areaId = Array.isArray(__classPrivateFieldGet(this, _ControllerCard_target, "f").area_id) ? __classPrivateFieldGet(this, _ControllerCard_target, "f").area_id[0] : __classPrivateFieldGet(this, _ControllerCard_target, "f").area_id;
             const areaSlug = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas[areaId]?.slug;
-            const linusDevice = areaSlug ? _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices[areaSlug] : undefined;
-            const magicAreasEntity = linusDevice && __classPrivateFieldGet(this, _ControllerCard_domain, "f") && (0,_utils__WEBPACK_IMPORTED_MODULE_1__.getMAEntity)(linusDevice, __classPrivateFieldGet(this, _ControllerCard_domain, "f"));
+            const magicAreasEntity = __classPrivateFieldGet(this, _ControllerCard_domain, "f") && (0,_utils__WEBPACK_IMPORTED_MODULE_1__.getMAEntity)(areaSlug, __classPrivateFieldGet(this, _ControllerCard_domain, "f"));
             const badges = [];
             if (__classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").showControls) {
                 badges.push({
@@ -1444,7 +1443,7 @@ class ControllerCard {
                 });
             }
             if (magicAreasEntity && __classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").extraControls) {
-                badges.push(...__classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").extraControls(linusDevice)?.map((chip) => {
+                badges.push(...__classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").extraControls(_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices[areaSlug])?.map((chip) => {
                     return {
                         type: "custom:mushroom-chips-card",
                         alignment: "end",
@@ -1656,10 +1655,9 @@ const getBadgeColor = (entityId) => `
 `;
 class HomeAreaCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractCard {
     constructor(options) {
-        const magicAreaDevice = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.magicAreasDevices[options.area_id];
-        const areaState = (0,_utils__WEBPACK_IMPORTED_MODULE_5__.getMAEntity)(magicAreaDevice, "area_state") ?? {};
+        const magicAreasEntity = (0,_utils__WEBPACK_IMPORTED_MODULE_5__.getMAEntity)(options.area_id, "area_state") ?? {};
         const area = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.areas[options.area_id];
-        super(areaState);
+        super(magicAreasEntity);
         const defaultConfig = options?.area_id === "undisclosed" ? this.getUndisclosedAreaConfig(area) : this.getDefaultConfig(area);
         this.config = { ...this.config, ...defaultConfig, ...options };
     }
@@ -3078,10 +3076,9 @@ class ClimateChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.AbstractChi
             },
         });
         __classPrivateFieldGet(this, _ClimateChip_defaultConfig, "f").content = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getCountTemplate("climate", "ne", "off", options?.area_id);
-        const magicAreaDevice = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices[options?.area_id ?? options?.floor_id ?? "global"];
-        const magicAreasLight = (0,_utils__WEBPACK_IMPORTED_MODULE_2__.getMAEntity)(magicAreaDevice, "climate");
-        if (magicAreasLight) {
-            __classPrivateFieldGet(this, _ClimateChip_defaultConfig, "f").entity = magicAreasLight.entity_id;
+        const magicAreasEntity = (0,_utils__WEBPACK_IMPORTED_MODULE_2__.getMAEntity)(options?.area_id ?? options?.floor_id ?? "global", "climate");
+        if (magicAreasEntity) {
+            __classPrivateFieldGet(this, _ClimateChip_defaultConfig, "f").entity = magicAreasEntity.entity_id;
         }
         this.config = Object.assign(this.config, __classPrivateFieldGet(this, _ClimateChip_defaultConfig, "f"), options);
     }
@@ -3407,10 +3404,10 @@ class LightChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.AbstractChip 
             },
         });
         __classPrivateFieldGet(this, _LightChip_defaultConfig, "f").content = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getCountTemplate("light", "eq", "on", options?.area_id);
-        const magicAreaDevice = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices[options?.area_id ?? options?.floor_id ?? "global"];
-        const magicAreasLight = (0,_utils__WEBPACK_IMPORTED_MODULE_2__.getMAEntity)(magicAreaDevice, "light");
-        if (magicAreasLight) {
-            __classPrivateFieldGet(this, _LightChip_defaultConfig, "f").entity = magicAreasLight.entity_id;
+        const magicAreasEntity = (0,_utils__WEBPACK_IMPORTED_MODULE_2__.getMAEntity)(options?.area_id ?? options?.floor_id ?? "global", "light");
+        console.log('===> magicAreasEntity', _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices["global"]);
+        if (magicAreasEntity) {
+            __classPrivateFieldGet(this, _LightChip_defaultConfig, "f").entity = magicAreasEntity.entity_id;
         }
         this.config = Object.assign(this.config, __classPrivateFieldGet(this, _LightChip_defaultConfig, "f"), options);
     }
@@ -3479,10 +3476,9 @@ class MediaPlayerChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.Abstrac
             },
         });
         __classPrivateFieldGet(this, _MediaPlayerChip_defaultConfig, "f").content = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getCountTemplate("media_player", "eq", "playing", options?.area_id);
-        const magicAreaDevice = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices[options?.area_id ?? options?.floor_id ?? "global"];
-        const magicAreasLight = (0,_utils__WEBPACK_IMPORTED_MODULE_3__.getMAEntity)(magicAreaDevice, "media_player");
-        if (magicAreasLight) {
-            __classPrivateFieldGet(this, _MediaPlayerChip_defaultConfig, "f").entity = magicAreasLight.entity_id;
+        const magicAreasEntity = (0,_utils__WEBPACK_IMPORTED_MODULE_3__.getMAEntity)(options?.area_id ?? options?.floor_id ?? "global", "media_player");
+        if (magicAreasEntity) {
+            __classPrivateFieldGet(this, _MediaPlayerChip_defaultConfig, "f").entity = magicAreasEntity.entity_id;
         }
         this.config = Object.assign(this.config, __classPrivateFieldGet(this, _MediaPlayerChip_defaultConfig, "f"), options);
     }
@@ -5686,14 +5682,16 @@ function getAggregateEntity(device, domains, deviceClasses) {
     }
     return aggregateKeys.filter(Boolean);
 }
-function getMAEntity(device, domain, deviceClass) {
+function getMAEntity(device_id, domain, deviceClass) {
+    const magicAreaDevice = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices[device_id];
+    // TODO remove '' when new release
     if (_variables__WEBPACK_IMPORTED_MODULE_1__.MAGIC_AREAS_LIGHT_DOMAINS === domain)
-        return device?.entities?.['all_lights'];
+        return magicAreaDevice?.entities?.['all_lights'] ?? magicAreaDevice?.entities?.[''];
     if (_variables__WEBPACK_IMPORTED_MODULE_1__.MAGIC_AREAS_GROUP_DOMAINS.includes(domain))
-        return device?.entities?.[`${domain}_group`];
+        return magicAreaDevice?.entities?.[`${domain}_group`];
     if (deviceClass && [..._variables__WEBPACK_IMPORTED_MODULE_1__.DEVICE_CLASSES.binary_sensor, ..._variables__WEBPACK_IMPORTED_MODULE_1__.DEVICE_CLASSES.sensor].includes(deviceClass))
-        return device?.entities?.[`aggregate_${deviceClass}`];
-    return device?.entities?.[domain];
+        return magicAreaDevice?.entities?.[`aggregate_${deviceClass}`];
+    return magicAreaDevice?.entities?.[domain];
 }
 function groupEntitiesByDomain(entity_ids) {
     return entity_ids
@@ -6991,10 +6989,6 @@ async function _HomeView_createAreaSection() {
             }
         }
     }
-    console.log("Helper.localize", _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.config.step.user.data.password"));
-    console.log("Helper.localize 1", _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.entity.switch.pre-release.name"));
-    console.log("Helper.localize 2", _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.magic_areas.entity.binary_sensor.area_state.name"));
-    console.log("Helper.localize 3", _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.fan.entity_component._.name"));
     groupedCards.push({
         type: "custom:mushroom-template-card",
         // primary: Helper.localize("components.linus-dashboard.ui.newAreaTitle"),

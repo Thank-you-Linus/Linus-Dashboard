@@ -5,8 +5,8 @@
                 "title": "Linus Dashboard Settings",
                 "description": "",
                 "data": {
-                    "alarm_entity_id": "Select alarm entity",
-                    "weather_entity_id": "Select weather entity"
+                    "alarm_entity": "Select alarm entity",
+                    "weather_entity": "Select weather entity"
                 }
             }
         },
@@ -20,8 +20,8 @@
                 "title": "Linus Dashboard Settings",
                 "description": "",
                 "data": {
-                    "alarm_entity_id": "Alarm entity",
-                    "weather_entity_id": "Weather entity"
+                    "alarm_entity": "Alarm entity",
+                    "weather_entity": "Weather entity"
                 }
             }
         }

@@ -105,8 +105,7 @@ class ControllerCard {
     if (this.#defaultConfig.showControls || this.#defaultConfig.extraControls) {
       const areaId = Array.isArray(this.#target.area_id) ? this.#target.area_id[0] : this.#target.area_id;
       const areaSlug = Helper.areas[areaId!]?.slug;
-      const linusDevice = areaSlug ? Helper.magicAreasDevices[areaSlug] : undefined;
-      const magicAreasEntity = linusDevice && this.#domain && getMAEntity(linusDevice, this.#domain);
+      const magicAreasEntity = this.#domain && getMAEntity(areaSlug, this.#domain);
 
       const badges: LovelaceBadgeConfig[] = [];
 
@@ -143,7 +142,7 @@ class ControllerCard {
       }
 
       if (magicAreasEntity && this.#defaultConfig.extraControls) {
-        badges.push(...this.#defaultConfig.extraControls(linusDevice)?.map((chip: any) => {
+        badges.push(...this.#defaultConfig.extraControls(Helper.magicAreasDevices[areaSlug])?.map((chip: any) => {
           return {
             type: "custom:mushroom-chips-card",
             alignment: "end",

@@ -78,11 +78,13 @@ export function getAggregateEntity(device: MagicAreaRegistryEntry, domains: stri
     return aggregateKeys.filter(Boolean)
 }
 
-export function getMAEntity(device: MagicAreaRegistryEntry, domain: string, deviceClass?: string): EntityRegistryEntry {
-    if (MAGIC_AREAS_LIGHT_DOMAINS === domain) return device?.entities?.['all_lights']
-    if (MAGIC_AREAS_GROUP_DOMAINS.includes(domain)) return device?.entities?.[`${domain}_group` as 'cover_group']
-    if (deviceClass && [...DEVICE_CLASSES.binary_sensor, ...DEVICE_CLASSES.sensor].includes(deviceClass)) return device?.entities?.[`aggregate_${deviceClass}` as 'aggregate_motion']
-    return device?.entities?.[domain]
+export function getMAEntity(device_id: string, domain: string, deviceClass?: string): EntityRegistryEntry {
+    const magicAreaDevice = Helper.magicAreasDevices[device_id];
+    // TODO remove '' when new release
+    if (MAGIC_AREAS_LIGHT_DOMAINS === domain) return magicAreaDevice?.entities?.['all_lights'] ?? magicAreaDevice?.entities?.['']
+    if (MAGIC_AREAS_GROUP_DOMAINS.includes(domain)) return magicAreaDevice?.entities?.[`${domain}_group` as 'cover_group']
+    if (deviceClass && [...DEVICE_CLASSES.binary_sensor, ...DEVICE_CLASSES.sensor].includes(deviceClass)) return magicAreaDevice?.entities?.[`aggregate_${deviceClass}` as 'aggregate_motion']
+    return magicAreaDevice?.entities?.[domain]
 }
 
 export function groupEntitiesByDomain(entity_ids: string[]): Record<string, string[]> {

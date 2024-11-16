@@ -40,11 +40,10 @@ class ClimateChip extends AbstractChip {
 
     this.#defaultConfig.content = Helper.getCountTemplate("climate", "ne", "off", options?.area_id);
 
-    const magicAreaDevice = Helper.magicAreasDevices[options?.area_id ?? options?.floor_id ?? "global"]
-    const magicAreasLight = getMAEntity(magicAreaDevice, "climate");
+    const magicAreasEntity = getMAEntity(options?.area_id ?? options?.floor_id ?? "global", "climate");
 
-    if (magicAreasLight) {
-      this.#defaultConfig.entity = magicAreasLight.entity_id;
+    if (magicAreasEntity) {
+      this.#defaultConfig.entity = magicAreasEntity.entity_id;
     }
 
     this.config = Object.assign(this.config, this.#defaultConfig, options);

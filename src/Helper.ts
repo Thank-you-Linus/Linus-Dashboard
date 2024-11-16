@@ -462,7 +462,7 @@ class Helper {
     }
 
     if (area_id) {
-      const newStates = this.#areas[area_id].domains[domain]?.map((entity_id) => `states['${entity_id}']`);
+      const newStates = this.#areas[area_id]?.domains[domain]?.map((entity_id) => `states['${entity_id}']`);
       if (newStates) {
         states.push(...newStates);
       }
@@ -517,7 +517,7 @@ class Helper {
 
 
     if (area_id) {
-      const newStates = this.#areas[area_id].domains[domain]?.map((entity_id) => `states['${entity_id}']`);
+      const newStates = this.#areas[area_id]?.domains[domain]?.map((entity_id) => `states['${entity_id}']`);
       if (newStates) {
         states.push(...newStates);
       }

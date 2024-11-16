@@ -486,7 +486,7 @@ class Helper {
             console.warn("Helper class should be initialized before calling this method!");
         }
         if (area_id) {
-            const newStates = __classPrivateFieldGet(this, _a, "f", _Helper_areas)[area_id].domains[domain]?.map((entity_id) => `states['${entity_id}']`);
+            const newStates = __classPrivateFieldGet(this, _a, "f", _Helper_areas)[area_id]?.domains[domain]?.map((entity_id) => `states['${entity_id}']`);
             if (newStates) {
                 states.push(...newStates);
             }
@@ -536,7 +536,7 @@ class Helper {
             console.warn("Helper class should be initialized before calling this method!");
         }
         if (area_id) {
-            const newStates = __classPrivateFieldGet(this, _a, "f", _Helper_areas)[area_id].domains[domain]?.map((entity_id) => `states['${entity_id}']`);
+            const newStates = __classPrivateFieldGet(this, _a, "f", _Helper_areas)[area_id]?.domains[domain]?.map((entity_id) => `states['${entity_id}']`);
             if (newStates) {
                 states.push(...newStates);
             }
@@ -3405,7 +3405,6 @@ class LightChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.AbstractChip 
         });
         __classPrivateFieldGet(this, _LightChip_defaultConfig, "f").content = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getCountTemplate("light", "eq", "on", options?.area_id);
         const magicAreasEntity = (0,_utils__WEBPACK_IMPORTED_MODULE_2__.getMAEntity)(options?.area_id ?? options?.floor_id ?? "global", "light");
-        console.log('===> magicAreasEntity', _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices["global"]);
         if (magicAreasEntity) {
             __classPrivateFieldGet(this, _LightChip_defaultConfig, "f").entity = magicAreasEntity.entity_id;
         }

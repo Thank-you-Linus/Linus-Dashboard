@@ -42,8 +42,6 @@ class LightChip extends AbstractChip {
 
     const magicAreasEntity = getMAEntity(options?.area_id ?? options?.floor_id ?? "global", "light");
 
-    console.log('===> magicAreasEntity', Helper.magicAreasDevices["global"]);
-
     if (magicAreasEntity) {
       this.#defaultConfig.entity = magicAreasEntity.entity_id;
     }

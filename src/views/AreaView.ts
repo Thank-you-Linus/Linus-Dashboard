@@ -12,7 +12,7 @@ import { SensorCard } from "../cards/SensorCard";
 import { EntityCardConfig } from "../types/lovelace-mushroom/cards/entity-card-config";
 import { ControllerCard } from "../cards/ControllerCard";
 import { HassServiceTarget } from "home-assistant-js-websocket";
-import { MainAreaCard } from "../cards/MainAreaCard";
+import { ImageAreaCard } from "../cards/ImageAreaCard";
 import { SwipeCardConfig } from "../types/lovelace-mushroom/cards/swipe-card-config";
 import { AREA_CARDS_DOMAINS, AREA_EXPOSED_CHIPS, DOMAIN_ICONS, HOME_EXPOSED_CHIPS, UNAVAILABLE_STATES } from "../variables";
 import { UnavailableChip } from "../chips/UnavailableChip";
@@ -92,8 +92,6 @@ class AreaView {
     const chips: LovelaceChipConfig[] = [];
     const chipOptions = Helper.strategyOptions.chips;
 
-    let chipModule;
-
     const device = Helper.magicAreasDevices[this.area.slug];
 
     if (device) {
@@ -105,6 +103,13 @@ class AreaView {
     if (areaChips) {
       chips.push(...areaChips);
     }
+
+
+    // (device?.entities.all_lights && device?.entities.all_lights.entity_id !== "unavailable" ? {
+    //   type: "custom:mushroom-chips-card",
+    //   alignment: "center",
+    //   chips: new AreaScenesChips(device, area).getChips()
+    // } : undefined)
 
     return chips.map(chip => ({
       type: "custom:mushroom-chips-card",
@@ -127,7 +132,7 @@ class AreaView {
     const globalSection: LovelaceGridCardConfig = {
       type: "grid",
       column_span: 1,
-      cards: this.area.area_id !== "undisclosed" ? [new MainAreaCard(this.area).getCard()] : []
+      cards: this.area.area_id !== "undisclosed" ? [new ImageAreaCard(this.area.area_id).getCard()] : []
     };
 
     if (globalSection.cards.length) {

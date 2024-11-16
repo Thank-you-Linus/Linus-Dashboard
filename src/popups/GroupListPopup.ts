@@ -27,17 +27,14 @@ class GroupListPopup extends AbstractPopup {
                                 content: `${Helper.areas[area_id]?.name}`,
                             },
                             {
-                                type: "custom:layout-card",
-                                layout_type: "custom:horizontal-layout",
-                                layout: {
-                                    width: 150,
-                                },
+                                type: "grid",
                                 cards: entities?.map((entity) => ({
                                     type: "custom:mushroom-entity-card",
                                     vertical: true,
                                     entity: entity.entity_id,
                                     secondary_info: 'last-changed',
                                 })),
+                                column_span: 1,
                             }
                         ])).flat()
                     }

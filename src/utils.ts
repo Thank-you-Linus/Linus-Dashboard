@@ -78,14 +78,6 @@ export function getAggregateEntity(device: MagicAreaRegistryEntry, domains: stri
     return aggregateKeys.filter(Boolean)
 }
 
-export function getConditionalChip(entityId: string, state: string, chip: any): any {
-    return entityId && {
-        type: "conditional",
-        conditions: [{ entity: entityId, state_not: state }],
-        chip: chip
-    };
-}
-
 export function getMAEntity(device: MagicAreaRegistryEntry, domain: string, deviceClass?: string): EntityRegistryEntry {
     if (MAGIC_AREAS_LIGHT_DOMAINS === domain) return device?.entities?.['all_lights']
     if (MAGIC_AREAS_GROUP_DOMAINS.includes(domain)) return device?.entities?.[`${domain}_group` as 'cover_group']

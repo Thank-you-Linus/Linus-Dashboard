@@ -8,10 +8,12 @@ import { AreaStateChip } from "../chips/AreaStateChip";
 import { generic } from "../types/strategy/generic";
 import StrategyArea = generic.StrategyArea;
 import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
-import { getConditionalChip, getMAEntity, slugify } from "../utils";
+import { getMAEntity, slugify } from "../utils";
 import { EntityRegistryEntry } from "../types/homeassistant/data/entity_registry";
 import { ClimateChip } from "../chips/ClimateChip";
 import { LightChip } from "../chips/LightChip";
+import { ConditionalChip } from "../chips/ConditionalChip";
+import { UNAVAILABLE } from "../variables";
 
 // Utility function to generate badge icon and color
 const getBadgeIcon = (entityId: string) => `
@@ -104,7 +106,7 @@ class HomeAreaCard extends AbstractCard {
     return {
       type: "custom:mushroom-template-card",
       primary: area.name,
-      secondary: this.getTemperatureTemplate(aggregate_temperature),
+      secondary: aggregate_temperature && this.getTemperatureTemplate(aggregate_temperature),
       icon: icon,
       icon_color: this.getIconColorTemplate(area_state),
       fill_container: true,
@@ -121,14 +123,38 @@ class HomeAreaCard extends AbstractCard {
       type: "custom:mushroom-chips-card",
       alignment: "end",
       chips: [
-        getConditionalChip(area_state?.entity_id, "unavailable", new AreaStateChip(device).getChip()),
-        getConditionalChip(aggregate_health?.entity_id, "on", new AggregateChip({ device_class: "health" }).getChip()),
-        getConditionalChip(aggregate_window?.entity_id, "on", new AggregateChip({ device_class: "window" }).getChip()),
-        getConditionalChip(aggregate_door?.entity_id, "on", new AggregateChip({ device_class: "door" }).getChip()),
-        getConditionalChip(aggregate_cover?.entity_id, "on", new AggregateChip({ device_class: "cover" }).getChip()),
-        getConditionalChip(aggregate_climate?.entity_id, "unavailable", new ClimateChip().getChip()),
-        getConditionalChip(all_lights?.entity_id, "unavailable", new LightChip({ area_id: area.slug }).getChip()),
-        getConditionalChip(all_lights?.entity_id, "unavailable", new ControlChip(light_control?.entity_id).getChip())
+        new ConditionalChip({
+          conditions: [{ entity: area_state?.entity_id, state_not: UNAVAILABLE }],
+          chip: new AreaStateChip(device).getChip()
+        }).getChip(),
+        new ConditionalChip({
+          conditions: [{ entity: aggregate_health?.entity_id, state_not: "on" }],
+          chip: new AggregateChip({ device_class: "health" }).getChip()
+        }).getChip(),
+        new ConditionalChip({
+          conditions: [{ entity: aggregate_window?.entity_id, state_not: "on" }],
+          chip: new AggregateChip({ device_class: "window" }).getChip()
+        }).getChip(),
+        new ConditionalChip({
+          conditions: [{ entity: aggregate_door?.entity_id, state_not: "on" }],
+          chip: new AggregateChip({ device_class: "door" }).getChip()
+        }).getChip(),
+        new ConditionalChip({
+          conditions: [{ entity: aggregate_cover?.entity_id, state_not: "on" }],
+          chip: new AggregateChip({ device_class: "cover" }).getChip()
+        }).getChip(),
+        new ConditionalChip({
+          conditions: [{ entity: aggregate_climate?.entity_id, state_not: UNAVAILABLE }],
+          chip: new ClimateChip().getChip()
+        }).getChip(),
+        new ConditionalChip({
+          conditions: [{ entity: all_lights?.entity_id, state_not: UNAVAILABLE }],
+          chip: new LightChip({ area_id: area.slug }).getChip()
+        }).getChip(),
+        new ConditionalChip({
+          conditions: [{ entity: all_lights?.entity_id, state_not: UNAVAILABLE }],
+          chip: new ControlChip(light_control?.entity_id).getChip()
+        }).getChip()
       ].filter(Boolean),
       card_mod: { style: this.getChipsCardModStyle() }
     };
@@ -158,14 +184,6 @@ class HomeAreaCard extends AbstractCard {
     return `
       {{ "indigo" if "dark" in state_attr('${area_state?.entity_id}', 'states') else "amber" }}
     `;
-  }
-
-  getConditionalChip(entityId: string, state: string, chip: any): any {
-    return entityId && {
-      type: "conditional",
-      conditions: [{ entity: entityId, state_not: state }],
-      chip: chip
-    };
   }
 
   getCardModStyle(): string {

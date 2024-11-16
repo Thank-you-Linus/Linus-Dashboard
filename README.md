@@ -5,7 +5,7 @@
   <h1 align="center">Linus Dashboard</h1>
   <p align="center">
     Your ultimate smart home assistant, redefined. <br>
-    Built with the latest Home Assistant innovation: **sections**. <br>
+    Built with the latest Home Assistant innovation: <b>sections</b>. <br>
     <a href="https://thankyou-linus.com/"><strong>Discover More »</strong></a>
     <br />
     <a href="https://discord.gg/cZ7NH4ex">

@@ -138,10 +138,6 @@ export async function createChipsFromList(chipsList: string[], chipOptions: gene
         chips.push(...chipOptions.extra_chips);
     }
 
-    const entities = (area_id ? Helper.areas[area_id] : Helper).entities;
-
-
-
     const unavailableChip = new UnavailableChip(area_id).getChip();
     if (unavailableChip) chips.push(unavailableChip);
 

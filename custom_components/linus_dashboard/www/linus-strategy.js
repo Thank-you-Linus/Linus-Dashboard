@@ -5739,7 +5739,6 @@ async function createChipsFromList(chipsList, chipOptions, area_id) {
     if (chipOptions?.extra_chips) {
         chips.push(...chipOptions.extra_chips);
     }
-    const entities = (area_id ? _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas[area_id] : _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper).entities;
     const unavailableChip = new _chips_UnavailableChip__WEBPACK_IMPORTED_MODULE_2__.UnavailableChip(area_id).getChip();
     if (unavailableChip)
         chips.push(unavailableChip);

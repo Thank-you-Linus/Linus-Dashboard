@@ -36,9 +36,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await register_static_paths_and_resources(hass, "lovelace-mushroom/mushroom.js")
     await register_static_paths_and_resources(hass, "lovelace-card-mod/card-mod.js")
     await register_static_paths_and_resources(hass, "swipe-card/swipe-card.js")
-    await register_static_paths_and_resources(
-        hass, "lovelace-layout-card/layout-card.js"
-    )
     await register_static_paths_and_resources(hass, "stack-in-card/stack-in-card.js")
     await register_static_paths_and_resources(
         hass, "mini-graph-card/mini-graph-card-bundle.js"

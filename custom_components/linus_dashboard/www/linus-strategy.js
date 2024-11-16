@@ -597,8 +597,6 @@ class Helper {
                 states.push(...newStates);
             }
         }
-        console.log('states', device_class, states);
-        // Todo: fix that because the temperature not working
         return `{% set entities = [${states}] %} {{ entities | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | sum / entities | length }} {{ state_attr('sensor.outside_temperature', 'unit_of_measurement')}}`;
     }
     /**
@@ -1612,6 +1610,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../utils */ "./src/utils.ts");
 /* harmony import */ var _chips_ClimateChip__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../chips/ClimateChip */ "./src/chips/ClimateChip.ts");
 /* harmony import */ var _chips_LightChip__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../chips/LightChip */ "./src/chips/LightChip.ts");
+/* harmony import */ var _chips_ConditionalChip__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../chips/ConditionalChip */ "./src/chips/ConditionalChip.ts");
+/* harmony import */ var _variables__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../variables */ "./src/variables.ts");
+
+
 
 
 
@@ -1697,7 +1699,7 @@ class HomeAreaCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractCa
         return {
             type: "custom:mushroom-template-card",
             primary: area.name,
-            secondary: this.getTemperatureTemplate(aggregate_temperature),
+            secondary: aggregate_temperature && this.getTemperatureTemplate(aggregate_temperature),
             icon: icon,
             icon_color: this.getIconColorTemplate(area_state),
             fill_container: true,
@@ -1713,14 +1715,38 @@ class HomeAreaCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractCa
             type: "custom:mushroom-chips-card",
             alignment: "end",
             chips: [
-                (0,_utils__WEBPACK_IMPORTED_MODULE_5__.getConditionalChip)(area_state?.entity_id, "unavailable", new _chips_AreaStateChip__WEBPACK_IMPORTED_MODULE_4__.AreaStateChip(device).getChip()),
-                (0,_utils__WEBPACK_IMPORTED_MODULE_5__.getConditionalChip)(aggregate_health?.entity_id, "on", new _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_3__.AggregateChip({ device_class: "health" }).getChip()),
-                (0,_utils__WEBPACK_IMPORTED_MODULE_5__.getConditionalChip)(aggregate_window?.entity_id, "on", new _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_3__.AggregateChip({ device_class: "window" }).getChip()),
-                (0,_utils__WEBPACK_IMPORTED_MODULE_5__.getConditionalChip)(aggregate_door?.entity_id, "on", new _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_3__.AggregateChip({ device_class: "door" }).getChip()),
-                (0,_utils__WEBPACK_IMPORTED_MODULE_5__.getConditionalChip)(aggregate_cover?.entity_id, "on", new _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_3__.AggregateChip({ device_class: "cover" }).getChip()),
-                (0,_utils__WEBPACK_IMPORTED_MODULE_5__.getConditionalChip)(aggregate_climate?.entity_id, "unavailable", new _chips_ClimateChip__WEBPACK_IMPORTED_MODULE_6__.ClimateChip().getChip()),
-                (0,_utils__WEBPACK_IMPORTED_MODULE_5__.getConditionalChip)(all_lights?.entity_id, "unavailable", new _chips_LightChip__WEBPACK_IMPORTED_MODULE_7__.LightChip({ area_id: area.slug }).getChip()),
-                (0,_utils__WEBPACK_IMPORTED_MODULE_5__.getConditionalChip)(all_lights?.entity_id, "unavailable", new _chips_ControlChip__WEBPACK_IMPORTED_MODULE_2__.ControlChip(light_control?.entity_id).getChip())
+                new _chips_ConditionalChip__WEBPACK_IMPORTED_MODULE_8__.ConditionalChip({
+                    conditions: [{ entity: area_state?.entity_id, state_not: _variables__WEBPACK_IMPORTED_MODULE_9__.UNAVAILABLE }],
+                    chip: new _chips_AreaStateChip__WEBPACK_IMPORTED_MODULE_4__.AreaStateChip(device).getChip()
+                }).getChip(),
+                new _chips_ConditionalChip__WEBPACK_IMPORTED_MODULE_8__.ConditionalChip({
+                    conditions: [{ entity: aggregate_health?.entity_id, state_not: "on" }],
+                    chip: new _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_3__.AggregateChip({ device_class: "health" }).getChip()
+                }).getChip(),
+                new _chips_ConditionalChip__WEBPACK_IMPORTED_MODULE_8__.ConditionalChip({
+                    conditions: [{ entity: aggregate_window?.entity_id, state_not: "on" }],
+                    chip: new _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_3__.AggregateChip({ device_class: "window" }).getChip()
+                }).getChip(),
+                new _chips_ConditionalChip__WEBPACK_IMPORTED_MODULE_8__.ConditionalChip({
+                    conditions: [{ entity: aggregate_door?.entity_id, state_not: "on" }],
+                    chip: new _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_3__.AggregateChip({ device_class: "door" }).getChip()
+                }).getChip(),
+                new _chips_ConditionalChip__WEBPACK_IMPORTED_MODULE_8__.ConditionalChip({
+                    conditions: [{ entity: aggregate_cover?.entity_id, state_not: "on" }],
+                    chip: new _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_3__.AggregateChip({ device_class: "cover" }).getChip()
+                }).getChip(),
+                new _chips_ConditionalChip__WEBPACK_IMPORTED_MODULE_8__.ConditionalChip({
+                    conditions: [{ entity: aggregate_climate?.entity_id, state_not: _variables__WEBPACK_IMPORTED_MODULE_9__.UNAVAILABLE }],
+                    chip: new _chips_ClimateChip__WEBPACK_IMPORTED_MODULE_6__.ClimateChip().getChip()
+                }).getChip(),
+                new _chips_ConditionalChip__WEBPACK_IMPORTED_MODULE_8__.ConditionalChip({
+                    conditions: [{ entity: all_lights?.entity_id, state_not: _variables__WEBPACK_IMPORTED_MODULE_9__.UNAVAILABLE }],
+                    chip: new _chips_LightChip__WEBPACK_IMPORTED_MODULE_7__.LightChip({ area_id: area.slug }).getChip()
+                }).getChip(),
+                new _chips_ConditionalChip__WEBPACK_IMPORTED_MODULE_8__.ConditionalChip({
+                    conditions: [{ entity: all_lights?.entity_id, state_not: _variables__WEBPACK_IMPORTED_MODULE_9__.UNAVAILABLE }],
+                    chip: new _chips_ControlChip__WEBPACK_IMPORTED_MODULE_2__.ControlChip(light_control?.entity_id).getChip()
+                }).getChip()
             ].filter(Boolean),
             card_mod: { style: this.getChipsCardModStyle() }
         };
@@ -1748,13 +1774,6 @@ class HomeAreaCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractCa
         return `
       {{ "indigo" if "dark" in state_attr('${area_state?.entity_id}', 'states') else "amber" }}
     `;
-    }
-    getConditionalChip(entityId, state, chip) {
-        return entityId && {
-            type: "conditional",
-            conditions: [{ entity: entityId, state_not: state }],
-            chip: chip
-        };
     }
     getCardModStyle() {
         return `
@@ -1800,6 +1819,69 @@ class HomeAreaCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractCa
         display: none;
       }
     `;
+    }
+}
+
+
+
+/***/ }),
+
+/***/ "./src/cards/ImageAreaCard.ts":
+/*!************************************!*\
+  !*** ./src/cards/ImageAreaCard.ts ***!
+  \************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   ImageAreaCard: () => (/* binding */ ImageAreaCard)
+/* harmony export */ });
+/**
+ * Scene Card Class
+ *
+ * Used to create a card for an entity of the Scene domain.
+ *
+ * @class
+ */
+class ImageAreaCard {
+    /**
+     * Class constructor.
+     *
+     * @throws {Error} If the Helper module isn't initialized.
+     */
+    constructor(area_id) {
+        /**
+         * Configuration of the card.
+         *
+         * @type {EntityCardConfig}
+         */
+        this.config = {
+            type: "area",
+            area: "",
+            show_camera: true,
+            alert_classes: [],
+            sensor_classes: [],
+            card_mod: {
+                style: `
+        .sensors {
+          display: none;
+        }
+        .buttons {
+          display: none;
+        }
+      `
+            }
+        };
+        this.config.area = area_id;
+    }
+    /**
+     * Get a card.
+     *
+     * @return {cards.AbstractCardConfig} A card object.
+     */
+    getCard() {
+        return this.config;
     }
 }
 
@@ -1917,238 +1999,6 @@ class LockCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractCard {
     }
 }
 _LockCard_defaultConfig = new WeakMap();
-
-
-
-/***/ }),
-
-/***/ "./src/cards/MainAreaCard.ts":
-/*!***********************************!*\
-  !*** ./src/cards/MainAreaCard.ts ***!
-  \***********************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   MainAreaCard: () => (/* binding */ MainAreaCard)
-/* harmony export */ });
-/* harmony import */ var _AbstractCard__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./AbstractCard */ "./src/cards/AbstractCard.ts");
-/* harmony import */ var _Helper__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../Helper */ "./src/Helper.ts");
-/* harmony import */ var _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../chips/AggregateChip */ "./src/chips/AggregateChip.ts");
-/* harmony import */ var _chips_AreaStateChip__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../chips/AreaStateChip */ "./src/chips/AreaStateChip.ts");
-/* harmony import */ var _chips_AreaScenesChips__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../chips/AreaScenesChips */ "./src/chips/AreaScenesChips.ts");
-
-
-
-
-
-// noinspection JSUnusedGlobalSymbols Class is dynamically imported.
-/**
- * Area Card Class
- *
- * Used to create a card for an entity of the area domain.
- *
- * @class
- * @extends AbstractCard
- */
-class MainAreaCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractCard {
-    getDefaultConfig(area) {
-        const device = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.magicAreasDevices[area.slug];
-        if (!device) {
-            return {
-                type: "custom:layout-card",
-                cards: [{ type: "markdown", content: `Area ${area.name} is empty.` }]
-            };
-        }
-        const { area_state, aggregate_temperature, aggregate_humidity, aggregate_illuminance, aggregate_window, aggregate_door, aggregate_health, aggregate_cover, } = device?.entities ?? {};
-        return {
-            type: "custom:layout-card",
-            layout_type: "custom:masonry-layout",
-            card_mod: {},
-            cards: [
-                {
-                    type: "custom:mod-card",
-                    style: `
-            ha-card {
-              position: relative;
-            }
-            .card-content {
-              position: absolute;
-              top: 0;
-              left: 0;
-              width: 100%;
-              height: 100%;
-            }
-          `,
-                    card: {
-                        type: "vertical-stack",
-                        cards: [
-                            {
-                                type: "custom:mushroom-chips-card",
-                                alignment: "end",
-                                chips: [
-                                    aggregate_temperature?.entity_id && {
-                                        type: "conditional",
-                                        conditions: [
-                                            {
-                                                entity: aggregate_temperature?.entity_id,
-                                                state_not: "unavailable"
-                                            }
-                                        ],
-                                        chip: new _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_2__.AggregateChip({ device_class: "temperature", show_content: false, area_id: area.slug }).getChip(),
-                                    },
-                                    aggregate_humidity?.entity_id && {
-                                        type: "conditional",
-                                        conditions: [
-                                            {
-                                                entity: aggregate_humidity?.entity_id,
-                                                state_not: "unavailable"
-                                            }
-                                        ],
-                                        chip: new _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_2__.AggregateChip({ device_class: "humidity", show_content: false, area_id: area.slug }).getChip(),
-                                    },
-                                    aggregate_illuminance?.entity_id && {
-                                        type: "conditional",
-                                        conditions: [
-                                            {
-                                                entity: aggregate_illuminance?.entity_id,
-                                                state_not: "unavailable"
-                                            }
-                                        ],
-                                        chip: new _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_2__.AggregateChip({ device_class: "illuminance", show_content: false, area_id: area.slug }).getChip(),
-                                    },
-                                ].filter(Boolean),
-                                card_mod: {
-                                    style: `
-                    ha-card {
-                      position: absolute;
-                      top: 24px;
-                      left: 0px;
-                      right: 8px;
-                      z-index: 2;
-                    }
-                  `
-                                }
-                            },
-                            {
-                                type: "custom:mushroom-chips-card",
-                                alignment: "end",
-                                chips: [
-                                    aggregate_window?.entity_id && {
-                                        type: "conditional",
-                                        conditions: [
-                                            {
-                                                entity: aggregate_window?.entity_id,
-                                                state_not: "unavailable"
-                                            }
-                                        ],
-                                        chip: new _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_2__.AggregateChip({ device_class: "window", show_content: false, area_id: area.slug }).getChip(),
-                                    },
-                                    aggregate_door?.entity_id && {
-                                        type: "conditional",
-                                        conditions: [
-                                            {
-                                                entity: aggregate_door?.entity_id,
-                                                state_not: "unavailable"
-                                            }
-                                        ],
-                                        chip: new _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_2__.AggregateChip({ device_class: "door", show_content: false, area_id: area.slug }).getChip(),
-                                    },
-                                    aggregate_health?.entity_id && {
-                                        type: "conditional",
-                                        conditions: [
-                                            {
-                                                entity: aggregate_health?.entity_id,
-                                                state_not: "unavailable"
-                                            }
-                                        ],
-                                        chip: new _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_2__.AggregateChip({ device_class: "health", show_content: false, area_id: area.slug }).getChip(),
-                                    },
-                                    aggregate_cover?.entity_id && {
-                                        type: "conditional",
-                                        conditions: [
-                                            {
-                                                entity: aggregate_cover?.entity_id,
-                                                state_not: "unavailable"
-                                            }
-                                        ],
-                                        chip: new _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_2__.AggregateChip({ device_class: "cover", show_content: false, area_id: area.slug }).getChip(),
-                                    },
-                                    area_state?.entity_id && {
-                                        type: "conditional",
-                                        conditions: [
-                                            {
-                                                entity: area_state?.entity_id,
-                                                state_not: "unavailable"
-                                            }
-                                        ],
-                                        chip: new _chips_AreaStateChip__WEBPACK_IMPORTED_MODULE_3__.AreaStateChip(device, true).getChip(),
-                                    },
-                                ].filter(Boolean),
-                                card_mod: {
-                                    style: `
-                    ha-card {
-                      position: absolute;
-                      bottom: 8px;
-                      left: 0px;
-                      right: 8px;
-                      z-index: 2;
-                    }
-                  `
-                                }
-                            },
-                            {
-                                type: "area",
-                                area: area.area_id,
-                                show_camera: true,
-                                alert_classes: [],
-                                sensor_classes: [],
-                                aspect_ratio: "16:9",
-                                card_mod: {
-                                    style: `
-                    ha-card {
-                      position: relative;
-                      z-index: 1;
-                    }
-                    .sensors {
-                      display: none;
-                    }
-                    .buttons {
-                      display: none;
-                    }
-                  `
-                                }
-                            }
-                        ]
-                    }
-                },
-                (device?.entities.all_lights && device?.entities.all_lights.entity_id !== "unavailable" ? {
-                    type: "custom:mushroom-chips-card",
-                    alignment: "center",
-                    chips: new _chips_AreaScenesChips__WEBPACK_IMPORTED_MODULE_4__.AreaScenesChips(device, area).getChips()
-                } : undefined)
-            ].filter(Boolean)
-        };
-    }
-    /**
-     * Class constructor.
-     *
-     * @param {StrategyArea} area The area entity to create a card for.
-     * @param {cards.TemplateCardOptions} [options={}] Options for the card.
-     *
-     * @throws {Error} If the Helper module isn't initialized.
-     */
-    constructor(area, options = {}) {
-        super(area);
-        // Don't override the default card type if default is set in the strategy options.
-        if (options.type === "LinusMainAreaCard") {
-            delete options.type;
-        }
-        const defaultConfig = this.getDefaultConfig(area);
-        this.config = Object.assign(this.config, defaultConfig, options);
-    }
-}
 
 
 
@@ -3255,8 +3105,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   ConditionalChip: () => (/* binding */ ConditionalChip)
 /* harmony export */ });
-/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../utils */ "./src/utils.ts");
-/* harmony import */ var _AbstractChip__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./AbstractChip */ "./src/chips/AbstractChip.ts");
+/* harmony import */ var _AbstractChip__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./AbstractChip */ "./src/chips/AbstractChip.ts");
 var __classPrivateFieldGet = (undefined && undefined.__classPrivateFieldGet) || function (receiver, state, kind, f) {
     if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a getter");
     if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
@@ -3264,21 +3113,20 @@ var __classPrivateFieldGet = (undefined && undefined.__classPrivateFieldGet) || 
 };
 var _ConditionalChip_defaultConfig;
 
-
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**
  * Motion Chip class.
  *
  * Used to create a chip to indicate how many motions are operating.
  */
-class ConditionalChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.AbstractChip {
+class ConditionalChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_0__.AbstractChip {
     /**
      * Class Constructor.
      *
      * @param {MagicAreaRegistryEntry} device The chip device.
-     * @param {chips.TemplateChipOptions} options The chip options.
+     * @param {ConditionalChipOptions} options The chip options.
      */
-    constructor(device, options = {}) {
+    constructor(options = { conditions: [] }) {
         super();
         /**
          * Default configuration of the chip.
@@ -3291,10 +3139,9 @@ class ConditionalChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.Abstrac
         _ConditionalChip_defaultConfig.set(this, {
             type: "conditional",
             conditions: [],
-            // chip: {},
         });
-        const aggregate_motion = (0,_utils__WEBPACK_IMPORTED_MODULE_0__.getMAEntity)(device, "binary_sensor", "motion");
-        console.log("aggregate_motion", aggregate_motion);
+        __classPrivateFieldGet(this, _ConditionalChip_defaultConfig, "f").conditions = options.conditions;
+        __classPrivateFieldGet(this, _ConditionalChip_defaultConfig, "f").chip = options.chip;
         this.config = Object.assign(this.config, __classPrivateFieldGet(this, _ConditionalChip_defaultConfig, "f"), options);
     }
 }
@@ -5155,17 +5002,14 @@ class GroupListPopup extends _AbstractPopup__WEBPACK_IMPORTED_MODULE_2__.Abstrac
                                 content: `${_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas[area_id]?.name}`,
                             },
                             {
-                                type: "custom:layout-card",
-                                layout_type: "custom:horizontal-layout",
-                                layout: {
-                                    width: 150,
-                                },
+                                type: "grid",
                                 cards: entities?.map((entity) => ({
                                     type: "custom:mushroom-entity-card",
                                     vertical: true,
                                     entity: entity.entity_id,
                                     secondary_info: 'last-changed',
                                 })),
+                                column_span: 1,
                             }
                         ])).flat()
                     }
@@ -5775,7 +5619,6 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   createChipsFromList: () => (/* binding */ createChipsFromList),
 /* harmony export */   getAggregateEntity: () => (/* binding */ getAggregateEntity),
-/* harmony export */   getConditionalChip: () => (/* binding */ getConditionalChip),
 /* harmony export */   getMAEntity: () => (/* binding */ getMAEntity),
 /* harmony export */   getStateContent: () => (/* binding */ getStateContent),
 /* harmony export */   groupBy: () => (/* binding */ groupBy),
@@ -5843,13 +5686,6 @@ function getAggregateEntity(device, domains, deviceClasses) {
         }
     }
     return aggregateKeys.filter(Boolean);
-}
-function getConditionalChip(entityId, state, chip) {
-    return entityId && {
-        type: "conditional",
-        conditions: [{ entity: entityId, state_not: state }],
-        chip: chip
-    };
 }
 function getMAEntity(device, domain, deviceClass) {
     if (_variables__WEBPACK_IMPORTED_MODULE_1__.MAGIC_AREAS_LIGHT_DOMAINS === domain)
@@ -6295,7 +6131,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _Helper__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../Helper */ "./src/Helper.ts");
 /* harmony import */ var _cards_SwipeCard__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../cards/SwipeCard */ "./src/cards/SwipeCard.ts");
 /* harmony import */ var _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../cards/ControllerCard */ "./src/cards/ControllerCard.ts");
-/* harmony import */ var _cards_MainAreaCard__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../cards/MainAreaCard */ "./src/cards/MainAreaCard.ts");
+/* harmony import */ var _cards_ImageAreaCard__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../cards/ImageAreaCard */ "./src/cards/ImageAreaCard.ts");
 /* harmony import */ var _variables__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../variables */ "./src/variables.ts");
 /* harmony import */ var _chips_AreaStateChip__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../chips/AreaStateChip */ "./src/chips/AreaStateChip.ts");
 /* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../utils */ "./src/utils.ts");
@@ -6358,7 +6194,6 @@ class AreaView {
         }
         const chips = [];
         const chipOptions = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.chips;
-        let chipModule;
         const device = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices[this.area.slug];
         if (device) {
             chips.push(new _chips_AreaStateChip__WEBPACK_IMPORTED_MODULE_5__.AreaStateChip(device, true).getChip());
@@ -6367,6 +6202,11 @@ class AreaView {
         if (areaChips) {
             chips.push(...areaChips);
         }
+        // (device?.entities.all_lights && device?.entities.all_lights.entity_id !== "unavailable" ? {
+        //   type: "custom:mushroom-chips-card",
+        //   alignment: "center",
+        //   chips: new AreaScenesChips(device, area).getChips()
+        // } : undefined)
         return chips.map(chip => ({
             type: "custom:mushroom-chips-card",
             alignment: "center",
@@ -6386,7 +6226,7 @@ class AreaView {
         const globalSection = {
             type: "grid",
             column_span: 1,
-            cards: this.area.area_id !== "undisclosed" ? [new _cards_MainAreaCard__WEBPACK_IMPORTED_MODULE_3__.MainAreaCard(this.area).getCard()] : []
+            cards: this.area.area_id !== "undisclosed" ? [new _cards_ImageAreaCard__WEBPACK_IMPORTED_MODULE_3__.ImageAreaCard(this.area.area_id).getCard()] : []
         };
         if (globalSection.cards.length) {
             viewSections.push(globalSection);
@@ -7978,10 +7818,12 @@ _VacuumView_domain = { value: "vacuum" };
 
 var map = {
 	"./AbstractCard": [
-		"./src/cards/AbstractCard.ts"
+		"./src/cards/AbstractCard.ts",
+		"main"
 	],
 	"./AbstractCard.ts": [
-		"./src/cards/AbstractCard.ts"
+		"./src/cards/AbstractCard.ts",
+		"main"
 	],
 	"./AggregateCard": [
 		"./src/cards/AggregateCard.ts",
@@ -8053,6 +7895,12 @@ var map = {
 		"./src/cards/HomeAreaCard.ts",
 		"main"
 	],
+	"./ImageAreaCard": [
+		"./src/cards/ImageAreaCard.ts"
+	],
+	"./ImageAreaCard.ts": [
+		"./src/cards/ImageAreaCard.ts"
+	],
 	"./LightCard": [
 		"./src/cards/LightCard.ts",
 		"main"
@@ -8068,12 +7916,6 @@ var map = {
 	"./LockCard.ts": [
 		"./src/cards/LockCard.ts",
 		"main"
-	],
-	"./MainAreaCard": [
-		"./src/cards/MainAreaCard.ts"
-	],
-	"./MainAreaCard.ts": [
-		"./src/cards/MainAreaCard.ts"
 	],
 	"./MediaPlayerCard": [
 		"./src/cards/MediaPlayerCard.ts",
@@ -8180,10 +8022,12 @@ var map = {
 		"./src/chips/AbstractChip.ts"
 	],
 	"./AggregateChip": [
-		"./src/chips/AggregateChip.ts"
+		"./src/chips/AggregateChip.ts",
+		"main"
 	],
 	"./AggregateChip.ts": [
-		"./src/chips/AggregateChip.ts"
+		"./src/chips/AggregateChip.ts",
+		"main"
 	],
 	"./AlarmChip": [
 		"./src/chips/AlarmChip.ts",
@@ -8194,10 +8038,12 @@ var map = {
 		"main"
 	],
 	"./AreaScenesChips": [
-		"./src/chips/AreaScenesChips.ts"
+		"./src/chips/AreaScenesChips.ts",
+		"main"
 	],
 	"./AreaScenesChips.ts": [
-		"./src/chips/AreaScenesChips.ts"
+		"./src/chips/AreaScenesChips.ts",
+		"main"
 	],
 	"./AreaStateChip": [
 		"./src/chips/AreaStateChip.ts"

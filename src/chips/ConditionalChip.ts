@@ -5,6 +5,8 @@ import { generic } from "../types/strategy/generic";
 import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
 import { AbstractChip } from "./AbstractChip";
 
+type ConditionalChipOptions = Omit<ConditionalChipConfig, "type">
+
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**
  * Motion Chip class.
@@ -23,21 +25,20 @@ class ConditionalChip extends AbstractChip {
   readonly #defaultConfig: ConditionalChipConfig = {
     type: "conditional",
     conditions: [],
-    // chip: {},
   };
 
   /**
    * Class Constructor.
    *
    * @param {MagicAreaRegistryEntry} device The chip device.
-   * @param {chips.TemplateChipOptions} options The chip options.
+   * @param {ConditionalChipOptions} options The chip options.
    */
-  constructor(device: MagicAreaRegistryEntry, options: chips.TemplateChipOptions = {}) {
+  constructor(options: ConditionalChipOptions = { conditions: [] }) {
     super();
 
-    const aggregate_motion = getMAEntity(device, "binary_sensor", "motion");
+    this.#defaultConfig.conditions = options.conditions;
+    this.#defaultConfig.chip = options.chip;
 
-    console.log("aggregate_motion", aggregate_motion);
 
     this.config = Object.assign(this.config, this.#defaultConfig, options);
   }

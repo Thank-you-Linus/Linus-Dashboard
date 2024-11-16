@@ -111,7 +111,7 @@ export function groupEntitiesByDomain(entity_ids: string[]): Record<string, stri
 export async function createChipsFromList(chipsList: string[], chipOptions: generic.Chips | undefined, area_id?: string) {
     const chips: LovelaceChipConfig[] = [];
     for (let chipType of chipsList) {
-        if (((area_id ? Helper.areas[area_id] : Helper).domains[chipType] ?? []).length === 0) continue;
+        if (((area_id ? Helper.areas[area_id] : Helper)?.domains[chipType] ?? []).length === 0) continue;
 
         if (chipOptions?.[`${chipType}_count` as string] ?? true) {
             const className = Helper.sanitizeClassName(chipType + "Chip");

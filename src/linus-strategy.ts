@@ -30,6 +30,7 @@ class MushroomStrategy extends HTMLTemplateElement {
    * @return {Promise<LovelaceConfig>}
    */
   static async generateDashboard(info: generic.DashBoardInfo): Promise<LovelaceConfig> {
+    console.log('info', info)
     await Helper.initialize(info);
 
     // Create views.

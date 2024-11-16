@@ -244,9 +244,7 @@ class Helper {
   static async initialize(info: generic.DashBoardInfo): Promise<void> {
     // Initialize properties.
     this.#hassStates = info.hass.states;
-    console.log('info.hass', info.hass)
     this.#hassLocalize = info.hass.localize;
-    console.log('info.hass.resources', info.hass.resources)
     this.#strategyOptions = deepmerge(configurationDefaults, info.config?.strategy?.options ?? {});
     this.#debug = this.#strategyOptions.debug;
 

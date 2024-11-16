@@ -310,9 +310,7 @@ class Helper {
     static async initialize(info) {
         // Initialize properties.
         __classPrivateFieldSet(this, _a, info.hass.states, "f", _Helper_hassStates);
-        console.log('info.hass', info.hass);
         __classPrivateFieldSet(this, _a, info.hass.localize, "f", _Helper_hassLocalize);
-        console.log('info.hass.resources', info.hass.resources);
         __classPrivateFieldSet(this, _a, deepmerge__WEBPACK_IMPORTED_MODULE_1___default()(_configurationDefaults__WEBPACK_IMPORTED_MODULE_0__.configurationDefaults, info.config?.strategy?.options ?? {}), "f", _Helper_strategyOptions);
         __classPrivateFieldSet(this, _a, __classPrivateFieldGet(this, _a, "f", _Helper_strategyOptions).debug, "f", _Helper_debug);
         let homeAssistantRegistries = [];
@@ -4334,6 +4332,7 @@ class MushroomStrategy extends HTMLTemplateElement {
      * @return {Promise<LovelaceConfig>}
      */
     static async generateDashboard(info) {
+        console.log('info', info);
         await _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.initialize(info);
         // Create views.
         const views = info.config?.views ?? [];
@@ -6992,10 +6991,15 @@ async function _HomeView_createAreaSection() {
             }
         }
     }
+    console.log("Helper.localize", _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.config.step.user.data.password"));
+    console.log("Helper.localize 1", _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.entity.switch.pre-release.name"));
+    console.log("Helper.localize 2", _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.magic_areas.entity.binary_sensor.area_state.name"));
+    console.log("Helper.localize 3", _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.fan.entity_component._.name"));
     groupedCards.push({
         type: "custom:mushroom-template-card",
-        primary: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("custom_components.linus-dashboard.ui.newAreaTitle"),
-        secondary: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("custom_components.linus-dashboard.ui.newAreaSubtitle"),
+        // primary: Helper.localize("components.linus-dashboard.ui.newAreaTitle"),
+        primary: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.entity.button.add-new-area.state.on"),
+        secondary: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.entity.button.add-new-area.state.off"),
         multiline_secondary: true,
         icon: "mdi:view-dashboard-variant",
         fill_container: true,

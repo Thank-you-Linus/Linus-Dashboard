@@ -39,7 +39,7 @@ class UnavailableChip extends AbstractChip {
     constructor(area_id?: string) {
         super();
 
-        const entities = area_id ? Helper.areas[area_id].entities : Object.values(Helper.areas).reduce((acc: string[], area) => {
+        const entities = area_id ? Helper.areas[area_id]?.entities : Object.values(Helper.areas).reduce((acc: string[], area) => {
             if (area.slug === 'unavailable') return acc;
             return [...acc, ...area.entities] as string[];
         }, [])

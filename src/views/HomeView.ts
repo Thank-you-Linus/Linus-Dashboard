@@ -5,17 +5,13 @@ import { LovelaceChipConfig } from "../types/lovelace-mushroom/utils/lovelace/ch
 import { ChipsCardConfig } from "../types/lovelace-mushroom/cards/chips-card";
 import { LovelaceGridCardConfig, StackCardConfig } from "../types/homeassistant/lovelace/cards/types";
 import { TemplateCardConfig } from "../types/lovelace-mushroom/cards/template-card-config";
-import { ActionConfig, LovelaceSectionConfig } from "../types/homeassistant/data/lovelace";
+import { ActionConfig } from "../types/homeassistant/data/lovelace";
 import { TitleCardConfig } from "../types/lovelace-mushroom/cards/title-card-config";
 import { PersonCardConfig } from "../types/lovelace-mushroom/cards/person-card-config";
 import { SettingsChip } from "../chips/SettingsChip";
 import { LinusSettings } from "../popups/LinusSettingsPopup";
-import { UnavailableChip } from "../chips/UnavailableChip";
-import { AREA_CARDS_DOMAINS, DEVICE_CLASSES, HOME_EXPOSED_CHIPS, UNAVAILABLE_STATES } from "../variables";
-import { createChipsFromList, groupBy, navigateTo, slugify } from "../utils";
-import { generic } from "../types/strategy/generic";
-import isCallServiceActionConfig = generic.isCallServiceActionConfig;
-import { AggregateChip } from "../chips/AggregateChip";
+import { HOME_EXPOSED_CHIPS } from "../variables";
+import { createChipsFromList, navigateTo, slugify } from "../utils";
 import { WeatherChip } from "../chips/WeatherChip";
 
 
@@ -328,10 +324,16 @@ class HomeView extends AbstractView {
       }
     }
 
+    console.log("Helper.localize", Helper.localize("component.linus_dashboard.config.step.user.data.password"))
+    console.log("Helper.localize 1", Helper.localize("component.linus_dashboard.entity.switch.pre-release.name"))
+    console.log("Helper.localize 2", Helper.localize("component.magic_areas.entity.binary_sensor.area_state.name"))
+    console.log("Helper.localize 3", Helper.localize("component.fan.entity_component._.name"))
+
     groupedCards.push({
       type: "custom:mushroom-template-card",
-      primary: Helper.localize("custom_components.linus-dashboard.ui.newAreaTitle"),
-      secondary: Helper.localize("custom_components.linus-dashboard.ui.newAreaSubtitle"),
+      // primary: Helper.localize("components.linus-dashboard.ui.newAreaTitle"),
+      primary: Helper.localize("component.linus_dashboard.entity.button.add-new-area.state.on"),
+      secondary: Helper.localize("component.linus_dashboard.entity.button.add-new-area.state.off"),
       multiline_secondary: true,
       icon: "mdi:view-dashboard-variant",
       fill_container: true,

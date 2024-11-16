@@ -16,12 +16,12 @@
         }
     },
     "entity": {
-        "switch": {
-            "pre-release": {
+        "button": {
+            "add-new-area": {
                 "name": "Pre-release",
                 "state": {
-                    "off": "No pre-releases",
-                    "on": "Pre-releases preferred"
+                    "on": "Add a new area",
+                    "off": "Click here to go to the areas page"
                 }
             }
         }

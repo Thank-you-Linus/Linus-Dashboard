@@ -3962,7 +3962,7 @@ class UnavailableChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.Abstrac
                 navigation_path: "switches",
             },
         });
-        const entities = area_id ? _Helper__WEBPACK_IMPORTED_MODULE_2__.Helper.areas[area_id].entities : Object.values(_Helper__WEBPACK_IMPORTED_MODULE_2__.Helper.areas).reduce((acc, area) => {
+        const entities = area_id ? _Helper__WEBPACK_IMPORTED_MODULE_2__.Helper.areas[area_id]?.entities : Object.values(_Helper__WEBPACK_IMPORTED_MODULE_2__.Helper.areas).reduce((acc, area) => {
             if (area.slug === 'unavailable')
                 return acc;
             return [...acc, ...area.entities];

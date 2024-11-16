@@ -1,4 +1,19 @@
-# Linus Dashboard
+
+<div align="center">
+  <a href="https://thankyou-linus.com/">
+   <img src="images/mongramme-linus-or.png" alt="Logo"  height="200">
+   </a>
+   <h1 align="center">Linus Dashboard</h3>
+      <p align="center">
+         Your personal butler
+    <br />
+    <a href="https://thankyou-linus.com/"><strong>Go to website »</strong></a>
+    <br />
+    <a href="https://discord.gg/cZ7NH4ex">
+        <img src="https://discordapp.com/api/guilds/1104794215440978042/widget.png?style=shield" alt="Linus Shield"/>
+    </a>
+  </p>
+</div>
 
 **Linus Dashboard** is a custom component for Home Assistant that provides a complete, ready-to-use dashboard specifically designed to work with the [hass-magic_areas](https://github.com/jseidl/hass-magic_areas) integration. This dashboard enables visualization of all entities created by hass-magic_areas alongside all standard Home Assistant entities, with a primary focus on simplicity and ease of use.
 

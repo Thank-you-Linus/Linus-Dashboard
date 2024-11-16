@@ -1,6 +1,5 @@
 import { GroupListPopup } from "../popups/GroupListPopup";
 import { AbstractChip } from "./AbstractChip";
-import { EntityRegistryEntry } from '../types/homeassistant/data/entity_registry';
 import { TemplateChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
 import { Helper } from "../Helper";
 import { UNAVAILABLE_STATES } from "../variables";

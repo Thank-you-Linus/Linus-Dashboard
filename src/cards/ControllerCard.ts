@@ -1,8 +1,8 @@
 import { cards } from "../types/strategy/cards";
 import { LovelaceBadgeConfig, LovelaceCardConfig } from "../types/homeassistant/data/lovelace";
-import { HassServiceTarget } from "home-assistant-js-websocket";
+import { ExtendedHassServiceTarget } from "home-assistant-js-websocket";
 import { Helper } from "../Helper";
-import { getMAEntity } from "../utils";
+import { getMAEntity, navigateTo } from "../utils";
 
 /**
  * Controller Card class.
@@ -13,10 +13,10 @@ import { getMAEntity } from "../utils";
  */
 class ControllerCard {
   /**
-   * @type {HassServiceTarget} The target to control the entities of.
+   * @type {ExtendedHassServiceTarget} The target to control the entities of.
    * @private
    */
-  readonly #target: HassServiceTarget;
+  readonly #target: ExtendedHassServiceTarget;
 
   /**
    * @type {string} The target to control the entities of.
@@ -42,10 +42,10 @@ class ControllerCard {
   /**
    * Class constructor.
    *
-   * @param {HassServiceTarget} target The target to control the entities of.
+   * @param {ExtendedHassServiceTarget} target The target to control the entities of.
    * @param {cards.ControllerCardOptions} options Controller Card options.
    */
-  constructor(target: HassServiceTarget, options: cards.ControllerCardOptions = {}, domain?: string) {
+  constructor(target: ExtendedHassServiceTarget, options: cards.ControllerCardOptions = {}, domain?: string) {
     this.#target = target;
     this.#domain = domain;
     this.#defaultConfig = {
@@ -73,11 +73,8 @@ class ControllerCard {
           grid_columns: "full",
           grid_rows: 1
         },
-        ...(this.#defaultConfig.navigate && {
-          tap_action: {
-            action: "navigate",
-            navigation_path: this.#defaultConfig.navigate
-          },
+        ...(this.#defaultConfig.titleNavigate && {
+          tap_action: navigateTo(this.#defaultConfig.titleNavigate)
         })
       })
     }
@@ -85,19 +82,15 @@ class ControllerCard {
     if (this.#defaultConfig.subtitle) {
       cards.push({
         type: "heading",
+        heading_style: "subtitle",
         heading: this.#defaultConfig.subtitle,
         icon: this.#defaultConfig.subtitleIcon,
-        heading_style: "subtitle",
-        badges: [],
         layout_options: {
           grid_columns: "full",
           grid_rows: 1
         },
-        ...(this.#defaultConfig.navigate && {
-          tap_action: {
-            action: "navigate",
-            navigation_path: this.#defaultConfig.navigate
-          },
+        ...(this.#defaultConfig.subtitleNavigate && {
+          tap_action: navigateTo(this.#defaultConfig.subtitleNavigate),
         })
       })
     }

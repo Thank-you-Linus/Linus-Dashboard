@@ -34,12 +34,6 @@ class SwitchView extends AbstractView {
     path: "switches",
     icon: "mdi:dip-switch",
     subview: false,
-    controllerCardOptions: {
-      iconOn: "mdi:power-plug",
-      iconOff: "mdi:power-plug-off",
-      onService: "switch.turn_on",
-      offService: "switch.turn_off",
-    },
   };
 
   /**
@@ -50,7 +44,7 @@ class SwitchView extends AbstractView {
    */
   #viewControllerCardConfig: cards.ControllerCardOptions = {
     title: `${Helper.localize(`component.switch.entity_component._.name`)}s`,
-    subtitle: Helper.getCountTemplate(SwitchView.#domain, "eq", "on") + " switches on",
+    // subtitle: Helper.getCountTemplate(SwitchView.#domain, "eq", "on") + " switches on",
   };
 
   /**
@@ -68,7 +62,7 @@ class SwitchView extends AbstractView {
       this.targetDomain(SwitchView.#domain),
       {
         ...this.#viewControllerCardConfig,
-        ...("controllerCardOptions" in this.config ? this.config.controllerCardOptions : {}) as cards.ControllerCardConfig,
+        ...Helper.strategyOptions.domains.switch.controllerCardOptions,
       }, SwitchView.#domain).createCard();
   }
 }

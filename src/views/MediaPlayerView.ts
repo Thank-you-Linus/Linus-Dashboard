@@ -34,9 +34,6 @@ class MediaPlayerView extends AbstractView {
     path: "media_players",
     icon: "mdi:cast",
     subview: false,
-    controllerCardOptions: {
-      showControls: false,
-    },
   };
 
   /**
@@ -47,7 +44,7 @@ class MediaPlayerView extends AbstractView {
    */
   #viewControllerCardConfig: cards.ControllerCardOptions = {
     title: `${Helper.localize(`component.media_player.entity_component._.name`)}s`,
-    subtitle: Helper.getCountTemplate(MediaPlayerView.#domain, "ne", "off") + " media players on",
+    // subtitle: Helper.getCountTemplate(MediaPlayerView.#domain, "ne", "off") + " media players on",
   };
 
   /**
@@ -65,7 +62,7 @@ class MediaPlayerView extends AbstractView {
       this.targetDomain(MediaPlayerView.#domain),
       {
         ...this.#viewControllerCardConfig,
-        ...("controllerCardOptions" in this.config ? this.config.controllerCardOptions : {}) as cards.ControllerCardConfig,
+        ...Helper.strategyOptions.domains.media_player.controllerCardOptions,
       }, MediaPlayerView.#domain).createCard();
   }
 }

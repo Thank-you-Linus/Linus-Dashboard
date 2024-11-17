@@ -326,7 +326,6 @@ class HomeView extends AbstractView {
 
     groupedCards.push({
       type: "custom:mushroom-template-card",
-      // primary: Helper.localize("components.linus-dashboard.ui.newAreaTitle"),
       primary: Helper.localize("component.linus_dashboard.entity.button.add-new-area.state.on"),
       secondary: Helper.localize("component.linus_dashboard.entity.button.add-new-area.state.off"),
       multiline_secondary: true,

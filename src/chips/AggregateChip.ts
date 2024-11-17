@@ -1,9 +1,8 @@
-import { AggregateAreaListPopup } from "../popups/AggregateAreaListPopup";
-import { AggregateListPopup } from "../popups/AggregateListPopup";
 import { chips } from "../types/strategy/chips";
 import { DEVICE_CLASSES, DOMAIN_ICONS } from "../variables";
 import { AbstractChip } from "./AbstractChip";
 import { Helper } from "../Helper";
+import { navigateTo } from "../utils";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**
@@ -28,66 +27,44 @@ class AggregateChip extends AbstractChip {
     const device = Helper.magicAreasDevices[area_id ?? "global"]
     const magicEntity = device?.entities[`aggregate_${device_class}`]
 
-    if (!magicEntity) return undefined
-
     if (domain === "binary_sensor") {
-      content = Helper.getDeviceClassCountTemplate(domain, device_class, "ne", "off", area_id)
-
-      icon_color = `{{ 'red' if expand(states.${magicEntity.entity_id}.attributes.sensors is defined and states.${magicEntity.entity_id}.attributes.sensors) | selectattr( 'state', 'eq', 'on') | list | count > 0 else 'grey' }}`
-      content = show_content ? `{{ expand(states.${magicEntity.entity_id}.attributes.sensors is defined and states.${magicEntity.entity_id}.attributes.sensors) | selectattr( 'state', 'eq', 'on') | list | count }}` : ""
+      content = show_content ? Helper.getDeviceClassCountTemplate(device_class, "eq", "on", area_id) : ""
+      icon_color = Helper.getBinarySensorColorFromState(device_class, "eq", "on", "red", "grey", area_id)
     }
 
     if (domain === "sensor") {
-      content = Helper.getAverageStateTemplate("temperature", area_id)
 
-      if (device_class === "battery") {
-        icon_color = `{% set bl = states('${magicEntity.entity_id}') %}
-        {% if bl == 'unknown' or bl == 'unavailable' %}
-        {% elif bl | int() < 30 %} red
-        {% elif bl | int() < 50 %} orange
-        {% elif bl | int() <= 100 %} green
-        {% else %} disabled{% endif %}`
-        icon = `{% set bl = states('${magicEntity.entity_id}') %}
-        {% if bl == 'unknown' or bl == 'unavailable' %}
-        {% elif bl | int() < 10 %}mdi:battery-outline
-        {% elif bl | int() < 20 %}  mdi:battery1
-        {% elif bl | int() < 30 %}  mdi:battery-20
-        {% elif bl | int() < 40 %}  mdi:battery-30
-        {% elif bl | int() < 50 %}  mdi:battery-40
-        {% elif bl | int() < 60 %}  mdi:battery-50
-        {% elif bl | int() < 70 %}  mdi:battery-60
-        {% elif bl | int() < 80 %}  mdi:battery-70
-        {% elif bl | int() < 90 %}  mdi:battery-80
-        {% elif bl | int() < 100 %}  mdi:battery-90
-        {% elif bl | int() == 100 %}  mdi:battery
-        {% else %}  mdi:battery{% endif %}`
-        content = show_content ? `{{ states('${magicEntity.entity_id}') | int | round(1) }} %` : ""
+      content = show_content ? Helper.getAverageStateTemplate(device_class, area_id) : ""
+      icon_color = Helper.getSensorColorFromState(device_class, area_id!)
+      icon = Helper.getSensorIconFromState(device_class, area_id!)
+
+      if (device_class === "illuminance") {
+        if (magicEntity) {
+          icon_color = `{{ 'blue' if 'dark' in state_attr('${device?.entities.area_state?.entity_id}', 'states') else 'amber' }}`
+        }
       }
-      if (device_class === "temperature") icon_color = `{% set bl = states('${magicEntity.entity_id}') | int() %} {% if bl < 20 %} blue
-      {% elif bl < 30 %} orange
-      {% elif bl >= 30 %} red{% else %} disabled{% endif %}`
-      if (device_class === "illuminance") icon_color = `{{ 'blue' if 'dark' in state_attr('${device?.entities.area_state?.entity_id}', 'states') else 'amber' }}`
-
-      content = show_content ? `{{ states.${magicEntity.entity_id}.state | float | round(1) }} {{ states.${magicEntity.entity_id}.attributes.unit_of_measurement }}` : ""
     }
 
     if (device_class === "cover") {
-      icon_color = `{{ 'red' if is_state('${magicEntity.entity_id}', 'open') else 'grey' }}`
-      content = show_content ? `{{ expand(states.${magicEntity.entity_id}.attributes.entity_id) | selectattr( 'state', 'eq', 'open') | list | count }}` : ""
+
+      if (magicEntity) {
+        icon_color = `{{ 'red' if is_state('${magicEntity.entity_id}', 'open') else 'grey' }}`
+        content = show_content ? Helper.getDeviceClassCountTemplate(device_class, "eq", "open", area_id) : ""
+      }
     }
 
     if (device_class === "health") {
       icon_color = `{{ 'red' if is_state(entity, 'on') else 'green' }}`
     }
 
-    const tap_action = area_id ? new AggregateAreaListPopup(magicEntity.entity_id, device_class).getPopup() : new AggregateListPopup(magicEntity.entity_id, device_class).getPopup()
+    const tap_action = navigateTo(device_class)
 
     return {
-      entity: magicEntity.entity_id,
-      icon_color: icon_color,
-      icon: icon,
+      entity: magicEntity?.entity_id,
+      icon_color,
+      icon,
       content: content,
-      tap_action: tap_action
+      tap_action,
     }
   }
 

@@ -3,22 +3,18 @@ import { views } from "../types/strategy/views";
 import { ChipsCardConfig } from "../types/lovelace-mushroom/cards/chips-card";
 import { LovelaceGridCardConfig, StackCardConfig } from "../types/homeassistant/lovelace/cards/types";
 import { TemplateCardConfig } from "../types/lovelace-mushroom/cards/template-card-config";
-import { LovelaceBadgeConfig, LovelaceViewConfig } from "../types/homeassistant/data/lovelace";
+import { LovelaceViewConfig } from "../types/homeassistant/data/lovelace";
 import { generic } from "../types/strategy/generic";
-import isCallServiceActionConfig = generic.isCallServiceActionConfig;
 import StrategyArea = generic.StrategyArea;
 import { SwipeCard } from "../cards/SwipeCard";
-import { SensorCard } from "../cards/SensorCard";
 import { EntityCardConfig } from "../types/lovelace-mushroom/cards/entity-card-config";
 import { ControllerCard } from "../cards/ControllerCard";
 import { HassServiceTarget } from "home-assistant-js-websocket";
 import { ImageAreaCard } from "../cards/ImageAreaCard";
-import { SwipeCardConfig } from "../types/lovelace-mushroom/cards/swipe-card-config";
-import { AREA_CARDS_DOMAINS, AREA_EXPOSED_CHIPS, DOMAIN_ICONS, HOME_EXPOSED_CHIPS, UNAVAILABLE_STATES } from "../variables";
-import { UnavailableChip } from "../chips/UnavailableChip";
+import { AREA_EXPOSED_CHIPS, DOMAIN_ICONS } from "../variables";
 import { LovelaceChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
 import { AreaStateChip } from "../chips/AreaStateChip";
-import { createChipsFromList } from "../utils";
+import { createChipsFromList, getDomainTranslationKey } from "../utils";
 
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
@@ -90,7 +86,6 @@ class AreaView {
     }
 
     const chips: LovelaceChipConfig[] = [];
-    const chipOptions = Helper.strategyOptions.chips;
 
     const device = Helper.magicAreasDevices[this.area.slug];
 
@@ -103,7 +98,6 @@ class AreaView {
     if (areaChips) {
       chips.push(...areaChips);
     }
-
 
     // (device?.entities.all_lights && device?.entities.all_lights.entity_id !== "unavailable" ? {
     //   type: "custom:mushroom-chips-card",
@@ -129,82 +123,68 @@ class AreaView {
     const exposedDomainIds = Helper.getExposedDomainIds();
 
     // Create global section card if area is not undisclosed
-    const globalSection: LovelaceGridCardConfig = {
-      type: "grid",
-      column_span: 1,
-      cards: this.area.area_id !== "undisclosed" ? [new ImageAreaCard(this.area.area_id).getCard()] : []
-    };
-
-    if (globalSection.cards.length) {
-      viewSections.push(globalSection);
+    if (this.area.area_id !== "undisclosed") {
+      viewSections.push({
+        type: "grid",
+        column_span: 1,
+        cards: [new ImageAreaCard(this.area.area_id).getCard()],
+      });
     }
 
-    let target: HassServiceTarget = {
-      area_id: [this.area.area_id],
-    };
+    let target: HassServiceTarget = { area_id: [this.area.area_id] };
 
     for (const domain of exposedDomainIds) {
       if (domain === "default") continue;
 
-      const className = Helper.sanitizeClassName(domain + "Card");
-
       try {
-        const cardModule = await import(`../cards/${className}`);
+        const cardModule = await import(`../cards/${Helper.sanitizeClassName(domain + "Card")}`);
         const entities = Helper.getAreaEntities(this.area, domain);
         const configEntityHidden = Helper.strategyOptions.domains[domain]?.hide_config_entities || Helper.strategyOptions.domains["_"].hide_config_entities;
 
         if (this.area.area_id === "undisclosed") {
-          target = {
-            entity_id: entities.map(entity => entity.entity_id),
-          };
+          target = { entity_id: entities.map(entity => entity.entity_id) };
         }
 
         const domainCards: EntityCardConfig[] = [];
 
         if (entities.length) {
-          const titleCardOptions: any = ("controllerCardOptions" in this.config) ? this.config.controllerCardOptions : {};
-          titleCardOptions.subtitle = Helper.localize(domain === 'scene' ? 'ui.dialogs.quick-bar.commands.navigation.scene' : `component.${domain}.entity_component._.name`);
-          titleCardOptions.domain = domain;
-          titleCardOptions.subtitleIcon = DOMAIN_ICONS[domain as keyof typeof DOMAIN_ICONS];
-          titleCardOptions.navigate = domain + "s";
-          titleCardOptions.showControls = Helper.strategyOptions.domains[domain].showControls;
-          titleCardOptions.extraControls = Helper.strategyOptions.domains[domain].extraControls;
+          const titleCardOptions = {
+            ...Helper.strategyOptions.domains[domain].controllerCardOptions,
+            subtitle: Helper.localize(getDomainTranslationKey(domain)),
+            domain,
+            subtitleIcon: DOMAIN_ICONS[domain as keyof typeof DOMAIN_ICONS],
+            subtitleNavigate: domain + "s",
+          };
 
           const titleCard = new ControllerCard(target, titleCardOptions, domain).createCard();
 
-          const entityCards: EntityCardConfig[] = [];
-
-          for (const entity of entities) {
-            let cardOptions = Helper.strategyOptions.card_options?.[entity.entity_id];
-            let deviceOptions = Helper.strategyOptions.card_options?.[entity.device_id ?? "null"];
-
-            if (cardOptions?.hidden || deviceOptions?.hidden) continue;
-            if (entity.entity_category === "config" && configEntityHidden) continue;
-
-            if (domain === "sensor" && Helper.getEntityState(entity.entity_id)?.attributes.unit_of_measurement) {
-              cardOptions = {
-                type: "custom:mini-graph-card",
-                entities: [entity.entity_id],
-                ...cardOptions,
-              };
-            }
-
-            entityCards.push(new cardModule[className](entity, cardOptions).getCard());
-          }
+          const entityCards = entities
+            .filter(entity => {
+              const cardOptions = Helper.strategyOptions.card_options?.[entity.entity_id];
+              const deviceOptions = Helper.strategyOptions.card_options?.[entity.device_id ?? "null"];
+              return !cardOptions?.hidden && !deviceOptions?.hidden && !(entity.entity_category === "config" && configEntityHidden);
+            })
+            .map(entity => {
+              const cardOptions = Helper.strategyOptions.card_options?.[entity.entity_id];
+              if (domain === "sensor" && Helper.getEntityState(entity.entity_id)?.attributes.unit_of_measurement) {
+                return new cardModule[Helper.sanitizeClassName(domain + "Card")](entity, {
+                  type: "custom:mini-graph-card",
+                  entities: [entity.entity_id],
+                  ...cardOptions,
+                }).getCard();
+              }
+              return new cardModule[Helper.sanitizeClassName(domain + "Card")](entity, cardOptions).getCard();
+            });
 
           if (entityCards.length) {
-            if (entityCards.length > 2) {
-              domainCards.push(new SwipeCard(entityCards).getCard());
-            } else {
-              domainCards.push(...entityCards);
-            }
+            domainCards.push(...(entityCards.length > 2 ? [new SwipeCard(entityCards).getCard()] : entityCards));
             domainCards.unshift(...titleCard);
           }
 
           viewSections.push({
             type: "grid",
             column_span: 1,
-            cards: domainCards
+            cards: domainCards,
           });
         }
       } catch (e) {
@@ -227,27 +207,23 @@ class AreaView {
       if (miscellaneousEntities.length) {
         try {
           const cardModule = await import("../cards/MiscellaneousCard");
-          const cards: (LovelaceBadgeConfig | EntityCardConfig)[] = [
+          const cards = [
             new ControllerCard(target, Helper.strategyOptions.domains.default).createCard(),
           ];
 
-          const swipeCard: SwipeCardConfig[] = [];
-
-          for (const entity_id of miscellaneousEntities) {
-            const entity = Helper.entities[entity_id];
-            let cardOptions = Helper.strategyOptions.card_options?.[entity.entity_id];
-            let deviceOptions = Helper.strategyOptions.card_options?.[entity.device_id ?? "null"];
-
-            if (cardOptions?.hidden || deviceOptions?.hidden) continue;
-            if (entity.entity_category === "config" && Helper.strategyOptions.domains["_"].hide_config_entities) continue;
-
-            swipeCard.push(new cardModule.MiscellaneousCard(entity, cardOptions).getCard());
-          }
+          const swipeCard = miscellaneousEntities
+            .filter(entity_id => {
+              const entity = Helper.entities[entity_id];
+              const cardOptions = Helper.strategyOptions.card_options?.[entity.entity_id];
+              const deviceOptions = Helper.strategyOptions.card_options?.[entity.device_id ?? "null"];
+              return !cardOptions?.hidden && !deviceOptions?.hidden && !(entity.entity_category === "config" && Helper.strategyOptions.domains["_"].hide_config_entities);
+            })
+            .map(entity_id => new cardModule.MiscellaneousCard(Helper.entities[entity_id], Helper.strategyOptions.card_options?.[entity_id]).getCard());
 
           viewSections.push({
             type: "grid",
             column_span: 1,
-            cards: [...cards, new SwipeCard(swipeCard).getCard()]
+            cards: [...cards, new SwipeCard(swipeCard).getCard()],
           });
         } catch (e) {
           Helper.logError("An error occurred while creating the domain cards!", e);

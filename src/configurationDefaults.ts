@@ -6,6 +6,7 @@ import { SettingsChip } from "./chips/SettingsChip";
 import { LightSettings } from "./popups/LightSettingsPopup";
 import { ToggleSceneChip } from "./chips/ToggleSceneChip";
 import { SceneSettings } from "./popups/SceneSettingsPopup";
+import { DOMAIN_STATE_ICONS } from "./variables";
 
 /**
  * Default configuration for the mushroom strategy.
@@ -52,16 +53,24 @@ export const configurationDefaults: StrategyDefaults = {
           new SettingsChip({ tap_action: new LightSettings(device).getPopup() }).getChip()
         ]
       },
-      iconOn: "mdi:lightbulb-group",
-      iconOff: "mdi:lightbulb-group-off",
-      onService: "light.turn_on",
-      offService: "light.turn_off",
+      controllerCardOptions: {
+        iconOn: DOMAIN_STATE_ICONS.light.on,
+        iconOff: DOMAIN_STATE_ICONS.light.off,
+        onService: "light.turn_on",
+        offService: "light.turn_off",
+      },
       hidden: false,
       order: 1
     },
     climate: {
       title: "Climates",
       showControls: true,
+      controllerCardOptions: {
+        iconOn: DOMAIN_STATE_ICONS.climate.on,
+        iconOff: DOMAIN_STATE_ICONS.climate.off,
+        onService: "climate.turn_on",
+        offService: "climate.turn_off",
+      },
       hidden: false,
       order: 2,
       extraControls: (device: MagicAreaRegistryEntry) => {
@@ -73,6 +82,12 @@ export const configurationDefaults: StrategyDefaults = {
     media_player: {
       title: "Media Players",
       showControls: true,
+      controllerCardOptions: {
+        iconOn: DOMAIN_STATE_ICONS.media_player.on,
+        iconOff: DOMAIN_STATE_ICONS.media_player.off,
+        onService: "media_player.turn_on",
+        offService: "media_player.turn_off",
+      },
       hidden: false,
       order: 3,
       extraControls: (device: MagicAreaRegistryEntry) => {
@@ -84,18 +99,23 @@ export const configurationDefaults: StrategyDefaults = {
     cover: {
       title: "Covers",
       showControls: true,
-      iconOn: "mdi:arrow-up",
-      iconOff: "mdi:arrow-down",
-      onService: "cover.open_cover",
-      offService: "cover.close_cover",
+      controllerCardOptions: {
+        iconOn: DOMAIN_STATE_ICONS.cover.on,
+        iconOff: DOMAIN_STATE_ICONS.cover.off,
+        onService: "cover.open_cover",
+        offService: "cover.close_cover",
+      },
       hidden: false,
       order: 4
     },
     scene: {
       title: "Scènes",
       showControls: false,
+      controllerCardOptions: {
+        iconOn: "mdi:lightbulb",
+        iconOff: "mdi:lightbulb-off",
+      },
       extraControls: (device: MagicAreaRegistryEntry) => {
-
         return [
           {
             type: "conditional",
@@ -108,8 +128,6 @@ export const configurationDefaults: StrategyDefaults = {
           new SettingsChip({ tap_action: new SceneSettings(device).getPopup() }).getChip()
         ]
       },
-      iconOn: "mdi:lightbulb",
-      iconOff: "mdi:lightbulb-off",
       onService: "scene.turn_on",
       hidden: false,
       order: 5
@@ -117,38 +135,58 @@ export const configurationDefaults: StrategyDefaults = {
     fan: {
       title: "Fans",
       showControls: true,
-      iconOn: "mdi:fan",
-      iconOff: "mdi:fan-off",
-      onService: "fan.turn_on",
-      offService: "fan.turn_off",
+      controllerCardOptions: {
+        iconOn: DOMAIN_STATE_ICONS.fan.on,
+        iconOff: DOMAIN_STATE_ICONS.fan.off,
+        onService: "fan.turn_on",
+        offService: "fan.turn_off",
+      },
       hidden: false,
       order: 6
     },
     switch: {
       title: "Switches",
       showControls: true,
-      iconOn: "mdi:power-plug",
-      iconOff: "mdi:power-plug-off",
-      onService: "switch.turn_on",
-      offService: "switch.turn_off",
+      controllerCardOptions: {
+        iconOn: DOMAIN_STATE_ICONS.switch.on,
+        iconOff: DOMAIN_STATE_ICONS.switch.off,
+        onService: "switch.turn_on",
+        offService: "switch.turn_off",
+      },
       hidden: false,
       order: 7
     },
     camera: {
       title: "Cameras",
       showControls: false,
+      controllerCardOptions: {
+        iconOn: DOMAIN_STATE_ICONS.camera.on,
+        iconOff: DOMAIN_STATE_ICONS.camera.on,
+        onService: "switch.turn_on",
+        offService: "switch.turn_off",
+      },
       hidden: false,
       order: 8
     },
     lock: {
       title: "Locks",
       showControls: false,
+      controllerCardOptions: {
+        iconOn: DOMAIN_STATE_ICONS.lock.on,
+        iconOff: DOMAIN_STATE_ICONS.lock.off,
+      },
       hidden: false,
       order: 9
     },
     vacuum: {
       title: "Vacuums",
       showControls: true,
+      controllerCardOptions: {
+        iconOn: DOMAIN_STATE_ICONS.vacuum.on,
+        iconOff: DOMAIN_STATE_ICONS.vacuum.off,
+        onService: "vacuum.start",
+        offService: "vacuum.stop",
+      },
       hidden: false,
       order: 10
     },
@@ -217,6 +255,18 @@ export const configurationDefaults: StrategyDefaults = {
       hidden: false,
     },
     securityDetails: {
+      hidden: false,
+    },
+    motion: {
+      order: 12,
+      hidden: false,
+    },
+    window: {
+      order: 12,
+      hidden: false,
+    },
+    door: {
+      order: 12,
       hidden: false,
     },
   }

@@ -34,9 +34,6 @@ class SceneView extends AbstractView {
     path: "scenes",
     icon: "mdi:palette",
     subview: false,
-    controllerCardOptions: {
-      showControls: false,
-    },
   };
 
   /**
@@ -47,7 +44,7 @@ class SceneView extends AbstractView {
    */
   #viewControllerCardConfig: cards.ControllerCardOptions = {
     title: `${Helper.localize(`ui.dialogs.quick-bar.commands.navigation.scene`)}`,
-    subtitle: Helper.getCountTemplate(SceneView.#domain, "ne", "on") + ` ${Helper.localize(`ui.dialogs.quick-bar.commands.navigation.scene`)}`,
+    // subtitle: Helper.getCountTemplate(SceneView.#domain, "ne", "on") + ` ${Helper.localize(`ui.dialogs.quick-bar.commands.navigation.scene`)}`,
   };
 
   /**
@@ -65,7 +62,7 @@ class SceneView extends AbstractView {
       this.targetDomain(SceneView.#domain),
       {
         ...this.#viewControllerCardConfig,
-        ...("controllerCardOptions" in this.config ? this.config.controllerCardOptions : {}) as cards.ControllerCardConfig,
+        ...Helper.strategyOptions.domains.scene.controllerCardOptions,
       }, SceneView.#domain).createCard();
   }
 }

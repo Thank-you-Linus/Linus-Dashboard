@@ -32,10 +32,17 @@ class FanChip extends AbstractChip {
   /**
    * Class Constructor.
    *
-   * @param {chips.TemplateChipOptions} options The chip options.
+   * @param {chips.ChipOptions} options The chip options.
    */
-  constructor(options: chips.TemplateChipOptions = {}) {
+  constructor(options: chips.ChipOptions = {}) {
     super();
+
+    if (options?.show_content) {
+      this.#defaultConfig.content = Helper.getCountTemplate("fan", "eq", "on", options?.area_id);
+    }
+
+    this.#defaultConfig.icon_color = Helper.getDomainColorFromState("fan", "eq", "on", this.#defaultConfig.icon_color!, "grey", options?.area_id)
+
 
     this.config = Object.assign(this.config, this.#defaultConfig, options);
   }

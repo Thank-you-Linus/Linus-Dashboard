@@ -23,7 +23,7 @@ class SafetyChip extends AbstractChip {
     type: "template",
     icon: DOMAIN_STATE_ICONS.binary_sensor.safety.on,
     icon_color: "grey",
-    content: Helper.getDeviceClassCountTemplate("binary_sensor", "safety", "ne", "off"),
+    content: Helper.getDeviceClassCountTemplate("safety", "ne", "off"),
     tap_action: {
       action: "none",
     },

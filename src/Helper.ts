@@ -759,7 +759,7 @@ class Helper {
     return entity.disabled_by === null && entity.hidden_by === null
   }
 
-  static getDomainColorFromState(domain: string, operator: string, value: string, color1: string, color2: string, area_id?: string): string {
+  static getDomainColorFromState({ domain, operator, value, ifReturn, elseReturn, area_id }: { domain: string, operator?: string, value?: string, ifReturn?: string, elseReturn?: string, area_id?: string }): string {
     const states: string[] = [];
 
     if (!this.isInitialized()) {
@@ -783,10 +783,33 @@ class Helper {
       }
     }
 
-    return `{% set entities = [${states}] %} {{ "${color1}" if entities | selectattr('state','${operator}','${value}') | list | count > 0 else "${color2}" }}`;
+    if (domain === "light") {
+      ifReturn = ifReturn ?? "amber";
+    }
+    if (domain === "climate") {
+      operator = operator ?? "ne";
+      value = value ?? "off";
+      ifReturn = ifReturn ?? "orange";
+    }
+    if (domain === "cover") {
+      value = value ?? "open";
+      ifReturn = ifReturn ?? "cyan";
+    }
+    if (domain === "fan") {
+      ifReturn = ifReturn ?? "green";
+    }
+    if (domain === "media_player") {
+      value = value ?? "playing";
+      ifReturn = ifReturn ?? "dark-blue";
+    }
+    if (domain === "switch") {
+      ifReturn = ifReturn ?? "blue";
+    }
+
+    return `{% set entities = [${states}] %} {{ "${ifReturn}" if entities | selectattr('state','${operator ?? "eq"}','${value ?? "on"}') | list | count > 0 else "${elseReturn ?? "grey"}" }}`;
   }
 
-  static getBinarySensorColorFromState(device_class: string, operator: string, value: string, color1: string, color2: string, area_id?: string): string {
+  static getBinarySensorColorFromState(device_class: string, operator: string, value: string, ifReturn: string, elseReturn: string, area_id?: string): string {
 
     const states: string[] = [];
 
@@ -814,7 +837,7 @@ class Helper {
 
     return `
       {% set entities = [${states}] %}
-      {{ "${color1}" if entities | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | selectattr('state','${operator}','${value}') | list | count else "${color2}" }}`;
+      {{ "${ifReturn}" if entities | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | selectattr('state','${operator}','${value}') | list | count else "${elseReturn}" }}`;
   }
 
   static getSensorColorFromState(device_class: string, area_id?: string): string {

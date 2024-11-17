@@ -21,7 +21,6 @@ class CoverChip extends AbstractChip {
   readonly #defaultConfig: TemplateChipConfig = {
     type: "template",
     icon: "mdi:window-open",
-    icon_color: "cyan",
     content: "none",
     tap_action: {
       action: "navigate",
@@ -41,7 +40,7 @@ class CoverChip extends AbstractChip {
       this.#defaultConfig.content = Helper.getCountTemplate("cover", "eq", "open", options?.area_id);
     }
 
-    this.#defaultConfig.icon_color = Helper.getDomainColorFromState("cover", "eq", "open", this.#defaultConfig.icon_color!, "grey", options?.area_id)
+    this.#defaultConfig.icon_color = Helper.getDomainColorFromState({ domain: "cover", area_id: options?.area_id })
 
     this.config = Object.assign(this.config, this.#defaultConfig, options);
   }

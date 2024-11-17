@@ -7,6 +7,7 @@ import { LightSettings } from "./popups/LightSettingsPopup";
 import { ToggleSceneChip } from "./chips/ToggleSceneChip";
 import { SceneSettings } from "./popups/SceneSettingsPopup";
 import { DOMAIN_STATE_ICONS } from "./variables";
+import { Helper } from "./Helper";
 
 /**
  * Default configuration for the mushroom strategy.
@@ -58,6 +59,7 @@ export const configurationDefaults: StrategyDefaults = {
         iconOff: DOMAIN_STATE_ICONS.light.off,
         onService: "light.turn_on",
         offService: "light.turn_off",
+        toggleService: "light.toggle",
       },
       hidden: false,
       order: 1
@@ -70,6 +72,7 @@ export const configurationDefaults: StrategyDefaults = {
         iconOff: DOMAIN_STATE_ICONS.climate.off,
         onService: "climate.turn_on",
         offService: "climate.turn_off",
+        toggleService: "climate.toggle",
       },
       hidden: false,
       order: 2,
@@ -87,6 +90,7 @@ export const configurationDefaults: StrategyDefaults = {
         iconOff: DOMAIN_STATE_ICONS.media_player.off,
         onService: "media_player.turn_on",
         offService: "media_player.turn_off",
+        toggleService: "media_player.toggle",
       },
       hidden: false,
       order: 3,
@@ -104,6 +108,7 @@ export const configurationDefaults: StrategyDefaults = {
         iconOff: DOMAIN_STATE_ICONS.cover.off,
         onService: "cover.open_cover",
         offService: "cover.close_cover",
+        toggleService: "cover.toggle",
       },
       hidden: false,
       order: 4
@@ -140,6 +145,7 @@ export const configurationDefaults: StrategyDefaults = {
         iconOff: DOMAIN_STATE_ICONS.fan.off,
         onService: "fan.turn_on",
         offService: "fan.turn_off",
+        toggleService: "fan.toggle",
       },
       hidden: false,
       order: 6
@@ -152,6 +158,7 @@ export const configurationDefaults: StrategyDefaults = {
         iconOff: DOMAIN_STATE_ICONS.switch.off,
         onService: "switch.turn_on",
         offService: "switch.turn_off",
+        toggleService: "switch.toggle",
       },
       hidden: false,
       order: 7
@@ -162,8 +169,6 @@ export const configurationDefaults: StrategyDefaults = {
       controllerCardOptions: {
         iconOn: DOMAIN_STATE_ICONS.camera.on,
         iconOff: DOMAIN_STATE_ICONS.camera.on,
-        onService: "switch.turn_on",
-        offService: "switch.turn_off",
       },
       hidden: false,
       order: 8

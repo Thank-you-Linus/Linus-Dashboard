@@ -47,7 +47,7 @@ export const DEVICE_ICONS = {
 };
 
 export const DOMAIN_STATE_ICONS = {
-  light: { on: "mdi:lightbulb", off: "mdi:lightbulb-outline" },
+  light: { on: "mdi:lightbulb-group", off: "mdi:lightbulb-group-off" },
   switch: { on: "mdi:power-plug", off: "mdi:power-plug" },
   fan: { on: "mdi:fan", off: "mdi:fan-off" },
   sensor: { humidity: "mdi:water-percent", temperature: "mdi:thermometer", pressure: "mdi:gauge" },

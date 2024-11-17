@@ -22,7 +22,6 @@ class ClimateChip extends AbstractChip {
   readonly #defaultConfig: TemplateChipConfig = {
     type: "template",
     icon: "mdi:thermostat",
-    icon_color: "orange",
     content: "none",
     tap_action: {
       action: "navigate",
@@ -42,7 +41,7 @@ class ClimateChip extends AbstractChip {
       this.#defaultConfig.content = Helper.getCountTemplate("climate", "ne", "off", options?.area_id);
     }
 
-    this.#defaultConfig.icon_color = Helper.getDomainColorFromState("climate", "ne", "off", this.#defaultConfig.icon_color!, "grey", options?.area_id)
+    this.#defaultConfig.icon_color = Helper.getDomainColorFromState({ domain: "climate", area_id: options?.area_id })
 
     const magicAreasEntity = getMAEntity(options?.area_id ?? options?.floor_id ?? "global", "climate");
 

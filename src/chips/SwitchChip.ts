@@ -21,7 +21,6 @@ class SwitchChip extends AbstractChip {
   readonly #defaultConfig: TemplateChipConfig = {
     type: "template",
     icon: "mdi:dip-switch",
-    icon_color: "blue",
     content: "none",
     tap_action: {
       action: "navigate",
@@ -41,7 +40,7 @@ class SwitchChip extends AbstractChip {
       this.#defaultConfig.content = Helper.getCountTemplate("switch", "eq", "on", options?.area_id);
     }
 
-    this.#defaultConfig.icon_color = Helper.getDomainColorFromState("switch", "eq", "on", this.#defaultConfig.icon_color!, "grey", options?.area_id)
+    this.#defaultConfig.icon_color = Helper.getDomainColorFromState({ domain: "switch", area_id: options?.area_id })
 
     this.config = Object.assign(this.config, this.#defaultConfig, options);
   }

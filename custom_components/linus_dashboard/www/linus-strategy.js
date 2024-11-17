@@ -729,7 +729,7 @@ class Helper {
     static getValidEntity(entity) {
         return entity.disabled_by === null && entity.hidden_by === null;
     }
-    static getDomainColorFromState(domain, operator, value, color1, color2, area_id) {
+    static getDomainColorFromState({ domain, operator, value, ifReturn, elseReturn, area_id }) {
         const states = [];
         if (!this.isInitialized()) {
             console.warn("Helper class should be initialized before calling this method!");
@@ -751,9 +751,31 @@ class Helper {
                 }
             }
         }
-        return `{% set entities = [${states}] %} {{ "${color1}" if entities | selectattr('state','${operator}','${value}') | list | count > 0 else "${color2}" }}`;
+        if (domain === "light") {
+            ifReturn = ifReturn ?? "amber";
+        }
+        if (domain === "climate") {
+            operator = operator ?? "ne";
+            value = value ?? "off";
+            ifReturn = ifReturn ?? "orange";
+        }
+        if (domain === "cover") {
+            value = value ?? "open";
+            ifReturn = ifReturn ?? "cyan";
+        }
+        if (domain === "fan") {
+            ifReturn = ifReturn ?? "green";
+        }
+        if (domain === "media_player") {
+            value = value ?? "playing";
+            ifReturn = ifReturn ?? "dark-blue";
+        }
+        if (domain === "switch") {
+            ifReturn = ifReturn ?? "blue";
+        }
+        return `{% set entities = [${states}] %} {{ "${ifReturn}" if entities | selectattr('state','${operator ?? "eq"}','${value ?? "on"}') | list | count > 0 else "${elseReturn ?? "grey"}" }}`;
     }
-    static getBinarySensorColorFromState(device_class, operator, value, color1, color2, area_id) {
+    static getBinarySensorColorFromState(device_class, operator, value, ifReturn, elseReturn, area_id) {
         const states = [];
         if (!this.isInitialized()) {
             console.warn("Helper class should be initialized before calling this method!");
@@ -777,7 +799,7 @@ class Helper {
         }
         return `
       {% set entities = [${states}] %}
-      {{ "${color1}" if entities | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | selectattr('state','${operator}','${value}') | list | count else "${color2}" }}`;
+      {{ "${ifReturn}" if entities | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | selectattr('state','${operator}','${value}') | list | count else "${elseReturn}" }}`;
     }
     static getSensorColorFromState(device_class, area_id) {
         const domain = "sensor";
@@ -1591,10 +1613,11 @@ class ControllerCard {
                             {
                                 type: "template",
                                 entity: __classPrivateFieldGet(this, _ControllerCard_target, "f").entity_id,
-                                icon: __classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").iconOff,
+                                icon: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getDomainColorFromState({ domain: __classPrivateFieldGet(this, _ControllerCard_domain, "f"), ifReturn: __classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").iconOn, elseReturn: __classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").iconOff, area_id: areaId }),
+                                icon_color: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getDomainColorFromState({ domain: __classPrivateFieldGet(this, _ControllerCard_domain, "f"), area_id: areaId }),
                                 tap_action: {
                                     action: "call-service",
-                                    service: __classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").offService,
+                                    service: __classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").toggleService ?? __classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").offService,
                                     target: __classPrivateFieldGet(this, _ControllerCard_target, "f"),
                                     data: {},
                                 },
@@ -3202,7 +3225,6 @@ class ClimateChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.AbstractChi
         _ClimateChip_defaultConfig.set(this, {
             type: "template",
             icon: "mdi:thermostat",
-            icon_color: "orange",
             content: "none",
             tap_action: {
                 action: "navigate",
@@ -3212,7 +3234,7 @@ class ClimateChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.AbstractChi
         if (options?.show_content) {
             __classPrivateFieldGet(this, _ClimateChip_defaultConfig, "f").content = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getCountTemplate("climate", "ne", "off", options?.area_id);
         }
-        __classPrivateFieldGet(this, _ClimateChip_defaultConfig, "f").icon_color = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getDomainColorFromState("climate", "ne", "off", __classPrivateFieldGet(this, _ClimateChip_defaultConfig, "f").icon_color, "grey", options?.area_id);
+        __classPrivateFieldGet(this, _ClimateChip_defaultConfig, "f").icon_color = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getDomainColorFromState({ domain: "climate", area_id: options?.area_id });
         const magicAreasEntity = (0,_utils__WEBPACK_IMPORTED_MODULE_2__.getMAEntity)(options?.area_id ?? options?.floor_id ?? "global", "climate");
         if (magicAreasEntity) {
             __classPrivateFieldGet(this, _ClimateChip_defaultConfig, "f").entity = magicAreasEntity.entity_id;
@@ -3407,7 +3429,6 @@ class CoverChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.AbstractChip 
         _CoverChip_defaultConfig.set(this, {
             type: "template",
             icon: "mdi:window-open",
-            icon_color: "cyan",
             content: "none",
             tap_action: {
                 action: "navigate",
@@ -3417,7 +3438,7 @@ class CoverChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.AbstractChip 
         if (options?.show_content) {
             __classPrivateFieldGet(this, _CoverChip_defaultConfig, "f").content = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getCountTemplate("cover", "eq", "open", options?.area_id);
         }
-        __classPrivateFieldGet(this, _CoverChip_defaultConfig, "f").icon_color = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getDomainColorFromState("cover", "eq", "open", __classPrivateFieldGet(this, _CoverChip_defaultConfig, "f").icon_color, "grey", options?.area_id);
+        __classPrivateFieldGet(this, _CoverChip_defaultConfig, "f").icon_color = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getDomainColorFromState({ domain: "cover", area_id: options?.area_id });
         this.config = Object.assign(this.config, __classPrivateFieldGet(this, _CoverChip_defaultConfig, "f"), options);
     }
 }
@@ -3473,7 +3494,6 @@ class FanChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.AbstractChip {
         _FanChip_defaultConfig.set(this, {
             type: "template",
             icon: "mdi:fan",
-            icon_color: "green",
             content: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getCountTemplate("fan", "eq", "on"),
             tap_action: {
                 action: "navigate",
@@ -3483,7 +3503,7 @@ class FanChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.AbstractChip {
         if (options?.show_content) {
             __classPrivateFieldGet(this, _FanChip_defaultConfig, "f").content = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getCountTemplate("fan", "eq", "on", options?.area_id);
         }
-        __classPrivateFieldGet(this, _FanChip_defaultConfig, "f").icon_color = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getDomainColorFromState("fan", "eq", "on", __classPrivateFieldGet(this, _FanChip_defaultConfig, "f").icon_color, "grey", options?.area_id);
+        __classPrivateFieldGet(this, _FanChip_defaultConfig, "f").icon_color = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getDomainColorFromState({ domain: "fan", area_id: options?.area_id });
         this.config = Object.assign(this.config, __classPrivateFieldGet(this, _FanChip_defaultConfig, "f"), options);
     }
 }
@@ -3551,7 +3571,7 @@ class LightChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.AbstractChip 
         if (options?.show_content) {
             __classPrivateFieldGet(this, _LightChip_defaultConfig, "f").content = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getCountTemplate("light", "eq", "on", options?.area_id);
         }
-        __classPrivateFieldGet(this, _LightChip_defaultConfig, "f").icon_color = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getDomainColorFromState("light", "eq", "on", __classPrivateFieldGet(this, _LightChip_defaultConfig, "f").icon_color, "grey", options?.area_id);
+        __classPrivateFieldGet(this, _LightChip_defaultConfig, "f").icon_color = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getDomainColorFromState({ domain: "light", area_id: options?.area_id });
         const magicAreasEntity = (0,_utils__WEBPACK_IMPORTED_MODULE_2__.getMAEntity)(options?.area_id ?? options?.floor_id ?? "global", "light");
         if (magicAreasEntity) {
             __classPrivateFieldGet(this, _LightChip_defaultConfig, "f").entity = magicAreasEntity.entity_id;
@@ -3615,7 +3635,6 @@ class MediaPlayerChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.Abstrac
         _MediaPlayerChip_defaultConfig.set(this, {
             type: "template",
             icon: _variables__WEBPACK_IMPORTED_MODULE_2__.DOMAIN_ICONS["media_player"],
-            icon_color: "blue",
             content: "none",
             tap_action: {
                 action: "navigate",
@@ -3625,7 +3644,7 @@ class MediaPlayerChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.Abstrac
         if (options?.show_content) {
             __classPrivateFieldGet(this, _MediaPlayerChip_defaultConfig, "f").content = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getCountTemplate("media_player", "eq", "playing", options?.area_id);
         }
-        __classPrivateFieldGet(this, _MediaPlayerChip_defaultConfig, "f").icon_color = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getDomainColorFromState("media_player", "eq", "playing", __classPrivateFieldGet(this, _MediaPlayerChip_defaultConfig, "f").icon_color, "grey", options?.area_id);
+        __classPrivateFieldGet(this, _MediaPlayerChip_defaultConfig, "f").icon_color = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getDomainColorFromState({ domain: "media_player", area_id: options?.area_id });
         const magicAreasEntity = (0,_utils__WEBPACK_IMPORTED_MODULE_3__.getMAEntity)(options?.area_id ?? options?.floor_id ?? "global", "media_player");
         if (magicAreasEntity) {
             __classPrivateFieldGet(this, _MediaPlayerChip_defaultConfig, "f").entity = magicAreasEntity.entity_id;
@@ -3978,7 +3997,6 @@ class SwitchChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.AbstractChip
         _SwitchChip_defaultConfig.set(this, {
             type: "template",
             icon: "mdi:dip-switch",
-            icon_color: "blue",
             content: "none",
             tap_action: {
                 action: "navigate",
@@ -3988,7 +4006,7 @@ class SwitchChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.AbstractChip
         if (options?.show_content) {
             __classPrivateFieldGet(this, _SwitchChip_defaultConfig, "f").content = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getCountTemplate("switch", "eq", "on", options?.area_id);
         }
-        __classPrivateFieldGet(this, _SwitchChip_defaultConfig, "f").icon_color = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getDomainColorFromState("switch", "eq", "on", __classPrivateFieldGet(this, _SwitchChip_defaultConfig, "f").icon_color, "grey", options?.area_id);
+        __classPrivateFieldGet(this, _SwitchChip_defaultConfig, "f").icon_color = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getDomainColorFromState({ domain: "switch", area_id: options?.area_id });
         this.config = Object.assign(this.config, __classPrivateFieldGet(this, _SwitchChip_defaultConfig, "f"), options);
     }
 }
@@ -4273,6 +4291,7 @@ const configurationDefaults = {
                 iconOff: _variables__WEBPACK_IMPORTED_MODULE_5__.DOMAIN_STATE_ICONS.light.off,
                 onService: "light.turn_on",
                 offService: "light.turn_off",
+                toggleService: "light.toggle",
             },
             hidden: false,
             order: 1
@@ -4285,6 +4304,7 @@ const configurationDefaults = {
                 iconOff: _variables__WEBPACK_IMPORTED_MODULE_5__.DOMAIN_STATE_ICONS.climate.off,
                 onService: "climate.turn_on",
                 offService: "climate.turn_off",
+                toggleService: "climate.toggle",
             },
             hidden: false,
             order: 2,
@@ -4302,6 +4322,7 @@ const configurationDefaults = {
                 iconOff: _variables__WEBPACK_IMPORTED_MODULE_5__.DOMAIN_STATE_ICONS.media_player.off,
                 onService: "media_player.turn_on",
                 offService: "media_player.turn_off",
+                toggleService: "media_player.toggle",
             },
             hidden: false,
             order: 3,
@@ -4319,6 +4340,7 @@ const configurationDefaults = {
                 iconOff: _variables__WEBPACK_IMPORTED_MODULE_5__.DOMAIN_STATE_ICONS.cover.off,
                 onService: "cover.open_cover",
                 offService: "cover.close_cover",
+                toggleService: "cover.toggle",
             },
             hidden: false,
             order: 4
@@ -4355,6 +4377,7 @@ const configurationDefaults = {
                 iconOff: _variables__WEBPACK_IMPORTED_MODULE_5__.DOMAIN_STATE_ICONS.fan.off,
                 onService: "fan.turn_on",
                 offService: "fan.turn_off",
+                toggleService: "fan.toggle",
             },
             hidden: false,
             order: 6
@@ -4367,6 +4390,7 @@ const configurationDefaults = {
                 iconOff: _variables__WEBPACK_IMPORTED_MODULE_5__.DOMAIN_STATE_ICONS.switch.off,
                 onService: "switch.turn_on",
                 offService: "switch.turn_off",
+                toggleService: "switch.toggle",
             },
             hidden: false,
             order: 7
@@ -4377,8 +4401,6 @@ const configurationDefaults = {
             controllerCardOptions: {
                 iconOn: _variables__WEBPACK_IMPORTED_MODULE_5__.DOMAIN_STATE_ICONS.camera.on,
                 iconOff: _variables__WEBPACK_IMPORTED_MODULE_5__.DOMAIN_STATE_ICONS.camera.on,
-                onService: "switch.turn_on",
-                offService: "switch.turn_off",
             },
             hidden: false,
             order: 8
@@ -5813,7 +5835,7 @@ const DEVICE_ICONS = {
     presence_hold: 'mdi:car-brake-hold'
 };
 const DOMAIN_STATE_ICONS = {
-    light: { on: "mdi:lightbulb", off: "mdi:lightbulb-outline" },
+    light: { on: "mdi:lightbulb-group", off: "mdi:lightbulb-group-off" },
     switch: { on: "mdi:power-plug", off: "mdi:power-plug" },
     fan: { on: "mdi:fan", off: "mdi:fan-off" },
     sensor: { humidity: "mdi:water-percent", temperature: "mdi:thermometer", pressure: "mdi:gauge" },
@@ -6152,7 +6174,7 @@ class AggregateView extends _AbstractView__WEBPACK_IMPORTED_MODULE_2__.AbstractV
         this.viewControllerCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_1__.ControllerCard(this.targetDomain(options?.device_class), {
             ...__classPrivateFieldGet(this, _AggregateView_viewControllerCardConfig, "f"),
             title: `${_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize((0,_utils__WEBPACK_IMPORTED_MODULE_4__.getDomainTranslationKey)(domain, options?.device_class))}s`,
-            subtitle: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getDeviceClassCountTemplate(options?.device_class, "eq", "on") + ` ${_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize((0,_utils__WEBPACK_IMPORTED_MODULE_4__.getStateTranslationKey)("on", domain, options?.device_class))}s`,
+            // subtitle: Helper.getDeviceClassCountTemplate(options?.device_class, "eq", "on") + ` ${Helper.localize(getStateTranslationKey("on", domain, options?.device_class))}s`,
             ...("controllerCardOptions" in this.config ? this.config.controllerCardOptions : {}),
         }, options?.device_class).createCard();
     }

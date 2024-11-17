@@ -21,7 +21,6 @@ class FanChip extends AbstractChip {
   readonly #defaultConfig: TemplateChipConfig = {
     type: "template",
     icon: "mdi:fan",
-    icon_color: "green",
     content: Helper.getCountTemplate("fan", "eq", "on"),
     tap_action: {
       action: "navigate",
@@ -41,7 +40,7 @@ class FanChip extends AbstractChip {
       this.#defaultConfig.content = Helper.getCountTemplate("fan", "eq", "on", options?.area_id);
     }
 
-    this.#defaultConfig.icon_color = Helper.getDomainColorFromState("fan", "eq", "on", this.#defaultConfig.icon_color!, "grey", options?.area_id)
+    this.#defaultConfig.icon_color = Helper.getDomainColorFromState({ domain: "fan", area_id: options?.area_id })
 
 
     this.config = Object.assign(this.config, this.#defaultConfig, options);

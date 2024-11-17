@@ -1057,7 +1057,7 @@ class AbstractCard {
     getCard() {
         return {
             ...this.config,
-            entity: "entity_id" in this.entity ? this.entity.entity_id : undefined,
+            entity: this.entity && "entity_id" in this.entity ? this.entity.entity_id : undefined,
         };
     }
 }
@@ -1597,31 +1597,26 @@ class ControllerCard {
                 badges.push({
                     type: "custom:mushroom-chips-card",
                     alignment: "end",
-                    chips: [magicAreasEntity ?
-                            {
-                                type: __classPrivateFieldGet(this, _ControllerCard_domain, "f") === "light" ? "light" : "entity",
-                                entity: magicAreasEntity.entity_id,
-                                icon_color: "",
-                                content_info: "none",
-                                tap_action: {
-                                    action: "toggle"
-                                },
+                    chips: [
+                        {
+                            type: "template",
+                            entity: magicAreasEntity ? magicAreasEntity?.entity_id : __classPrivateFieldGet(this, _ControllerCard_target, "f").entity_id,
+                            icon: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getDomainColorFromState({ domain: __classPrivateFieldGet(this, _ControllerCard_domain, "f"), ifReturn: __classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").iconOn, elseReturn: __classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").iconOff, area_id: areaId }),
+                            icon_color: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getDomainColorFromState({ domain: __classPrivateFieldGet(this, _ControllerCard_domain, "f"), area_id: areaId }),
+                            tap_action: magicAreasEntity ? {
+                                action: "toggle"
+                            } : {
+                                action: "call-service",
+                                service: __classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").toggleService ?? __classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").offService,
+                                target: __classPrivateFieldGet(this, _ControllerCard_target, "f"),
+                                data: {},
+                            },
+                            ...(magicAreasEntity ? {
                                 hold_action: {
                                     action: "more-info"
                                 }
-                            } :
-                            {
-                                type: "template",
-                                entity: __classPrivateFieldGet(this, _ControllerCard_target, "f").entity_id,
-                                icon: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getDomainColorFromState({ domain: __classPrivateFieldGet(this, _ControllerCard_domain, "f"), ifReturn: __classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").iconOn, elseReturn: __classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").iconOff, area_id: areaId }),
-                                icon_color: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getDomainColorFromState({ domain: __classPrivateFieldGet(this, _ControllerCard_domain, "f"), area_id: areaId }),
-                                tap_action: {
-                                    action: "call-service",
-                                    service: __classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").toggleService ?? __classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").offService,
-                                    target: __classPrivateFieldGet(this, _ControllerCard_target, "f"),
-                                    data: {},
-                                },
-                            }
+                            } : {})
+                        }
                     ]
                 });
             }
@@ -1838,7 +1833,7 @@ const getBadgeColor = (entityId) => `
 `;
 class HomeAreaCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractCard {
     constructor(options) {
-        const magicAreasEntity = (0,_utils__WEBPACK_IMPORTED_MODULE_5__.getMAEntity)(options.area_id, "area_state") ?? {};
+        const magicAreasEntity = (0,_utils__WEBPACK_IMPORTED_MODULE_5__.getMAEntity)(options.area_id, "area_state");
         const area = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.areas[options.area_id];
         super(magicAreasEntity);
         const defaultConfig = options?.area_id === "undisclosed" ? this.getUndisclosedAreaConfig(area) : this.getDefaultConfig(area);
@@ -5704,7 +5699,7 @@ function getMAEntity(device_id, domain, device_class) {
         return magicAreaDevice?.entities?.[`${domain}_group`];
     if (device_class && [..._variables__WEBPACK_IMPORTED_MODULE_1__.DEVICE_CLASSES.binary_sensor, ..._variables__WEBPACK_IMPORTED_MODULE_1__.DEVICE_CLASSES.sensor].includes(device_class))
         return magicAreaDevice?.entities?.[`aggregate_${device_class}`];
-    return magicAreaDevice?.entities?.[domain];
+    return undefined;
 }
 function groupEntitiesByDomain(entity_ids) {
     return entity_ids

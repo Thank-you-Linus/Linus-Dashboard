@@ -1,7 +1,7 @@
-import {Helper} from "../Helper";
-import {cards} from "../types/strategy/cards";
-import {generic} from "../types/strategy/generic";
-import {EntityCardConfig} from "../types/lovelace-mushroom/cards/entity-card-config";
+import { Helper } from "../Helper";
+import { cards } from "../types/strategy/cards";
+import { generic } from "../types/strategy/generic";
+import { EntityCardConfig } from "../types/lovelace-mushroom/cards/entity-card-config";
 
 /**
  * Abstract Card Class
@@ -51,9 +51,9 @@ abstract class AbstractCard {
   getCard(): cards.AbstractCardConfig {
     return {
       ...this.config,
-      entity: "entity_id" in this.entity ? this.entity.entity_id : undefined,
+      entity: this.entity && "entity_id" in this.entity ? this.entity.entity_id : undefined,
     };
   }
 }
 
-export {AbstractCard};
+export { AbstractCard };

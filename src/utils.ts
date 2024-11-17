@@ -79,13 +79,13 @@ export function getAggregateEntity(device: MagicAreaRegistryEntry, domains: stri
     return aggregateKeys.filter(Boolean)
 }
 
-export function getMAEntity(device_id: string, domain: string, device_class?: string): EntityRegistryEntry {
+export function getMAEntity(device_id: string, domain: string, device_class?: string): EntityRegistryEntry | undefined {
     const magicAreaDevice = Helper.magicAreasDevices[device_id];
     // TODO remove '' when new release
     if (MAGIC_AREAS_LIGHT_DOMAINS === domain) return magicAreaDevice?.entities?.['all_lights'] ?? magicAreaDevice?.entities?.['']
     if (MAGIC_AREAS_GROUP_DOMAINS.includes(domain)) return magicAreaDevice?.entities?.[`${domain}_group` as 'cover_group']
     if (device_class && [...DEVICE_CLASSES.binary_sensor, ...DEVICE_CLASSES.sensor].includes(device_class)) return magicAreaDevice?.entities?.[`aggregate_${device_class}` as 'aggregate_motion']
-    return magicAreaDevice?.entities?.[domain]
+    return undefined
 }
 
 export function groupEntitiesByDomain(entity_ids: string[]): Record<string, string[]> {

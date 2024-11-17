@@ -39,7 +39,6 @@ class SwitchChip extends AbstractChip {
     if (options?.show_content) {
       this.#defaultConfig.content = Helper.getCountTemplate("switch", "eq", "on", options?.area_id);
     }
-
     this.#defaultConfig.icon_color = Helper.getDomainColorFromState({ domain: "switch", area_id: options?.area_id })
 
     this.config = Object.assign(this.config, this.#defaultConfig, options);

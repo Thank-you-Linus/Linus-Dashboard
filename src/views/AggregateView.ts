@@ -61,7 +61,7 @@ class AggregateView extends AbstractView {
       {
         ...this.#viewControllerCardConfig,
         title: `${Helper.localize(getDomainTranslationKey(domain, options?.device_class))}s`,
-        subtitle: Helper.getDeviceClassCountTemplate(options?.device_class, "eq", "on") + ` ${Helper.localize(getStateTranslationKey("on", domain, options?.device_class))}s`,
+        // subtitle: Helper.getDeviceClassCountTemplate(options?.device_class, "eq", "on") + ` ${Helper.localize(getStateTranslationKey("on", domain, options?.device_class))}s`,
         ...("controllerCardOptions" in this.config ? this.config.controllerCardOptions : {}) as cards.ControllerCardConfig,
       }, options?.device_class).createCard();
 

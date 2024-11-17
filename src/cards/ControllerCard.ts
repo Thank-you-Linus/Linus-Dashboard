@@ -122,10 +122,11 @@ class ControllerCard {
             {
               type: "template",
               entity: this.#target.entity_id,
-              icon: this.#defaultConfig.iconOff,
+              icon: Helper.getDomainColorFromState({ domain: this.#domain!, ifReturn: this.#defaultConfig.iconOn, elseReturn: this.#defaultConfig.iconOff, area_id: areaId }),
+              icon_color: Helper.getDomainColorFromState({ domain: this.#domain!, area_id: areaId }),
               tap_action: {
                 action: "call-service",
-                service: this.#defaultConfig.offService,
+                service: this.#defaultConfig.toggleService ?? this.#defaultConfig.offService,
                 target: this.#target,
                 data: {},
               },

@@ -54,7 +54,7 @@ const getBadgeColor = (entityId: string) => `
 class HomeAreaCard extends AbstractCard {
   constructor(options: cards.HomeAreaCardOptions) {
 
-    const magicAreasEntity = getMAEntity(options.area_id, "area_state") ?? {};
+    const magicAreasEntity: EntityRegistryEntry = getMAEntity(options.area_id, "area_state") as EntityRegistryEntry;
 
     const area = Helper.areas[options.area_id];
 

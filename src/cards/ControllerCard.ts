@@ -106,30 +106,25 @@ class ControllerCard {
         badges.push({
           type: "custom:mushroom-chips-card",
           alignment: "end",
-          chips: [magicAreasEntity ?
-            {
-              type: this.#domain === "light" ? "light" : "entity",
-              entity: magicAreasEntity.entity_id,
-              icon_color: "",
-              content_info: "none",
-              tap_action: {
-                action: "toggle"
-              },
-              hold_action: {
-                action: "more-info"
-              }
-            } :
+          chips: [
             {
               type: "template",
-              entity: this.#target.entity_id,
+              entity: magicAreasEntity ? magicAreasEntity?.entity_id : this.#target.entity_id,
               icon: Helper.getDomainColorFromState({ domain: this.#domain!, ifReturn: this.#defaultConfig.iconOn, elseReturn: this.#defaultConfig.iconOff, area_id: areaId }),
               icon_color: Helper.getDomainColorFromState({ domain: this.#domain!, area_id: areaId }),
-              tap_action: {
+              tap_action: magicAreasEntity ? {
+                action: "toggle"
+              } : {
                 action: "call-service",
                 service: this.#defaultConfig.toggleService ?? this.#defaultConfig.offService,
                 target: this.#target,
                 data: {},
               },
+              ...(magicAreasEntity ? {
+                hold_action: {
+                  action: "more-info"
+                }
+              } : {})
             }
           ]
         });

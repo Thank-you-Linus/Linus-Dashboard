@@ -34,12 +34,6 @@ class FanView extends AbstractView {
     path: "fans",
     icon: "mdi:fan",
     subview: false,
-    controllerCardOptions: {
-      iconOn: "mdi:fan",
-      iconOff: "mdi:fan-off",
-      onService: "fan.turn_on",
-      offService: "fan.turn_off",
-    },
   };
 
   /**
@@ -50,7 +44,7 @@ class FanView extends AbstractView {
    */
   #viewControllerCardConfig: cards.ControllerCardOptions = {
     title: `${Helper.localize(`component.fan.entity_component._.name`)}s`,
-    subtitle: Helper.getCountTemplate(FanView.#domain, "eq", "on") + ` ${Helper.localize(`component.fan.entity_component._.state.on`)}s`,
+    // subtitle: Helper.getCountTemplate(FanView.#domain, "eq", "on") + ` ${Helper.localize(`component.fan.entity_component._.state.on`)}s`,
   };
 
   /**
@@ -68,7 +62,7 @@ class FanView extends AbstractView {
       this.targetDomain(FanView.#domain),
       {
         ...this.#viewControllerCardConfig,
-        ...("controllerCardOptions" in this.config ? this.config.controllerCardOptions : {}) as cards.ControllerCardConfig,
+        ...Helper.strategyOptions.domains.fan.controllerCardOptions,
       }, FanView.#domain).createCard();
   }
 }

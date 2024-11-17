@@ -496,7 +496,7 @@ class Helper {
    * @return {string} The template string.
    * @static
    */
-  static getDeviceClassCountTemplate(domain: string, device_class: string, operator: string, value: string, area_id?: string): string {
+  static getDeviceClassCountTemplate(device_class: string, operator: string, value: string, area_id?: string): string {
     // noinspection JSMismatchedCollectionQueryUpdate (False positive per 17-04-2023)
     /**
      * Array of entity state-entries, filtered by domain.
@@ -515,21 +515,20 @@ class Helper {
       console.warn("Helper class should be initialized before calling this method!");
     }
 
-
     if (area_id) {
-      const newStates = this.#areas[area_id]?.domains[domain]?.map((entity_id) => `states['${entity_id}']`);
+      const newStates = this.#areas[area_id]?.domains[device_class]?.map((entity_id) => `states['${entity_id}']`);
       if (newStates) {
         states.push(...newStates);
       }
-    }
+    } else {
+      // Get the ID of the devices which are linked to the given area.
+      for (const area of Object.values(this.#areas)) {
+        if (area.area_id === "undisclosed") continue
 
-    // Get the ID of the devices which are linked to the given area.
-    for (const area of Object.values(this.#areas)) {
-      if (area.area_id === "undisclosed") continue
-
-      const newStates = this.#areas[area.area_id]?.domains[domain]?.map((entity_id) => `states['${entity_id}']`);
-      if (newStates) {
-        states.push(...newStates);
+        const newStates = this.#areas[area.area_id]?.domains[device_class]?.map((entity_id) => `states['${entity_id}']`);
+        if (newStates) {
+          states.push(...newStates);
+        }
       }
     }
 
@@ -572,17 +571,18 @@ class Helper {
       if (newStates) {
         states.push(...newStates);
       }
-    }
+    } else {
+      // Get the ID of the devices which are linked to the given area.
+      for (const area of Object.values(this.#areas)) {
+        if (area.area_id === "undisclosed") continue
 
-    // Get the ID of the devices which are linked to the given area.
-    for (const area of Object.values(this.#areas)) {
-      if (area.area_id === "undisclosed") continue
-
-      const newStates = this.#areas[area.area_id].domains[device_class]?.map((entity_id) => `states['${entity_id}']`);
-      if (newStates) {
-        states.push(...newStates);
+        const newStates = this.#areas[area.area_id].domains[device_class]?.map((entity_id) => `states['${entity_id}']`);
+        if (newStates) {
+          states.push(...newStates);
+        }
       }
     }
+
 
     return `{% set entities = [${states}] %} {{ entities | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | sum / entities | length }} {{ state_attr('sensor.outside_temperature', 'unit_of_measurement')}}`;
   }
@@ -757,6 +757,192 @@ class Helper {
    */
   static getValidEntity(entity: StrategyEntity): Boolean {
     return entity.disabled_by === null && entity.hidden_by === null
+  }
+
+  static getDomainColorFromState(domain: string, operator: string, value: string, color1: string, color2: string, area_id?: string): string {
+    const states: string[] = [];
+
+    if (!this.isInitialized()) {
+      console.warn("Helper class should be initialized before calling this method!");
+    }
+
+    if (area_id) {
+      const newStates = this.#areas[area_id]?.domains[domain]?.map((entity_id) => `states['${entity_id}']`);
+      if (newStates) {
+        states.push(...newStates);
+      }
+    } else {
+      // Get the ID of the devices which are linked to the given area.
+      for (const area of Object.values(this.#areas)) {
+        if (area.area_id === "undisclosed") continue
+
+        const newStates = this.#areas[area.area_id]?.domains[domain]?.map((entity_id) => `states['${entity_id}']`);
+        if (newStates) {
+          states.push(...newStates);
+        }
+      }
+    }
+
+    return `{% set entities = [${states}] %} {{ "${color1}" if entities | selectattr('state','${operator}','${value}') | list | count > 0 else "${color2}" }}`;
+  }
+
+  static getBinarySensorColorFromState(device_class: string, operator: string, value: string, color1: string, color2: string, area_id?: string): string {
+
+    const states: string[] = [];
+
+    if (!this.isInitialized()) {
+      console.warn("Helper class should be initialized before calling this method!");
+    }
+
+
+    if (area_id) {
+      const newStates = this.#areas[area_id]?.domains[device_class]?.map((entity_id) => `states['${entity_id}']`);
+      if (newStates) {
+        states.push(...newStates);
+      }
+    } else {
+      // Get the ID of the devices which are linked to the given area.
+      for (const area of Object.values(this.#areas)) {
+        if (area.area_id === "undisclosed") continue
+
+        const newStates = this.#areas[area.area_id]?.domains[device_class]?.map((entity_id) => `states['${entity_id}']`);
+        if (newStates) {
+          states.push(...newStates);
+        }
+      }
+    }
+
+    return `
+      {% set entities = [${states}] %}
+      {{ "${color1}" if entities | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | selectattr('state','${operator}','${value}') | list | count else "${color2}" }}`;
+  }
+
+  static getSensorColorFromState(device_class: string, area_id?: string): string {
+
+    const domain = "sensor"
+
+    const states: string[] = [];
+
+    if (!this.isInitialized()) {
+      console.warn("Helper class should be initialized before calling this method!");
+    }
+
+
+    if (area_id) {
+      const newStates = this.#areas[area_id]?.domains[device_class]?.map((entity_id) => `states['${entity_id}']`);
+      if (newStates) {
+        states.push(...newStates);
+      }
+    } else {
+      // Get the ID of the devices which are linked to the given area.
+      for (const area of Object.values(this.#areas)) {
+        if (area.area_id === "undisclosed") continue
+
+        const newStates = this.#areas[area.area_id]?.domains[device_class]?.map((entity_id) => `states['${entity_id}']`);
+        if (newStates) {
+          states.push(...newStates);
+        }
+      }
+    }
+
+    if (device_class === "battery") {
+      return `
+        {% set entities = [${states}] %}
+        {% set bl = entities | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | sum / entities | length %}
+        {% if bl < 20 %}
+          blue
+        {% elif bl < 30 %}
+          orange
+        {% elif bl >= 30 %}
+          red
+        {% else %}
+          disabled
+        {% endif %}
+      `
+    }
+
+    if (device_class === "temperature") {
+      return `
+        {% set entities = [${states}] %}
+        {% set bl = entities | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | sum / entities | length %}
+        {% if bl < 20 %}
+          blue
+        {% elif bl < 30 %}
+          orange
+        {% elif bl >= 30 %}
+          red
+        {% else %}
+          disabled
+        {% endif %}
+      `
+    }
+
+    return ""
+  }
+
+  static getSensorIconFromState(device_class: string, area_id?: string): string {
+
+    const domain = "sensor"
+
+    const states: string[] = [];
+
+    if (!this.isInitialized()) {
+      console.warn("Helper class should be initialized before calling this method!");
+    }
+
+    if (area_id) {
+      const newStates = this.#areas[area_id]?.domains[device_class]?.map((entity_id) => `states['${entity_id}']`);
+      if (newStates) {
+        states.push(...newStates);
+      }
+    } else {
+      // Get the ID of the devices which are linked to the given area.
+      for (const area of Object.values(this.#areas)) {
+        if (area.area_id === "undisclosed") continue
+
+        const newStates = this.#areas[area.area_id]?.domains[device_class]?.map((entity_id) => `states['${entity_id}']`);
+        if (newStates) {
+          states.push(...newStates);
+        }
+      }
+    }
+
+    if (device_class === "battery") {
+      return `
+      {% set entities = [${states}] %}
+      {% set bl = entities | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute = 'state') | map('float') | sum / entities | length %}
+      {% if bl == 'unknown' or bl == 'unavailable' %}
+      {% elif bl | int() < 10 %} mdi: battery - outline
+      {% elif bl | int() < 20 %} mdi: battery1
+      {% elif bl | int() < 30 %} mdi: battery - 20
+      {% elif bl | int() < 40 %} mdi: battery - 30
+      {% elif bl | int() < 50 %} mdi: battery - 40
+      {% elif bl | int() < 60 %} mdi: battery - 50
+      {% elif bl | int() < 70 %} mdi: battery - 60
+      {% elif bl | int() < 80 %} mdi: battery - 70
+      {% elif bl | int() < 90 %} mdi: battery - 80
+      {% elif bl | int() < 100 %} mdi: battery - 90
+      {% elif bl | int() == 100 %} mdi: battery
+      {% else %} mdi:battery{% endif %} `
+    }
+
+    if (device_class === "temperature") {
+      return `
+        {% set entities = [${states}] %}
+        {% set bl = (entities | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute = 'state') | map('float') | sum / entities | length) %}
+        {% if bl < 20 %}
+          mdi:thermometer-low
+        {% elif bl < 30 %}
+          mdi:thermometer
+        {% elif bl >= 30 %}
+          mdi:thermometer-high
+        {% else %}
+          disabled
+        {% endif %}
+      `
+    }
+
+    return ""
   }
 }
 

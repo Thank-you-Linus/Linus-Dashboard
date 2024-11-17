@@ -50,7 +50,7 @@ export function navigateTo(path: string): ActionConfig {
     }
 }
 
-export function getAggregateEntity(device: MagicAreaRegistryEntry, domains: string | string[], deviceClasses?: string | string[]): EntityRegistryEntry[] {
+export function getAggregateEntity(device: MagicAreaRegistryEntry, domains: string | string[], device_classes?: string | string[]): EntityRegistryEntry[] {
 
     const aggregateKeys = []
 
@@ -69,8 +69,8 @@ export function getAggregateEntity(device: MagicAreaRegistryEntry, domains: stri
         }
 
         if (MAGIC_AREAS_AGGREGATE_DOMAINS.includes(domain)) {
-            for (const deviceClass of Array.isArray(deviceClasses) ? deviceClasses : [deviceClasses]) {
-                aggregateKeys.push(device?.entities[`aggregate_${deviceClass}` as 'aggregate_motion'])
+            for (const device_class of Array.isArray(device_classes) ? device_classes : [device_classes]) {
+                aggregateKeys.push(device?.entities[`aggregate_${device_class}` as 'aggregate_motion'])
             }
 
         }
@@ -79,12 +79,12 @@ export function getAggregateEntity(device: MagicAreaRegistryEntry, domains: stri
     return aggregateKeys.filter(Boolean)
 }
 
-export function getMAEntity(device_id: string, domain: string, deviceClass?: string): EntityRegistryEntry {
+export function getMAEntity(device_id: string, domain: string, device_class?: string): EntityRegistryEntry {
     const magicAreaDevice = Helper.magicAreasDevices[device_id];
     // TODO remove '' when new release
     if (MAGIC_AREAS_LIGHT_DOMAINS === domain) return magicAreaDevice?.entities?.['all_lights'] ?? magicAreaDevice?.entities?.['']
     if (MAGIC_AREAS_GROUP_DOMAINS.includes(domain)) return magicAreaDevice?.entities?.[`${domain}_group` as 'cover_group']
-    if (deviceClass && [...DEVICE_CLASSES.binary_sensor, ...DEVICE_CLASSES.sensor].includes(deviceClass)) return magicAreaDevice?.entities?.[`aggregate_${deviceClass}` as 'aggregate_motion']
+    if (device_class && [...DEVICE_CLASSES.binary_sensor, ...DEVICE_CLASSES.sensor].includes(device_class)) return magicAreaDevice?.entities?.[`aggregate_${device_class}` as 'aggregate_motion']
     return magicAreaDevice?.entities?.[domain]
 }
 
@@ -114,7 +114,6 @@ export async function createChipsFromList(chipsList: string[], chipOptions?: Par
     for (let chipType of chipsList) {
         if (((area_id ? Helper.areas[area_id] : Helper)?.domains[chipType] ?? []).length === 0) continue;
 
-
         const className = Helper.sanitizeClassName(chipType + "Chip");
 
         try {
@@ -138,4 +137,20 @@ export async function createChipsFromList(chipsList: string[], chipOptions?: Par
     if (unavailableChip) chips.push(unavailableChip);
 
     return chips;
+}
+
+export function getDomainTranslationKey(domain: string, device_class?: string) {
+    if (domain === 'scene') return 'ui.dialogs.quick-bar.commands.navigation.scene'
+
+    if (MAGIC_AREAS_AGGREGATE_DOMAINS.includes(domain)) return `component.${domain}.entity_component.${device_class}.name`
+
+    return `component.${domain}.entity_component._.name`
+}
+
+export function getStateTranslationKey(state: string, domain: string, device_class?: string) {
+    if (domain === 'scene') return 'ui.dialogs.quick-bar.commands.navigation.scene'
+
+    if (MAGIC_AREAS_AGGREGATE_DOMAINS.includes(domain)) return `component.${domain}.entity_component.${device_class}.state.${state}`
+
+    return `component.${domain}.entity_component._.name`
 }

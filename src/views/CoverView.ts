@@ -34,12 +34,6 @@ class CoverView extends AbstractView {
     path: "covers",
     icon: "mdi:window-open",
     subview: false,
-    controllerCardOptions: {
-      iconOn: "mdi:arrow-up",
-      iconOff: "mdi:arrow-down",
-      onService: "cover.open_cover",
-      offService: "cover.close_cover",
-    },
   };
 
   /**
@@ -50,7 +44,7 @@ class CoverView extends AbstractView {
    */
   #viewControllerCardConfig: cards.ControllerCardOptions = {
     title: `${Helper.localize(`component.cover.entity_component._.name`)}`,
-    subtitle: Helper.getCountTemplate(CoverView.#domain, "eq", "open") + ` ${Helper.localize(`component.cover.entity_component._.state.open`)}`,
+    // subtitle: Helper.getCountTemplate(CoverView.#domain, "eq", "open") + ` ${Helper.localize(`component.cover.entity_component._.state.open`)}`,
   };
 
   /**
@@ -68,7 +62,7 @@ class CoverView extends AbstractView {
       this.targetDomain(CoverView.#domain),
       {
         ...this.#viewControllerCardConfig,
-        ...("controllerCardOptions" in this.config ? this.config.controllerCardOptions : {}) as cards.ControllerCardConfig,
+        ...Helper.strategyOptions.domains.cover.controllerCardOptions,
       }, CoverView.#domain).createCard();
   }
 }

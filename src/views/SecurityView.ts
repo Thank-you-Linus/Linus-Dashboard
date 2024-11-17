@@ -232,7 +232,7 @@ abstract class SecurityView {
 
         // Vertical stack the area cards if it has entities.
         if (areaCards.length) {
-          const titleCardOptions: any = ("controllerCardOptions" in this.config) ? this.config.controllerCardOptions : {};
+          const titleCardOptions: any = {};
           titleCardOptions.subtitle = area.name
           titleCardOptions.subtitleIcon = area.icon ?? "mdi:floor-plan";
           titleCardOptions.navigate = area.slug;

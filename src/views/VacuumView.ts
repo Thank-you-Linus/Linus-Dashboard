@@ -34,12 +34,6 @@ class VacuumView extends AbstractView {
     path: "vacuums",
     icon: "mdi:robot-vacuum",
     subview: false,
-    controllerCardOptions: {
-      iconOn: "mdi:robot-vacuum",
-      iconOff: "mdi:robot-vacuum-off",
-      onService: "vacuum.start",
-      offService: "vacuum.stop",
-    },
   };
 
   /**
@@ -50,7 +44,7 @@ class VacuumView extends AbstractView {
    */
   #viewControllerCardConfig: cards.ControllerCardOptions = {
     title: `${Helper.localize(`component.vacuum.entity_component._.name`)}s`,
-    subtitle: Helper.getCountTemplate(VacuumView.#domain, "ne", "off") + ` ${Helper.localize(`component.vacuum.entity_component._.state.on`)}`,
+    // subtitle: Helper.getCountTemplate(VacuumView.#domain, "ne", "off") + ` ${Helper.localize(`component.vacuum.entity_component._.state.on`)}`,
   };
 
   /**
@@ -68,7 +62,7 @@ class VacuumView extends AbstractView {
       this.targetDomain(VacuumView.#domain),
       {
         ...this.#viewControllerCardConfig,
-        ...("controllerCardOptions" in this.config ? this.config.controllerCardOptions : {}) as cards.ControllerCardConfig,
+        ...Helper.strategyOptions.domains.vacuum.controllerCardOptions,
       }, VacuumView.#domain).createCard();
   }
 }

@@ -22,7 +22,7 @@ class SwitchChip extends AbstractChip {
     type: "template",
     icon: "mdi:dip-switch",
     icon_color: "blue",
-    content: Helper.getCountTemplate("switch", "eq", "on"),
+    content: "none",
     tap_action: {
       action: "navigate",
       navigation_path: "switches",
@@ -32,10 +32,16 @@ class SwitchChip extends AbstractChip {
   /**
    * Class Constructor.
    *
-   * @param {chips.TemplateChipOptions} options The chip options.
+   * @param {chips.ChipOptions} options The chip options.
    */
-  constructor(options: chips.TemplateChipOptions = {}) {
+  constructor(options: chips.ChipOptions = {}) {
     super();
+
+    if (options?.show_content) {
+      this.#defaultConfig.content = Helper.getCountTemplate("switch", "eq", "on", options?.area_id);
+    }
+
+    this.#defaultConfig.icon_color = Helper.getDomainColorFromState("switch", "eq", "on", this.#defaultConfig.icon_color!, "grey", options?.area_id)
 
     this.config = Object.assign(this.config, this.#defaultConfig, options);
   }

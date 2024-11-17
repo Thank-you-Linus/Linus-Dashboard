@@ -33,12 +33,6 @@ class LightView extends AbstractView {
     path: "lights",
     icon: "mdi:lightbulb-group",
     subview: false,
-    controllerCardOptions: {
-      iconOn: "mdi:lightbulb-group",
-      iconOff: "mdi:lightbulb-group-off",
-      onService: "light.turn_on",
-      offService: "light.turn_off",
-    },
   };
 
   /**
@@ -49,7 +43,7 @@ class LightView extends AbstractView {
    */
   #viewControllerCardConfig: cards.ControllerCardOptions = {
     title: `${Helper.localize(`component.light.entity_component._.name`)}s`,
-    subtitle: Helper.getCountTemplate(LightView.#domain, "eq", "on") + ` ${Helper.localize("component.light.entity_component._.state.on")}`,
+    // subtitle: Helper.getCountTemplate(LightView.#domain, "eq", "on") + ` ${Helper.localize("component.light.entity_component._.state.on")}`,
   };
 
   /**
@@ -67,7 +61,7 @@ class LightView extends AbstractView {
       this.targetDomain(LightView.#domain),
       {
         ...this.#viewControllerCardConfig,
-        ...("controllerCardOptions" in this.config ? this.config.controllerCardOptions : {}) as cards.ControllerCardConfig,
+        ...Helper.strategyOptions.domains.light.controllerCardOptions,
       }, LightView.#domain).createCard();
   }
 }

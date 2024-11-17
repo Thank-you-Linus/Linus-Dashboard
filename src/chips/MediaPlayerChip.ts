@@ -23,7 +23,7 @@ class MediaPlayerChip extends AbstractChip {
   readonly #defaultConfig: TemplateChipConfig = {
     type: "template",
     icon: DOMAIN_ICONS["media_player"],
-    icon_color: "orange",
+    icon_color: "blue",
     content: "none",
     tap_action: {
       action: "navigate",
@@ -39,7 +39,11 @@ class MediaPlayerChip extends AbstractChip {
   constructor(options: chips.ChipOptions) {
     super();
 
-    this.#defaultConfig.content = Helper.getCountTemplate("media_player", "eq", "playing", options?.area_id);
+    if (options?.show_content) {
+      this.#defaultConfig.content = Helper.getCountTemplate("media_player", "eq", "playing", options?.area_id);
+    }
+
+    this.#defaultConfig.icon_color = Helper.getDomainColorFromState("media_player", "eq", "playing", this.#defaultConfig.icon_color!, "grey", options?.area_id)
 
     const magicAreasEntity = getMAEntity(options?.area_id ?? options?.floor_id ?? "global", "media_player");
 

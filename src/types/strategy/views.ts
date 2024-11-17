@@ -1,5 +1,5 @@
-import {cards} from "./cards";
-import {LovelaceViewConfig} from "../homeassistant/data/lovelace";
+import { cards } from "./cards";
+import { LovelaceViewConfig } from "../homeassistant/data/lovelace";
 
 export namespace views {
   /**
@@ -10,6 +10,8 @@ export namespace views {
   export interface ViewConfig extends LovelaceViewConfig {
     controllerCardOptions?: cards.ControllerCardOptions;
   }
+
+  export type AggregateViewOptions = { device_class: string } & ViewConfig;
 }
 
 

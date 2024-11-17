@@ -3,7 +3,7 @@ import { generic } from "./types/strategy/generic";
 import { LovelaceConfig, LovelaceViewConfig } from "./types/homeassistant/data/lovelace";
 import StrategyArea = generic.StrategyArea;
 import StrategyFloor = generic.StrategyFloor;
-import { AREA_CARDS_DOMAINS } from "./variables";
+import { AREA_CARDS_DOMAINS, DEVICE_CLASSES } from "./variables";
 import { AreaView } from "./views/AreaView";
 import { slugify } from "./utils";
 
@@ -36,19 +36,20 @@ class MushroomStrategy extends HTMLTemplateElement {
     // Create views.
     const views: LovelaceViewConfig[] = info.config?.views ?? [];
 
-    let viewModule;
-
-
     // Create a view for each exposed domain.
     for (let viewId of Helper.getExposedViewIds()) {
       if (AREA_CARDS_DOMAINS.includes(viewId) && (Helper.domains[viewId] ?? []).length === 0) continue
       try {
-        const viewType = Helper.sanitizeClassName(viewId + "View");
-        viewModule = await import(`./views/${viewType}`);
-        const view: LovelaceViewConfig = await new viewModule[viewType](Helper.strategyOptions.views[viewId]).getView();
-
-        if (view.cards?.length || view.sections?.length) {
-          views.push(view);
+        let viewModule;
+        if ([...DEVICE_CLASSES.binary_sensor, ...DEVICE_CLASSES.sensor].includes(viewId)) {
+          viewModule = await import("./views/AggregateView");
+          const view = new viewModule.AggregateView({ device_class: viewId });
+          views.push(await view.getView());
+        } else {
+          const viewType = Helper.sanitizeClassName(viewId + "View");
+          viewModule = await import(`./views/${viewType}`);
+          const view = new viewModule[viewType](Helper.strategyOptions.views[viewId])
+          views.push(await view.getView());
         }
       } catch (e) {
         Helper.logError(`View '${viewId}' couldn't be loaded!`, e);

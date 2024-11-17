@@ -34,9 +34,6 @@ class ClimateView extends AbstractView {
     path: "climates",
     icon: "mdi:thermostat",
     subview: false,
-    controllerCardOptions: {
-      showControls: false,
-    },
   };
 
   /**
@@ -47,7 +44,7 @@ class ClimateView extends AbstractView {
    */
   #viewControllerCardConfig: cards.ControllerCardOptions = {
     title: `${Helper.localize(`component.climate.entity_component._.name`)}s`,
-    subtitle: Helper.getCountTemplate(ClimateView.#domain, "ne", "off") + ` ${Helper.localize(`component.fan.entity_component._.state.on`)}s`,
+    // subtitle: Helper.getCountTemplate(ClimateView.#domain, "ne", "off") + ` ${Helper.localize(`component.fan.entity_component._.state.on`)}s`,
   };
 
   /**
@@ -65,7 +62,7 @@ class ClimateView extends AbstractView {
       this.targetDomain(ClimateView.#domain),
       {
         ...this.#viewControllerCardConfig,
-        ...("controllerCardOptions" in this.config ? this.config.controllerCardOptions : {}) as cards.ControllerCardConfig,
+        ...Helper.strategyOptions.domains.climate.controllerCardOptions,
       }, ClimateView.#domain).createCard();
   }
 }

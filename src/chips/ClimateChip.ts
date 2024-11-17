@@ -38,7 +38,11 @@ class ClimateChip extends AbstractChip {
   constructor(options: chips.ChipOptions = {}) {
     super();
 
-    this.#defaultConfig.content = Helper.getCountTemplate("climate", "ne", "off", options?.area_id);
+    if (options?.show_content) {
+      this.#defaultConfig.content = Helper.getCountTemplate("climate", "ne", "off", options?.area_id);
+    }
+
+    this.#defaultConfig.icon_color = Helper.getDomainColorFromState("climate", "ne", "off", this.#defaultConfig.icon_color!, "grey", options?.area_id)
 
     const magicAreasEntity = getMAEntity(options?.area_id ?? options?.floor_id ?? "global", "climate");
 

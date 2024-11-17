@@ -34,9 +34,6 @@ class CameraView extends AbstractView {
     path: "cameras",
     icon: "mdi:cctv",
     subview: false,
-    controllerCardOptions: {
-      showControls: false,
-    },
   };
 
   /**
@@ -47,7 +44,7 @@ class CameraView extends AbstractView {
    */
   #viewControllerCardConfig: cards.ControllerCardOptions = {
     title: `${Helper.localize(`component.camera.entity_component._.name`)}s`,
-    subtitle: Helper.getCountTemplate(CameraView.#domain, "ne", "off") + ` ${Helper.localize("component.light.entity_component._.state.on")}`,
+    // subtitle: Helper.getCountTemplate(CameraView.#domain, "ne", "off") + ` ${Helper.localize("component.light.entity_component._.state.on")}`,
   };
 
   /**
@@ -65,7 +62,7 @@ class CameraView extends AbstractView {
       this.targetDomain(CameraView.#domain),
       {
         ...this.#viewControllerCardConfig,
-        ...("controllerCardOptions" in this.config ? this.config.controllerCardOptions : {}) as cards.ControllerCardConfig,
+        ...Helper.strategyOptions.domains.camera.controllerCardOptions,
       }, CameraView.#domain).createCard();
   }
 }

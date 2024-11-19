@@ -6,7 +6,7 @@ import { SettingsChip } from "./chips/SettingsChip";
 import { LightSettings } from "./popups/LightSettingsPopup";
 import { ToggleSceneChip } from "./chips/ToggleSceneChip";
 import { SceneSettings } from "./popups/SceneSettingsPopup";
-import { DOMAIN_STATE_ICONS } from "./variables";
+import { DOMAIN_STATE_ICONS, UNDISCLOSED } from "./variables";
 import { Helper } from "./Helper";
 
 /**
@@ -15,9 +15,9 @@ import { Helper } from "./Helper";
 export const configurationDefaults: StrategyDefaults = {
   areas: {
     undisclosed: {
-      slug: "undisclosed",
+      slug: UNDISCLOSED,
       aliases: [],
-      area_id: "undisclosed",
+      area_id: UNDISCLOSED,
       name: "Non assigné",
       picture: null,
       hidden: false,
@@ -29,10 +29,10 @@ export const configurationDefaults: StrategyDefaults = {
   floors: {
     undisclosed: {
       aliases: [],
-      floor_id: "undisclosed",
+      floor_id: UNDISCLOSED,
       name: "Non assigné",
       hidden: false,
-      areas: ["undisclosed"]
+      areas_slug: [UNDISCLOSED]
     }
   },
   debug: true,

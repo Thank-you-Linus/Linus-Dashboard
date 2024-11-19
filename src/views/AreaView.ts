@@ -11,7 +11,7 @@ import { EntityCardConfig } from "../types/lovelace-mushroom/cards/entity-card-c
 import { ControllerCard } from "../cards/ControllerCard";
 import { HassServiceTarget } from "home-assistant-js-websocket";
 import { ImageAreaCard } from "../cards/ImageAreaCard";
-import { AREA_EXPOSED_CHIPS, DOMAIN_ICONS } from "../variables";
+import { AREA_EXPOSED_CHIPS, DOMAIN_ICONS, UNDISCLOSED } from "../variables";
 import { LovelaceChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
 import { AreaStateChip } from "../chips/AreaStateChip";
 import { createChipsFromList, getDomainTranslationKey } from "../utils";
@@ -123,11 +123,11 @@ class AreaView {
     const exposedDomainIds = Helper.getExposedDomainIds();
 
     // Create global section card if area is not undisclosed
-    if (this.area.area_id !== "undisclosed") {
+    if (this.area.area_id !== UNDISCLOSED) {
       viewSections.push({
         type: "grid",
         column_span: 1,
-        cards: [new ImageAreaCard(this.area.area_id).getCard()],
+        cards: [new ImageAreaCard(this.area.slug).getCard()],
       });
     }
 
@@ -141,7 +141,7 @@ class AreaView {
         const entities = Helper.getAreaEntities(this.area, domain);
         const configEntityHidden = Helper.strategyOptions.domains[domain]?.hide_config_entities || Helper.strategyOptions.domains["_"].hide_config_entities;
 
-        if (this.area.area_id === "undisclosed") {
+        if (this.area.area_id === UNDISCLOSED) {
           target = { entity_id: entities.map(entity => entity.entity_id) };
         }
 

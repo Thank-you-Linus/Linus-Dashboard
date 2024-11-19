@@ -46,7 +46,7 @@ export namespace cards {
     offService?: string;
   }
 
-  export type HomeAreaCardOptions = { area_id: string } & Omit<HomeAreaCardConfig, "type">;
+  export type HomeAreaCardOptions = { area_slug: string } & Omit<HomeAreaCardConfig, "type">;
   export type ClimateCardOptions = Omit<ClimateCardConfig, "type">;
   export type ControllerCardOptions = Omit<ControllerCardConfig, "type">;
   export type CoverCardOptions = Omit<CoverCardConfig, "type">;

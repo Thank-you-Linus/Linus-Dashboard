@@ -194,7 +194,7 @@ export namespace generic {
     order?: number;
     hidden?: boolean;
     type?: string;
-    areas: string[];
+    areas_slug: string[];
   }
 
   /**

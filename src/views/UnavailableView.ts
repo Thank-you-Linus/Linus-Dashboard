@@ -1,4 +1,4 @@
-import { AREA_CARDS_DOMAINS, UNDISCLOSED } from './../variables';
+import { AREA_CARDS_DOMAINS, UNAVAILABLE, UNAVAILABLE_STATES, UNDISCLOSED } from '../variables';
 import { Helper } from "../Helper";
 import { ControllerCard } from "../cards/ControllerCard";
 import { LovelaceGridCardConfig, StackCardConfig } from "../types/homeassistant/lovelace/cards/types";
@@ -18,16 +18,18 @@ import { views } from '../types/strategy/views';
  * @class
  * @abstract
  */
-abstract class AbstractView {
+class UnavailableView {
   /**
    * Configuration of the view.
    *
    * @type {views.ViewConfig}
    */
   config: views.ViewConfig = {
+    path: "unavailable",
+    title: Helper.localize("state.default.unavailable"),
     icon: "mdi:view-dashboard",
     type: "sections",
-    subview: false,
+    subview: true,
   };
 
   /**
@@ -38,37 +40,15 @@ abstract class AbstractView {
   viewControllerCard: LovelaceCardConfig[] = []
 
   /**
-   * The domain of which we operate the devices.
-   *
-   * @private
-   * @readonly
-   */
-  readonly #domain: string;
-
-  /**
-   * The device class of the view.
-   *
-   * @private
-   * @readonly
-   */
-  readonly #device_class?: string;
-
-  /**
    * Class constructor.
-   *
-   * @param {string} [domain] The domain which the view is representing.
-   * @param {string} [device_class] The device class which the view is representing.
    *
    * @throws {Error} If trying to instantiate this class.
    * @throws {Error} If the Helper module isn't initialized.
    */
-  protected constructor(domain: string = "", device_class?: string) {
+  constructor() {
     if (!Helper.isInitialized()) {
       throw new Error("The Helper module must be initialized before using this one.");
     }
-
-    this.#domain = domain;
-    this.#device_class = device_class;
   }
 
   /**
@@ -99,61 +79,49 @@ abstract class AbstractView {
    */
   async createSectionCards(): Promise<LovelaceGridCardConfig[]> {
     const viewSections: LovelaceGridCardConfig[] = [];
-    const configEntityHidden = Helper.strategyOptions.domains[this.#domain ?? "_"].hide_config_entities
-      || Helper.strategyOptions.domains["_"].hide_config_entities;
 
     for (const floor of Helper.orderedFloors) {
-      if (floor.areas_slug.length === 0 || !AREA_CARDS_DOMAINS.includes(this.#domain ?? "")) continue;
+      if (floor.areas_slug.length === 0) continue;
 
       const floorCards = [];
 
       for (const area of floor.areas_slug.map(area_slug => Helper.areas[area_slug]).values()) {
-        const entities = Helper.getAreaEntities(area, this.#device_class ?? this.#domain ?? "");
-        const className = Helper.sanitizeClassName(this.#domain + "Card");
-        const cardModule = await import(`../cards/${className}`);
+        const entities = Helper.areas[area.slug].entities;
+        const unavailableEntities = entities?.filter(entity_id => AREA_CARDS_DOMAINS.includes(Helper.getEntityDomain(entity_id)) && UNAVAILABLE_STATES.includes(Helper.getEntityState(entity_id)?.state ?? UNAVAILABLE)).map(entity_id => Helper.entities[entity_id]);
+        const cardModule = await import(`../cards/MiscellaneousCard`);
 
         if (entities.length === 0 || !cardModule) continue;
 
         let target: HassServiceTarget = { area_id: [area.area_id] };
-        if (area.area_id === UNDISCLOSED && this.#domain === 'light') {
-          target = { entity_id: entities.map(entity => entity.entity_id) };
+        if (area.area_id === UNDISCLOSED) {
+          target = { entity_id: unavailableEntities.map(entity => entity.entity_id) };
         }
 
-        const entityCards = entities
+        const entityCards = unavailableEntities
           .filter(entity => !Helper.strategyOptions.card_options?.[entity.entity_id]?.hidden
             && !Helper.strategyOptions.card_options?.[entity.device_id ?? "null"]?.hidden
-            && !(entity.entity_category === "config" && configEntityHidden))
-          .map(entity => new cardModule[className](entity).getCard());
+            && !(entity.entity_category === "config"))
+          .map(entity => new cardModule.MiscellaneousCard(entity).getCard());
 
         if (entityCards.length) {
           const areaCards = entityCards.length > 2 ? [new SwipeCard(entityCards).getCard()] : entityCards;
           const titleCardOptions = {
-            ...Helper.strategyOptions.domains[this.#domain].controllerCardOptions,
             subtitle: getAreaName(area),
             subtitleIcon: area.area_id === UNDISCLOSED ? "mdi:help-circle" : area.icon ?? "mdi:floor-plan",
             subtitleNavigate: area.slug
           } as any;
-          if (this.#domain) {
-            titleCardOptions.showControls = Helper.strategyOptions.domains[this.#domain].showControls;
-            titleCardOptions.extraControls = Helper.strategyOptions.domains[this.#domain].extraControls;
-          }
-          const areaControllerCard = new ControllerCard(target, titleCardOptions, this.#domain).createCard();
+          const areaControllerCard = new ControllerCard(target, titleCardOptions).createCard();
           floorCards.push(...areaControllerCard, ...areaCards);
         }
       }
 
       if (floorCards.length) {
         const titleSectionOptions: any = {
-          ...Helper.strategyOptions.domains[this.#domain].controllerCardOptions,
           title: getFloorName(floor),
           titleIcon: floor.icon ?? "mdi:floor-plan",
           titleNavigate: slugify(floor.name)
         };
-        if (this.#domain) {
-          titleSectionOptions.showControls = Helper.strategyOptions.domains[this.#domain].showControls;
-          titleSectionOptions.extraControls = Helper.strategyOptions.domains[this.#domain].extraControls;
-        }
-        const floorControllerCard = new ControllerCard({ floor_id: floor.floor_id }, titleSectionOptions, this.#domain).createCard();
+        const floorControllerCard = new ControllerCard({ floor_id: floor.floor_id }, titleSectionOptions).createCard();
         viewSections.push({ type: "grid", cards: [...floorControllerCard, ...floorCards] });
       }
     }
@@ -198,4 +166,4 @@ abstract class AbstractView {
   }
 }
 
-export { AbstractView };
+export { UnavailableView };

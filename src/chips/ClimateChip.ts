@@ -38,12 +38,12 @@ class ClimateChip extends AbstractChip {
     super();
 
     if (options?.show_content) {
-      this.#defaultConfig.content = Helper.getCountTemplate("climate", "ne", "off", options?.area_id);
+      this.#defaultConfig.content = Helper.getCountTemplate("climate", "ne", "off", options?.area_slug);
     }
 
-    this.#defaultConfig.icon_color = Helper.getDomainColorFromState({ domain: "climate", area_id: options?.area_id })
+    this.#defaultConfig.icon_color = Helper.getDomainColorFromState({ domain: "climate", area_slug: options?.area_slug })
 
-    const magicAreasEntity = getMAEntity(options?.area_id ?? options?.floor_id ?? "global", "climate");
+    const magicAreasEntity = getMAEntity(options?.area_slug ?? options?.floor_id ?? "global", "climate");
 
     if (magicAreasEntity) {
       this.#defaultConfig.entity = magicAreasEntity.entity_id;

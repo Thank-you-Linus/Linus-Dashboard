@@ -10,7 +10,7 @@ import { TitleCardConfig } from "../types/lovelace-mushroom/cards/title-card-con
 import { PersonCardConfig } from "../types/lovelace-mushroom/cards/person-card-config";
 import { SettingsChip } from "../chips/SettingsChip";
 import { SettingsPopup } from "../popups/SettingsPopup";
-import { HOME_EXPOSED_CHIPS } from "../variables";
+import { HOME_EXPOSED_CHIPS, UNDISCLOSED } from "../variables";
 import { createChipsFromList, getFloorName, navigateTo, slugify } from "../utils";
 import { WeatherChip } from "../chips/WeatherChip";
 
@@ -272,7 +272,7 @@ class HomeView extends AbstractView {
 
 
     for (const floor of Helper.orderedFloors) {
-      if (floor.areas.length === 0) continue
+      if (floor.areas_slug.length === 0) continue
 
       groupedCards.push(
         {
@@ -280,17 +280,17 @@ class HomeView extends AbstractView {
           heading: getFloorName(floor),
           heading_style: "subtitle",
           icon: floor.icon ?? "mdi:floor-plan",
-          tap_action: floor.floor_id !== "undisclosed" ? navigateTo(slugify(floor.name)) : undefined,
+          tap_action: floor.floor_id !== UNDISCLOSED ? navigateTo(slugify(floor.name)) : undefined,
         }
       );
 
-      for (const area of floor.areas.map(areaId => Helper.areas[areaId]).values()) {
+      for (const area of floor.areas_slug.map(area_slug => Helper.areas[area_slug]).values()) {
 
         type ModuleType = typeof import("../cards/HomeAreaCard");
 
         let module: ModuleType;
         let moduleName =
-          Helper.strategyOptions.areas[area.area_id]?.type ??
+          Helper.strategyOptions.areas[area.slug]?.type ??
           Helper.strategyOptions.areas["_"]?.type ??
           "default";
 
@@ -307,11 +307,11 @@ class HomeView extends AbstractView {
         }
 
         // Get a card for the area.
-        if (!Helper.strategyOptions.areas[area.area_id as string]?.hidden) {
+        if (!Helper.strategyOptions.areas[area.slug as string]?.hidden) {
           let options = {
             ...Helper.strategyOptions.areas["_"],
-            ...Helper.strategyOptions.areas[area.area_id],
-            area_id: area.area_id,
+            ...Helper.strategyOptions.areas[area.slug],
+            area_slug: area.slug,
           };
 
           groupedCards.push({

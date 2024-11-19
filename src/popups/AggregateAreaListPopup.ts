@@ -14,9 +14,9 @@ import { AbstractPopup } from "./AbstractPopup";
  */
 class AggregateAreaListPopup extends AbstractPopup {
 
-  getDefaultConfig({ domain, device_class, area_id }: { area_id?: string; device_class: string; domain: string }): PopupActionConfig {
+  getDefaultConfig({ domain, device_class, area_slug }: { area_slug?: string; device_class: string; domain: string }): PopupActionConfig {
 
-    const device = Helper.magicAreasDevices[area_id ?? "global"]
+    const device = Helper.magicAreasDevices[area_slug ?? "global"]
     const magicEntity = Helper.getEntityState(device?.entities[`aggregate_${device_class}`]?.entity_id)
 
     const groupedCards: (TitleCardConfig | StackCardConfig)[] = [];
@@ -91,10 +91,10 @@ class AggregateAreaListPopup extends AbstractPopup {
    *
    * @param {chips.PopupActionConfig} options The chip options.
    */
-  constructor(domain: string, device_class: string, area_id: string) {
+  constructor(domain: string, device_class: string, area_slug: string) {
     super();
 
-    const defaultConfig = this.getDefaultConfig({ domain, device_class, area_id })
+    const defaultConfig = this.getDefaultConfig({ domain, device_class, area_slug })
 
     this.config = Object.assign(this.config, defaultConfig);
 

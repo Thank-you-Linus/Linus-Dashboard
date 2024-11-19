@@ -1,7 +1,10 @@
-from homeassistant import config_entries
+"""Config flow for Linus Dashboard integration."""
+
 import voluptuous as vol
-from homeassistant.helpers import selector
+from homeassistant import config_entries
 from homeassistant.core import callback
+from homeassistant.helpers import selector
+
 from .const import CONF_ALARM_ENTITY, CONF_WEATHER_ENTITY, DOMAIN
 
 
@@ -10,28 +13,25 @@ class LinusDashboardConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the config flow."""
         self._config = {}
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict | None = None
+    ) -> config_entries.ConfigFlowResult:
         """Handle the initial step."""
         if user_input is not None:
             # Sauvegarde et création de l'entrée de configuration
             self._config.update(user_input)
             return self.async_create_entry(
-                title="",
+                title="Linus Dashboard",
                 data=self._config,
             )
 
         # Récupérer les entités disponibles dans Home Assistant
-        alarm_entities = [
-            entity_id
-            for entity_id in self.hass.states.async_entity_ids("alarm_control_panel")
-        ]
-        weather_entities = [
-            entity_id for entity_id in self.hass.states.async_entity_ids("weather")
-        ]
+        alarm_entities = list(self.hass.states.async_entity_ids("alarm_control_panel"))
+        weather_entities = list(self.hass.states.async_entity_ids("weather"))
 
         # Création du schéma pour le formulaire
         schema = vol.Schema(
@@ -49,7 +49,9 @@ class LinusDashboardConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> config_entries.OptionsFlow:
         """Define the options flow."""
         return LinusDashboardOptionsFlowHandler(config_entry)
 
@@ -57,11 +59,13 @@ class LinusDashboardConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class LinusDashboardOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle options for the Linus Dashboard component."""
 
-    def __init__(self, config_entry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize the options flow."""
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(
+        self, user_input: dict | None = None
+    ) -> config_entries.ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)

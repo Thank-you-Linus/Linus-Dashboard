@@ -45,7 +45,7 @@ class ControllerCard {
    * @param {ExtendedHassServiceTarget} target The target to control the entities of.
    * @param {cards.ControllerCardOptions} options Controller Card options.
    */
-  constructor(target: ExtendedHassServiceTarget, options: cards.ControllerCardOptions = {}, domain?: string) {
+  constructor(target: ExtendedHassServiceTarget, options: cards.ControllerCardOptions = {}, domain: string) {
     this.#target = target;
     this.#domain = domain;
     this.#defaultConfig = {

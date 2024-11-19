@@ -142,6 +142,7 @@ class ControllerCard {
       }
 
       if (badges.length) {
+        console.log(this.#domain, cards, badges);
         cards[0].badges = badges;
       }
     }

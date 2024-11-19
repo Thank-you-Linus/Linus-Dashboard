@@ -1630,8 +1630,7 @@ class ControllerCard {
                     };
                 }));
             }
-            if (badges.length) {
-                console.log(__classPrivateFieldGet(this, _ControllerCard_domain, "f"), cards, badges);
+            if (cards[0]?.badges && badges.length) {
                 cards[0].badges = badges;
             }
         }

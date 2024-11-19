@@ -49,9 +49,6 @@ export const configurationDefaults: StrategyDefaults = {
       // title: "Lights",
       showControls: true,
       extraControls: (device: MagicAreaRegistryEntry) => {
-
-        console.log('device', device)
-        console.log('device?.entities.light_control?.entity_id', device?.entities.light_control?.entity_id)
         return [
           new ControlChip("light", device?.entities.light_control?.entity_id).getChip(),
           new SettingsChip({ tap_action: new LightSettings(device).getPopup() }).getChip()

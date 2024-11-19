@@ -21,7 +21,7 @@ class CoverChip extends AbstractChip {
   readonly #defaultConfig: TemplateChipConfig = {
     type: "template",
     icon: "mdi:window-open",
-    content: "none",
+    content: "",
     tap_action: {
       action: "navigate",
       navigation_path: "covers",

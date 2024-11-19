@@ -1618,9 +1618,14 @@ class ControllerCard {
         }
         if (__classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").showControls || __classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").extraControls) {
             const areaId = Array.isArray(__classPrivateFieldGet(this, _ControllerCard_target, "f").area_id) ? __classPrivateFieldGet(this, _ControllerCard_target, "f").area_id[0] : __classPrivateFieldGet(this, _ControllerCard_target, "f").area_id;
-            const areaSlug = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas[areaId]?.slug;
-            const magicAreasEntity = __classPrivateFieldGet(this, _ControllerCard_domain, "f") && (0,_utils__WEBPACK_IMPORTED_MODULE_1__.getMAEntity)(areaSlug, __classPrivateFieldGet(this, _ControllerCard_domain, "f"));
+            const area_slug = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas[areaId]?.slug;
+            console.log('area_slug', area_slug);
+            const magicAreasEntity = __classPrivateFieldGet(this, _ControllerCard_domain, "f") && (0,_utils__WEBPACK_IMPORTED_MODULE_1__.getMAEntity)(area_slug, __classPrivateFieldGet(this, _ControllerCard_domain, "f"));
             const badges = [];
+            const icon = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getDomainColorFromState({ domain: __classPrivateFieldGet(this, _ControllerCard_domain, "f"), ifReturn: __classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").iconOn, elseReturn: __classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").iconOff, area_slug: area_slug });
+            const icon_color = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getDomainColorFromState({ domain: __classPrivateFieldGet(this, _ControllerCard_domain, "f"), area_slug: area_slug });
+            console.log('icon', icon);
+            console.log('icon_color', icon_color);
             if (__classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").showControls) {
                 badges.push({
                     type: "custom:mushroom-chips-card",
@@ -1628,8 +1633,8 @@ class ControllerCard {
                         {
                             type: "template",
                             entity: magicAreasEntity ? magicAreasEntity?.entity_id : __classPrivateFieldGet(this, _ControllerCard_target, "f").entity_id,
-                            icon: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getDomainColorFromState({ domain: __classPrivateFieldGet(this, _ControllerCard_domain, "f"), ifReturn: __classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").iconOn, elseReturn: __classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").iconOff, area_slug: areaSlug }),
-                            icon_color: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getDomainColorFromState({ domain: __classPrivateFieldGet(this, _ControllerCard_domain, "f"), area_slug: areaId }),
+                            icon,
+                            icon_color,
                             tap_action: magicAreasEntity ? {
                                 action: "toggle"
                             } : {
@@ -1648,7 +1653,7 @@ class ControllerCard {
                 });
             }
             if (magicAreasEntity && __classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").extraControls) {
-                badges.push(...__classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").extraControls(_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices[areaSlug])?.map((chip) => {
+                badges.push(...__classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").extraControls(_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices[area_slug])?.map((chip) => {
                     return {
                         type: "custom:mushroom-chips-card",
                         chips: [chip]
@@ -3246,7 +3251,7 @@ class ClimateChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.AbstractChi
         _ClimateChip_defaultConfig.set(this, {
             type: "template",
             icon: "mdi:thermostat",
-            content: "none",
+            content: "",
             tap_action: {
                 action: "navigate",
                 navigation_path: "climates",
@@ -3437,7 +3442,7 @@ class CoverChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.AbstractChip 
         _CoverChip_defaultConfig.set(this, {
             type: "template",
             icon: "mdi:window-open",
-            content: "none",
+            content: "",
             tap_action: {
                 action: "navigate",
                 navigation_path: "covers",
@@ -3585,7 +3590,6 @@ class LightChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.AbstractChip 
             __classPrivateFieldGet(this, _LightChip_defaultConfig, "f").entity = magicAreasEntity.entity_id;
         }
         this.config = Object.assign(this.config, __classPrivateFieldGet(this, _LightChip_defaultConfig, "f"), options);
-        console.log("this.config   ", this.config);
     }
 }
 _LightChip_defaultConfig = new WeakMap();
@@ -3644,7 +3648,7 @@ class MediaPlayerChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.Abstrac
         _MediaPlayerChip_defaultConfig.set(this, {
             type: "template",
             icon: _variables__WEBPACK_IMPORTED_MODULE_2__.DOMAIN_ICONS["media_player"],
-            content: "none",
+            content: "",
             tap_action: {
                 action: "navigate",
                 navigation_path: "media_players",
@@ -4006,7 +4010,7 @@ class SwitchChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.AbstractChip
         _SwitchChip_defaultConfig.set(this, {
             type: "template",
             icon: "mdi:dip-switch",
-            content: "none",
+            content: "",
             tap_action: {
                 action: "navigate",
                 navigation_path: "switches",
@@ -4301,8 +4305,6 @@ const configurationDefaults = {
             // title: "Lights",
             showControls: true,
             extraControls: (device) => {
-                console.log('device', device);
-                console.log('device?.entities.light_control?.entity_id', device?.entities.light_control?.entity_id);
                 return [
                     new _chips_ControlChip__WEBPACK_IMPORTED_MODULE_0__.ControlChip("light", device?.entities.light_control?.entity_id).getChip(),
                     new _chips_SettingsChip__WEBPACK_IMPORTED_MODULE_1__.SettingsChip({ tap_action: new _popups_LightSettingsPopup__WEBPACK_IMPORTED_MODULE_2__.LightSettings(device).getPopup() }).getChip()
@@ -5646,8 +5648,8 @@ function getAggregateEntity(device, domains, device_classes) {
     }
     return aggregateKeys.filter(Boolean);
 }
-function getMAEntity(device_id, domain, device_class) {
-    const magicAreaDevice = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices[device_id];
+function getMAEntity(area_slug, domain, device_class) {
+    const magicAreaDevice = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices[area_slug];
     // TODO remove '' when new release
     if (domain === _variables__WEBPACK_IMPORTED_MODULE_1__.MAGIC_AREAS_LIGHT_DOMAINS)
         return magicAreaDevice?.entities?.[''] ?? magicAreaDevice?.entities?.['all_lights'];
@@ -6019,7 +6021,6 @@ class AbstractView {
                         titleCardOptions.extraControls = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.strategyOptions.domains[__classPrivateFieldGet(this, _AbstractView_domain, "f")].extraControls;
                     }
                     const areaControllerCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_2__.ControllerCard(target, titleCardOptions, __classPrivateFieldGet(this, _AbstractView_domain, "f")).createCard();
-                    console.log('areaControllerCard', areaControllerCard);
                     floorCards.push(...areaControllerCard, ...areaCards);
                 }
             }

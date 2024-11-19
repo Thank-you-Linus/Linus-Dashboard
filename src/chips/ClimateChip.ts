@@ -22,7 +22,7 @@ class ClimateChip extends AbstractChip {
   readonly #defaultConfig: TemplateChipConfig = {
     type: "template",
     icon: "mdi:thermostat",
-    content: "none",
+    content: "",
     tap_action: {
       action: "navigate",
       navigation_path: "climates",

@@ -98,10 +98,17 @@ class ControllerCard {
 
     if (this.#defaultConfig.showControls || this.#defaultConfig.extraControls) {
       const areaId = Array.isArray(this.#target.area_id) ? this.#target.area_id[0] : this.#target.area_id;
-      const areaSlug = Helper.areas[areaId!]?.slug;
-      const magicAreasEntity = this.#domain && getMAEntity(areaSlug, this.#domain);
+      const area_slug = Helper.areas[areaId!]?.slug;
+      console.log('area_slug', area_slug)
+      const magicAreasEntity = this.#domain && getMAEntity(area_slug, this.#domain);
 
       const badges: LovelaceBadgeConfig[] = [];
+
+      const icon = Helper.getDomainColorFromState({ domain: this.#domain!, ifReturn: this.#defaultConfig.iconOn, elseReturn: this.#defaultConfig.iconOff, area_slug: area_slug })
+      const icon_color = Helper.getDomainColorFromState({ domain: this.#domain!, area_slug: area_slug })
+
+      console.log('icon', icon)
+      console.log('icon_color', icon_color)
 
       if (this.#defaultConfig.showControls) {
         badges.push({
@@ -110,8 +117,8 @@ class ControllerCard {
             {
               type: "template",
               entity: magicAreasEntity ? magicAreasEntity?.entity_id : this.#target.entity_id,
-              icon: Helper.getDomainColorFromState({ domain: this.#domain!, ifReturn: this.#defaultConfig.iconOn, elseReturn: this.#defaultConfig.iconOff, area_slug: areaSlug }),
-              icon_color: Helper.getDomainColorFromState({ domain: this.#domain!, area_slug: areaId }),
+              icon,
+              icon_color,
               tap_action: magicAreasEntity ? {
                 action: "toggle"
               } : {
@@ -131,7 +138,7 @@ class ControllerCard {
       }
 
       if (magicAreasEntity && this.#defaultConfig.extraControls) {
-        badges.push(...this.#defaultConfig.extraControls(Helper.magicAreasDevices[areaSlug])?.map((chip: any) => {
+        badges.push(...this.#defaultConfig.extraControls(Helper.magicAreasDevices[area_slug])?.map((chip: any) => {
           return {
             type: "custom:mushroom-chips-card",
             chips: [chip]

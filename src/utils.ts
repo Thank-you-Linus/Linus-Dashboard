@@ -5,7 +5,7 @@ import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
 import StrategyFloor = generic.StrategyFloor;
 import StrategyArea = generic.StrategyArea;
 import { ActionConfig } from "./types/homeassistant/data/lovelace";
-import { DEVICE_CLASSES, MAGIC_AREAS_AGGREGATE_DOMAINS, MAGIC_AREAS_GROUP_DOMAINS, MAGIC_AREAS_LIGHT_DOMAINS, SENSOR_DOMAINS, UNAVAILABLE_STATES } from "./variables";
+import { DEVICE_CLASSES, MAGIC_AREAS_AGGREGATE_DOMAINS, MAGIC_AREAS_GROUP_DOMAINS, MAGIC_AREAS_LIGHT_DOMAINS, SENSOR_DOMAINS, UNAVAILABLE_STATES, UNDISCLOSED } from "./variables";
 import { LovelaceChipConfig } from "./types/lovelace-mushroom/utils/lovelace/chip/types";
 import { UnavailableChip } from "./chips/UnavailableChip";
 import { chips } from "./types/strategy/chips";
@@ -84,7 +84,7 @@ export function getAggregateEntity(device: MagicAreaRegistryEntry, domains: stri
 export function getMAEntity(device_id: string, domain: string, device_class?: string): EntityRegistryEntry | undefined {
     const magicAreaDevice = Helper.magicAreasDevices[device_id];
     // TODO remove '' when new release
-    if (MAGIC_AREAS_LIGHT_DOMAINS === domain) return magicAreaDevice?.entities?.['all_lights'] ?? magicAreaDevice?.entities?.['']
+    if (domain === MAGIC_AREAS_LIGHT_DOMAINS) return magicAreaDevice?.entities?.['all_lights'] ?? magicAreaDevice?.entities?.['']
     if (MAGIC_AREAS_GROUP_DOMAINS.includes(domain)) return magicAreaDevice?.entities?.[`${domain}_group` as 'cover_group']
     if (device_class && [...DEVICE_CLASSES.binary_sensor, ...DEVICE_CLASSES.sensor].includes(device_class)) return magicAreaDevice?.entities?.[`aggregate_${device_class}` as 'aggregate_motion']
     return undefined
@@ -111,10 +111,10 @@ export function groupEntitiesByDomain(entity_ids: string[]): Record<string, stri
 }
 
 // Numeric chips.
-export async function createChipsFromList(chipsList: string[], chipOptions?: Partial<chips.AggregateChipOptions>, area_id?: string) {
+export async function createChipsFromList(chipsList: string[], chipOptions?: Partial<chips.AggregateChipOptions>, area_slug?: string) {
     const chips: LovelaceChipConfig[] = [];
     for (let chipType of chipsList) {
-        if (((area_id ? Helper.areas[area_id] : Helper)?.domains[chipType] ?? []).length === 0) continue;
+        if (((area_slug ? Helper.areas[area_slug] : Helper)?.domains[chipType] ?? []).length === 0) continue;
 
         const className = Helper.sanitizeClassName(chipType + "Chip");
 
@@ -122,11 +122,11 @@ export async function createChipsFromList(chipsList: string[], chipOptions?: Par
             let chipModule;
             if ([...DEVICE_CLASSES.binary_sensor, ...DEVICE_CLASSES.sensor].includes(chipType)) {
                 chipModule = await import("./chips/AggregateChip");
-                const chip = new chipModule.AggregateChip({ ...chipOptions, device_class: chipType, area_id });
+                const chip = new chipModule.AggregateChip({ ...chipOptions, device_class: chipType, area_slug });
                 chips.push(chip.getChip());
             } else {
                 chipModule = await import("./chips/" + className);
-                const chip = new chipModule[className]({ ...chipOptions, area_id });
+                const chip = new chipModule[className]({ ...chipOptions, area_slug });
                 chips.push(chip.getChip());
             }
         } catch (e) {
@@ -135,7 +135,7 @@ export async function createChipsFromList(chipsList: string[], chipOptions?: Par
         }
     }
 
-    const unavailableChip = new UnavailableChip(area_id).getChip();
+    const unavailableChip = new UnavailableChip({ area_slug }).getChip();
     if (unavailableChip) chips.push(unavailableChip);
 
     return chips;
@@ -158,9 +158,9 @@ export function getStateTranslationKey(state: string, domain: string, device_cla
 }
 
 export function getFloorName(floor: StrategyFloor): string {
-    return floor.floor_id === "undisclosed" ? Helper.localize("component.linus_dashboard.entity.button.floor_not_found.name") : floor.name!
+    return floor.floor_id === UNDISCLOSED ? Helper.localize("component.linus_dashboard.entity.button.floor_not_found.name") : floor.name!
 }
 
 export function getAreaName(area: StrategyArea): string {
-    return area.area_id === "undisclosed" ? Helper.localize("ui.card.area.area_not_found") : area.name!
+    return area.area_id === UNDISCLOSED ? Helper.localize("ui.card.area.area_not_found") : area.name!
 }

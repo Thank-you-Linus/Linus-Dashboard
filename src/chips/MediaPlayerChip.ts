@@ -39,12 +39,12 @@ class MediaPlayerChip extends AbstractChip {
     super();
 
     if (options?.show_content) {
-      this.#defaultConfig.content = Helper.getCountTemplate("media_player", "eq", "playing", options?.area_id);
+      this.#defaultConfig.content = Helper.getCountTemplate("media_player", "eq", "playing", options?.area_slug);
     }
 
-    this.#defaultConfig.icon_color = Helper.getDomainColorFromState({ domain: "media_player", area_id: options?.area_id })
+    this.#defaultConfig.icon_color = Helper.getDomainColorFromState({ domain: "media_player", area_slug: options?.area_slug })
 
-    const magicAreasEntity = getMAEntity(options?.area_id ?? options?.floor_id ?? "global", "media_player");
+    const magicAreasEntity = getMAEntity(options?.area_slug ?? options?.floor_id ?? "global", "media_player");
 
     if (magicAreasEntity) {
       this.#defaultConfig.entity = magicAreasEntity.entity_id;

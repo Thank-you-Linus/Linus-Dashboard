@@ -56,6 +56,16 @@ class MushroomStrategy extends HTMLTemplateElement {
       }
     }
 
+    // Create unavailable entities view
+    try {
+      const viewModule = await import("./views/UnavailableView");
+      const view = new viewModule.UnavailableView();
+      views.push(await view.getView());
+    } catch (e) {
+      Helper.logError(`View 'Unavailable' couldn't be loaded!`, e);
+    }
+
+
     // Create subviews for each area.
     for (let area of Helper.orderedAreas) {
       if (!area.hidden) {

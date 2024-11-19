@@ -39,12 +39,12 @@ class LightChip extends AbstractChip {
     super();
 
     if (options?.show_content) {
-      this.#defaultConfig.content = Helper.getCountTemplate("light", "eq", "on", options?.area_id);
+      this.#defaultConfig.content = Helper.getCountTemplate("light", "eq", "on", options?.area_slug);
     }
 
-    this.#defaultConfig.icon_color = Helper.getDomainColorFromState({ domain: "light", area_id: options?.area_id })
+    this.#defaultConfig.icon_color = Helper.getDomainColorFromState({ domain: "light", area_slug: options?.area_slug })
 
-    const magicAreasEntity = getMAEntity(options?.area_id ?? options?.floor_id ?? "global", "light");
+    const magicAreasEntity = getMAEntity(options?.area_slug ?? options?.floor_id ?? "global", "light");
 
     if (magicAreasEntity) {
       this.#defaultConfig.entity = magicAreasEntity.entity_id;

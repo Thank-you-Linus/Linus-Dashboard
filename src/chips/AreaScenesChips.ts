@@ -2,10 +2,10 @@
 import { Helper } from "../Helper";
 import { generic } from "../types/strategy/generic";
 import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
+import StrategyArea = generic.StrategyArea;
 import { LovelaceChipConfig, TemplateChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
 import { DOMAIN, todOrder } from "../variables";
 import { slugify } from "../utils";
-import { AreaRegistryEntry } from "../types/homeassistant/data/area_registry";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**
@@ -26,7 +26,7 @@ class AreaScenesChips {
    * @type {ConditionalChipConfig}
    *
    */
-  getDefaultConfig(device: MagicAreaRegistryEntry, area: AreaRegistryEntry): TemplateChipConfig[] {
+  getDefaultConfig(device: MagicAreaRegistryEntry, area: StrategyArea): TemplateChipConfig[] {
 
     const selects = todOrder.map(tod => Helper.getEntityState(device?.entities[`scene_${tod as 'morning'}`]?.entity_id)).filter(Boolean)
 
@@ -94,7 +94,7 @@ class AreaScenesChips {
    *
    * @param {chips.TemplateChipOptions} options The chip options.
    */
-  constructor(device: MagicAreaRegistryEntry, area: AreaRegistryEntry) {
+  constructor(device: MagicAreaRegistryEntry, area: StrategyArea) {
 
     this.config = this.getDefaultConfig(device, area);
 

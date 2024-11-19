@@ -168,7 +168,7 @@ abstract class SecurityView {
 
     for (const floor of orderedFloors) {
 
-      if (floor.areas.length === 0) continue
+      if (floor.areas_slug.length === 0) continue
 
       let floorCards: LovelaceCardConfig[] = [
         {
@@ -185,7 +185,7 @@ abstract class SecurityView {
       ]
 
       // Create cards for each area.
-      for (const [i, area] of floor.areas.map(areaId => Helper.areas[areaId]).entries()) {
+      for (const [i, area] of floor.areas_slug.map(area_slug => Helper.areas[area_slug]).entries()) {
         const entities = Helper.getAreaEntities(area, domain ?? "");
         const className = Helper.sanitizeClassName(domain + "Card");
 

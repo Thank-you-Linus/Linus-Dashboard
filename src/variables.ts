@@ -3,6 +3,7 @@ export const NAME = "Magic Areas";
 
 export const UNAVAILABLE = "unavailable";
 export const UNKNOWN = "unknown";
+export const UNDISCLOSED = "undisclosed";
 
 
 export const todOrder = ["morning", "daytime", "evening", "night"];
@@ -10,7 +11,7 @@ export const todOrder = ["morning", "daytime", "evening", "night"];
 
 export const STATES_OFF = ["closed", "locked", "off", "docked", "idle", "standby", "paused", "auto", "ok"];
 
-export const UNAVAILABLE_STATES = ["unavailable", "unknown"];
+export const UNAVAILABLE_STATES = ['unavailable', "unknown"];
 
 export const MAGIC_AREAS_LIGHT_DOMAINS = "light";
 export const MAGIC_AREAS_GROUP_DOMAINS = ["climate", "media_player", "cover"];

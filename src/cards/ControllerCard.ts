@@ -111,8 +111,8 @@ class ControllerCard {
             {
               type: "template",
               entity: magicAreasEntity ? magicAreasEntity?.entity_id : this.#target.entity_id,
-              icon: Helper.getDomainColorFromState({ domain: this.#domain!, ifReturn: this.#defaultConfig.iconOn, elseReturn: this.#defaultConfig.iconOff, area_id: areaId }),
-              icon_color: Helper.getDomainColorFromState({ domain: this.#domain!, area_id: areaId }),
+              icon: Helper.getDomainColorFromState({ domain: this.#domain!, ifReturn: this.#defaultConfig.iconOn, elseReturn: this.#defaultConfig.iconOff, area_slug: areaSlug }),
+              icon_color: Helper.getDomainColorFromState({ domain: this.#domain!, area_slug: areaId }),
               tap_action: magicAreasEntity ? {
                 action: "toggle"
               } : {

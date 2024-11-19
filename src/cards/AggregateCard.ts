@@ -3,6 +3,7 @@ import { LovelaceCardConfig } from "../types/homeassistant/data/lovelace";
 import { getAggregateEntity, getAreaName, getFloorName, getStateContent, groupBy } from "../utils";
 import { Helper } from "../Helper";
 import { TemplateCardConfig } from "../types/lovelace-mushroom/cards/template-card-config";
+import { UNDISCLOSED } from "../variables";
 
 interface AggregateCardConfig {
   title?: string;
@@ -76,7 +77,7 @@ class AggregateCard {
 
 
     for (const floor of Helper.orderedFloors) {
-      if (floor.areas.length === 0) continue
+      if (floor.areas_slug.length === 0) continue
 
       let floorCards: (TemplateCardConfig)[] = [];
       floorCards.push({
@@ -93,11 +94,11 @@ class AggregateCard {
 
       let areaCards: (TemplateCardConfig)[] = [];
 
-      for (const [i, area] of floor.areas.map(areaId => Helper.areas[areaId]).entries()) {
+      for (const [i, area] of floor.areas_slug.map(area_slug => Helper.areas[area_slug]).entries()) {
 
-        if (Helper.strategyOptions.areas[area?.area_id]?.hidden) continue
+        if (Helper.strategyOptions.areas[area?.slug]?.hidden) continue
 
-        if (area.slug !== "undisclosed") {
+        if (area.slug !== UNDISCLOSED) {
           const areaEntities = getAggregateEntity(Helper.magicAreasDevices[area.slug], domains, deviceClasses).map(e => e.entity_id).filter(Boolean)
 
           for (const areaEntity of areaEntities) {
@@ -112,7 +113,7 @@ class AggregateCard {
         }
 
         // Horizontally group every two area cards if all cards are created.
-        if (i === floor.areas.length - 1) {
+        if (i === floor.areas_slug.length - 1) {
           for (let i = 0; i < areaCards.length; i += 2) {
             floorCards.push({
               type: "horizontal-stack",

@@ -49,9 +49,9 @@ class ImageAreaCard {
    *
    * @throws {Error} If the Helper module isn't initialized.
    */
-  constructor(area_id: string) {
+  constructor(area_slug: string) {
 
-    this.config.area = area_id;
+    this.config.area = area_slug;
   }
 
   /**

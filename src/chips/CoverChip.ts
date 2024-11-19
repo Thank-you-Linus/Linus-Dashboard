@@ -37,10 +37,10 @@ class CoverChip extends AbstractChip {
     super();
 
     if (options?.show_content) {
-      this.#defaultConfig.content = Helper.getCountTemplate("cover", "eq", "open", options?.area_id);
+      this.#defaultConfig.content = Helper.getCountTemplate("cover", "eq", "open", options?.area_slug);
     }
 
-    this.#defaultConfig.icon_color = Helper.getDomainColorFromState({ domain: "cover", area_id: options?.area_id })
+    this.#defaultConfig.icon_color = Helper.getDomainColorFromState({ domain: "cover", area_slug: options?.area_slug })
 
     this.config = Object.assign(this.config, this.#defaultConfig, options);
   }

@@ -13,7 +13,7 @@ import { EntityRegistryEntry } from "../types/homeassistant/data/entity_registry
 import { ClimateChip } from "../chips/ClimateChip";
 import { LightChip } from "../chips/LightChip";
 import { ConditionalChip } from "../chips/ConditionalChip";
-import { UNAVAILABLE } from "../variables";
+import { UNAVAILABLE, UNDISCLOSED } from "../variables";
 
 // Utility function to generate badge icon and color
 const getBadgeIcon = (entityId: string) => `
@@ -54,12 +54,12 @@ const getBadgeColor = (entityId: string) => `
 class HomeAreaCard extends AbstractCard {
   constructor(options: cards.HomeAreaCardOptions) {
 
-    const magicAreasEntity: EntityRegistryEntry = getMAEntity(options.area_id, "area_state") as EntityRegistryEntry;
+    const magicAreasEntity: EntityRegistryEntry = getMAEntity(options.area_slug, "area_state") as EntityRegistryEntry;
 
-    const area = Helper.areas[options.area_id];
+    const area = Helper.areas[options.area_slug];
 
     super(magicAreasEntity);
-    const defaultConfig = options?.area_id === "undisclosed" ? this.getUndisclosedAreaConfig(area) : this.getDefaultConfig(area);
+    const defaultConfig = options?.area_slug === UNDISCLOSED ? this.getUndisclosedAreaConfig(area) : this.getDefaultConfig(area);
     this.config = { ...this.config, ...defaultConfig, ...options };
   }
 
@@ -148,7 +148,7 @@ class HomeAreaCard extends AbstractCard {
         }).getChip(),
         new ConditionalChip({
           conditions: [{ entity: all_lights?.entity_id, state_not: UNAVAILABLE, }],
-          chip: new LightChip({ area_id: area.slug, tap_action: { action: "toggle" } }).getChip()
+          chip: new LightChip({ area_slug: area.slug, tap_action: { action: "toggle" } }).getChip()
         }).getChip(),
         new ConditionalChip({
           conditions: [{ entity: all_lights?.entity_id, state_not: UNAVAILABLE }],

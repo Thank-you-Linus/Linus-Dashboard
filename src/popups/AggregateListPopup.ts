@@ -14,9 +14,9 @@ import { AbstractPopup } from "./AbstractPopup";
  */
 class AggregateListPopup extends AbstractPopup {
 
-  getDefaultConfig({ domain, device_class, area_id }: { domain: string, area_id: string; device_class: string }): PopupActionConfig {
+  getDefaultConfig({ domain, device_class, area_slug }: { domain: string, area_slug: string; device_class: string }): PopupActionConfig {
 
-    const device = Helper.magicAreasDevices[area_id ?? "global"]
+    const device = Helper.magicAreasDevices[area_slug ?? "global"]
     const magicEntity = Helper.getEntityState(device?.entities[`aggregate_${device_class}`]?.entity_id)
 
     const groupedCards: (TitleCardConfig | StackCardConfig)[] = [];
@@ -24,7 +24,7 @@ class AggregateListPopup extends AbstractPopup {
 
     for (const floor of Helper.orderedFloors) {
 
-      if (floor.areas.length === 0) continue
+      if (floor.areas_slug.length === 0) continue
 
       groupedCards.push({
         type: "custom:mushroom-title-card",
@@ -40,24 +40,24 @@ class AggregateListPopup extends AbstractPopup {
 
       let areaCards: (TemplateCardConfig)[] = [];
 
-      for (const [i, area] of floor.areas.map(areaId => Helper.areas[areaId]).entries()) {
+      for (const [i, area] of floor.areas_slug.map(area_slug => Helper.areas[area_slug]).entries()) {
 
         const entity = Helper.magicAreasDevices[area.slug]?.entities[`aggregate_${device_class}`]
 
         // Get a card for the area.
-        if (entity && !Helper.strategyOptions.areas[area.area_id]?.hidden) {
+        // if (entity && !Helper.strategyOptions.areas[area.area_slug]?.hidden) {
 
-          areaCards.push({
-            type: "tile",
-            entity: entity?.entity_id,
-            primary: getAreaName(area),
-            state_content: is_binary_sensor ? 'last-changed' : 'state',
-            color: is_binary_sensor ? 'red' : false,
-          });
-        }
+        //   areaCards.push({
+        //     type: "tile",
+        //     entity: entity?.entity_id,
+        //     primary: getAreaName(area),
+        //     state_content: is_binary_sensor ? 'last-changed' : 'state',
+        //     color: is_binary_sensor ? 'red' : false,
+        //   });
+        // }
 
         // Horizontally group every two area cards if all cards are created.
-        if (i === floor.areas.length - 1) {
+        if (i === floor.areas_slug.length - 1) {
           for (let i = 0; i < areaCards.length; i += 2) {
             groupedCards.push({
               type: "horizontal-stack",
@@ -113,10 +113,10 @@ class AggregateListPopup extends AbstractPopup {
    *
    * @param {chips.PopupActionConfig} options The chip options.
    */
-  constructor(domain: string, area_id: string, device_class: string) {
+  constructor(domain: string, area_slug: string, device_class: string) {
     super();
 
-    const defaultConfig = this.getDefaultConfig({ domain, device_class, area_id })
+    const defaultConfig = this.getDefaultConfig({ domain, device_class, area_slug })
 
     this.config = Object.assign(this.config, defaultConfig);
 

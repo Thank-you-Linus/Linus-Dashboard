@@ -17,26 +17,26 @@ class AggregateChip extends AbstractChip {
    * @type {TemplateChipConfig | undefined}
    *
    */
-  getDefaultConfig({ device_class, show_content = true, area_id }: chips.AggregateChipOptions) {
+  getDefaultConfig({ device_class, show_content = true, area_slug }: chips.AggregateChipOptions) {
 
     const domain = DEVICE_CLASSES.sensor.includes(device_class) ? "sensor" : "binary_sensor"
     let icon = DOMAIN_ICONS[device_class as "motion"]
     let icon_color = ""
     let content = ""
 
-    const device = Helper.magicAreasDevices[area_id ?? "global"]
+    const device = Helper.magicAreasDevices[area_slug ?? "global"]
     const magicEntity = device?.entities[`aggregate_${device_class}`]
 
     if (domain === "binary_sensor") {
-      content = show_content ? Helper.getDeviceClassCountTemplate(device_class, "eq", "on", area_id) : ""
-      icon_color = Helper.getBinarySensorColorFromState(device_class, "eq", "on", "red", "grey", area_id)
+      content = show_content ? Helper.getDeviceClassCountTemplate(device_class, "eq", "on", area_slug) : ""
+      icon_color = Helper.getBinarySensorColorFromState(device_class, "eq", "on", "red", "grey", area_slug)
     }
 
     if (domain === "sensor") {
 
-      content = show_content ? Helper.getAverageStateTemplate(device_class, area_id) : ""
-      icon_color = Helper.getSensorColorFromState(device_class, area_id!)
-      icon = Helper.getSensorIconFromState(device_class, area_id!)
+      content = show_content ? Helper.getAverageStateTemplate(device_class, area_slug) : ""
+      icon_color = Helper.getSensorColorFromState(device_class, area_slug!)
+      icon = Helper.getSensorIconFromState(device_class, area_slug!)
 
       if (device_class === "illuminance") {
         if (magicEntity) {
@@ -49,7 +49,7 @@ class AggregateChip extends AbstractChip {
 
       if (magicEntity) {
         icon_color = `{{ 'red' if is_state('${magicEntity.entity_id}', 'open') else 'grey' }}`
-        content = show_content ? Helper.getDeviceClassCountTemplate(device_class, "eq", "open", area_id) : ""
+        content = show_content ? Helper.getDeviceClassCountTemplate(device_class, "eq", "open", area_slug) : ""
       }
     }
 
@@ -76,9 +76,9 @@ class AggregateChip extends AbstractChip {
   constructor(options: chips.AggregateChipOptions) {
     super();
 
-    const { device_class, show_content = false, area_id } = options
+    const { device_class, show_content = false, area_slug } = options
 
-    const defaultConfig = this.getDefaultConfig({ device_class, show_content, area_id })
+    const defaultConfig = this.getDefaultConfig({ device_class, show_content, area_slug })
 
     this.config = Object.assign(this.config, defaultConfig);
 

@@ -406,16 +406,17 @@ class Helper {
         // Enrichir les zones
         __classPrivateFieldSet(this, _a, areas.reduce((acc, area) => {
             const areaEntities = entitiesByAreaId[area.area_id]?.map(entity => entity.entity_id) || [];
+            const slug = area.area_id === _variables__WEBPACK_IMPORTED_MODULE_2__.UNDISCLOSED ? area.area_id : (0,_utils__WEBPACK_IMPORTED_MODULE_3__.slugify)(area.name);
             const enrichedArea = {
                 ...area,
                 floor_id: area.floor_id || _variables__WEBPACK_IMPORTED_MODULE_2__.UNDISCLOSED,
-                slug: area.area_id === _variables__WEBPACK_IMPORTED_MODULE_2__.UNDISCLOSED ? area.area_id : (0,_utils__WEBPACK_IMPORTED_MODULE_3__.slugify)(area.name),
+                slug,
                 domains: (0,_utils__WEBPACK_IMPORTED_MODULE_3__.groupEntitiesByDomain)(areaEntities) ?? {},
                 devices: devicesByAreaId[area.area_id]?.map(device => device.id) || [],
                 magicAreaDevice: Object.values(__classPrivateFieldGet(this, _a, "f", _Helper_devices)).find(device => device.manufacturer === _variables__WEBPACK_IMPORTED_MODULE_2__.NAME && device.name === area.name),
                 entities: areaEntities,
             };
-            acc[area.area_id] = enrichedArea;
+            acc[slug] = enrichedArea;
             return acc;
         }, {}), "f", _Helper_areas);
         // Create and add the undisclosed floor if not hidden in the strategy options.

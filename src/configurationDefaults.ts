@@ -50,7 +50,7 @@ export const configurationDefaults: StrategyDefaults = {
       showControls: true,
       extraControls: (device: MagicAreaRegistryEntry) => {
         return [
-          new ControlChip(device?.entities.light_control?.entity_id).getChip(),
+          new ControlChip("light", device?.entities.light_control?.entity_id).getChip(),
           new SettingsChip({ tap_action: new LightSettings(device).getPopup() }).getChip()
         ]
       },
@@ -78,7 +78,7 @@ export const configurationDefaults: StrategyDefaults = {
       order: 2,
       extraControls: (device: MagicAreaRegistryEntry) => {
         return [
-          new ControlChip(device?.entities.climate_control?.entity_id).getChip()
+          new ControlChip("climate", device?.entities.climate_control?.entity_id).getChip()
         ]
       },
     },
@@ -96,7 +96,7 @@ export const configurationDefaults: StrategyDefaults = {
       order: 3,
       extraControls: (device: MagicAreaRegistryEntry) => {
         return [
-          new ControlChip(device?.entities.media_player_control?.entity_id).getChip()
+          new ControlChip("media_player", device?.entities.media_player_control?.entity_id).getChip()
         ]
       },
     },
@@ -116,10 +116,6 @@ export const configurationDefaults: StrategyDefaults = {
     scene: {
       title: "Scènes",
       showControls: false,
-      controllerCardOptions: {
-        iconOn: "mdi:lightbulb",
-        iconOff: "mdi:lightbulb-off",
-      },
       extraControls: (device: MagicAreaRegistryEntry) => {
         return [
           {

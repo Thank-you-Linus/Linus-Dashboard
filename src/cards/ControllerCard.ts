@@ -83,6 +83,7 @@ class ControllerCard {
       cards.push({
         type: "heading",
         heading_style: "subtitle",
+        badges: [],
         heading: this.#defaultConfig.subtitle,
         icon: this.#defaultConfig.subtitleIcon,
         layout_options: {

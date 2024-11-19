@@ -148,11 +148,11 @@ class HomeAreaCard extends AbstractCard {
         }).getChip(),
         new ConditionalChip({
           conditions: [{ entity: all_lights?.entity_id, state_not: UNAVAILABLE, }],
-          chip: new LightChip({ area_id: area.slug }).getChip()
+          chip: new LightChip({ area_id: area.slug, tap_action: { action: "toggle" } }).getChip()
         }).getChip(),
         new ConditionalChip({
           conditions: [{ entity: all_lights?.entity_id, state_not: UNAVAILABLE }],
-          chip: new ControlChip(light_control?.entity_id).getChip()
+          chip: new ControlChip("light", light_control?.entity_id).getChip()
         }).getChip()
       ].filter(Boolean),
       card_mod: { style: this.getChipsCardModStyle() }

@@ -604,7 +604,7 @@ class Helper {
                 }
             }
         }
-        return `{% set entities = [${states}] %} {{ entities | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | sum / entities | length }} {{ ${states[0]}.attributes.unit_of_measurement }}`;
+        return `{% set entities = [${states}] %} {{ (entities | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | sum / entities | length) | round(1) }} {{ ${states[0]}.attributes.unit_of_measurement }}`;
     }
     /**
      * Get device entities from the entity registry, filtered by area and domain.
@@ -839,11 +839,11 @@ class Helper {
         {% set entities = [${states}] %}
         {% set bl = entities | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | sum / entities | length %}
         {% if bl < 20 %}
-          blue
+          red
         {% elif bl < 30 %}
           orange
         {% elif bl >= 30 %}
-          red
+          green
         {% else %}
           disabled
         {% endif %}
@@ -864,10 +864,22 @@ class Helper {
         {% endif %}
       `;
         }
-        return "";
+        if (device_class === "humidity") {
+            return `
+        {% set entities = [${states}] %}
+        {% set humidity = entities | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | sum / entities | length %}
+        {% if humidity < 30 %}
+          blue
+        {% elif humidity >= 30 and humidity <= 60 %}
+          green
+        {% else %}
+          red
+        {% endif %}
+      `;
+        }
+        return undefined;
     }
     static getSensorIconFromState(device_class, area_slug) {
-        const domain = "sensor";
         const states = [];
         if (!this.isInitialized()) {
             console.warn("Helper class should be initialized before calling this method!");
@@ -894,17 +906,17 @@ class Helper {
       {% set entities = [${states}] %}
       {% set bl = entities | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute = 'state') | map('float') | sum / entities | length %}
       {% if bl == 'unknown' or bl == 'unavailable' %}
-      {% elif bl | int() < 10 %} mdi: battery - outline
-      {% elif bl | int() < 20 %} mdi: battery1
-      {% elif bl | int() < 30 %} mdi: battery - 20
-      {% elif bl | int() < 40 %} mdi: battery - 30
-      {% elif bl | int() < 50 %} mdi: battery - 40
-      {% elif bl | int() < 60 %} mdi: battery - 50
-      {% elif bl | int() < 70 %} mdi: battery - 60
-      {% elif bl | int() < 80 %} mdi: battery - 70
-      {% elif bl | int() < 90 %} mdi: battery - 80
-      {% elif bl | int() < 100 %} mdi: battery - 90
-      {% elif bl | int() == 100 %} mdi: battery
+      {% elif bl | int() < 10 %} mdi:battery-outline
+      {% elif bl | int() < 20 %} mdi:battery-10
+      {% elif bl | int() < 30 %} mdi:battery-20
+      {% elif bl | int() < 40 %} mdi:battery-30
+      {% elif bl | int() < 50 %} mdi:battery-40
+      {% elif bl | int() < 60 %} mdi:battery-50
+      {% elif bl | int() < 70 %} mdi:battery-60
+      {% elif bl | int() < 80 %} mdi:battery-70
+      {% elif bl | int() < 90 %} mdi:battery-80
+      {% elif bl | int() < 100 %} mdi:battery-90
+      {% elif bl | int() == 100 %} mdi:battery
       {% else %} mdi:battery{% endif %} `;
         }
         if (device_class === "temperature") {
@@ -922,7 +934,7 @@ class Helper {
         {% endif %}
       `;
         }
-        return "";
+        return undefined;
     }
 }
 _a = Helper, _Helper_getObjectKeysByPropertyValue = function _Helper_getObjectKeysByPropertyValue(object, property, value) {
@@ -1479,6 +1491,10 @@ class ClimateCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractCar
                     ]
                 }
             ],
+            layout_options: {
+                grid_columns: 2,
+                grid_rows: 1,
+            },
         });
         this.config = Object.assign(this.config, __classPrivateFieldGet(this, _ClimateCard_defaultConfig, "f"), options);
     }
@@ -1609,7 +1625,6 @@ class ControllerCard {
             if (__classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").showControls) {
                 badges.push({
                     type: "custom:mushroom-chips-card",
-                    alignment: "end",
                     chips: [
                         {
                             type: "template",
@@ -1637,7 +1652,6 @@ class ControllerCard {
                 badges.push(...__classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").extraControls(_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices[areaSlug])?.map((chip) => {
                     return {
                         type: "custom:mushroom-chips-card",
-                        alignment: "end",
                         chips: [chip]
                     };
                 }));
@@ -2851,8 +2865,8 @@ class AggregateChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.AbstractC
         }
         if (domain === "sensor") {
             content = show_content ? _Helper__WEBPACK_IMPORTED_MODULE_2__.Helper.getAverageStateTemplate(device_class, area_slug) : "";
-            icon_color = _Helper__WEBPACK_IMPORTED_MODULE_2__.Helper.getSensorColorFromState(device_class, area_slug);
-            icon = _Helper__WEBPACK_IMPORTED_MODULE_2__.Helper.getSensorIconFromState(device_class, area_slug);
+            icon_color = _Helper__WEBPACK_IMPORTED_MODULE_2__.Helper.getSensorColorFromState(device_class, area_slug) ?? "white";
+            icon = _Helper__WEBPACK_IMPORTED_MODULE_2__.Helper.getSensorIconFromState(device_class, area_slug) ?? _variables__WEBPACK_IMPORTED_MODULE_0__.DOMAIN_ICONS[device_class];
             if (device_class === "illuminance") {
                 if (magicEntity) {
                     icon_color = `{{ 'blue' if 'dark' in state_attr('${device?.entities.area_state?.entity_id}', 'states') else 'amber' }}`;
@@ -3572,6 +3586,7 @@ class LightChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.AbstractChip 
             __classPrivateFieldGet(this, _LightChip_defaultConfig, "f").entity = magicAreasEntity.entity_id;
         }
         this.config = Object.assign(this.config, __classPrivateFieldGet(this, _LightChip_defaultConfig, "f"), options);
+        console.log("this.config   ", this.config);
     }
 }
 _LightChip_defaultConfig = new WeakMap();
@@ -4143,8 +4158,8 @@ class UnavailableChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_0__.Abstrac
             elseReturn: "green",
             area_slug: options?.area_slug
         });
-        console.log("this.#defaultConfig.icon   ", __classPrivateFieldGet(this, _UnavailableChip_defaultConfig, "f").icon);
-        console.log("this.#defaultConfig.icon_color   ", __classPrivateFieldGet(this, _UnavailableChip_defaultConfig, "f").icon_color);
+        // console.log("this.#defaultConfig.icon   ", this.#defaultConfig.icon)
+        // console.log("this.#defaultConfig.icon_color   ", this.#defaultConfig.icon_color)
         __classPrivateFieldGet(this, _UnavailableChip_defaultConfig, "f").tap_action = (0,_utils__WEBPACK_IMPORTED_MODULE_1__.navigateTo)("unavailable");
         this.config = Object.assign(this.config, __classPrivateFieldGet(this, _UnavailableChip_defaultConfig, "f"));
     }
@@ -4287,6 +4302,8 @@ const configurationDefaults = {
             // title: "Lights",
             showControls: true,
             extraControls: (device) => {
+                console.log('device', device);
+                console.log('device?.entities.light_control?.entity_id', device?.entities.light_control?.entity_id);
                 return [
                     new _chips_ControlChip__WEBPACK_IMPORTED_MODULE_0__.ControlChip("light", device?.entities.light_control?.entity_id).getChip(),
                     new _chips_SettingsChip__WEBPACK_IMPORTED_MODULE_1__.SettingsChip({ tap_action: new _popups_LightSettingsPopup__WEBPACK_IMPORTED_MODULE_2__.LightSettings(device).getPopup() }).getChip()
@@ -4812,16 +4829,6 @@ class AreaInformations extends _AbstractPopup__WEBPACK_IMPORTED_MODULE_2__.Abstr
                                     },
                                 ]
                             },
-                            // {
-                            //     type: "horizontal-stack",
-                            //     cards: [
-                            //         {
-                            //             type: "custom:mushroom-chips-card",
-                            //             alignment: "end",
-                            //             chips: currentStateChip(states),
-                            //         },
-                            //     ]
-                            // },
                             ...(!minimalist ? [
                                 {
                                     type: "custom:mushroom-template-card",
@@ -5644,7 +5651,7 @@ function getMAEntity(device_id, domain, device_class) {
     const magicAreaDevice = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices[device_id];
     // TODO remove '' when new release
     if (domain === _variables__WEBPACK_IMPORTED_MODULE_1__.MAGIC_AREAS_LIGHT_DOMAINS)
-        return magicAreaDevice?.entities?.['all_lights'] ?? magicAreaDevice?.entities?.[''];
+        return magicAreaDevice?.entities?.[''] ?? magicAreaDevice?.entities?.['all_lights'];
     if (_variables__WEBPACK_IMPORTED_MODULE_1__.MAGIC_AREAS_GROUP_DOMAINS.includes(domain))
         return magicAreaDevice?.entities?.[`${domain}_group`];
     if (device_class && [..._variables__WEBPACK_IMPORTED_MODULE_1__.DEVICE_CLASSES.binary_sensor, ..._variables__WEBPACK_IMPORTED_MODULE_1__.DEVICE_CLASSES.sensor].includes(device_class))
@@ -6013,6 +6020,7 @@ class AbstractView {
                         titleCardOptions.extraControls = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.strategyOptions.domains[__classPrivateFieldGet(this, _AbstractView_domain, "f")].extraControls;
                     }
                     const areaControllerCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_2__.ControllerCard(target, titleCardOptions, __classPrivateFieldGet(this, _AbstractView_domain, "f")).createCard();
+                    console.log('areaControllerCard', areaControllerCard);
                     floorCards.push(...areaControllerCard, ...areaCards);
                 }
             }

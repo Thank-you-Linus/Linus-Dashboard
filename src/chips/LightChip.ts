@@ -50,8 +50,10 @@ class LightChip extends AbstractChip {
       this.#defaultConfig.entity = magicAreasEntity.entity_id;
     }
 
+
     this.config = Object.assign(this.config, this.#defaultConfig, options);
 
+    console.log("this.config   ", this.config)
   }
 }
 

@@ -55,8 +55,8 @@ class UnavailableChip extends AbstractChip {
             elseReturn: "green",
             area_slug: options?.area_slug
         });
-        console.log("this.#defaultConfig.icon   ", this.#defaultConfig.icon)
-        console.log("this.#defaultConfig.icon_color   ", this.#defaultConfig.icon_color)
+        // console.log("this.#defaultConfig.icon   ", this.#defaultConfig.icon)
+        // console.log("this.#defaultConfig.icon_color   ", this.#defaultConfig.icon_color)
 
         this.#defaultConfig.tap_action = navigateTo("unavailable")
 

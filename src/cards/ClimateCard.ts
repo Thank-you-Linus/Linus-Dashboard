@@ -1,7 +1,7 @@
-import {AbstractCard} from "./AbstractCard";
-import {cards} from "../types/strategy/cards";
-import {EntityRegistryEntry} from "../types/homeassistant/data/entity_registry";
-import {ClimateCardConfig} from "../types/lovelace-mushroom/cards/climate-card-config";
+import { AbstractCard } from "./AbstractCard";
+import { cards } from "../types/strategy/cards";
+import { EntityRegistryEntry } from "../types/homeassistant/data/entity_registry";
+import { ClimateCardConfig } from "../types/lovelace-mushroom/cards/climate-card-config";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**
@@ -30,7 +30,7 @@ class ClimateCard extends AbstractCard {
       {
         type: "climate-preset-modes",
         style: "icons",
-        preset_modes: ["home","eco", "comfort", "away", "boost"]
+        preset_modes: ["home", "eco", "comfort", "away", "boost"]
       },
       {
         type: "climate-hvac-modes",
@@ -55,6 +55,11 @@ class ClimateCard extends AbstractCard {
         ]
       }
     ],
+
+    layout_options: {
+      grid_columns: 2,
+      grid_rows: 1,
+    },
   };
 
   /**
@@ -71,4 +76,4 @@ class ClimateCard extends AbstractCard {
   }
 }
 
-export {ClimateCard};
+export { ClimateCard };

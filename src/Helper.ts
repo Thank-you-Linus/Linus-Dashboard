@@ -588,7 +588,7 @@ class Helper {
       }
     }
 
-    return `{% set entities = [${states}] %} {{ entities | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | sum / entities | length }} {{ ${states[0]}.attributes.unit_of_measurement }}`;
+    return `{% set entities = [${states}] %} {{ (entities | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | sum / entities | length) | round(1) }} {{ ${states[0]}.attributes.unit_of_measurement }}`;
   }
 
   /**
@@ -851,7 +851,7 @@ class Helper {
       {{ "${ifReturn}" if entities | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | selectattr('state','${operator}','${value}') | list | count else "${elseReturn}" }}`;
   }
 
-  static getSensorColorFromState(device_class: string, area_slug?: string): string {
+  static getSensorColorFromState(device_class: string, area_slug?: string): string | undefined {
 
     const domain = "sensor"
 
@@ -884,11 +884,11 @@ class Helper {
         {% set entities = [${states}] %}
         {% set bl = entities | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | sum / entities | length %}
         {% if bl < 20 %}
-          blue
+          red
         {% elif bl < 30 %}
           orange
         {% elif bl >= 30 %}
-          red
+          green
         {% else %}
           disabled
         {% endif %}
@@ -910,13 +910,24 @@ class Helper {
         {% endif %}
       `
     }
+    if (device_class === "humidity") {
+      return `
+        {% set entities = [${states}] %}
+        {% set humidity = entities | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | sum / entities | length %}
+        {% if humidity < 30 %}
+          blue
+        {% elif humidity >= 30 and humidity <= 60 %}
+          green
+        {% else %}
+          red
+        {% endif %}
+      `
+    }
 
-    return ""
+    return undefined
   }
 
-  static getSensorIconFromState(device_class: string, area_slug?: string): string {
-
-    const domain = "sensor"
+  static getSensorIconFromState(device_class: string, area_slug?: string): string | undefined {
 
     const states: string[] = [];
 
@@ -946,17 +957,17 @@ class Helper {
       {% set entities = [${states}] %}
       {% set bl = entities | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute = 'state') | map('float') | sum / entities | length %}
       {% if bl == 'unknown' or bl == 'unavailable' %}
-      {% elif bl | int() < 10 %} mdi: battery - outline
-      {% elif bl | int() < 20 %} mdi: battery1
-      {% elif bl | int() < 30 %} mdi: battery - 20
-      {% elif bl | int() < 40 %} mdi: battery - 30
-      {% elif bl | int() < 50 %} mdi: battery - 40
-      {% elif bl | int() < 60 %} mdi: battery - 50
-      {% elif bl | int() < 70 %} mdi: battery - 60
-      {% elif bl | int() < 80 %} mdi: battery - 70
-      {% elif bl | int() < 90 %} mdi: battery - 80
-      {% elif bl | int() < 100 %} mdi: battery - 90
-      {% elif bl | int() == 100 %} mdi: battery
+      {% elif bl | int() < 10 %} mdi:battery-outline
+      {% elif bl | int() < 20 %} mdi:battery-10
+      {% elif bl | int() < 30 %} mdi:battery-20
+      {% elif bl | int() < 40 %} mdi:battery-30
+      {% elif bl | int() < 50 %} mdi:battery-40
+      {% elif bl | int() < 60 %} mdi:battery-50
+      {% elif bl | int() < 70 %} mdi:battery-60
+      {% elif bl | int() < 80 %} mdi:battery-70
+      {% elif bl | int() < 90 %} mdi:battery-80
+      {% elif bl | int() < 100 %} mdi:battery-90
+      {% elif bl | int() == 100 %} mdi:battery
       {% else %} mdi:battery{% endif %} `
     }
 
@@ -976,7 +987,7 @@ class Helper {
       `
     }
 
-    return ""
+    return undefined
   }
 }
 

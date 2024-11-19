@@ -361,17 +361,19 @@ class Helper {
 
       const areaEntities = entitiesByAreaId[area.area_id]?.map(entity => entity.entity_id) || [];
 
+      const slug = area.area_id === UNDISCLOSED ? area.area_id : slugify(area.name);
+
       const enrichedArea = {
         ...area,
         floor_id: area.floor_id || UNDISCLOSED,
-        slug: area.area_id === UNDISCLOSED ? area.area_id : slugify(area.name),
+        slug,
         domains: groupEntitiesByDomain(areaEntities) ?? {},
         devices: devicesByAreaId[area.area_id]?.map(device => device.id) || [],
         magicAreaDevice: Object.values(this.#devices).find(device => device.manufacturer === NAME && device.name === area.name),
         entities: areaEntities,
       };
 
-      acc[area.area_id] = enrichedArea;
+      acc[slug] = enrichedArea;
       return acc;
     }, {} as Record<string, StrategyArea>);
 

@@ -604,7 +604,7 @@ class Helper {
                 }
             }
         }
-        return `{% set entities = [${states}] %} {{ entities | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | sum / entities | length }} {{ state_attr('sensor.outside_temperature', 'unit_of_measurement')}}`;
+        return `{% set entities = [${states}] %} {{ entities | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | sum / entities | length }} {{ ${states}.attributes.unit_of_measurement }}`;
     }
     /**
      * Get device entities from the entity registry, filtered by area and domain.
@@ -6262,7 +6262,7 @@ class AreaView {
             viewSections.push({
                 type: "grid",
                 column_span: 1,
-                cards: [new _cards_ImageAreaCard__WEBPACK_IMPORTED_MODULE_3__.ImageAreaCard(this.area.slug).getCard()],
+                cards: [new _cards_ImageAreaCard__WEBPACK_IMPORTED_MODULE_3__.ImageAreaCard(this.area.area_id).getCard()],
             });
         }
         let target = { area_id: [this.area.area_id] };

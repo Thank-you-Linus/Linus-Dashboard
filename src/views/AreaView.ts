@@ -127,7 +127,7 @@ class AreaView {
       viewSections.push({
         type: "grid",
         column_span: 1,
-        cards: [new ImageAreaCard(this.area.slug).getCard()],
+        cards: [new ImageAreaCard(this.area.area_id).getCard()],
       });
     }
 

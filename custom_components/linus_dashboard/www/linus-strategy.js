@@ -1664,6 +1664,7 @@ class ControllerCard {
                 cards[0].badges = badges;
             }
         }
+        console.log('cards', cards);
         return cards;
     }
 }

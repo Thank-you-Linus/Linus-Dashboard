@@ -114,7 +114,7 @@ abstract class AbstractView {
 
         if (entities.length === 0 || !cardModule) continue;
 
-        let target: HassServiceTarget = { area_id: [area.area_id] };
+        let target: HassServiceTarget = { area_id: [area.slug] };
         if (area.area_id === UNDISCLOSED && this.#domain === 'light') {
           target = { entity_id: entities.map(entity => entity.entity_id) };
         }

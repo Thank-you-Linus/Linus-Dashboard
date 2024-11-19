@@ -131,7 +131,7 @@ class AreaView {
       });
     }
 
-    let target: HassServiceTarget = { area_id: [this.area.area_id] };
+    let target: HassServiceTarget = { area_id: [this.area.slug] };
 
     for (const domain of exposedDomainIds) {
       if (domain === "default") continue;

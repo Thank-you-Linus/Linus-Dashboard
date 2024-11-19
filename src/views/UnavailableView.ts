@@ -92,7 +92,7 @@ class UnavailableView {
 
         if (entities.length === 0 || !cardModule) continue;
 
-        let target: HassServiceTarget = { area_id: [area.area_id] };
+        let target: HassServiceTarget = { area_id: [area.slug] };
         if (area.area_id === UNDISCLOSED) {
           target = { entity_id: unavailableEntities.map(entity => entity.entity_id) };
         }

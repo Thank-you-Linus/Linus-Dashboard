@@ -77,9 +77,6 @@ class HomeView extends AbstractView {
     const chips: LovelaceChipConfig[] = [];
     const chipOptions = Helper.strategyOptions.chips;
 
-    // Create a list of area-ids, used for switching all devices via chips
-    const areaIds = Helper.orderedAreas.map(area => area.area_id ?? "");
-
     let chipModule;
 
     // Weather chip.

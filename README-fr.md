@@ -52,23 +52,33 @@
 
 ### 🏠 **Page d'accueil**
 Cartes interactives pour contrôler rapidement l’éclairage, le climat et d'autres fonctionnalités par pièce.
-![Page d'accueil](https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/images/screenshots/home-page-example.png)
+<div align="center">
+  <img src="https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/images/screenshots/home-page-example.png" alt="Page d'accueil" width="50%">
+</div>
 
 ### 🛋️ **Pages pièces**
 Vue détaillée des appareils dans chaque pièce pour une gestion simplifiée.
-![Page pièce](https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/images/screenshots/room-page-example.png)
+<div align="center">
+  <img src="https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/images/screenshots/room-page-example.png" alt="Page pièce" width="50%">
+</div>
 
 ### 📟 **Pages par catégorie d'appareil**
 Vue d'ensemble des appareils regroupés par catégories, comme les lumières, les capteurs ou les interrupteurs.
-![Vue des lumières](https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/images/screenshots/lights-page-example.png)
+<div align="center">
+  <img src="https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/images/screenshots/lights-page-example.png" alt="Vue des lumières" width="50%">
+</div>
 
 ### 🔒 **Page Sécurité**
 Gardez un œil sur les appareils de sécurité, tels que les alarmes, les caméras et les capteurs de mouvement. Consultez leur statut en temps réel et interagissez rapidement en cas de problème.
-![Page Sécurité](https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/images/screenshots/security-page-example.png)
+<div align="center">
+  <img src="https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/images/screenshots/security-page-example.png" alt="Page Sécurité" width="50%">
+</div>
 
 ### ⚠️ **Page des appareils hors ligne**
 Identifiez rapidement et résolvez les problèmes des appareils non disponibles.
-![Appareils hors ligne](https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/images/screenshots/offline-page-example.png)
+<div align="center">
+  <img src="https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/images/screenshots/offline-page-example.png" alt="Appareils hors ligne" width="50%">
+</div>
 
 ---
 

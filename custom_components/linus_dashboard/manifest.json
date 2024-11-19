@@ -4,6 +4,9 @@
   "codeowners": [
     "@Thank-you-Linus"
   ],
+  "dependencies": [
+    "http"
+  ],
   "config_flow": true,
   "documentation": "https://github.com/Thank-you-Linus/Linus-Dashboard",
   "iot_class": "calculated",

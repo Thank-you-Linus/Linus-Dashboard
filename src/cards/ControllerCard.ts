@@ -151,6 +151,8 @@ class ControllerCard {
       }
     }
 
+    console.log('cards', cards)
+
     return cards;
   }
 }

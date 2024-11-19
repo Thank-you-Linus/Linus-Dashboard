@@ -18,21 +18,28 @@
     </a>
   </p>
 
-<!-- Social icons section -->
-<p align="center">
-  <a href="https://www.youtube.com/channel/UCKXNON6Xtxp63z-GKoMyPWw"><img width="32px" alt="Youtube" title="Youtube" src="https://raw.githubusercontent.com/Thank-you-Linus/.github/master/images/socials/youtube.svg"/></a>
-  &#8287;&#8287;&#8287;&#8287;&#8287;
-  <a href="https://twitter.com/i/flow/login?redirect_after_login=%2Fthank_you_Linus"><img width="32px" alt="Twitter" title="Twitter" src="https://raw.githubusercontent.com/Thank-you-Linus/.github/master/images/socials/x.svg"/></a>
-  &#8287;&#8287;&#8287;&#8287;&#8287;
-  <a href="https://discord.gg/ej2Xn4GTww" alt="Discord" title="Discord Server"><img width="32px" src="https://raw.githubusercontent.com/Thank-you-Linus/.github/master/images/socials/discord.svg"/></a>
-  &#8287;&#8287;&#8287;&#8287;&#8287;
-  <a href="https://www.instagram.com/thankyoulinus.ai/"><img width="32px" alt="Instagram" title="Instagram" src="https://raw.githubusercontent.com/Thank-you-Linus/.github/master/images/socials/instagram.svg"></a>
-  &#8287;&#8287;&#8287;&#8287;&#8287;
-  <a href="https://www.facebook.com/people/Thank-you-Linus/100093180180087/"><img width="32px" alt="Facebook" title="Facebook" src="https://raw.githubusercontent.com/Thank-you-Linus/.github/master/images/socials/facebook.svg"/></a>
-  &#8287;&#8287;&#8287;&#8287;&#8287;
-  <a href="https://www.linkedin.com/company/thankyou-linus/"><img width="32px" alt="LinkedIn" title="LinkedIn" src="https://raw.githubusercontent.com/Thank-you-Linus/.github/master/images/socials/linkedin.svg"/></a>
-</p>
-</div>
+  <!-- Social icons section -->
+  <p align="center">
+    <a href="https://www.instagram.com/thankyoulinus.ai/">
+      <img width="32px" alt="Instagram" title="Instagram" src="https://raw.githubusercontent.com/Thank-you-Linus/.github/master/images/socials/instagram.svg"/>
+    </a>
+    <a href="https://www.facebook.com/people/Thank-you-Linus/100093180180087/">
+      <img width="32px" alt="Facebook" title="Facebook" src="https://raw.githubusercontent.com/Thank-you-Linus/.github/master/images/socials/facebook.svg"/>
+    </a>
+    <a href="https://twitter.com/i/flow/login?redirect_after_login=%2Fthank_you_Linus">
+      <img width="32px" alt="Twitter" title="Twitter" src="https://raw.githubusercontent.com/Thank-you-Linus/.github/master/images/socials/x.svg"/>
+    </a>
+    <a href="https://discord.gg/ej2Xn4GTww" alt="Discord" title="Discord Server">
+      <img width="32px" src="https://raw.githubusercontent.com/Thank-you-Linus/.github/master/images/socials/discord.svg"/>
+    </a>
+    <a href="https://www.youtube.com/channel/UCKXNON6Xtxp63z-GKoMyPWw">
+      <img width="32px" alt="Youtube" title="Youtube" src="https://raw.githubusercontent.com/Thank-you-Linus/.github/master/images/socials/youtube.svg"/>
+    </a>
+    <a href="https://www.linkedin.com/company/thankyou-linus/">
+      <img width="32px" alt="LinkedIn" title="LinkedIn" src="https://raw.githubusercontent.com/Thank-you-Linus/.github/master/images/socials/linkedin.svg"/>
+    </a>
+  </p>
+  </div>
 
 ---
 

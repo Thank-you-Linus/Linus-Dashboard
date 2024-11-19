@@ -5,7 +5,7 @@ import { TitleCardConfig } from "../types/lovelace-mushroom/cards/title-card-con
 import { AlarmCard } from "../cards/AlarmCard";
 import { PersonCard } from "../cards/PersonCard";
 import { BinarySensorCard } from "../cards/BinarySensorCard";
-import { navigateTo } from "../utils";
+import { getAreaName, getFloorName, navigateTo } from "../utils";
 import { HassServiceTarget } from "home-assistant-js-websocket";
 import { SwipeCard } from "../cards/SwipeCard";
 import { ControllerCard } from "../cards/ControllerCard";
@@ -173,7 +173,7 @@ abstract class SecurityView {
       let floorCards: LovelaceCardConfig[] = [
         {
           type: "heading",
-          heading: floor.name,
+          heading: getFloorName(floor),
           heading_style: "title",
           badges: [],
           layout_options: {
@@ -233,7 +233,7 @@ abstract class SecurityView {
         // Vertical stack the area cards if it has entities.
         if (areaCards.length) {
           const titleCardOptions: any = {};
-          titleCardOptions.subtitle = area.name
+          titleCardOptions.subtitle = getAreaName(area)
           titleCardOptions.subtitleIcon = area.icon ?? "mdi:floor-plan";
           titleCardOptions.navigate = area.slug;
           if (domain) {

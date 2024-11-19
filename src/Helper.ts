@@ -746,8 +746,8 @@ class Helper {
    *
    * @return {string}
    */
-  static localize(translationKey: string): string | undefined {
-    return this.#hassLocalize(translationKey);
+  static localize(translationKey: string): string {
+    return this.#hassLocalize(translationKey) ?? "translation not found";
   }
 
   /**

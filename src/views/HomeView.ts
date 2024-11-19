@@ -11,7 +11,7 @@ import { PersonCardConfig } from "../types/lovelace-mushroom/cards/person-card-c
 import { SettingsChip } from "../chips/SettingsChip";
 import { SettingsPopup } from "../popups/SettingsPopup";
 import { HOME_EXPOSED_CHIPS } from "../variables";
-import { createChipsFromList, navigateTo, slugify } from "../utils";
+import { createChipsFromList, getFloorName, navigateTo, slugify } from "../utils";
 import { WeatherChip } from "../chips/WeatherChip";
 
 
@@ -277,7 +277,7 @@ class HomeView extends AbstractView {
       groupedCards.push(
         {
           type: "heading",
-          heading: floor.name,
+          heading: getFloorName(floor),
           heading_style: "subtitle",
           icon: floor.icon ?? "mdi:floor-plan",
           tap_action: floor.floor_id !== "undisclosed" ? navigateTo(slugify(floor.name)) : undefined,
@@ -326,8 +326,8 @@ class HomeView extends AbstractView {
 
     groupedCards.push({
       type: "custom:mushroom-template-card",
-      primary: Helper.localize("component.linus_dashboard.entity.button.add-new-area.state.on"),
-      secondary: Helper.localize("component.linus_dashboard.entity.button.add-new-area.state.off"),
+      primary: Helper.localize("component.linus_dashboard.entity.button.add_new_area.state.on"),
+      secondary: Helper.localize("component.linus_dashboard.entity.button.add_new_area.state.off"),
       multiline_secondary: true,
       icon: "mdi:view-dashboard-variant",
       fill_container: true,

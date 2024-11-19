@@ -33,11 +33,8 @@ class AggregateAreaListPopup extends AbstractPopup {
         areaCards.push({
           type: "tile",
           entity: entity_id,
-          // primary: area.name,
           state_content: is_binary_sensor ? 'last-changed' : 'state',
           color: is_binary_sensor ? 'red' : false,
-          // badge_icon: "mdi:numeric-9",
-          // badge_color: "red",
         });
       }
 

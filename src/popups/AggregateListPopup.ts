@@ -3,7 +3,7 @@ import { PopupActionConfig } from "../types/homeassistant/data/lovelace";
 import { StackCardConfig } from "../types/homeassistant/lovelace/cards/types";
 import { TemplateCardConfig } from "../types/lovelace-mushroom/cards/template-card-config";
 import { TitleCardConfig } from "../types/lovelace-mushroom/cards/title-card-config";
-import { getDomainTranslationKey } from "../utils";
+import { getAreaName, getDomainTranslationKey } from "../utils";
 import { AbstractPopup } from "./AbstractPopup";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
@@ -50,11 +50,9 @@ class AggregateListPopup extends AbstractPopup {
           areaCards.push({
             type: "tile",
             entity: entity?.entity_id,
-            primary: area.name,
+            primary: getAreaName(area),
             state_content: is_binary_sensor ? 'last-changed' : 'state',
             color: is_binary_sensor ? 'red' : false,
-            // badge_icon: "mdi:numeric-9",
-            // badge_color: "red",
           });
         }
 

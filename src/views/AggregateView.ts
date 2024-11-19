@@ -50,8 +50,9 @@ class AggregateView extends AbstractView {
 
     super(domain, options?.device_class);
 
-    this.#defaultConfig.icon = DOMAIN_ICONS[options?.device_class as keyof typeof DOMAIN_ICONS]
-    this.#defaultConfig.path = options?.device_class
+    this.#defaultConfig.title = `${Helper.localize(getDomainTranslationKey(domain, options?.device_class))}s`;
+    this.#defaultConfig.icon = DOMAIN_ICONS[options?.device_class as keyof typeof DOMAIN_ICONS];
+    this.#defaultConfig.path = options?.device_class;
 
     this.config = Object.assign(this.config, this.#defaultConfig, options);
 
@@ -60,7 +61,7 @@ class AggregateView extends AbstractView {
       this.targetDomain(options?.device_class),
       {
         ...this.#viewControllerCardConfig,
-        title: `${Helper.localize(getDomainTranslationKey(domain, options?.device_class))}s`,
+        title: this.#defaultConfig.title,
         // subtitle: Helper.getDeviceClassCountTemplate(options?.device_class, "eq", "on") + ` ${Helper.localize(getStateTranslationKey("on", domain, options?.device_class))}s`,
         ...("controllerCardOptions" in this.config ? this.config.controllerCardOptions : {}) as cards.ControllerCardConfig,
       }, options?.device_class).createCard();

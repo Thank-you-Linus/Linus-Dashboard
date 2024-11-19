@@ -8,7 +8,7 @@ import { AreaStateChip } from "../chips/AreaStateChip";
 import { generic } from "../types/strategy/generic";
 import StrategyArea = generic.StrategyArea;
 import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
-import { getMAEntity, slugify } from "../utils";
+import { getAreaName, getMAEntity, slugify } from "../utils";
 import { EntityRegistryEntry } from "../types/homeassistant/data/entity_registry";
 import { ClimateChip } from "../chips/ClimateChip";
 import { LightChip } from "../chips/LightChip";
@@ -91,7 +91,7 @@ class HomeAreaCard extends AbstractCard {
   getUndisclosedAreaConfig(area: StrategyArea): TemplateCardConfig {
     return {
       type: "custom:mushroom-template-card",
-      primary: area.name,
+      primary: getAreaName(area),
       icon: "mdi:devices",
       icon_color: "grey",
       fill_container: true,
@@ -104,7 +104,7 @@ class HomeAreaCard extends AbstractCard {
   getMainCard(area: StrategyArea, icon: string, aggregate_temperature: EntityRegistryEntry, aggregate_battery: EntityRegistryEntry, area_state: EntityRegistryEntry): any {
     return {
       type: "custom:mushroom-template-card",
-      primary: area.name,
+      primary: getAreaName(area),
       secondary: aggregate_temperature && this.getTemperatureTemplate(aggregate_temperature),
       icon: icon,
       icon_color: this.getIconColorTemplate(area_state),

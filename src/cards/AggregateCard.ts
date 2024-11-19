@@ -1,7 +1,6 @@
 import { StackCardConfig } from "../types/homeassistant/lovelace/cards/types";
 import { LovelaceCardConfig } from "../types/homeassistant/data/lovelace";
-import { HassServiceTarget } from "home-assistant-js-websocket";
-import { getAggregateEntity, getStateContent, groupBy } from "../utils";
+import { getAggregateEntity, getAreaName, getFloorName, getStateContent, groupBy } from "../utils";
 import { Helper } from "../Helper";
 import { TemplateCardConfig } from "../types/lovelace-mushroom/cards/template-card-config";
 
@@ -82,7 +81,7 @@ class AggregateCard {
       let floorCards: (TemplateCardConfig)[] = [];
       floorCards.push({
         type: "custom:mushroom-title-card",
-        subtitle: floor.name,
+        subtitle: getFloorName(floor),
         card_mod: {
           style: `
             ha-card.header {
@@ -105,7 +104,7 @@ class AggregateCard {
             areaCards.push({
               type: "tile",
               entity: areaEntity,
-              primary: area.name,
+              primary: getAreaName(area),
               state_content: getStateContent(areaEntity),
               color: areaEntity.startsWith('binary_sensor.') ? 'red' : false,
             });

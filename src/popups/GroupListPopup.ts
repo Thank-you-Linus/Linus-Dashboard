@@ -26,16 +26,11 @@ class GroupListPopup extends AbstractPopup {
                                 type: "markdown",
                                 content: `${Helper.areas[area_id]?.name}`,
                             },
-                            {
-                                type: "grid",
-                                cards: entities?.map((entity) => ({
-                                    type: "custom:mushroom-entity-card",
-                                    vertical: true,
-                                    entity: entity.entity_id,
-                                    secondary_info: 'last-changed',
-                                })),
-                                column_span: 1,
-                            }
+                            ...entities?.map((entity) => ({
+                                type: "custom:mushroom-entity-card",
+                                entity: entity.entity_id,
+                                secondary_info: 'last-changed',
+                            })),
                         ])).flat()
                     }
                 }

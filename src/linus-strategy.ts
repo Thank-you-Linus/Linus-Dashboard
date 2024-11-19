@@ -5,7 +5,7 @@ import StrategyArea = generic.StrategyArea;
 import StrategyFloor = generic.StrategyFloor;
 import { AREA_CARDS_DOMAINS, DEVICE_CLASSES } from "./variables";
 import { AreaView } from "./views/AreaView";
-import { slugify } from "./utils";
+import { getAreaName, getFloorName, slugify } from "./utils";
 
 /**
  * Mushroom Dashboard Strategy.<br>
@@ -60,7 +60,7 @@ class MushroomStrategy extends HTMLTemplateElement {
     for (let area of Helper.orderedAreas) {
       if (!area.hidden) {
         views.push({
-          title: area.name,
+          title: getAreaName(area),
           path: area.slug ?? area.name,
           subview: true,
           strategy: {
@@ -77,7 +77,7 @@ class MushroomStrategy extends HTMLTemplateElement {
     for (let floor of Helper.orderedFloors) {
       if (!floor.hidden) {
         views.push({
-          title: floor.name,
+          title: getFloorName(floor),
           path: slugify(floor.name),
           subview: true,
           strategy: {

@@ -259,15 +259,18 @@ export const configurationDefaults: StrategyDefaults = {
       hidden: false,
     },
     motion: {
-      order: 12,
       hidden: false,
     },
     window: {
-      order: 12,
       hidden: false,
     },
     door: {
-      order: 12,
+      hidden: false,
+    },
+    battery: {
+      hidden: false,
+    },
+    temperature: {
       hidden: false,
     },
   }

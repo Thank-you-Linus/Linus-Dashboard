@@ -2,6 +2,8 @@ import { Helper } from "./Helper";
 import { EntityRegistryEntry } from "./types/homeassistant/data/entity_registry";
 import { generic } from "./types/strategy/generic";
 import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
+import StrategyFloor = generic.StrategyFloor;
+import StrategyArea = generic.StrategyArea;
 import { ActionConfig } from "./types/homeassistant/data/lovelace";
 import { DEVICE_CLASSES, MAGIC_AREAS_AGGREGATE_DOMAINS, MAGIC_AREAS_GROUP_DOMAINS, MAGIC_AREAS_LIGHT_DOMAINS, SENSOR_DOMAINS, UNAVAILABLE_STATES } from "./variables";
 import { LovelaceChipConfig } from "./types/lovelace-mushroom/utils/lovelace/chip/types";
@@ -153,4 +155,12 @@ export function getStateTranslationKey(state: string, domain: string, device_cla
     if (MAGIC_AREAS_AGGREGATE_DOMAINS.includes(domain)) return `component.${domain}.entity_component.${device_class}.state.${state}`
 
     return `component.${domain}.entity_component._.name`
+}
+
+export function getFloorName(floor: StrategyFloor): string {
+    return floor.floor_id === "undisclosed" ? Helper.localize("component.linus_dashboard.entity.button.floor_not_found.name") : floor.name!
+}
+
+export function getAreaName(area: StrategyArea): string {
+    return area.area_id === "undisclosed" ? Helper.localize("ui.card.area.area_not_found") : area.name!
 }

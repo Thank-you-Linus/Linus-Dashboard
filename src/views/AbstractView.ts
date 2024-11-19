@@ -7,7 +7,7 @@ import { HassServiceTarget } from "home-assistant-js-websocket";
 import { TemplateCardConfig } from '../types/lovelace-mushroom/cards/template-card-config';
 import { ChipsCardConfig } from '../types/lovelace-mushroom/cards/chips-card';
 import { SwipeCard } from '../cards/SwipeCard';
-import { slugify } from '../utils';
+import { getAreaName, getFloorName, slugify } from '../utils';
 import { views } from '../types/strategy/views';
 
 /**
@@ -127,7 +127,12 @@ abstract class AbstractView {
 
         if (entityCards.length) {
           const areaCards = entityCards.length > 2 ? [new SwipeCard(entityCards).getCard()] : entityCards;
-          const titleCardOptions = { ...Helper.strategyOptions.domains[this.#domain].controllerCardOptions, subtitle: area.name, subtitleIcon: area.icon ?? "mdi:floor-plan", subtitleNavigate: area.slug } as any;
+          const titleCardOptions = {
+            ...Helper.strategyOptions.domains[this.#domain].controllerCardOptions,
+            subtitle: getAreaName(area),
+            subtitleIcon: area.area_id === "undisclosed" ? "mdi:help-circle" : area.icon ?? "mdi:floor-plan",
+            subtitleNavigate: area.slug
+          } as any;
           if (this.#domain) {
             titleCardOptions.showControls = Helper.strategyOptions.domains[this.#domain].showControls;
             titleCardOptions.extraControls = Helper.strategyOptions.domains[this.#domain].extraControls;
@@ -138,7 +143,12 @@ abstract class AbstractView {
       }
 
       if (floorCards.length) {
-        const titleSectionOptions: any = { ...Helper.strategyOptions.domains[this.#domain].controllerCardOptions, title: floor.name, titleIcon: floor.icon ?? "mdi:floor-plan", titleNavigate: slugify(floor.name) };
+        const titleSectionOptions: any = {
+          ...Helper.strategyOptions.domains[this.#domain].controllerCardOptions,
+          title: getFloorName(floor),
+          titleIcon: floor.icon ?? "mdi:floor-plan",
+          titleNavigate: slugify(floor.name)
+        };
         if (this.#domain) {
           titleSectionOptions.showControls = Helper.strategyOptions.domains[this.#domain].showControls;
           titleSectionOptions.extraControls = Helper.strategyOptions.domains[this.#domain].extraControls;

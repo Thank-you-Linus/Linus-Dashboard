@@ -719,7 +719,7 @@ class Helper {
      * @return {string}
      */
     static localize(translationKey) {
-        return __classPrivateFieldGet(this, _a, "f", _Helper_hassLocalize).call(this, translationKey);
+        return __classPrivateFieldGet(this, _a, "f", _Helper_hassLocalize).call(this, translationKey) ?? "translation not found";
     }
     /**
      * Get valid entity.
@@ -1153,7 +1153,7 @@ class AggregateCard {
             let floorCards = [];
             floorCards.push({
                 type: "custom:mushroom-title-card",
-                subtitle: floor.name,
+                subtitle: (0,_utils__WEBPACK_IMPORTED_MODULE_0__.getFloorName)(floor),
                 card_mod: {
                     style: `
             ha-card.header {
@@ -1172,7 +1172,7 @@ class AggregateCard {
                         areaCards.push({
                             type: "tile",
                             entity: areaEntity,
-                            primary: area.name,
+                            primary: (0,_utils__WEBPACK_IMPORTED_MODULE_0__.getAreaName)(area),
                             state_content: (0,_utils__WEBPACK_IMPORTED_MODULE_0__.getStateContent)(areaEntity),
                             color: areaEntity.startsWith('binary_sensor.') ? 'red' : false,
                         });
@@ -1861,7 +1861,7 @@ class HomeAreaCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractCa
     getUndisclosedAreaConfig(area) {
         return {
             type: "custom:mushroom-template-card",
-            primary: area.name,
+            primary: (0,_utils__WEBPACK_IMPORTED_MODULE_5__.getAreaName)(area),
             icon: "mdi:devices",
             icon_color: "grey",
             fill_container: true,
@@ -1873,7 +1873,7 @@ class HomeAreaCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractCa
     getMainCard(area, icon, aggregate_temperature, aggregate_battery, area_state) {
         return {
             type: "custom:mushroom-template-card",
-            primary: area.name,
+            primary: (0,_utils__WEBPACK_IMPORTED_MODULE_5__.getAreaName)(area),
             secondary: aggregate_temperature && this.getTemperatureTemplate(aggregate_temperature),
             icon: icon,
             icon_color: this.getIconColorTemplate(area_state),
@@ -4474,15 +4474,18 @@ const configurationDefaults = {
             hidden: false,
         },
         motion: {
-            order: 12,
             hidden: false,
         },
         window: {
-            order: 12,
             hidden: false,
         },
         door: {
-            order: 12,
+            hidden: false,
+        },
+        battery: {
+            hidden: false,
+        },
+        temperature: {
             hidden: false,
         },
     }
@@ -4563,7 +4566,7 @@ class MushroomStrategy extends HTMLTemplateElement {
         for (let area of _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.orderedAreas) {
             if (!area.hidden) {
                 views.push({
-                    title: area.name,
+                    title: (0,_utils__WEBPACK_IMPORTED_MODULE_3__.getAreaName)(area),
                     path: area.slug ?? area.name,
                     subview: true,
                     strategy: {
@@ -4579,7 +4582,7 @@ class MushroomStrategy extends HTMLTemplateElement {
         for (let floor of _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.orderedFloors) {
             if (!floor.hidden) {
                 views.push({
-                    title: floor.name,
+                    title: (0,_utils__WEBPACK_IMPORTED_MODULE_3__.getFloorName)(floor),
                     path: (0,_utils__WEBPACK_IMPORTED_MODULE_3__.slugify)(floor.name),
                     subview: true,
                     strategy: {
@@ -4986,16 +4989,11 @@ class GroupListPopup extends _AbstractPopup__WEBPACK_IMPORTED_MODULE_2__.Abstrac
                                 type: "markdown",
                                 content: `${_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas[area_id]?.name}`,
                             },
-                            {
-                                type: "grid",
-                                cards: entities?.map((entity) => ({
-                                    type: "custom:mushroom-entity-card",
-                                    vertical: true,
-                                    entity: entity.entity_id,
-                                    secondary_info: 'last-changed',
-                                })),
-                                column_span: 1,
-                            }
+                            ...entities?.map((entity) => ({
+                                type: "custom:mushroom-entity-card",
+                                entity: entity.entity_id,
+                                secondary_info: 'last-changed',
+                            })),
                         ])).flat()
                     }
                 }
@@ -5418,7 +5416,7 @@ class SettingsPopup extends _AbstractPopup__WEBPACK_IMPORTED_MODULE_2__.Abstract
             browser_mod: {
                 service: "browser_mod.popup",
                 data: {
-                    title: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.entity.button.settings-chip.name"),
+                    title: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.entity.button.settings_chip.name"),
                     content: {
                         type: "vertical-stack",
                         cards: [
@@ -5427,7 +5425,7 @@ class SettingsPopup extends _AbstractPopup__WEBPACK_IMPORTED_MODULE_2__.Abstract
                                 cards: [
                                     {
                                         type: "custom:mushroom-template-card",
-                                        primary: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.entity.button.settings-chip.state.on"),
+                                        primary: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.entity.button.settings_chip.state.on"),
                                         icon: "mdi:refresh",
                                         icon_color: "blue",
                                         tap_action: {
@@ -5438,7 +5436,7 @@ class SettingsPopup extends _AbstractPopup__WEBPACK_IMPORTED_MODULE_2__.Abstract
                                     },
                                     {
                                         type: "custom:mushroom-template-card",
-                                        primary: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.entity.button.settings-chip.state.off"),
+                                        primary: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.entity.button.settings_chip.state.off"),
                                         icon: "mdi:restart",
                                         icon_color: "red",
                                         tap_action: {
@@ -5604,7 +5602,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   createChipsFromList: () => (/* binding */ createChipsFromList),
 /* harmony export */   getAggregateEntity: () => (/* binding */ getAggregateEntity),
+/* harmony export */   getAreaName: () => (/* binding */ getAreaName),
 /* harmony export */   getDomainTranslationKey: () => (/* binding */ getDomainTranslationKey),
+/* harmony export */   getFloorName: () => (/* binding */ getFloorName),
 /* harmony export */   getMAEntity: () => (/* binding */ getMAEntity),
 /* harmony export */   getStateContent: () => (/* binding */ getStateContent),
 /* harmony export */   getStateTranslationKey: () => (/* binding */ getStateTranslationKey),
@@ -5744,6 +5744,12 @@ function getStateTranslationKey(state, domain, device_class) {
     if (_variables__WEBPACK_IMPORTED_MODULE_1__.MAGIC_AREAS_AGGREGATE_DOMAINS.includes(domain))
         return `component.${domain}.entity_component.${device_class}.state.${state}`;
     return `component.${domain}.entity_component._.name`;
+}
+function getFloorName(floor) {
+    return floor.floor_id === "undisclosed" ? _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.entity.button.floor_not_found.name") : floor.name;
+}
+function getAreaName(area) {
+    return area.area_id === "undisclosed" ? _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("ui.card.area.area_not_found") : area.name;
 }
 
 
@@ -6028,7 +6034,12 @@ class AbstractView {
                     .map(entity => new cardModule[className](entity).getCard());
                 if (entityCards.length) {
                     const areaCards = entityCards.length > 2 ? [new _cards_SwipeCard__WEBPACK_IMPORTED_MODULE_3__.SwipeCard(entityCards).getCard()] : entityCards;
-                    const titleCardOptions = { ..._Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.strategyOptions.domains[__classPrivateFieldGet(this, _AbstractView_domain, "f")].controllerCardOptions, subtitle: area.name, subtitleIcon: area.icon ?? "mdi:floor-plan", subtitleNavigate: area.slug };
+                    const titleCardOptions = {
+                        ..._Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.strategyOptions.domains[__classPrivateFieldGet(this, _AbstractView_domain, "f")].controllerCardOptions,
+                        subtitle: (0,_utils__WEBPACK_IMPORTED_MODULE_4__.getAreaName)(area),
+                        subtitleIcon: area.area_id === "undisclosed" ? "mdi:help-circle" : area.icon ?? "mdi:floor-plan",
+                        subtitleNavigate: area.slug
+                    };
                     if (__classPrivateFieldGet(this, _AbstractView_domain, "f")) {
                         titleCardOptions.showControls = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.strategyOptions.domains[__classPrivateFieldGet(this, _AbstractView_domain, "f")].showControls;
                         titleCardOptions.extraControls = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.strategyOptions.domains[__classPrivateFieldGet(this, _AbstractView_domain, "f")].extraControls;
@@ -6038,7 +6049,12 @@ class AbstractView {
                 }
             }
             if (floorCards.length) {
-                const titleSectionOptions = { ..._Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.strategyOptions.domains[__classPrivateFieldGet(this, _AbstractView_domain, "f")].controllerCardOptions, title: floor.name, titleIcon: floor.icon ?? "mdi:floor-plan", titleNavigate: (0,_utils__WEBPACK_IMPORTED_MODULE_4__.slugify)(floor.name) };
+                const titleSectionOptions = {
+                    ..._Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.strategyOptions.domains[__classPrivateFieldGet(this, _AbstractView_domain, "f")].controllerCardOptions,
+                    title: (0,_utils__WEBPACK_IMPORTED_MODULE_4__.getFloorName)(floor),
+                    titleIcon: floor.icon ?? "mdi:floor-plan",
+                    titleNavigate: (0,_utils__WEBPACK_IMPORTED_MODULE_4__.slugify)(floor.name)
+                };
                 if (__classPrivateFieldGet(this, _AbstractView_domain, "f")) {
                     titleSectionOptions.showControls = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.strategyOptions.domains[__classPrivateFieldGet(this, _AbstractView_domain, "f")].showControls;
                     titleSectionOptions.extraControls = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.strategyOptions.domains[__classPrivateFieldGet(this, _AbstractView_domain, "f")].extraControls;
@@ -6152,13 +6168,14 @@ class AggregateView extends _AbstractView__WEBPACK_IMPORTED_MODULE_2__.AbstractV
         _AggregateView_viewControllerCardConfig.set(this, {
         // title: `${Helper.localize(`component.fan.entity_component._.name`)}s`,
         });
+        __classPrivateFieldGet(this, _AggregateView_defaultConfig, "f").title = `${_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize((0,_utils__WEBPACK_IMPORTED_MODULE_4__.getDomainTranslationKey)(domain, options?.device_class))}s`;
         __classPrivateFieldGet(this, _AggregateView_defaultConfig, "f").icon = _variables__WEBPACK_IMPORTED_MODULE_3__.DOMAIN_ICONS[options?.device_class];
         __classPrivateFieldGet(this, _AggregateView_defaultConfig, "f").path = options?.device_class;
         this.config = Object.assign(this.config, __classPrivateFieldGet(this, _AggregateView_defaultConfig, "f"), options);
         // Create a Controller card to switch all entities of the domain.
         this.viewControllerCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_1__.ControllerCard(this.targetDomain(options?.device_class), {
             ...__classPrivateFieldGet(this, _AggregateView_viewControllerCardConfig, "f"),
-            title: `${_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize((0,_utils__WEBPACK_IMPORTED_MODULE_4__.getDomainTranslationKey)(domain, options?.device_class))}s`,
+            title: __classPrivateFieldGet(this, _AggregateView_defaultConfig, "f").title,
             // subtitle: Helper.getDeviceClassCountTemplate(options?.device_class, "eq", "on") + ` ${Helper.localize(getStateTranslationKey("on", domain, options?.device_class))}s`,
             ...("controllerCardOptions" in this.config ? this.config.controllerCardOptions : {}),
         }, options?.device_class).createCard();
@@ -6973,7 +6990,7 @@ async function _HomeView_createAreaSection() {
             continue;
         groupedCards.push({
             type: "heading",
-            heading: floor.name,
+            heading: (0,_utils__WEBPACK_IMPORTED_MODULE_5__.getFloorName)(floor),
             heading_style: "subtitle",
             icon: floor.icon ?? "mdi:floor-plan",
             tap_action: floor.floor_id !== "undisclosed" ? (0,_utils__WEBPACK_IMPORTED_MODULE_5__.navigateTo)((0,_utils__WEBPACK_IMPORTED_MODULE_5__.slugify)(floor.name)) : undefined,
@@ -7012,8 +7029,8 @@ async function _HomeView_createAreaSection() {
     }
     groupedCards.push({
         type: "custom:mushroom-template-card",
-        primary: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.entity.button.add-new-area.state.on"),
-        secondary: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.entity.button.add-new-area.state.off"),
+        primary: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.entity.button.add_new_area.state.on"),
+        secondary: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.entity.button.add_new_area.state.off"),
         multiline_secondary: true,
         icon: "mdi:view-dashboard-variant",
         fill_container: true,
@@ -7551,7 +7568,7 @@ class SecurityView {
             let floorCards = [
                 {
                     type: "heading",
-                    heading: floor.name,
+                    heading: (0,_utils__WEBPACK_IMPORTED_MODULE_4__.getFloorName)(floor),
                     heading_style: "title",
                     badges: [],
                     layout_options: {
@@ -7600,7 +7617,7 @@ class SecurityView {
                 // Vertical stack the area cards if it has entities.
                 if (areaCards.length) {
                     const titleCardOptions = {};
-                    titleCardOptions.subtitle = area.name;
+                    titleCardOptions.subtitle = (0,_utils__WEBPACK_IMPORTED_MODULE_4__.getAreaName)(area);
                     titleCardOptions.subtitleIcon = area.icon ?? "mdi:floor-plan";
                     titleCardOptions.navigate = area.slug;
                     if (domain) {

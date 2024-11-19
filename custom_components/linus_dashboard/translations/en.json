@@ -28,14 +28,17 @@
     },
     "entity": {
         "button": {
-            "add-new-area": {
-                "name": "Pre-release",
+            "floor_not_found": {
+                "name": "Floor not found"
+            },
+            "add_new_area": {
+                "name": "Area not found",
                 "state": {
                     "on": "Add a new area",
                     "off": "Click here to go to the areas page"
                 }
             },
-            "settings-chip": {
+            "settings_chip": {
                 "name": "Linus Settings",
                 "state": {
                     "on": "Reload Magic Areas",

@@ -6961,10 +6961,7 @@ async function _HomeView_createAreaSection() {
             icon: floor.icon ?? "mdi:floor-plan",
             tap_action: floor.floor_id !== _variables__WEBPACK_IMPORTED_MODULE_4__.UNDISCLOSED ? (0,_utils__WEBPACK_IMPORTED_MODULE_5__.navigateTo)((0,_utils__WEBPACK_IMPORTED_MODULE_5__.slugify)(floor.name)) : undefined,
         });
-        console.log("floor", floor);
-        console.log("Helper.areas", _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas);
         for (const area of floor.areas_slug.map(area_slug => _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas[area_slug]).values()) {
-            console.log('area', area);
             let module;
             let moduleName = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.areas[area.slug]?.type ??
                 _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.areas["_"]?.type ??

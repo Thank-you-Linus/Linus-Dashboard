@@ -1,6 +1,6 @@
 <div align="center">
   <a href="https://thankyou-linus.com/">
-    <img src="https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/images/screenshots/mongramme-linus-or.png?raw=true" alt="Logo" height="200">
+    <img src="https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/images/mongramme-linus-or.png?raw=true" alt="Logo" height="200">
   </a>
   <h1 align="center">Tableau de bord Linus</h1>
   <p align="center">
@@ -126,7 +126,7 @@ Nous sommes toujours ouverts aux contributions ! Forkez le projet, proposez de
     Visitez <a href="https://thankyou-linus.com/">thankyou-linus.com</a> pour explorer plus en profondeur l'écosystème Linus et découvrir toutes les possibilités.
   </p>
   <a href="https://thankyou-linus.com/" style="text-decoration: none;">
-    <img src="https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/images/screenshots/thank-you-linus.png?raw=true" alt="Visitez thankyou-linus.com" >
+    <img src="https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/images/thank-you-linus.png?raw=true" alt="Visitez thankyou-linus.com" >
   </a>
 </div>
 

@@ -207,7 +207,6 @@ class AreaView {
       if (miscellaneousEntities.length) {
         try {
           const cardModule = await import("../cards/MiscellaneousCard");
-          const controllerCard = new ControllerCard(target, Helper.strategyOptions.domains.default).createCard();
 
           const swipeCard = miscellaneousEntities
             .filter(entity_id => {
@@ -221,7 +220,7 @@ class AreaView {
           viewSections.push({
             type: "grid",
             column_span: 1,
-            cards: [...controllerCard, new SwipeCard(swipeCard).getCard()],
+            cards: [new SwipeCard(swipeCard).getCard()],
           });
         } catch (e) {
           Helper.logError("An error occurred while creating the domain cards!", e);

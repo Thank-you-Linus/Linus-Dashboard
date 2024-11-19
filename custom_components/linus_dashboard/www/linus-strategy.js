@@ -6341,7 +6341,6 @@ class AreaView {
             if (miscellaneousEntities.length) {
                 try {
                     const cardModule = await Promise.resolve(/*! import() */).then(__webpack_require__.bind(__webpack_require__, /*! ../cards/MiscellaneousCard */ "./src/cards/MiscellaneousCard.ts"));
-                    const controllerCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_2__.ControllerCard(target, _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains.default).createCard();
                     const swipeCard = miscellaneousEntities
                         .filter(entity_id => {
                         const entity = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.entities[entity_id];
@@ -6353,7 +6352,7 @@ class AreaView {
                     viewSections.push({
                         type: "grid",
                         column_span: 1,
-                        cards: [...controllerCard, new _cards_SwipeCard__WEBPACK_IMPORTED_MODULE_1__.SwipeCard(swipeCard).getCard()],
+                        cards: [new _cards_SwipeCard__WEBPACK_IMPORTED_MODULE_1__.SwipeCard(swipeCard).getCard()],
                     });
                 }
                 catch (e) {
@@ -7724,10 +7723,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var _variables__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../variables */ "./src/variables.ts");
 /* harmony import */ var _Helper__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../Helper */ "./src/Helper.ts");
-/* harmony import */ var _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../cards/ControllerCard */ "./src/cards/ControllerCard.ts");
-/* harmony import */ var _cards_SwipeCard__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../cards/SwipeCard */ "./src/cards/SwipeCard.ts");
-/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../utils */ "./src/utils.ts");
-
+/* harmony import */ var _cards_SwipeCard__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../cards/SwipeCard */ "./src/cards/SwipeCard.ts");
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../utils */ "./src/utils.ts");
 
 
 
@@ -7816,24 +7813,17 @@ class UnavailableView {
                     && !(entity.entity_category === "config"))
                     .map(entity => new cardModule.MiscellaneousCard(entity).getCard());
                 if (entityCards.length) {
-                    const areaCards = entityCards.length > 2 ? [new _cards_SwipeCard__WEBPACK_IMPORTED_MODULE_3__.SwipeCard(entityCards).getCard()] : entityCards;
-                    const titleCardOptions = {
-                        subtitle: (0,_utils__WEBPACK_IMPORTED_MODULE_4__.getAreaName)(area),
-                        subtitleIcon: area.area_id === _variables__WEBPACK_IMPORTED_MODULE_0__.UNDISCLOSED ? "mdi:help-circle" : area.icon ?? "mdi:floor-plan",
-                        subtitleNavigate: area.slug
-                    };
-                    const areaControllerCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_2__.ControllerCard(target, titleCardOptions).createCard();
-                    floorCards.push(...areaControllerCard, ...areaCards);
+                    const areaCards = entityCards.length > 2 ? [new _cards_SwipeCard__WEBPACK_IMPORTED_MODULE_2__.SwipeCard(entityCards).getCard()] : entityCards;
+                    floorCards.push(...areaCards);
                 }
             }
             if (floorCards.length) {
                 const titleSectionOptions = {
-                    title: (0,_utils__WEBPACK_IMPORTED_MODULE_4__.getFloorName)(floor),
+                    title: (0,_utils__WEBPACK_IMPORTED_MODULE_3__.getFloorName)(floor),
                     titleIcon: floor.icon ?? "mdi:floor-plan",
-                    titleNavigate: (0,_utils__WEBPACK_IMPORTED_MODULE_4__.slugify)(floor.name)
+                    titleNavigate: (0,_utils__WEBPACK_IMPORTED_MODULE_3__.slugify)(floor.name)
                 };
-                const floorControllerCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_2__.ControllerCard({ floor_id: floor.floor_id }, titleSectionOptions).createCard();
-                viewSections.push({ type: "grid", cards: [...floorControllerCard, ...floorCards] });
+                viewSections.push({ type: "grid", cards: floorCards });
             }
         }
         if (viewSections.length) {

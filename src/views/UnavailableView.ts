@@ -105,13 +105,7 @@ class UnavailableView {
 
         if (entityCards.length) {
           const areaCards = entityCards.length > 2 ? [new SwipeCard(entityCards).getCard()] : entityCards;
-          const titleCardOptions = {
-            subtitle: getAreaName(area),
-            subtitleIcon: area.area_id === UNDISCLOSED ? "mdi:help-circle" : area.icon ?? "mdi:floor-plan",
-            subtitleNavigate: area.slug
-          } as any;
-          const areaControllerCard = new ControllerCard(target, titleCardOptions).createCard();
-          floorCards.push(...areaControllerCard, ...areaCards);
+          floorCards.push(...areaCards);
         }
       }
 
@@ -121,8 +115,7 @@ class UnavailableView {
           titleIcon: floor.icon ?? "mdi:floor-plan",
           titleNavigate: slugify(floor.name)
         };
-        const floorControllerCard = new ControllerCard({ floor_id: floor.floor_id }, titleSectionOptions).createCard();
-        viewSections.push({ type: "grid", cards: [...floorControllerCard, ...floorCards] });
+        viewSections.push({ type: "grid", cards: floorCards });
       }
     }
 

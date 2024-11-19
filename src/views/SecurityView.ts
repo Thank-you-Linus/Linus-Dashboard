@@ -197,7 +197,7 @@ abstract class SecurityView {
 
         // Set the target for controller cards to the current area.
         let target: HassServiceTarget = {
-          area_id: [area.area_id],
+          area_id: [area.slug],
         };
 
         let areaCards: LovelaceCardConfig[] = [];

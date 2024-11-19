@@ -5998,7 +5998,7 @@ class AbstractView {
                 const cardModule = await __webpack_require__("./src/cards lazy recursive ^\\.\\/.*$")(`./${className}`);
                 if (entities.length === 0 || !cardModule)
                     continue;
-                let target = { area_id: [area.area_id] };
+                let target = { area_id: [area.slug] };
                 if (area.area_id === _variables__WEBPACK_IMPORTED_MODULE_0__.UNDISCLOSED && __classPrivateFieldGet(this, _AbstractView_domain, "f") === 'light') {
                     target = { entity_id: entities.map(entity => entity.entity_id) };
                 }
@@ -6275,7 +6275,7 @@ class AreaView {
                 cards: [new _cards_ImageAreaCard__WEBPACK_IMPORTED_MODULE_3__.ImageAreaCard(this.area.area_id).getCard()],
             });
         }
-        let target = { area_id: [this.area.area_id] };
+        let target = { area_id: [this.area.slug] };
         for (const domain of exposedDomainIds) {
             if (domain === "default")
                 continue;
@@ -6805,8 +6805,6 @@ class HomeView extends _AbstractView__WEBPACK_IMPORTED_MODULE_1__.AbstractView {
         }
         const chips = [];
         const chipOptions = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.chips;
-        // Create a list of area-ids, used for switching all devices via chips
-        const areaIds = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.orderedAreas.map(area => area.area_id ?? "");
         let chipModule;
         // Weather chip.
         const weatherEntityId = chipOptions?.weather_entity ?? _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.domains.weather[0]?.entity_id;
@@ -7564,7 +7562,7 @@ class SecurityView {
                 }
                 // Set the target for controller cards to the current area.
                 let target = {
-                    area_id: [area.area_id],
+                    area_id: [area.slug],
                 };
                 let areaCards = [];
                 const entityCards = [];
@@ -7808,7 +7806,7 @@ class UnavailableView {
                 const cardModule = await Promise.resolve(/*! import() */).then(__webpack_require__.bind(__webpack_require__, /*! ../cards/MiscellaneousCard */ "./src/cards/MiscellaneousCard.ts"));
                 if (entities.length === 0 || !cardModule)
                     continue;
-                let target = { area_id: [area.area_id] };
+                let target = { area_id: [area.slug] };
                 if (area.area_id === _variables__WEBPACK_IMPORTED_MODULE_0__.UNDISCLOSED) {
                     target = { entity_id: unavailableEntities.map(entity => entity.entity_id) };
                 }

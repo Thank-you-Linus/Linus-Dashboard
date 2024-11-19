@@ -6950,8 +6950,6 @@ async function _HomeView_createAreaSection() {
             heading_style: "title",
         });
     }
-    console.log("floors", _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.floors);
-    console.log("areas", _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas);
     for (const floor of _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.orderedFloors) {
         if (floor.areas_slug.length === 0)
             continue;
@@ -6962,7 +6960,9 @@ async function _HomeView_createAreaSection() {
             icon: floor.icon ?? "mdi:floor-plan",
             tap_action: floor.floor_id !== _variables__WEBPACK_IMPORTED_MODULE_4__.UNDISCLOSED ? (0,_utils__WEBPACK_IMPORTED_MODULE_5__.navigateTo)((0,_utils__WEBPACK_IMPORTED_MODULE_5__.slugify)(floor.name)) : undefined,
         });
+        console.log("floor", floor);
         for (const area of floor.areas_slug.map(area_slug => _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas[area_slug]).values()) {
+            console.log('area', area);
             let module;
             let moduleName = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.areas[area.slug]?.type ??
                 _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.areas["_"]?.type ??

@@ -271,10 +271,6 @@ class HomeView extends AbstractView {
     }
 
 
-    console.log("floors", Helper.floors);
-    console.log("areas", Helper.areas);
-
-
     for (const floor of Helper.orderedFloors) {
       if (floor.areas_slug.length === 0) continue
 
@@ -288,7 +284,12 @@ class HomeView extends AbstractView {
         }
       );
 
+
+      console.log("floor", floor);
+
       for (const area of floor.areas_slug.map(area_slug => Helper.areas[area_slug]).values()) {
+
+        console.log('area', area);
 
         type ModuleType = typeof import("../cards/HomeAreaCard");
 

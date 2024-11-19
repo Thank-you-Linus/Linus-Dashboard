@@ -21,7 +21,7 @@ class SwitchChip extends AbstractChip {
   readonly #defaultConfig: TemplateChipConfig = {
     type: "template",
     icon: "mdi:dip-switch",
-    content: "none",
+    content: "",
     tap_action: {
       action: "navigate",
       navigation_path: "switches",

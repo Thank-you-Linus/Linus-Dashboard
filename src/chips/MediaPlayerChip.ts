@@ -23,7 +23,7 @@ class MediaPlayerChip extends AbstractChip {
   readonly #defaultConfig: TemplateChipConfig = {
     type: "template",
     icon: DOMAIN_ICONS["media_player"],
-    content: "none",
+    content: "",
     tap_action: {
       action: "navigate",
       navigation_path: "media_players",

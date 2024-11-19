@@ -83,16 +83,6 @@ class AreaInformations extends AbstractPopup {
                                     },
                                 ]
                             },
-                            // {
-                            //     type: "horizontal-stack",
-                            //     cards: [
-                            //         {
-                            //             type: "custom:mushroom-chips-card",
-                            //             alignment: "end",
-                            //             chips: currentStateChip(states),
-                            //         },
-                            //     ]
-                            // },
                             ...(!minimalist ? [
                                 {
                                     type: "custom:mushroom-template-card",

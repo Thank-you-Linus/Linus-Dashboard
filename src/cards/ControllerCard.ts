@@ -106,7 +106,6 @@ class ControllerCard {
       if (this.#defaultConfig.showControls) {
         badges.push({
           type: "custom:mushroom-chips-card",
-          alignment: "end",
           chips: [
             {
               type: "template",
@@ -135,7 +134,6 @@ class ControllerCard {
         badges.push(...this.#defaultConfig.extraControls(Helper.magicAreasDevices[areaSlug])?.map((chip: any) => {
           return {
             type: "custom:mushroom-chips-card",
-            alignment: "end",
             chips: [chip]
           }
         }));

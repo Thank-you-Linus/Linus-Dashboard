@@ -138,6 +138,8 @@ abstract class AbstractView {
             titleCardOptions.extraControls = Helper.strategyOptions.domains[this.#domain].extraControls;
           }
           const areaControllerCard = new ControllerCard(target, titleCardOptions, this.#domain).createCard();
+
+          console.log('areaControllerCard', areaControllerCard)
           floorCards.push(...areaControllerCard, ...areaCards);
         }
       }

@@ -98,8 +98,8 @@ class ControllerCard {
 
     if (this.#defaultConfig.showControls || this.#defaultConfig.extraControls) {
       const areaId = Array.isArray(this.#target.area_id) ? this.#target.area_id[0] : this.#target.area_id;
-      const area_slug = Helper.areas[areaId!]?.slug;
-      console.log('area_slug', area_slug)
+      const area_slug = Helper.areas[areaId!]?.slug || "global";
+      console.log('area_slug', this.#domain, area_slug)
       const magicAreasEntity = this.#domain && getMAEntity(area_slug, this.#domain);
 
       const badges: LovelaceBadgeConfig[] = [];

@@ -817,7 +817,7 @@ class Helper {
 
     const formatedValue = Array.isArray(value) ? JSON.stringify(value) : `'${value ?? "on"}'`;
 
-    return `{% set entities = [${states}] %}{{ '${ifReturn}' if entities | selectattr('state','${operator ?? 'eq'}', ${formatedValue}) | list | count > 0 else '${elseReturn ?? 'grey'}' }}`;
+    return `{% set entities = [${states}] %}{{ '${ifReturn ?? 'white'}' if entities | selectattr('state','${operator ?? 'eq'}', ${formatedValue}) | list | count > 0 else '${elseReturn ?? 'grey'}' }}`;
   }
 
   static getBinarySensorColorFromState(device_class: string, operator: string, value: string, ifReturn: string, elseReturn: string, area_slug?: string): string {

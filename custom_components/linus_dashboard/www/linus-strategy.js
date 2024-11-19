@@ -783,7 +783,7 @@ class Helper {
             ifReturn = ifReturn ?? "blue";
         }
         const formatedValue = Array.isArray(value) ? JSON.stringify(value) : `'${value ?? "on"}'`;
-        return `{% set entities = [${states}] %}{{ '${ifReturn}' if entities | selectattr('state','${operator ?? 'eq'}', ${formatedValue}) | list | count > 0 else '${elseReturn ?? 'grey'}' }}`;
+        return `{% set entities = [${states}] %}{{ '${ifReturn ?? 'white'}' if entities | selectattr('state','${operator ?? 'eq'}', ${formatedValue}) | list | count > 0 else '${elseReturn ?? 'grey'}' }}`;
     }
     static getBinarySensorColorFromState(device_class, operator, value, ifReturn, elseReturn, area_slug) {
         const states = [];
@@ -1618,8 +1618,8 @@ class ControllerCard {
         }
         if (__classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").showControls || __classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").extraControls) {
             const areaId = Array.isArray(__classPrivateFieldGet(this, _ControllerCard_target, "f").area_id) ? __classPrivateFieldGet(this, _ControllerCard_target, "f").area_id[0] : __classPrivateFieldGet(this, _ControllerCard_target, "f").area_id;
-            const area_slug = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas[areaId]?.slug;
-            console.log('area_slug', area_slug);
+            const area_slug = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas[areaId]?.slug || "global";
+            console.log('area_slug', __classPrivateFieldGet(this, _ControllerCard_domain, "f"), area_slug);
             const magicAreasEntity = __classPrivateFieldGet(this, _ControllerCard_domain, "f") && (0,_utils__WEBPACK_IMPORTED_MODULE_1__.getMAEntity)(area_slug, __classPrivateFieldGet(this, _ControllerCard_domain, "f"));
             const badges = [];
             const icon = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getDomainColorFromState({ domain: __classPrivateFieldGet(this, _ControllerCard_domain, "f"), ifReturn: __classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").iconOn, elseReturn: __classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").iconOff, area_slug: area_slug });

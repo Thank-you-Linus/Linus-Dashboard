@@ -604,7 +604,7 @@ class Helper {
                 }
             }
         }
-        return `{% set entities = [${states}] %} {{ entities | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | sum / entities | length }} {{ ${states}.attributes.unit_of_measurement }}`;
+        return `{% set entities = [${states}] %} {{ entities | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | sum / entities | length }} {{ ${states[0]}.attributes.unit_of_measurement }}`;
     }
     /**
      * Get device entities from the entity registry, filtered by area and domain.
@@ -4143,6 +4143,8 @@ class UnavailableChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_0__.Abstrac
             elseReturn: "green",
             area_slug: options?.area_slug
         });
+        console.log("this.#defaultConfig.icon   ", __classPrivateFieldGet(this, _UnavailableChip_defaultConfig, "f").icon);
+        console.log("this.#defaultConfig.icon_color   ", __classPrivateFieldGet(this, _UnavailableChip_defaultConfig, "f").icon_color);
         __classPrivateFieldGet(this, _UnavailableChip_defaultConfig, "f").tap_action = (0,_utils__WEBPACK_IMPORTED_MODULE_1__.navigateTo)("unavailable");
         this.config = Object.assign(this.config, __classPrivateFieldGet(this, _UnavailableChip_defaultConfig, "f"));
     }

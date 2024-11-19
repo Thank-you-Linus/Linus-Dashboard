@@ -46,6 +46,7 @@ class UnavailableChip extends AbstractChip {
             area_slug: options?.area_slug
         });
 
+
         this.#defaultConfig.icon_color = Helper.getDomainColorFromState({
             domain: "all",
             operator: "in",
@@ -54,6 +55,8 @@ class UnavailableChip extends AbstractChip {
             elseReturn: "green",
             area_slug: options?.area_slug
         });
+        console.log("this.#defaultConfig.icon   ", this.#defaultConfig.icon)
+        console.log("this.#defaultConfig.icon_color   ", this.#defaultConfig.icon_color)
 
         this.#defaultConfig.tap_action = navigateTo("unavailable")
 

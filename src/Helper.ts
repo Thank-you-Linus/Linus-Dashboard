@@ -588,8 +588,7 @@ class Helper {
       }
     }
 
-
-    return `{% set entities = [${states}] %} {{ entities | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | sum / entities | length }} {{ ${states}.attributes.unit_of_measurement }}`;
+    return `{% set entities = [${states}] %} {{ entities | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | sum / entities | length }} {{ ${states[0]}.attributes.unit_of_measurement }}`;
   }
 
   /**

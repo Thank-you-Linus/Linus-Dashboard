@@ -4345,6 +4345,7 @@ const configurationDefaults = {
                 ];
             },
             onService: "scene.turn_on",
+            offService: "scene.turn_off",
             hidden: false,
             order: 5
         },

@@ -286,6 +286,7 @@ class HomeView extends AbstractView {
 
 
       console.log("floor", floor);
+      console.log("Helper.areas", Helper.areas);
 
       for (const area of floor.areas_slug.map(area_slug => Helper.areas[area_slug]).values()) {
 

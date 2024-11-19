@@ -1,6 +1,6 @@
 <div align="center">
   <a href="https://thankyou-linus.com/">
-    <img src="https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/images/screenshots/mongramme-linus-or.png?raw=true" alt="Logo" height="200">
+    <img src="https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/images/mongramme-linus-or.png?raw=true" alt="Logo" height="200">
   </a>
   <h1 align="center">Linus Dashboard</h1>
   <p align="center">
@@ -63,23 +63,33 @@
 
 ### 🏠 **Home Page**
 Interactive cards allow you to control lighting, climate, and more for each room.
-![Home Page](https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/images/screenshots/home-page-example.png)
+<div align="center">
+  <img src="https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/images/screenshots/home-page-example.png" alt="Home Page" width="50%">
+</div>
 
 ### 🛋️ **Room Pages**
 Detailed views of devices in each room for better control and management.
-![Room Page](https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/images/screenshots/room-page-example.png)
+<div align="center">
+  <img src="https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/images/screenshots/room-page-example.png" alt="Room Page" width="50%">
+</div>
 
 ### 📟 **Device Category Pages**
 Overview of devices grouped by categories, such as lights, sensors, or switches.
-![Lights Overview](https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/images/screenshots/lights-page-example.png)
+<div align="center">
+  <img src="https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/images/screenshots/lights-page-example.png" alt="Lights Overview" width="50%">
+</div>
 
 ### 🔒 **Security Page**
 Keep an eye on security devices such as alarms, cameras, and motion sensors. Check their real-time status and interact quickly in case of any issues.
-![Security Page](https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/images/screenshots/security-page-example.png)
+<div align="center">
+  <img src="https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/images/screenshots/security-page-example.png" alt="Security Page" width="50%">
+</div>
 
 ### ⚠️ **Offline Devices Page**
 Quickly identify and troubleshoot unavailable devices.
-![Offline Devices](https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/images/screenshots/offline-page-example.png)
+<div align="center">
+  <img src="https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/images/screenshots/offline-page-example.png" alt="Offline Devices" width="50%">
+</div>
 
 ---
 
@@ -139,6 +149,6 @@ We’re always open to contributions! Fork the project, submit improvements, or 
     Visit <a href="https://thankyou-linus.com/">thankyou-linus.com</a> to dive deeper into the Linus ecosystem and discover all the possibilities.
   </p>
   <a href="https://thankyou-linus.com/" style="text-decoration: none;">
-    <img src="https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/images/screenshots/thank-you-linus.png?raw=true" alt="Visit thankyou-linus.com" >
+    <img src="https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/images/thank-you-linus.png?raw=true" alt="Visit thankyou-linus.com" >
   </a>
 </div>

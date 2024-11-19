@@ -271,6 +271,10 @@ class HomeView extends AbstractView {
     }
 
 
+    console.log("floors", Helper.floors);
+    console.log("areas", Helper.areas);
+
+
     for (const floor of Helper.orderedFloors) {
       if (floor.areas_slug.length === 0) continue
 

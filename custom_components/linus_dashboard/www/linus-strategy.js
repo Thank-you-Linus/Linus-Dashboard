@@ -6950,6 +6950,8 @@ async function _HomeView_createAreaSection() {
             heading_style: "title",
         });
     }
+    console.log("floors", _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.floors);
+    console.log("areas", _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas);
     for (const floor of _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.orderedFloors) {
         if (floor.areas_slug.length === 0)
             continue;

@@ -507,7 +507,7 @@ class Helper {
                 }
             }
         }
-        return `{% set entities = [${states}] %} {{ entities | selectattr('state','${operator}',${Array.isArray(value) ? JSON.stringify(value) : `'${value}'`}) | list | count }}`;
+        return `{% set entities = [${states}] %}{{ entities | selectattr('state','${operator}',${Array.isArray(value) ? JSON.stringify(value) : `'${value}'`}) | list | count }}`;
     }
     /**
      * Get a template string to define the number of a given device_class's entities with a certain state.
@@ -557,7 +557,7 @@ class Helper {
                 }
             }
         }
-        return `{% set entities = [${states}] %} {{ entities | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | selectattr('state','${operator}','${value}') | list | count }}`;
+        return `{% set entities = [${states}] %}{{ entities | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | selectattr('state','${operator}','${value}') | list | count }}`;
     }
     /**
      * Get a template string to define the average state of sensor entities with a given device class.
@@ -604,7 +604,7 @@ class Helper {
                 }
             }
         }
-        return `{% set entities = [${states}] %} {{ (entities | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | sum / entities | length) | round(1) }} {{ ${states[0]}.attributes.unit_of_measurement }}`;
+        return `{% set entities = [${states}] %}{{ (entities | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | sum / entities | length) | round(1) }} {{ ${states[0]}.attributes.unit_of_measurement }}`;
     }
     /**
      * Get device entities from the entity registry, filtered by area and domain.
@@ -783,7 +783,7 @@ class Helper {
             ifReturn = ifReturn ?? "blue";
         }
         const formatedValue = Array.isArray(value) ? JSON.stringify(value) : `'${value ?? "on"}'`;
-        return `{% set entities = [${states}] %} {{ '${ifReturn}' if entities | selectattr('state','${operator ?? 'eq'}', ${formatedValue}) | list | count > 0 else '${elseReturn ?? "grey"}' }}`;
+        return `{% set entities = [${states}] %}{{ '${ifReturn}' if entities | selectattr('state','${operator ?? 'eq'}', ${formatedValue}) | list | count > 0 else '${elseReturn ?? "grey"}' }}`;
     }
     static getBinarySensorColorFromState(device_class, operator, value, ifReturn, elseReturn, area_slug) {
         const states = [];

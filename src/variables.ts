@@ -117,3 +117,9 @@ export const AREA_STATE_ICONS = {
   sleep: "mdi:bed",
 };
 
+export const AREA_CONTROL_ICONS = {
+  light: "mdi:lightbulb-auto-outline",
+  climate: "mdi:thermostat-auto",
+  media_player: "mdi:auto-mode",
+};
+

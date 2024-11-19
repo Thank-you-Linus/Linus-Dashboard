@@ -1,5 +1,6 @@
 import { AbstractChip } from "./AbstractChip";
-import { EntityChipConfig, TemplateChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
+import { TemplateChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
+import { AREA_CONTROL_ICONS } from "../variables";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**
@@ -11,39 +12,20 @@ class ControlChip extends AbstractChip {
   /**
    * Default configuration of the chip.
    *
-   * @type {EntityChipConfig}
+   * @type {TemplateChipConfig}
    *
    * @readonly
    * @private
    */
-  readonly #defaultConfig: EntityChipConfig = {
-    type: "entity",
+  readonly #defaultConfig: TemplateChipConfig = {
+    type: "template",
     entity: undefined,
-    content_info: "none",
-    // icon_color: "{% if is_state('switch.magic_areas_climate_groups_salon_climate_control', 'on') %}green{% else %}red{% endif %}",
-    icon_color: `
-      {% if states('switch.magic_areas_climate_groups_salon_climate_control') === 'off' %}
-        green
-      {% else %}
-        blue
-      {% endif %}
-    `,
+    content: "",
+    icon: AREA_CONTROL_ICONS.media_player,
+    icon_color: "green",
     tap_action: {
       action: "more-info"
     },
-
-    // card_mod: {
-    //   style: `
-    //     ha-card {
-    //       {% if states('switch.magic_areas_climate_groups_salon_climate_control') == 'on' %}
-    //         --card-mod-icon-color: blue;
-    //       {% else %}
-    //         --card-mod-icon-color: green;
-    //       {% endif %}
-    //     }
-    //   `
-    // }
-
   };
 
   /**
@@ -51,10 +33,13 @@ class ControlChip extends AbstractChip {
    *
    * @param {chips.TemplateChipOptions} options The chip options.
    */
-  constructor(entity_id: string) {
+  constructor(domain: string, entity_id: string) {
     super();
 
     this.#defaultConfig.entity = entity_id
+    this.#defaultConfig.icon = AREA_CONTROL_ICONS[domain as "media_player"]
+    this.#defaultConfig.icon_color = `{{ "green" if states("${entity_id}") == "on" else "red" }}`;
+
     this.config = Object.assign(this.config, this.#defaultConfig);
 
   }

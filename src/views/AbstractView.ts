@@ -115,7 +115,7 @@ abstract class AbstractView {
         if (entities.length === 0 || !cardModule) continue;
 
         let target: HassServiceTarget = { area_id: [area.slug] };
-        if (area.area_id === UNDISCLOSED && this.#domain === 'light') {
+        if (area.area_id === UNDISCLOSED) {
           target = { entity_id: entities.map(entity => entity.entity_id) };
         }
 
@@ -155,6 +155,7 @@ abstract class AbstractView {
           titleSectionOptions.extraControls = Helper.strategyOptions.domains[this.#domain].extraControls;
         }
         const floorControllerCard = new ControllerCard({ floor_id: floor.floor_id }, titleSectionOptions, this.#domain).createCard();
+        console.log('floorControllerCard', floorControllerCard)
         viewSections.push({ type: "grid", cards: [...floorControllerCard, ...floorCards] });
       }
     }

@@ -97,9 +97,9 @@ class ControllerCard {
     }
 
     if (this.#defaultConfig.showControls || this.#defaultConfig.extraControls) {
-      const areaId = Array.isArray(this.#target.area_id) ? this.#target.area_id[0] : this.#target.area_id;
+      const floor_areas_ids = this.#target.floor_id && Helper.floors[this.#target.floor_id[0]]?.areas_slug.map(area_slug => Helper.areas[area_slug].area_id);
+      const areaId = this.#target.floor_id ?? Array.isArray(this.#target.area_id) ? this.#target.area_id?.[0] : this.#target.area_id;
       const area_slug = Helper.areas[areaId!]?.slug || "global";
-      console.log('area_slug', this.#domain, area_slug)
       const magicAreasEntity = this.#domain && getMAEntity(area_slug, this.#domain);
 
       const badges: LovelaceBadgeConfig[] = [];
@@ -107,8 +107,11 @@ class ControllerCard {
       const icon = Helper.getDomainColorFromState({ domain: this.#domain!, ifReturn: this.#defaultConfig.iconOn, elseReturn: this.#defaultConfig.iconOff, area_slug: area_slug })
       const icon_color = Helper.getDomainColorFromState({ domain: this.#domain!, area_slug: area_slug })
 
+      console.log('areaId', areaId)
+      console.log('area_slug', this.#domain, area_slug)
       console.log('icon', icon)
       console.log('icon_color', icon_color)
+      console.log('magicAreasEntity', magicAreasEntity)
 
       if (this.#defaultConfig.showControls) {
         badges.push({
@@ -124,7 +127,7 @@ class ControllerCard {
               } : {
                 action: "call-service",
                 service: this.#defaultConfig.toggleService ?? this.#defaultConfig.offService,
-                target: this.#target,
+                target: this.#target.floor_id ? floor_areas_ids : this.#target,
                 data: {},
               },
               ...(magicAreasEntity ? {

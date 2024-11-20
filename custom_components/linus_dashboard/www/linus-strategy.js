@@ -1617,15 +1617,18 @@ class ControllerCard {
             });
         }
         if (__classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").showControls || __classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").extraControls) {
-            const areaId = Array.isArray(__classPrivateFieldGet(this, _ControllerCard_target, "f").area_id) ? __classPrivateFieldGet(this, _ControllerCard_target, "f").area_id[0] : __classPrivateFieldGet(this, _ControllerCard_target, "f").area_id;
+            const floor_areas_ids = __classPrivateFieldGet(this, _ControllerCard_target, "f").floor_id && _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.floors[__classPrivateFieldGet(this, _ControllerCard_target, "f").floor_id[0]]?.areas_slug.map(area_slug => _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas[area_slug].area_id);
+            const areaId = (__classPrivateFieldGet(this, _ControllerCard_target, "f").floor_id ?? Array.isArray(__classPrivateFieldGet(this, _ControllerCard_target, "f").area_id)) ? __classPrivateFieldGet(this, _ControllerCard_target, "f").area_id?.[0] : __classPrivateFieldGet(this, _ControllerCard_target, "f").area_id;
             const area_slug = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas[areaId]?.slug || "global";
-            console.log('area_slug', __classPrivateFieldGet(this, _ControllerCard_domain, "f"), area_slug);
             const magicAreasEntity = __classPrivateFieldGet(this, _ControllerCard_domain, "f") && (0,_utils__WEBPACK_IMPORTED_MODULE_1__.getMAEntity)(area_slug, __classPrivateFieldGet(this, _ControllerCard_domain, "f"));
             const badges = [];
             const icon = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getDomainColorFromState({ domain: __classPrivateFieldGet(this, _ControllerCard_domain, "f"), ifReturn: __classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").iconOn, elseReturn: __classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").iconOff, area_slug: area_slug });
             const icon_color = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getDomainColorFromState({ domain: __classPrivateFieldGet(this, _ControllerCard_domain, "f"), area_slug: area_slug });
+            console.log('areaId', areaId);
+            console.log('area_slug', __classPrivateFieldGet(this, _ControllerCard_domain, "f"), area_slug);
             console.log('icon', icon);
             console.log('icon_color', icon_color);
+            console.log('magicAreasEntity', magicAreasEntity);
             if (__classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").showControls) {
                 badges.push({
                     type: "custom:mushroom-chips-card",
@@ -1640,7 +1643,7 @@ class ControllerCard {
                             } : {
                                 action: "call-service",
                                 service: __classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").toggleService ?? __classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").offService,
-                                target: __classPrivateFieldGet(this, _ControllerCard_target, "f"),
+                                target: __classPrivateFieldGet(this, _ControllerCard_target, "f").floor_id ? floor_areas_ids : __classPrivateFieldGet(this, _ControllerCard_target, "f"),
                                 data: {},
                             },
                             ...(magicAreasEntity ? {
@@ -6001,7 +6004,7 @@ class AbstractView {
                 if (entities.length === 0 || !cardModule)
                     continue;
                 let target = { area_id: [area.slug] };
-                if (area.area_id === _variables__WEBPACK_IMPORTED_MODULE_0__.UNDISCLOSED && __classPrivateFieldGet(this, _AbstractView_domain, "f") === 'light') {
+                if (area.area_id === _variables__WEBPACK_IMPORTED_MODULE_0__.UNDISCLOSED) {
                     target = { entity_id: entities.map(entity => entity.entity_id) };
                 }
                 const entityCards = entities
@@ -6037,6 +6040,7 @@ class AbstractView {
                     titleSectionOptions.extraControls = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.strategyOptions.domains[__classPrivateFieldGet(this, _AbstractView_domain, "f")].extraControls;
                 }
                 const floorControllerCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_2__.ControllerCard({ floor_id: floor.floor_id }, titleSectionOptions, __classPrivateFieldGet(this, _AbstractView_domain, "f")).createCard();
+                console.log('floorControllerCard', floorControllerCard);
                 viewSections.push({ type: "grid", cards: [...floorControllerCard, ...floorCards] });
             }
         }
@@ -6269,7 +6273,7 @@ class AreaView {
         const viewSections = [];
         const exposedDomainIds = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getExposedDomainIds();
         // Create global section card if area is not undisclosed
-        if (this.area.area_id !== _variables__WEBPACK_IMPORTED_MODULE_4__.UNDISCLOSED) {
+        if (this.area.area_id !== _variables__WEBPACK_IMPORTED_MODULE_4__.UNDISCLOSED && this.area.picture) {
             viewSections.push({
                 type: "grid",
                 column_span: 1,

@@ -147,7 +147,7 @@ class HomeView extends AbstractView {
     return await Promise.all([
       this.#createPersonCards(),
       this.#createAreaSection(),
-    ]).then(([personCards, areaCards]) => {
+    ]).then(([personCards, areaSections]) => {
       const options = Helper.strategyOptions;
       const firstSection: LovelaceGridCardConfig = {
         type: "grid",
@@ -204,14 +204,9 @@ class HomeView extends AbstractView {
         firstSection.cards.push(...options.extra_cards);
       }
 
-      // Add area cards.
-      const secondSection: LovelaceGridCardConfig = {
-        type: "grid",
-        column_span: 1,
-        cards: areaCards,
-      };
+      console.log('COUCOU ', [firstSection, ...areaSections])
 
-      return [firstSection, secondSection];
+      return [firstSection, ...areaSections];
     });
   }
 
@@ -246,32 +241,38 @@ class HomeView extends AbstractView {
    *
    * Area cards are grouped into two areas per row.
    *
-   * @return {Promise<(TitleCardConfig | StackCardConfig)[]>} Promise an Area Card Section.
+   * @return {Promise<LovelaceGridCardConfig[]>} Promise an Area Card Section.
    */
-  async #createAreaSection(): Promise<(TitleCardConfig | StackCardConfig)[]> {
+  async #createAreaSection(): Promise<LovelaceGridCardConfig[]> {
     if (Helper.strategyOptions.home_view.hidden.includes("areas")) {
       // Areas section is hidden.
 
       return [];
     }
 
-    const groupedCards: (TitleCardConfig | StackCardConfig)[] = [];
-
-    if (!Helper.strategyOptions.home_view.hidden.includes("areasTitle")) {
-      groupedCards.push(
-        {
-          type: "heading",
-          heading: `${Helper.localize("ui.components.area-picker.area")}s`,
-          heading_style: "title",
-        },
-      );
-    }
-
+    const groupedSections: LovelaceGridCardConfig[] = [];
+    let isFirstLoop = true;
 
     for (const floor of Helper.orderedFloors) {
       if (floor.areas_slug.length === 0) continue
 
-      groupedCards.push(
+      let floorSection = {
+        type: "grid",
+        column_span: 1,
+        cards: [],
+      } as LovelaceGridCardConfig;
+
+      if (isFirstLoop && !Helper.strategyOptions.home_view.hidden.includes("areasTitle")) {
+        floorSection.cards.push({
+          type: "heading",
+          heading: `${Helper.localize("ui.components.area-picker.area")}s`,
+          heading_style: "title",
+        });
+
+        isFirstLoop = false;
+      }
+
+      floorSection.cards.push(
         {
           type: "heading",
           heading: getFloorName(floor),
@@ -311,7 +312,7 @@ class HomeView extends AbstractView {
             area_slug: area.slug,
           };
 
-          groupedCards.push({
+          floorSection.cards.push({
             ...new module.HomeAreaCard(options).getCard(),
             layout_options: {
               grid_columns: 2
@@ -319,26 +320,32 @@ class HomeView extends AbstractView {
           });
         }
       }
+
+      groupedSections.push(floorSection);
     }
 
-    groupedCards.push({
-      type: "custom:mushroom-template-card",
-      primary: Helper.localize("component.linus_dashboard.entity.button.add_new_area.state.on"),
-      secondary: Helper.localize("component.linus_dashboard.entity.button.add_new_area.state.off"),
-      multiline_secondary: true,
-      icon: "mdi:view-dashboard-variant",
-      fill_container: true,
-      layout_options: {
-        grid_columns: 4,
-        grid_rows: 1,
-      },
-      tap_action: {
-        action: "navigate",
-        navigation_path: "/config/areas/dashboard",
-      },
-    } as any);
+    groupedSections.push({
+      type: "grid",
+      column_span: 1,
+      cards: [{
+        type: "custom:mushroom-template-card",
+        primary: Helper.localize("component.linus_dashboard.entity.button.add_new_area.state.on"),
+        secondary: Helper.localize("component.linus_dashboard.entity.button.add_new_area.state.off"),
+        multiline_secondary: true,
+        icon: "mdi:view-dashboard-variant",
+        fill_container: true,
+        layout_options: {
+          grid_columns: 4,
+          grid_rows: 1,
+        },
+        tap_action: {
+          action: "navigate",
+          navigation_path: "/config/areas/dashboard",
+        },
+      } as any],
+    })
 
-    return groupedCards;
+    return groupedSections;
   }
 }
 

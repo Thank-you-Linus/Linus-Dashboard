@@ -123,7 +123,7 @@ class AreaView {
     const exposedDomainIds = Helper.getExposedDomainIds();
 
     // Create global section card if area is not undisclosed
-    if (this.area.area_id !== UNDISCLOSED) {
+    if (this.area.area_id !== UNDISCLOSED && this.area.picture) {
       viewSections.push({
         type: "grid",
         column_span: 1,

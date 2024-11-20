@@ -5993,6 +5993,7 @@ class AbstractView {
         const viewSections = [];
         const configEntityHidden = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.strategyOptions.domains[__classPrivateFieldGet(this, _AbstractView_domain, "f") ?? "_"].hide_config_entities
             || _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.strategyOptions.domains["_"].hide_config_entities;
+        let isFirstLoop = true;
         for (const floor of _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.orderedFloors) {
             if (floor.areas_slug.length === 0 || !_variables__WEBPACK_IMPORTED_MODULE_0__.AREA_CARDS_DOMAINS.includes(__classPrivateFieldGet(this, _AbstractView_domain, "f") ?? ""))
                 continue;
@@ -6040,12 +6041,15 @@ class AbstractView {
                     titleSectionOptions.extraControls = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.strategyOptions.domains[__classPrivateFieldGet(this, _AbstractView_domain, "f")].extraControls;
                 }
                 const floorControllerCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_2__.ControllerCard({ floor_id: floor.floor_id }, titleSectionOptions, __classPrivateFieldGet(this, _AbstractView_domain, "f")).createCard();
-                console.log('floorControllerCard', floorControllerCard);
-                viewSections.push({ type: "grid", cards: [...floorControllerCard, ...floorCards] });
+                const section = { type: "grid", cards: [] };
+                if (isFirstLoop) {
+                    section.cards.push(...this.viewControllerCard);
+                    isFirstLoop = false;
+                }
+                section.cards.push(...floorControllerCard);
+                section.cards.push(...floorCards);
+                viewSections.push(section);
             }
-        }
-        if (viewSections.length) {
-            viewSections.unshift({ type: "grid", cards: this.viewControllerCard });
         }
         return viewSections;
     }
@@ -6867,7 +6871,7 @@ class HomeView extends _AbstractView__WEBPACK_IMPORTED_MODULE_1__.AbstractView {
         return await Promise.all([
             __classPrivateFieldGet(this, _HomeView_instances, "m", _HomeView_createPersonCards).call(this),
             __classPrivateFieldGet(this, _HomeView_instances, "m", _HomeView_createAreaSection).call(this),
-        ]).then(([personCards, areaCards]) => {
+        ]).then(([personCards, areaSections]) => {
             const options = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions;
             const firstSection = {
                 type: "grid",
@@ -6917,13 +6921,8 @@ class HomeView extends _AbstractView__WEBPACK_IMPORTED_MODULE_1__.AbstractView {
             if (options.extra_cards) {
                 firstSection.cards.push(...options.extra_cards);
             }
-            // Add area cards.
-            const secondSection = {
-                type: "grid",
-                column_span: 1,
-                cards: areaCards,
-            };
-            return [firstSection, secondSection];
+            console.log('COUCOU ', [firstSection, ...areaSections]);
+            return [firstSection, ...areaSections];
         });
     }
 }
@@ -6948,25 +6947,32 @@ _HomeView_defaultConfig = new WeakMap(), _HomeView_instances = new WeakSet(), _H
  *
  * Area cards are grouped into two areas per row.
  *
- * @return {Promise<(TitleCardConfig | StackCardConfig)[]>} Promise an Area Card Section.
+ * @return {Promise<LovelaceGridCardConfig[]>} Promise an Area Card Section.
  */
 async function _HomeView_createAreaSection() {
     if (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.home_view.hidden.includes("areas")) {
         // Areas section is hidden.
         return [];
     }
-    const groupedCards = [];
-    if (!_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.home_view.hidden.includes("areasTitle")) {
-        groupedCards.push({
-            type: "heading",
-            heading: `${_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("ui.components.area-picker.area")}s`,
-            heading_style: "title",
-        });
-    }
+    const groupedSections = [];
+    let isFirstLoop = true;
     for (const floor of _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.orderedFloors) {
         if (floor.areas_slug.length === 0)
             continue;
-        groupedCards.push({
+        let floorSection = {
+            type: "grid",
+            column_span: 1,
+            cards: [],
+        };
+        if (isFirstLoop && !_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.home_view.hidden.includes("areasTitle")) {
+            floorSection.cards.push({
+                type: "heading",
+                heading: `${_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("ui.components.area-picker.area")}s`,
+                heading_style: "title",
+            });
+            isFirstLoop = false;
+        }
+        floorSection.cards.push({
             type: "heading",
             heading: (0,_utils__WEBPACK_IMPORTED_MODULE_5__.getFloorName)(floor),
             heading_style: "subtitle",
@@ -6996,7 +7002,7 @@ async function _HomeView_createAreaSection() {
                     ..._Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.areas[area.slug],
                     area_slug: area.slug,
                 };
-                groupedCards.push({
+                floorSection.cards.push({
                     ...new module.HomeAreaCard(options).getCard(),
                     layout_options: {
                         grid_columns: 2
@@ -7004,24 +7010,29 @@ async function _HomeView_createAreaSection() {
                 });
             }
         }
+        groupedSections.push(floorSection);
     }
-    groupedCards.push({
-        type: "custom:mushroom-template-card",
-        primary: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.entity.button.add_new_area.state.on"),
-        secondary: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.entity.button.add_new_area.state.off"),
-        multiline_secondary: true,
-        icon: "mdi:view-dashboard-variant",
-        fill_container: true,
-        layout_options: {
-            grid_columns: 4,
-            grid_rows: 1,
-        },
-        tap_action: {
-            action: "navigate",
-            navigation_path: "/config/areas/dashboard",
-        },
+    groupedSections.push({
+        type: "grid",
+        column_span: 1,
+        cards: [{
+                type: "custom:mushroom-template-card",
+                primary: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.entity.button.add_new_area.state.on"),
+                secondary: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.entity.button.add_new_area.state.off"),
+                multiline_secondary: true,
+                icon: "mdi:view-dashboard-variant",
+                fill_container: true,
+                layout_options: {
+                    grid_columns: 4,
+                    grid_rows: 1,
+                },
+                tap_action: {
+                    action: "navigate",
+                    navigation_path: "/config/areas/dashboard",
+                },
+            }],
     });
-    return groupedCards;
+    return groupedSections;
 };
 
 

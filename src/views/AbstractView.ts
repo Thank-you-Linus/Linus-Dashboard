@@ -101,6 +101,7 @@ abstract class AbstractView {
     const viewSections: LovelaceGridCardConfig[] = [];
     const configEntityHidden = Helper.strategyOptions.domains[this.#domain ?? "_"].hide_config_entities
       || Helper.strategyOptions.domains["_"].hide_config_entities;
+    let isFirstLoop = true;
 
     for (const floor of Helper.orderedFloors) {
       if (floor.areas_slug.length === 0 || !AREA_CARDS_DOMAINS.includes(this.#domain ?? "")) continue;
@@ -155,14 +156,19 @@ abstract class AbstractView {
           titleSectionOptions.extraControls = Helper.strategyOptions.domains[this.#domain].extraControls;
         }
         const floorControllerCard = new ControllerCard({ floor_id: floor.floor_id }, titleSectionOptions, this.#domain).createCard();
-        console.log('floorControllerCard', floorControllerCard)
-        viewSections.push({ type: "grid", cards: [...floorControllerCard, ...floorCards] });
+
+        const section = { type: "grid", cards: [] } as LovelaceGridCardConfig;
+        if (isFirstLoop) {
+          section.cards.push(...this.viewControllerCard);
+          isFirstLoop = false;
+        }
+
+        section.cards.push(...floorControllerCard);
+        section.cards.push(...floorCards);
+        viewSections.push(section);
       }
     }
 
-    if (viewSections.length) {
-      viewSections.unshift({ type: "grid", cards: this.viewControllerCard });
-    }
 
     return viewSections;
   }

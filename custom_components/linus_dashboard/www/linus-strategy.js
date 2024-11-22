@@ -1635,7 +1635,6 @@ class ControllerCard {
             const badges = [];
             const icon = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getFromDomainState({ domain: __classPrivateFieldGet(this, _ControllerCard_domain, "f"), ifReturn: __classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").iconOn, elseReturn: __classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").iconOff, area_slug: __classPrivateFieldGet(this, _ControllerCard_target, "f").area_id });
             const icon_color = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getFromDomainState({ domain: __classPrivateFieldGet(this, _ControllerCard_domain, "f"), area_slug: __classPrivateFieldGet(this, _ControllerCard_target, "f").area_id });
-            console.log('domain', __classPrivateFieldGet(this, _ControllerCard_domain, "f"), __classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").showControls);
             if (__classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").showControls) {
                 badges.push({
                     type: "custom:mushroom-chips-card",
@@ -1674,7 +1673,6 @@ class ControllerCard {
                 cards[0].badges = badges;
             }
         }
-        console.log('cards', cards);
         return cards;
     }
 }
@@ -4150,7 +4148,6 @@ class UnavailableChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_0__.Abstrac
         });
         __classPrivateFieldGet(this, _UnavailableChip_defaultConfig, "f").tap_action = (0,_utils__WEBPACK_IMPORTED_MODULE_1__.navigateTo)("unavailable");
         this.config = Object.assign(this.config, __classPrivateFieldGet(this, _UnavailableChip_defaultConfig, "f"));
-        console.log('UnavailableChip', this.config);
     }
 }
 _UnavailableChip_defaultConfig = new WeakMap();
@@ -5655,7 +5652,6 @@ function getAggregateEntity(device, domains, device_classes) {
 }
 function getMAEntity(area_slug, domain, device_class) {
     const magicAreaDevice = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices[area_slug];
-    console.log('getMAEntity ', area_slug, magicAreaDevice);
     // TODO remove '' when new release
     if (domain === _variables__WEBPACK_IMPORTED_MODULE_1__.MAGIC_AREAS_LIGHT_DOMAINS)
         return magicAreaDevice?.entities?.[''] ?? magicAreaDevice?.entities?.['all_lights'];

@@ -59,8 +59,6 @@ class UnavailableChip extends AbstractChip {
         this.#defaultConfig.tap_action = navigateTo("unavailable")
 
         this.config = Object.assign(this.config, this.#defaultConfig);
-
-        console.log('UnavailableChip', this.config)
     }
 }
 

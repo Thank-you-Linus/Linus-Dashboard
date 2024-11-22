@@ -115,8 +115,6 @@ class ControllerCard {
       const icon = Helper.getFromDomainState({ domain: this.#domain!, ifReturn: this.#defaultConfig.iconOn, elseReturn: this.#defaultConfig.iconOff, area_slug: this.#target.area_id })
       const icon_color = Helper.getFromDomainState({ domain: this.#domain!, area_slug: this.#target.area_id })
 
-      console.log('domain', this.#domain, this.#defaultConfig.showControls)
-
       if (this.#defaultConfig.showControls) {
         badges.push({
           type: "custom:mushroom-chips-card",
@@ -157,8 +155,6 @@ class ControllerCard {
         cards[0].badges = badges;
       }
     }
-
-    console.log('cards', cards)
 
     return cards;
   }

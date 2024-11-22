@@ -37,7 +37,11 @@ export function slugify(text: string | null, separator: string = "_"): string {
     if (text === "" || text === null) {
         return "";
     }
-    const slug = text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, separator);
+    const slug = text.toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/\s+/g, separator)
+        .replace(/-/g, "_");
     return slug === "" ? "unknown" : slug;
 }
 

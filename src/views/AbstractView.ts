@@ -108,8 +108,8 @@ abstract class AbstractView {
 
       const floorCards = [];
 
-      for (const area of floor.areas_slug.map(area_slug => Helper.areas[area_slug]).values()) {
-        const entities = Helper.getAreaEntities(area, this.#device_class ?? this.#domain ?? "");
+      for (const area of floor.areas_slug.map(area_slug => Helper.areas[area_slug])) {
+        const entities = Helper.getAreaEntities(area, this.#device_class ?? this.#domain);
         const className = Helper.sanitizeClassName(this.#domain + "Card");
         const cardModule = await import(`../cards/${className}`);
 

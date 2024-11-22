@@ -444,7 +444,7 @@ class Helper {
         __classPrivateFieldGet(this, _a, "f", _Helper_strategyOptions).domains = Object.fromEntries(Object.entries(__classPrivateFieldGet(this, _a, "f", _Helper_strategyOptions).domains).sort(([, a], [, b]) => {
             return (a.order ?? Infinity) - (b.order ?? Infinity) || (a.title ?? "undefined").localeCompare(b.title ?? "undefined");
         }));
-        console.log('this.#areas', __classPrivateFieldGet(this, _a, "f", _Helper_areas));
+        console.log('this.#areas', __classPrivateFieldGet(this, _a, "f", _Helper_areas), __classPrivateFieldGet(this, _a, "f", _Helper_magicAreasDevices));
         __classPrivateFieldSet(this, _a, true, "f", _Helper_initialized);
     }
     /**
@@ -1585,7 +1585,6 @@ class ControllerCard {
         __classPrivateFieldSet(this, _ControllerCard_magic_entity_id, magic_entity_id, "f");
         __classPrivateFieldSet(this, _ControllerCard_defaultConfig, {
             ...__classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f"),
-            ..._Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain],
             ...options,
         }, "f");
     }
@@ -5643,6 +5642,7 @@ function getAggregateEntity(device, domains, device_classes) {
 }
 function getMAEntity(area_slug, domain, device_class) {
     const magicAreaDevice = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices[area_slug];
+    console.log('getMAEntity ', area_slug, magicAreaDevice);
     // TODO remove '' when new release
     if (domain === _variables__WEBPACK_IMPORTED_MODULE_1__.MAGIC_AREAS_LIGHT_DOMAINS)
         return magicAreaDevice?.entities?.[''] ?? magicAreaDevice?.entities?.['all_lights'];
@@ -6294,6 +6294,10 @@ class AreaView {
                         subtitleIcon: _variables__WEBPACK_IMPORTED_MODULE_4__.DOMAIN_ICONS[domain],
                         subtitleNavigate: domain + "s",
                     };
+                    if (domain) {
+                        titleCardOptions.showControls = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain].showControls;
+                        titleCardOptions.extraControls = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain].extraControls;
+                    }
                     const titleCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_2__.ControllerCard(target, titleCardOptions, domain, this.area.slug).createCard();
                     const entityCards = entities
                         .filter(entity => {

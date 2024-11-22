@@ -156,6 +156,11 @@ class AreaView {
             subtitleNavigate: domain + "s",
           };
 
+          if (domain) {
+            titleCardOptions.showControls = Helper.strategyOptions.domains[domain].showControls;
+            titleCardOptions.extraControls = Helper.strategyOptions.domains[domain].extraControls;
+          }
+
           const titleCard = new ControllerCard(target, titleCardOptions, domain, this.area.slug).createCard();
 
           const entityCards = entities

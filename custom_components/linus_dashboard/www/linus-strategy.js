@@ -627,10 +627,10 @@ class Helper {
             console.warn("Helper class should be initialized before calling this method!");
         }
         if (domain) {
-            return __classPrivateFieldGet(this, _a, "f", _Helper_areas)[area.slug].domains[domain]?.map(entity_id => __classPrivateFieldGet(this, _a, "f", _Helper_entities)[entity_id]) ?? [];
+            return area.domains[domain]?.map(entity_id => __classPrivateFieldGet(this, _a, "f", _Helper_entities)[entity_id]) ?? [];
         }
         else {
-            return __classPrivateFieldGet(this, _a, "f", _Helper_areas)[area.slug].entities.map(entity_id => __classPrivateFieldGet(this, _a, "f", _Helper_entities)[entity_id]) ?? [];
+            return area.entities.map(entity_id => __classPrivateFieldGet(this, _a, "f", _Helper_entities)[entity_id]) ?? [];
         }
     }
     /**
@@ -4538,6 +4538,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _variables__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./variables */ "./src/variables.ts");
 /* harmony import */ var _views_AreaView__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./views/AreaView */ "./src/views/AreaView.ts");
 /* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./utils */ "./src/utils.ts");
+/* harmony import */ var _views_FloorView__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./views/FloorView */ "./src/views/FloorView.ts");
+
 
 
 
@@ -4621,7 +4623,7 @@ class MushroomStrategy extends HTMLTemplateElement {
             if (!floor.hidden) {
                 views.push({
                     title: (0,_utils__WEBPACK_IMPORTED_MODULE_3__.getFloorName)(floor),
-                    path: (0,_utils__WEBPACK_IMPORTED_MODULE_3__.slugify)(floor.name),
+                    path: floor.floor_id,
                     subview: true,
                     strategy: {
                         type: "custom:linus-strategy",
@@ -4650,15 +4652,20 @@ class MushroomStrategy extends HTMLTemplateElement {
      * @return {Promise<LovelaceViewConfig>}
      */
     static async generateView(info) {
-        const floor = info.view.strategy?.options?.floor ?? {};
-        const area = info.view.strategy?.options?.area ?? {};
+        const floor = info.view.strategy?.options?.floor;
+        const area = info.view.strategy?.options?.area;
         let view = {};
         // Create a view for each exposed domain.
         try {
-            view = await new _views_AreaView__WEBPACK_IMPORTED_MODULE_2__.AreaView(area, floor).getView();
+            if (area) {
+                view = await new _views_AreaView__WEBPACK_IMPORTED_MODULE_2__.AreaView(area).getView();
+            }
+            if (floor) {
+                view = await new _views_FloorView__WEBPACK_IMPORTED_MODULE_4__.FloorView(floor).getView();
+            }
         }
         catch (e) {
-            _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.logError(`View for area '${area.name}' couldn't be loaded!`, e);
+            _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.logError(`View for '${info.view.strategy?.options}' couldn't be loaded!`, e);
         }
         // Return the created view.
         return view;
@@ -5604,7 +5611,11 @@ function slugify(text, separator = "_") {
     if (text === "" || text === null) {
         return "";
     }
-    const slug = text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, separator);
+    const slug = text.toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/\s+/g, separator)
+        .replace(/-/g, "_");
     return slug === "" ? "unknown" : slug;
 }
 function getMagicAreaSlug(device) {
@@ -5987,8 +5998,8 @@ class AbstractView {
             if (floor.areas_slug.length === 0 || !_variables__WEBPACK_IMPORTED_MODULE_0__.AREA_CARDS_DOMAINS.includes(__classPrivateFieldGet(this, _AbstractView_domain, "f") ?? ""))
                 continue;
             const floorCards = [];
-            for (const area of floor.areas_slug.map(area_slug => _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.areas[area_slug]).values()) {
-                const entities = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.getAreaEntities(area, __classPrivateFieldGet(this, _AbstractView_device_class, "f") ?? __classPrivateFieldGet(this, _AbstractView_domain, "f") ?? "");
+            for (const area of floor.areas_slug.map(area_slug => _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.areas[area_slug])) {
+                const entities = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.getAreaEntities(area, __classPrivateFieldGet(this, _AbstractView_device_class, "f") ?? __classPrivateFieldGet(this, _AbstractView_domain, "f"));
                 const className = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.sanitizeClassName(__classPrivateFieldGet(this, _AbstractView_domain, "f") + "Card");
                 const cardModule = await __webpack_require__("./src/cards lazy recursive ^\\.\\/.*$")(`./${className}`);
                 if (entities.length === 0 || !cardModule)
@@ -6716,6 +6727,247 @@ _a = FanView, _FanView_defaultConfig = new WeakMap(), _FanView_viewControllerCar
  * @private
  */
 _FanView_domain = { value: "fan" };
+
+
+
+/***/ }),
+
+/***/ "./src/views/FloorView.ts":
+/*!********************************!*\
+  !*** ./src/views/FloorView.ts ***!
+  \********************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   FloorView: () => (/* binding */ FloorView)
+/* harmony export */ });
+/* harmony import */ var _Helper__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../Helper */ "./src/Helper.ts");
+/* harmony import */ var _cards_SwipeCard__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../cards/SwipeCard */ "./src/cards/SwipeCard.ts");
+/* harmony import */ var _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../cards/ControllerCard */ "./src/cards/ControllerCard.ts");
+/* harmony import */ var _variables__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../variables */ "./src/variables.ts");
+/* harmony import */ var _chips_AreaStateChip__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../chips/AreaStateChip */ "./src/chips/AreaStateChip.ts");
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../utils */ "./src/utils.ts");
+
+
+
+
+
+
+// noinspection JSUnusedGlobalSymbols Class is dynamically imported.
+/**
+ * Floor View Class.
+ *
+ * Used to create a Floor view.
+ *
+ * @class FloorView
+ */
+class FloorView {
+    /**
+     * Class constructor.
+     *
+     * @param {views.ViewConfig} [options={}] Options for the view.
+     */
+    constructor(floor, options = {}) {
+        /**
+         * Default configuration of the view.
+         *
+         * @type {views.ViewConfig}
+         * @private
+         */
+        this.config = {
+            icon: "mdi:home-assistant",
+            type: "sections",
+            path: "home",
+            subview: true,
+        };
+        /**
+         * View controller card.
+         *
+         * @type {LovelaceGridCardConfig[]}
+         * @private
+         */
+        this.viewControllerCard = [];
+        console.log('floor', floor, options);
+        this.floor = floor;
+        this.config = { ...this.config, ...options };
+    }
+    /**
+     * Create the cards to include in the view.
+     *
+     * @return {Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig)[]>} Promise a View Card array.
+     * @override
+     */
+    async createViewCards() {
+        return [];
+    }
+    /**
+     * Create the cards to include in the view.
+     *
+     * @return {Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig)[]>} Promise a View Card array.
+     * @override
+     */
+    async createSectionBadges() {
+        if (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.home_view.hidden.includes("chips")) {
+            // Chips section is hidden.
+            return [];
+        }
+        const chips = [];
+        const device = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices[this.floor.floor_id];
+        if (device) {
+            chips.push(new _chips_AreaStateChip__WEBPACK_IMPORTED_MODULE_4__.AreaStateChip(device, true).getChip());
+        }
+        const areaChips = await (0,_utils__WEBPACK_IMPORTED_MODULE_5__.createChipsFromList)(_variables__WEBPACK_IMPORTED_MODULE_3__.AREA_EXPOSED_CHIPS, { show_content: true }, this.floor.floor_id);
+        if (areaChips) {
+            chips.push(...areaChips);
+        }
+        // (device?.entities.all_lights && device?.entities.all_lights.entity_id !== "unavailable" ? {
+        //   type: "custom:mushroom-chips-card",
+        //   alignment: "center",
+        //   chips: new FloorScenesChips(device, area).getChips()
+        // } : undefined)
+        return chips.map(chip => ({
+            type: "custom:mushroom-chips-card",
+            alignment: "center",
+            chips: [chip],
+        }));
+    }
+    /**
+     * Create the cards to include in the view.
+     *
+     * @return {Promise<LovelaceGridCardConfig[]>} Promise a View Card array.
+     * @override
+     */
+    async createSectionCards() {
+        const viewSections = [];
+        const exposedDomainIds = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getExposedDomainIds();
+        let isFirstLoop = true;
+        let target = { area_id: this.floor.areas_slug };
+        for (const domain of exposedDomainIds) {
+            if (domain === "default")
+                continue;
+            const domainCards = [];
+            try {
+                const cardModule = await __webpack_require__("./src/cards lazy recursive ^\\.\\/.*$")(`./${_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.sanitizeClassName(domain + "Card")}`);
+                const configEntityHidden = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain]?.hide_config_entities || _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains["_"].hide_config_entities;
+                for (const area of this.floor.areas_slug.map(area_slug => _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas[area_slug])) {
+                    if (!area)
+                        continue;
+                    const areaEntities = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getAreaEntities(area, domain);
+                    if (areaEntities.length) {
+                        const entityCards = areaEntities
+                            .filter(entity => {
+                            const cardOptions = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.card_options?.[entity.entity_id];
+                            const deviceOptions = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.card_options?.[entity.device_id ?? "null"];
+                            return !cardOptions?.hidden && !deviceOptions?.hidden && !(entity.entity_category === "config" && configEntityHidden);
+                        })
+                            .map(entity => {
+                            const cardOptions = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.card_options?.[entity.entity_id];
+                            if (domain === "sensor" && _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getEntityState(entity.entity_id)?.attributes.unit_of_measurement) {
+                                return new cardModule[_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.sanitizeClassName(domain + "Card")](entity, {
+                                    type: "custom:mini-graph-card",
+                                    entities: [entity.entity_id],
+                                    ...cardOptions,
+                                }).getCard();
+                            }
+                            return new cardModule[_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.sanitizeClassName(domain + "Card")](entity, cardOptions).getCard();
+                        });
+                        if (entityCards.length) {
+                            const titleCardOptions = {
+                                ..._Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain].controllerCardOptions,
+                                subtitle: area.name,
+                                domain,
+                                subtitleIcon: _variables__WEBPACK_IMPORTED_MODULE_3__.DOMAIN_ICONS[domain],
+                                subtitleNavigate: domain + "s",
+                            };
+                            if (domain) {
+                                titleCardOptions.showControls = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain].showControls;
+                                titleCardOptions.extraControls = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain].extraControls;
+                            }
+                            const titleCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_2__.ControllerCard(target, titleCardOptions, domain, area.slug).createCard();
+                            let areaCards;
+                            areaCards = entityCards.length > 2 ? [new _cards_SwipeCard__WEBPACK_IMPORTED_MODULE_1__.SwipeCard(entityCards).getCard()] : entityCards;
+                            areaCards.unshift(...titleCard);
+                            domainCards.push(...areaCards);
+                        }
+                    }
+                }
+                if (domainCards.length) {
+                    const titleSectionOptions = {
+                        ..._Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain].controllerCardOptions,
+                        title: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize((0,_utils__WEBPACK_IMPORTED_MODULE_5__.getDomainTranslationKey)(domain)),
+                        titleIcon: _variables__WEBPACK_IMPORTED_MODULE_3__.DOMAIN_ICONS[domain] ?? "mdi:floor-plan",
+                        titleNavigate: domain + "s",
+                    };
+                    if (domain) {
+                        titleSectionOptions.showControls = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain].showControls;
+                        titleSectionOptions.extraControls = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain].extraControls;
+                    }
+                    const area_ids = this.floor.areas_slug.map(area_slug => _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas[area_slug].area_id);
+                    const domainControllerCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_2__.ControllerCard({ area_id: area_ids }, titleSectionOptions, domain, this.floor.floor_id).createCard();
+                    const section = { type: "grid", cards: [] };
+                    if (isFirstLoop) {
+                        section.cards.push(...this.viewControllerCard);
+                        isFirstLoop = false;
+                    }
+                    section.cards.push(...domainControllerCard);
+                    section.cards.push(...domainCards);
+                    viewSections.push(section);
+                }
+                // // Handle default domain if not hidden
+                // if (!Helper.strategyOptions.domains.default.hidden) {
+                //   const areaDevices = area.devices.filter(device_id => Helper.devices[device_id].area_id === floor.area_id);
+                //   const miscellaneousEntities = floor.entities.filter(entity_id => {
+                //     const entity = Helper.entities[entity_id];
+                //     const entityLinked = areaDevices.includes(entity.device_id ?? "null") || entity.area_id === floor.area_id;
+                //     const entityUnhidden = entity.hidden_by === null && entity.disabled_by === null;
+                //     const domainExposed = exposedDomainIds.includes(entity.entity_id.split(".", 1)[0]);
+                //     return entityUnhidden && !domainExposed && entityLinked;
+                //   });
+                //   if (miscellaneousEntities.length) {
+                //     try {
+                //       const cardModule = await import("../cards/MiscellaneousCard");
+                //       const swipeCard = miscellaneousEntities
+                //         .filter(entity_id => {
+                //           const entity = Helper.entities[entity_id];
+                //           const cardOptions = Helper.strategyOptions.card_options?.[entity.entity_id];
+                //           const deviceOptions = Helper.strategyOptions.card_options?.[entity.device_id ?? "null"];
+                //           return !cardOptions?.hidden && !deviceOptions?.hidden && !(entity.entity_category === "config" && Helper.strategyOptions.domains["_"].hide_config_entities);
+                //         })
+                //         .map(entity_id => new cardModule.MiscellaneousCard(Helper.entities[entity_id], Helper.strategyOptions.card_options?.[entity_id]).getCard());
+                //       viewSections.push({
+                //         type: "grid",
+                //         column_span: 1,
+                //         cards: [new SwipeCard(swipeCard).getCard()],
+                //       });
+                //     } catch (e) {
+                //       Helper.logError("An error occurred while creating the domain cards!", e);
+                //     }
+                //   }
+                // }
+            }
+            catch (e) {
+                _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.logError("An error occurred while creating the domain cards!", e);
+            }
+        }
+        return viewSections;
+    }
+    /**
+     * Get a view object.
+     *
+     * The view includes the cards which are created by method createSectionCards().
+     *
+     * @returns {Promise<LovelaceViewConfig>} The view object.
+     */
+    async getView() {
+        return {
+            ...this.config,
+            badges: await this.createSectionBadges(),
+            sections: await this.createSectionCards(),
+        };
+    }
+}
 
 
 
@@ -7566,7 +7818,7 @@ class SecurityView {
             ];
             // Create cards for each area.
             for (const [i, area] of floor.areas_slug.map(area_slug => _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas[area_slug]).entries()) {
-                const entities = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getAreaEntities(area, domain ?? "");
+                const entities = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getAreaEntities(area, domain);
                 const className = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.sanitizeClassName(domain + "Card");
                 const cardModule = await __webpack_require__("./src/cards lazy recursive ^\\.\\/.*$")(`./${className}`);
                 if (entities.length === 0 || !cardModule) {
@@ -8471,6 +8723,12 @@ var map = {
 	"./FanView.ts": [
 		"./src/views/FanView.ts",
 		"main"
+	],
+	"./FloorView": [
+		"./src/views/FloorView.ts"
+	],
+	"./FloorView.ts": [
+		"./src/views/FloorView.ts"
 	],
 	"./HomeView": [
 		"./src/views/HomeView.ts",

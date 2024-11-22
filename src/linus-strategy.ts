@@ -1,11 +1,10 @@
 import { Helper } from "./Helper";
 import { generic } from "./types/strategy/generic";
 import { LovelaceConfig, LovelaceViewConfig } from "./types/homeassistant/data/lovelace";
-import StrategyArea = generic.StrategyArea;
-import StrategyFloor = generic.StrategyFloor;
 import { AREA_CARDS_DOMAINS, DEVICE_CLASSES } from "./variables";
 import { AreaView } from "./views/AreaView";
-import { getAreaName, getFloorName, slugify } from "./utils";
+import { getAreaName, getFloorName } from "./utils";
+import { FloorView } from "./views/FloorView";
 
 /**
  * Mushroom Dashboard Strategy.<br>
@@ -83,12 +82,13 @@ class MushroomStrategy extends HTMLTemplateElement {
       }
     }
 
+
     // Create subviews for each area.
     for (let floor of Helper.orderedFloors) {
       if (!floor.hidden) {
         views.push({
           title: getFloorName(floor),
-          path: slugify(floor.name),
+          path: floor.floor_id,
           subview: true,
           strategy: {
             type: "custom:linus-strategy",
@@ -121,16 +121,21 @@ class MushroomStrategy extends HTMLTemplateElement {
    */
   static async generateView(info: generic.ViewInfo): Promise<LovelaceViewConfig> {
 
-    const floor = info.view.strategy?.options?.floor ?? {} as StrategyFloor;
-    const area = info.view.strategy?.options?.area ?? {} as StrategyArea;
+    const floor = info.view.strategy?.options?.floor;
+    const area = info.view.strategy?.options?.area;
 
     let view = {} as LovelaceViewConfig
 
     // Create a view for each exposed domain.
     try {
-      view = await new AreaView(area, floor).getView();
+      if (area) {
+        view = await new AreaView(area).getView();
+      }
+      if (floor) {
+        view = await new FloorView(floor).getView();
+      }
     } catch (e) {
-      Helper.logError(`View for area '${area.name}' couldn't be loaded!`, e);
+      Helper.logError(`View for '${info.view.strategy?.options}' couldn't be loaded!`, e);
     }
 
 

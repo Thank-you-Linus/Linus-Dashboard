@@ -615,11 +615,10 @@ class Helper {
     }
 
     if (domain) {
-      return this.#areas[area.slug].domains[domain]?.map(entity_id => this.#entities[entity_id]) ?? []
+      return area.domains[domain]?.map(entity_id => this.#entities[entity_id]) ?? []
     } else {
-      return this.#areas[area.slug].entities.map(entity_id => this.#entities[entity_id]) ?? []
+      return area.entities.map(entity_id => this.#entities[entity_id]) ?? []
     }
-
   }
 
   /**

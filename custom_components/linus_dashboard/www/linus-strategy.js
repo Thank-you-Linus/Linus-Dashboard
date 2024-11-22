@@ -6822,11 +6822,6 @@ class FloorView {
         if (areaChips) {
             chips.push(...areaChips);
         }
-        // (device?.entities.all_lights && device?.entities.all_lights.entity_id !== "unavailable" ? {
-        //   type: "custom:mushroom-chips-card",
-        //   alignment: "center",
-        //   chips: new FloorScenesChips(device, area).getChips()
-        // } : undefined)
         return chips.map(chip => ({
             type: "custom:mushroom-chips-card",
             alignment: "center",
@@ -6879,7 +6874,7 @@ class FloorView {
                                 subtitle: area.name,
                                 domain,
                                 subtitleIcon: _variables__WEBPACK_IMPORTED_MODULE_3__.DOMAIN_ICONS[domain],
-                                subtitleNavigate: domain + "s",
+                                subtitleNavigate: area.slug,
                             };
                             if (domain) {
                                 titleCardOptions.showControls = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain].showControls;

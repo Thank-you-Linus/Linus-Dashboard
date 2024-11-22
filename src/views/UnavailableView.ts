@@ -1,4 +1,4 @@
-import { AREA_CARDS_DOMAINS, UNAVAILABLE, UNAVAILABLE_STATES, UNDISCLOSED } from '../variables';
+import { AREA_CARDS_DOMAINS, UNAVAILABLE, UNDISCLOSED } from '../variables';
 import { Helper } from "../Helper";
 import { ControllerCard } from "../cards/ControllerCard";
 import { LovelaceGridCardConfig, StackCardConfig } from "../types/homeassistant/lovelace/cards/types";
@@ -87,7 +87,7 @@ class UnavailableView {
 
       for (const area of floor.areas_slug.map(area_slug => Helper.areas[area_slug]).values()) {
         const entities = Helper.areas[area.slug].entities;
-        const unavailableEntities = entities?.filter(entity_id => AREA_CARDS_DOMAINS.includes(Helper.getEntityDomain(entity_id)) && UNAVAILABLE_STATES.includes(Helper.getEntityState(entity_id)?.state ?? UNAVAILABLE)).map(entity_id => Helper.entities[entity_id]);
+        const unavailableEntities = entities?.filter(entity_id => AREA_CARDS_DOMAINS.includes(Helper.getEntityDomain(entity_id)) && Helper.getEntityState(entity_id)?.state === UNAVAILABLE).map(entity_id => Helper.entities[entity_id]);
         const cardModule = await import(`../cards/MiscellaneousCard`);
 
         if (entities.length === 0 || !cardModule) continue;

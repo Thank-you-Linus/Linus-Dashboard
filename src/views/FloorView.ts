@@ -63,8 +63,6 @@ class FloorView {
    */
   constructor(floor: StrategyFloor, options: views.ViewConfig = {}) {
 
-    console.log('floor', floor, options)
-
     this.floor = floor;
 
     this.config = { ...this.config, ...options };
@@ -76,22 +74,10 @@ class FloorView {
    * @return {Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig)[]>} Promise a View Card array.
    * @override
    */
-  async createViewCards(): Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig)[]> {
-    return []
-  }
-
-
-  /**
-   * Create the cards to include in the view.
-   *
-   * @return {Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig)[]>} Promise a View Card array.
-   * @override
-   */
   async createSectionBadges(): Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig)[]> {
 
     if (Helper.strategyOptions.home_view.hidden.includes("chips")) {
       // Chips section is hidden.
-
       return [];
     }
 

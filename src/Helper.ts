@@ -416,7 +416,7 @@ class Helper {
       }),
     );
 
-    console.log('this.#areas', this.#areas)
+    console.log('this.#areas', this.#areas, this.#magicAreasDevices)
 
     this.#initialized = true;
   }

@@ -59,7 +59,6 @@ class ControllerCard {
     this.#magic_entity_id = magic_entity_id;
     this.#defaultConfig = {
       ...this.#defaultConfig,
-      ...Helper.strategyOptions.domains[domain],
       ...options,
     };
   }

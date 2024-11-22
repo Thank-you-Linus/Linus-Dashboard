@@ -87,6 +87,7 @@ export function getAggregateEntity(device: MagicAreaRegistryEntry, domains: stri
 
 export function getMAEntity(area_slug: string, domain: string, device_class?: string): EntityRegistryEntry | undefined {
     const magicAreaDevice = Helper.magicAreasDevices[area_slug];
+    console.log('getMAEntity ', area_slug, magicAreaDevice)
     // TODO remove '' when new release
     if (domain === MAGIC_AREAS_LIGHT_DOMAINS) return magicAreaDevice?.entities?.[''] ?? magicAreaDevice?.entities?.['all_lights']
     if (MAGIC_AREAS_GROUP_DOMAINS.includes(domain)) return magicAreaDevice?.entities?.[`${domain}_group` as 'cover_group']

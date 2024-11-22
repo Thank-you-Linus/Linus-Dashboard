@@ -6,7 +6,6 @@ import { ChipsCardConfig } from "../types/lovelace-mushroom/cards/chips-card";
 import { LovelaceGridCardConfig, StackCardConfig } from "../types/homeassistant/lovelace/cards/types";
 import { TemplateCardConfig } from "../types/lovelace-mushroom/cards/template-card-config";
 import { ActionConfig } from "../types/homeassistant/data/lovelace";
-import { TitleCardConfig } from "../types/lovelace-mushroom/cards/title-card-config";
 import { PersonCardConfig } from "../types/lovelace-mushroom/cards/person-card-config";
 import { SettingsChip } from "../chips/SettingsChip";
 import { SettingsPopup } from "../popups/SettingsPopup";
@@ -204,8 +203,6 @@ class HomeView extends AbstractView {
         firstSection.cards.push(...options.extra_cards);
       }
 
-      console.log('COUCOU ', [firstSection, ...areaSections])
-
       return [firstSection, ...areaSections];
     });
   }
@@ -213,9 +210,9 @@ class HomeView extends AbstractView {
   /**
    * Create the person cards to include in the view.
    *
-   * @return {PersonCardConfig[]} A Person Card array.
+   * @return {Promise<PersonCardConfig[]>} A Person Card array.
    */
-  #createPersonCards(): PersonCardConfig[] {
+  async #createPersonCards(): Promise<PersonCardConfig[]> {
     if (Helper.strategyOptions.home_view.hidden.includes("persons")) {
       // Person section is hidden.
 
@@ -321,29 +318,29 @@ class HomeView extends AbstractView {
         }
       }
 
+
+      if (floor.floor_id === UNDISCLOSED) {
+        floorSection.cards.push({
+          type: "custom:mushroom-template-card",
+          primary: Helper.localize("component.linus_dashboard.entity.button.add_new_area.state.on"),
+          secondary: Helper.localize("component.linus_dashboard.entity.button.add_new_area.state.off"),
+          multiline_secondary: true,
+          icon: "mdi:view-dashboard-variant",
+          fill_container: true,
+          layout_options: {
+            grid_columns: 4,
+            grid_rows: 1,
+          },
+          tap_action: {
+            action: "navigate",
+            navigation_path: "/config/areas/dashboard",
+          },
+        } as any);
+      }
+
       groupedSections.push(floorSection);
     }
 
-    groupedSections.push({
-      type: "grid",
-      column_span: 1,
-      cards: [{
-        type: "custom:mushroom-template-card",
-        primary: Helper.localize("component.linus_dashboard.entity.button.add_new_area.state.on"),
-        secondary: Helper.localize("component.linus_dashboard.entity.button.add_new_area.state.off"),
-        multiline_secondary: true,
-        icon: "mdi:view-dashboard-variant",
-        fill_container: true,
-        layout_options: {
-          grid_columns: 4,
-          grid_rows: 1,
-        },
-        tap_action: {
-          action: "navigate",
-          navigation_path: "/config/areas/dashboard",
-        },
-      } as any],
-    })
 
     return groupedSections;
   }

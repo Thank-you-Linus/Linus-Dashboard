@@ -33,12 +33,16 @@ export function groupBy<T, K extends string | number | symbol>(array: T[], fn: (
     }, {} as Record<K, T[]>);
 }
 
-
-export function slugify(name: string | null): string {
-    if (name === null) {
+export function slugify(text: string | null, separator: string = "_"): string {
+    if (text === "" || text === null) {
         return "";
     }
-    return name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "_");
+    const slug = text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, separator);
+    return slug === "" ? "unknown" : slug;
+}
+
+export function getMagicAreaSlug(device: MagicAreaRegistryEntry): string {
+    return device.identifiers[0][1].replace('magic_area_device_', '')
 }
 
 export function getStateContent(entity_id: string): string {
@@ -144,8 +148,7 @@ export async function createChipsFromList(chipsList: string[], chipOptions?: Par
 export function getDomainTranslationKey(domain: string, device_class?: string) {
     if (domain === 'scene') return 'ui.dialogs.quick-bar.commands.navigation.scene'
 
-    if (MAGIC_AREAS_AGGREGATE_DOMAINS.includes(domain)) return `component.${domain}.entity_component.${device_class}.name`
-
+    if (MAGIC_AREAS_AGGREGATE_DOMAINS.includes(domain) && device_class) return `component.${domain}.entity_component.${device_class}.name`
     return `component.${domain}.entity_component._.name`
 }
 

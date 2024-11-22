@@ -40,7 +40,7 @@ class FanChip extends AbstractChip {
       this.#defaultConfig.content = Helper.getCountTemplate("fan", "eq", "on", options?.area_slug);
     }
 
-    this.#defaultConfig.icon_color = Helper.getDomainColorFromState({ domain: "fan", area_slug: options?.area_slug })
+    this.#defaultConfig.icon_color = Helper.getFromDomainState({ domain: "fan", area_slug: options?.area_slug })
 
 
     this.config = Object.assign(this.config, this.#defaultConfig, options);

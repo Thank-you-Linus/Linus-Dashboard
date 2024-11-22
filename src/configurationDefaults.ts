@@ -7,7 +7,6 @@ import { LightSettings } from "./popups/LightSettingsPopup";
 import { ToggleSceneChip } from "./chips/ToggleSceneChip";
 import { SceneSettings } from "./popups/SceneSettingsPopup";
 import { DOMAIN_STATE_ICONS, UNDISCLOSED } from "./variables";
-import { Helper } from "./Helper";
 
 /**
  * Default configuration for the mushroom strategy.
@@ -49,10 +48,14 @@ export const configurationDefaults: StrategyDefaults = {
       // title: "Lights",
       showControls: true,
       extraControls: (device: MagicAreaRegistryEntry) => {
-        return [
-          new ControlChip("light", device?.entities.light_control?.entity_id).getChip(),
-          new SettingsChip({ tap_action: new LightSettings(device).getPopup() }).getChip()
-        ]
+        const chips = [];
+        if (device?.entities.light_control?.entity_id) {
+          chips.push(new ControlChip("light", device?.entities.light_control?.entity_id).getChip());
+        }
+        if (device?.entities.all_lights?.entity_id) {
+          chips.push(new SettingsChip({ tap_action: new LightSettings(device).getPopup() }).getChip());
+        }
+        return chips
       },
       controllerCardOptions: {
         iconOn: DOMAIN_STATE_ICONS.light.on,
@@ -77,9 +80,11 @@ export const configurationDefaults: StrategyDefaults = {
       hidden: false,
       order: 2,
       extraControls: (device: MagicAreaRegistryEntry) => {
-        return [
-          new ControlChip("climate", device?.entities.climate_control?.entity_id).getChip()
-        ]
+        const chips = [];
+        if (device?.entities.climate_control?.entity_id) {
+          chips.push(new ControlChip("climate", device?.entities.climate_control?.entity_id).getChip());
+        }
+        return chips
       },
     },
     media_player: {
@@ -95,9 +100,11 @@ export const configurationDefaults: StrategyDefaults = {
       hidden: false,
       order: 3,
       extraControls: (device: MagicAreaRegistryEntry) => {
-        return [
-          new ControlChip("media_player", device?.entities.media_player_control?.entity_id).getChip()
-        ]
+        const chips = [];
+        if (device?.entities.media_player_control?.entity_id) {
+          chips.push(new ControlChip("media_player", device?.entities.media_player_control?.entity_id).getChip());
+        }
+        return chips
       },
     },
     cover: {
@@ -117,17 +124,12 @@ export const configurationDefaults: StrategyDefaults = {
       title: "Scènes",
       showControls: false,
       extraControls: (device: MagicAreaRegistryEntry) => {
-        return [
-          {
-            type: "conditional",
-            conditions: [{
-              entity: device?.entities.all_lights?.entity_id,
-              state_not: "unavailable"
-            }],
-            chip: new ToggleSceneChip(device).getChip(),
-          },
-          new SettingsChip({ tap_action: new SceneSettings(device).getPopup() }).getChip()
-        ]
+        const chips = [];
+        if (device?.entities.all_lights?.entity_id) {
+          chips.push(new ToggleSceneChip(device).getChip());
+          chips.push(new SettingsChip({ tap_action: new SceneSettings(device).getPopup() }).getChip());
+        }
+        return chips
       },
       onService: "scene.turn_on",
       offService: "scene.turn_off",

@@ -122,38 +122,38 @@ class HomeAreaCard extends AbstractCard {
       type: "custom:mushroom-chips-card",
       alignment: "end",
       chips: [
-        new ConditionalChip({
-          conditions: [{ entity: area_state?.entity_id, state_not: UNAVAILABLE }],
-          chip: new AreaStateChip(device).getChip()
-        }).getChip(),
-        new ConditionalChip({
-          conditions: [{ entity: aggregate_health?.entity_id, state_not: "on" }],
-          chip: new AggregateChip({ device_class: "health" }).getChip()
-        }).getChip(),
-        new ConditionalChip({
-          conditions: [{ entity: aggregate_window?.entity_id, state_not: "on" }],
-          chip: new AggregateChip({ device_class: "window" }).getChip()
-        }).getChip(),
-        new ConditionalChip({
-          conditions: [{ entity: aggregate_door?.entity_id, state_not: "on" }],
-          chip: new AggregateChip({ device_class: "door" }).getChip()
-        }).getChip(),
-        new ConditionalChip({
-          conditions: [{ entity: aggregate_cover?.entity_id, state_not: "on" }],
-          chip: new AggregateChip({ device_class: "cover" }).getChip()
-        }).getChip(),
-        new ConditionalChip({
-          conditions: [{ entity: aggregate_climate?.entity_id, state_not: UNAVAILABLE }],
-          chip: new ClimateChip().getChip()
-        }).getChip(),
-        new ConditionalChip({
-          conditions: [{ entity: all_lights?.entity_id, state_not: UNAVAILABLE, }],
-          chip: new LightChip({ area_slug: area.slug, tap_action: { action: "toggle" } }).getChip()
-        }).getChip(),
-        new ConditionalChip({
-          conditions: [{ entity: all_lights?.entity_id, state_not: UNAVAILABLE }],
-          chip: new ControlChip("light", light_control?.entity_id).getChip()
-        }).getChip()
+        new ConditionalChip(
+          [{ entity: area_state?.entity_id, state_not: UNAVAILABLE }],
+          new AreaStateChip(device).getChip()
+        ).getChip(),
+        new ConditionalChip(
+          [{ entity: aggregate_health?.entity_id, state_not: "on" }],
+          new AggregateChip({ device_class: "health" }).getChip()
+        ).getChip(),
+        new ConditionalChip(
+          [{ entity: aggregate_window?.entity_id, state_not: "on" }],
+          new AggregateChip({ device_class: "window" }).getChip()
+        ).getChip(),
+        new ConditionalChip(
+          [{ entity: aggregate_door?.entity_id, state_not: "on" }],
+          new AggregateChip({ device_class: "door" }).getChip()
+        ).getChip(),
+        new ConditionalChip(
+          [{ entity: aggregate_cover?.entity_id, state_not: "on" }],
+          new AggregateChip({ device_class: "cover" }).getChip()
+        ).getChip(),
+        new ConditionalChip(
+          [{ entity: aggregate_climate?.entity_id, state_not: UNAVAILABLE }],
+          new ClimateChip().getChip()
+        ).getChip(),
+        new ConditionalChip(
+          [{ entity: all_lights?.entity_id, state_not: UNAVAILABLE, }],
+          new LightChip({ area_slug: area.slug, tap_action: { action: "toggle" } }).getChip()
+        ).getChip(),
+        new ConditionalChip(
+          [{ entity: all_lights?.entity_id, state_not: UNAVAILABLE }],
+          new ControlChip("light", light_control?.entity_id).getChip()
+        ).getChip()
       ].filter(Boolean),
       card_mod: { style: this.getChipsCardModStyle() }
     };

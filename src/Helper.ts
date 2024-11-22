@@ -277,7 +277,7 @@ class Helper {
 
     this.#entities = entities.reduce((acc, entity) => {
 
-      if (this.getEntityState(entity.entity_id)?.state === UNKNOWN) return acc;
+      if (!(entity.entity_id in this.#hassStates)) return acc;
 
       const area = entity.area_id ? areasById[entity.area_id] : {} as StrategyArea;
       const floor = area.floor_id ? floorsById[area.floor_id] : {} as StrategyFloor;

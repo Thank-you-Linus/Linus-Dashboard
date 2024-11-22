@@ -37,7 +37,7 @@ class UnavailableChip extends AbstractChip {
 
         this.#defaultConfig.content = Helper.getCountTemplate("all", "in", UNAVAILABLE_STATES, options?.area_slug);
 
-        this.#defaultConfig.icon = Helper.getDomainColorFromState({
+        this.#defaultConfig.icon = Helper.getFromDomainState({
             domain: "all",
             operator: "in",
             value: UNAVAILABLE_STATES,
@@ -47,7 +47,7 @@ class UnavailableChip extends AbstractChip {
         });
 
 
-        this.#defaultConfig.icon_color = Helper.getDomainColorFromState({
+        this.#defaultConfig.icon_color = Helper.getFromDomainState({
             domain: "all",
             operator: "in",
             value: UNAVAILABLE_STATES,
@@ -55,12 +55,12 @@ class UnavailableChip extends AbstractChip {
             elseReturn: "green",
             area_slug: options?.area_slug
         });
-        // console.log("this.#defaultConfig.icon   ", this.#defaultConfig.icon)
-        // console.log("this.#defaultConfig.icon_color   ", this.#defaultConfig.icon_color)
 
         this.#defaultConfig.tap_action = navigateTo("unavailable")
 
         this.config = Object.assign(this.config, this.#defaultConfig);
+
+        console.log('UnavailableChip', this.config)
     }
 }
 

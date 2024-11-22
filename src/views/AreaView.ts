@@ -156,7 +156,7 @@ class AreaView {
             subtitleNavigate: domain + "s",
           };
 
-          const titleCard = new ControllerCard(target, titleCardOptions, domain).createCard();
+          const titleCard = new ControllerCard(target, titleCardOptions, domain, this.area.slug).createCard();
 
           const entityCards = entities
             .filter(entity => {

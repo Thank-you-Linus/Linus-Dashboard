@@ -42,7 +42,7 @@ class LightChip extends AbstractChip {
       this.#defaultConfig.content = Helper.getCountTemplate("light", "eq", "on", options?.area_slug);
     }
 
-    this.#defaultConfig.icon_color = Helper.getDomainColorFromState({ domain: "light", area_slug: options?.area_slug })
+    this.#defaultConfig.icon_color = Helper.getFromDomainState({ domain: "light", area_slug: options?.area_slug })
 
     const magicAreasEntity = getMAEntity(options?.area_slug ?? options?.floor_id ?? "global", "light");
 

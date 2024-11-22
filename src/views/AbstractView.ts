@@ -138,7 +138,7 @@ abstract class AbstractView {
             titleCardOptions.showControls = Helper.strategyOptions.domains[this.#domain].showControls;
             titleCardOptions.extraControls = Helper.strategyOptions.domains[this.#domain].extraControls;
           }
-          const areaControllerCard = new ControllerCard(target, titleCardOptions, this.#domain).createCard();
+          const areaControllerCard = new ControllerCard(target, titleCardOptions, this.#domain, area.slug).createCard();
 
           floorCards.push(...areaControllerCard, ...areaCards);
         }
@@ -155,7 +155,14 @@ abstract class AbstractView {
           titleSectionOptions.showControls = Helper.strategyOptions.domains[this.#domain].showControls;
           titleSectionOptions.extraControls = Helper.strategyOptions.domains[this.#domain].extraControls;
         }
-        const floorControllerCard = new ControllerCard({ floor_id: floor.floor_id }, titleSectionOptions, this.#domain).createCard();
+
+        const area_ids = floor.areas_slug.map(area_slug => Helper.areas[area_slug].area_id);
+        const floorControllerCard = new ControllerCard(
+          { area_id: area_ids },
+          titleSectionOptions,
+          this.#domain,
+          floor.floor_id
+        ).createCard();
 
         const section = { type: "grid", cards: [] } as LovelaceGridCardConfig;
         if (isFirstLoop) {

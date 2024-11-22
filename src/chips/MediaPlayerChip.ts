@@ -42,7 +42,7 @@ class MediaPlayerChip extends AbstractChip {
       this.#defaultConfig.content = Helper.getCountTemplate("media_player", "eq", "playing", options?.area_slug);
     }
 
-    this.#defaultConfig.icon_color = Helper.getDomainColorFromState({ domain: "media_player", area_slug: options?.area_slug })
+    this.#defaultConfig.icon_color = Helper.getFromDomainState({ domain: "media_player", area_slug: options?.area_slug })
 
     const magicAreasEntity = getMAEntity(options?.area_slug ?? options?.floor_id ?? "global", "media_player");
 

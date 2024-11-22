@@ -336,6 +336,8 @@ class Helper {
         const entitiesByAreaId = {};
         const devicesByAreaId = {};
         __classPrivateFieldSet(this, _a, entities.reduce((acc, entity) => {
+            if (this.getEntityState(entity.entity_id)?.state === _variables__WEBPACK_IMPORTED_MODULE_2__.UNKNOWN)
+                return acc;
             const area = entity.area_id ? areasById[entity.area_id] : {};
             const floor = area.floor_id ? floorsById[area.floor_id] : {};
             const enrichedEntity = {
@@ -4129,19 +4131,19 @@ class UnavailableChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_0__.Abstrac
             icon_color: "orange",
             content: "",
         });
-        __classPrivateFieldGet(this, _UnavailableChip_defaultConfig, "f").content = _Helper__WEBPACK_IMPORTED_MODULE_2__.Helper.getCountTemplate("all", "in", _variables__WEBPACK_IMPORTED_MODULE_3__.UNAVAILABLE_STATES, options?.area_slug);
+        __classPrivateFieldGet(this, _UnavailableChip_defaultConfig, "f").content = _Helper__WEBPACK_IMPORTED_MODULE_2__.Helper.getCountTemplate("all", "eq", _variables__WEBPACK_IMPORTED_MODULE_3__.UNAVAILABLE, options?.area_slug);
         __classPrivateFieldGet(this, _UnavailableChip_defaultConfig, "f").icon = _Helper__WEBPACK_IMPORTED_MODULE_2__.Helper.getFromDomainState({
             domain: "all",
-            operator: "in",
-            value: _variables__WEBPACK_IMPORTED_MODULE_3__.UNAVAILABLE_STATES,
+            operator: "eq",
+            value: _variables__WEBPACK_IMPORTED_MODULE_3__.UNAVAILABLE,
             ifReturn: __classPrivateFieldGet(this, _UnavailableChip_defaultConfig, "f").icon,
             elseReturn: "mdi:alert-circle-check-outline",
             area_slug: options?.area_slug
         });
         __classPrivateFieldGet(this, _UnavailableChip_defaultConfig, "f").icon_color = _Helper__WEBPACK_IMPORTED_MODULE_2__.Helper.getFromDomainState({
             domain: "all",
-            operator: "in",
-            value: _variables__WEBPACK_IMPORTED_MODULE_3__.UNAVAILABLE_STATES,
+            operator: "eq",
+            value: _variables__WEBPACK_IMPORTED_MODULE_3__.UNAVAILABLE,
             ifReturn: __classPrivateFieldGet(this, _UnavailableChip_defaultConfig, "f").icon_color,
             elseReturn: "green",
             area_slug: options?.area_slug
@@ -6234,15 +6236,6 @@ class AreaView {
      * @return {Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig)[]>} Promise a View Card array.
      * @override
      */
-    async createViewCards() {
-        return [];
-    }
-    /**
-     * Create the cards to include in the view.
-     *
-     * @return {Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig)[]>} Promise a View Card array.
-     * @override
-     */
     async createSectionBadges() {
         if (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.home_view.hidden.includes("chips")) {
             // Chips section is hidden.
@@ -6789,18 +6782,8 @@ class FloorView {
          * @private
          */
         this.viewControllerCard = [];
-        console.log('floor', floor, options);
         this.floor = floor;
         this.config = { ...this.config, ...options };
-    }
-    /**
-     * Create the cards to include in the view.
-     *
-     * @return {Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig)[]>} Promise a View Card array.
-     * @override
-     */
-    async createViewCards() {
-        return [];
     }
     /**
      * Create the cards to include in the view.
@@ -8143,7 +8126,7 @@ class UnavailableView {
             const floorCards = [];
             for (const area of floor.areas_slug.map(area_slug => _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.areas[area_slug]).values()) {
                 const entities = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.areas[area.slug].entities;
-                const unavailableEntities = entities?.filter(entity_id => _variables__WEBPACK_IMPORTED_MODULE_0__.AREA_CARDS_DOMAINS.includes(_Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.getEntityDomain(entity_id)) && _variables__WEBPACK_IMPORTED_MODULE_0__.UNAVAILABLE_STATES.includes(_Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.getEntityState(entity_id)?.state ?? _variables__WEBPACK_IMPORTED_MODULE_0__.UNAVAILABLE)).map(entity_id => _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.entities[entity_id]);
+                const unavailableEntities = entities?.filter(entity_id => _variables__WEBPACK_IMPORTED_MODULE_0__.AREA_CARDS_DOMAINS.includes(_Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.getEntityDomain(entity_id)) && _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.getEntityState(entity_id)?.state === _variables__WEBPACK_IMPORTED_MODULE_0__.UNAVAILABLE).map(entity_id => _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.entities[entity_id]);
                 const cardModule = await Promise.resolve(/*! import() */).then(__webpack_require__.bind(__webpack_require__, /*! ../cards/MiscellaneousCard */ "./src/cards/MiscellaneousCard.ts"));
                 if (entities.length === 0 || !cardModule)
                     continue;

@@ -10,7 +10,7 @@ import StrategyEntity = generic.StrategyEntity;
 import StrategyDevice = generic.StrategyDevice;
 import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
 import { FloorRegistryEntry } from "./types/homeassistant/data/floor_registry";
-import { DEVICE_CLASSES, DOMAIN, NAME, UNDISCLOSED } from "./variables";
+import { DEVICE_CLASSES, DOMAIN, NAME, UNDISCLOSED, UNKNOWN } from "./variables";
 import { getMagicAreaSlug, groupEntitiesByDomain, slugify } from "./utils";
 import { EntityRegistryEntry } from "./types/homeassistant/data/entity_registry";
 
@@ -276,6 +276,8 @@ class Helper {
     const devicesByAreaId: Record<string, StrategyDevice[]> = {};
 
     this.#entities = entities.reduce((acc, entity) => {
+
+      if (this.getEntityState(entity.entity_id)?.state === UNKNOWN) return acc;
 
       const area = entity.area_id ? areasById[entity.area_id] : {} as StrategyArea;
       const floor = area.floor_id ? floorsById[area.floor_id] : {} as StrategyFloor;

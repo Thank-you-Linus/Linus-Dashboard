@@ -66,17 +66,6 @@ class AreaView {
    * @return {Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig)[]>} Promise a View Card array.
    * @override
    */
-  async createViewCards(): Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig)[]> {
-    return []
-  }
-
-
-  /**
-   * Create the cards to include in the view.
-   *
-   * @return {Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig)[]>} Promise a View Card array.
-   * @override
-   */
   async createSectionBadges(): Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig)[]> {
 
     if (Helper.strategyOptions.home_view.hidden.includes("chips")) {

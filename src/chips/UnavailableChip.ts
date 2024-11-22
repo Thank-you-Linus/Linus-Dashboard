@@ -3,7 +3,7 @@ import { TemplateChipConfig } from "../types/lovelace-mushroom/utils/lovelace/ch
 import { navigateTo } from "../utils";
 import { Helper } from "../Helper";
 import { chips } from "../types/strategy/chips";
-import { UNAVAILABLE, UNAVAILABLE_STATES } from "../variables";
+import { UNAVAILABLE } from "../variables";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**
@@ -35,12 +35,12 @@ class UnavailableChip extends AbstractChip {
     constructor(options: chips.ChipOptions = {}) {
         super();
 
-        this.#defaultConfig.content = Helper.getCountTemplate("all", "in", UNAVAILABLE_STATES, options?.area_slug);
+        this.#defaultConfig.content = Helper.getCountTemplate("all", "eq", UNAVAILABLE, options?.area_slug);
 
         this.#defaultConfig.icon = Helper.getFromDomainState({
             domain: "all",
-            operator: "in",
-            value: UNAVAILABLE_STATES,
+            operator: "eq",
+            value: UNAVAILABLE,
             ifReturn: this.#defaultConfig.icon,
             elseReturn: "mdi:alert-circle-check-outline",
             area_slug: options?.area_slug
@@ -49,8 +49,8 @@ class UnavailableChip extends AbstractChip {
 
         this.#defaultConfig.icon_color = Helper.getFromDomainState({
             domain: "all",
-            operator: "in",
-            value: UNAVAILABLE_STATES,
+            operator: "eq",
+            value: UNAVAILABLE,
             ifReturn: this.#defaultConfig.icon_color,
             elseReturn: "green",
             area_slug: options?.area_slug

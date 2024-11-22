@@ -336,7 +336,7 @@ class Helper {
         const entitiesByAreaId = {};
         const devicesByAreaId = {};
         __classPrivateFieldSet(this, _a, entities.reduce((acc, entity) => {
-            if (this.getEntityState(entity.entity_id)?.state === _variables__WEBPACK_IMPORTED_MODULE_2__.UNKNOWN)
+            if (!(entity.entity_id in __classPrivateFieldGet(this, _a, "f", _Helper_hassStates)))
                 return acc;
             const area = entity.area_id ? areasById[entity.area_id] : {};
             const floor = area.floor_id ? floorsById[area.floor_id] : {};

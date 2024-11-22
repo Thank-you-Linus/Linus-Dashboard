@@ -42,7 +42,7 @@ export function slugify(text: string | null, separator: string = "_"): string {
 }
 
 export function getMagicAreaSlug(device: MagicAreaRegistryEntry): string {
-    return device.identifiers[0][1].replace('magic_area_device_', '')
+    return slugify(device.name ?? "".replace('-', '_'));
 }
 
 export function getStateContent(entity_id: string): string {

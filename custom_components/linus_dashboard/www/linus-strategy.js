@@ -5608,7 +5608,7 @@ function slugify(text, separator = "_") {
     return slug === "" ? "unknown" : slug;
 }
 function getMagicAreaSlug(device) {
-    return device.identifiers[0][1].replace('magic_area_device_', '');
+    return slugify(device.name ?? "".replace('-', '_'));
 }
 function getStateContent(entity_id) {
     return entity_id.startsWith('binary_sensor.') ? 'last-changed' : 'state';

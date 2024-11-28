@@ -13,6 +13,7 @@ import { HOME_EXPOSED_CHIPS, UNDISCLOSED } from "../variables";
 import { createChipsFromList, getFloorName, navigateTo, slugify } from "../utils";
 import { WeatherChip } from "../chips/WeatherChip";
 import { AggregateChip } from "../chips/AggregateChip";
+import { PersonCard } from "../cards/PersonCard";
 
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
@@ -211,15 +212,15 @@ class HomeView extends AbstractView {
     }
 
     const cards: PersonCardConfig[] = [];
-
-    import("../cards/PersonCard").then(personModule => {
-      for (const person of Helper.domains.person.filter((entity) => {
-        return entity.hidden_by == null
-          && entity.disabled_by == null;
-      })) {
-        cards.push(new personModule.PersonCard(person).getCard());
-      }
+    const persons = Helper.domains.person.filter((entity) => {
+      return entity.hidden_by == null
+        && entity.disabled_by == null
     });
+
+    for (const person of persons) {
+      cards.push(new PersonCard(person).getCard());
+    }
+
 
     return cards;
   }

@@ -300,7 +300,7 @@ class Helper {
       }
 
 
-      let domain = entity.entity_id.split(".")[0];
+      let domain = this.getEntityDomain(entity.entity_id)
       if (Object.keys(DEVICE_CLASSES).includes(domain)) {
         const entityState = Helper.getEntityState(entity.entity_id);
         if (entityState?.attributes?.device_class) domain = entityState.attributes.device_class

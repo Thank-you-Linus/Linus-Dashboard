@@ -356,7 +356,7 @@ class Helper {
                     entitiesByDeviceId[entity.device_id] = [];
                 entitiesByDeviceId[entity.device_id].push(enrichedEntity);
             }
-            let domain = entity.entity_id.split(".")[0];
+            let domain = this.getEntityDomain(entity.entity_id);
             if (Object.keys(_variables__WEBPACK_IMPORTED_MODULE_2__.DEVICE_CLASSES).includes(domain)) {
                 const entityState = _a.getEntityState(entity.entity_id);
                 if (entityState?.attributes?.device_class)
@@ -4518,7 +4518,8 @@ class LinusStrategy extends HTMLTemplateElement {
      * @return {Promise<LovelaceConfig>}
      */
     static async generateDashboard(info) {
-        await _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.initialize(info);
+        if (!_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.isInitialized())
+            await _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.initialize(info);
         console.log('info', info);
         const views = info.config?.views ?? [];
         LinusStrategy.createDomainSubviews(views);
@@ -6965,12 +6966,14 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../utils */ "./src/utils.ts");
 /* harmony import */ var _chips_WeatherChip__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../chips/WeatherChip */ "./src/chips/WeatherChip.ts");
 /* harmony import */ var _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../chips/AggregateChip */ "./src/chips/AggregateChip.ts");
+/* harmony import */ var _cards_PersonCard__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../cards/PersonCard */ "./src/cards/PersonCard.ts");
 var __classPrivateFieldGet = (undefined && undefined.__classPrivateFieldGet) || function (receiver, state, kind, f) {
     if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a getter");
     if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
     return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
 };
 var _HomeView_instances, _HomeView_defaultConfig, _HomeView_createPersonCards, _HomeView_createAreaSection;
+
 
 
 
@@ -7149,14 +7152,13 @@ async function _HomeView_createPersonCards() {
         return [];
     }
     const cards = [];
-    Promise.resolve(/*! import() */).then(__webpack_require__.bind(__webpack_require__, /*! ../cards/PersonCard */ "./src/cards/PersonCard.ts")).then(personModule => {
-        for (const person of _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.domains.person.filter((entity) => {
-            return entity.hidden_by == null
-                && entity.disabled_by == null;
-        })) {
-            cards.push(new personModule.PersonCard(person).getCard());
-        }
+    const persons = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.domains.person.filter((entity) => {
+        return entity.hidden_by == null
+            && entity.disabled_by == null;
     });
+    for (const person of persons) {
+        cards.push(new _cards_PersonCard__WEBPACK_IMPORTED_MODULE_8__.PersonCard(person).getCard());
+    }
     return cards;
 }, _HomeView_createAreaSection = 
 /**

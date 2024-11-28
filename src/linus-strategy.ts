@@ -29,7 +29,7 @@ class LinusStrategy extends HTMLTemplateElement {
    * @return {Promise<LovelaceConfig>}
    */
   static async generateDashboard(info: generic.DashBoardInfo): Promise<LovelaceConfig> {
-    await Helper.initialize(info);
+    if (!Helper.isInitialized()) await Helper.initialize(info);
 
     console.log('info', info);
 

@@ -4537,6 +4537,8 @@ class LinusStrategy extends HTMLTemplateElement {
      */
     static createDomainSubviews(views) {
         for (let domainId of _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getExposedViewIds()) {
+            if (!_variables__WEBPACK_IMPORTED_MODULE_1__.DOMAINS_VIEWS.includes(domainId))
+                continue;
             if (_variables__WEBPACK_IMPORTED_MODULE_1__.AREA_CARDS_DOMAINS.includes(domainId) && (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.domains[domainId] ?? []).length === 0)
                 continue;
             views.push({
@@ -5667,10 +5669,9 @@ function groupEntitiesByDomain(entity_ids) {
 async function createChipsFromList(chipsList, chipOptions, magic_device_id = "global", area_slug) {
     const chips = [];
     const area_slugs = area_slug ? Array.isArray(area_slug) ? area_slug : [area_slug] : [];
-    const domains = area_slugs.reduce((acc, area_slug) => {
-        acc.push(...Object.keys(_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas[area_slug]?.domains ?? {}));
-        return acc;
-    }, []);
+    const domains = magic_device_id === "global"
+        ? Object.keys(_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.domains)
+        : area_slugs.flatMap(area_slug => Object.keys(_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas[area_slug]?.domains ?? {}));
     for (let chipType of chipsList) {
         if (!domains.includes(chipType))
             continue;
@@ -5740,6 +5741,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   DEVICE_CLASSES: () => (/* binding */ DEVICE_CLASSES),
 /* harmony export */   DEVICE_ICONS: () => (/* binding */ DEVICE_ICONS),
 /* harmony export */   DOMAIN: () => (/* binding */ DOMAIN),
+/* harmony export */   DOMAINS_VIEWS: () => (/* binding */ DOMAINS_VIEWS),
 /* harmony export */   DOMAIN_ICONS: () => (/* binding */ DOMAIN_ICONS),
 /* harmony export */   DOMAIN_STATE_ICONS: () => (/* binding */ DOMAIN_STATE_ICONS),
 /* harmony export */   HOME_EXPOSED_CHIPS: () => (/* binding */ HOME_EXPOSED_CHIPS),
@@ -5778,6 +5780,7 @@ const CLIMATE_DOMAINS = ["climate", "fan"];
 const HOUSE_INFORMATION_DOMAINS = ["camera", "cover", "vacuum", "media_player", "lock", "plant"];
 const OTHER_DOMAINS = ["camera", "cover", "vacuum", "media_player", "lock", "scene", "plant"];
 const AREA_CARDS_DOMAINS = [...TOGGLE_DOMAINS, ...CLIMATE_DOMAINS, ...OTHER_DOMAINS, "binary_sensor", "sensor"];
+const DOMAINS_VIEWS = ["home", "security", "security-details", ...AREA_CARDS_DOMAINS];
 const DEVICE_CLASSES = {
     sensor: ["illuminance", "temperature", "humidity", "battery", "energy", "power"],
     binary_sensor: ["motion", "door", "window", "vibration", "moisture", "smoke"],

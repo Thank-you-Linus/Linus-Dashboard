@@ -33,6 +33,8 @@ export const OTHER_DOMAINS = ["camera", "cover", "vacuum", "media_player", "lock
 
 export const AREA_CARDS_DOMAINS = [...TOGGLE_DOMAINS, ...CLIMATE_DOMAINS, ...OTHER_DOMAINS, "binary_sensor", "sensor"];
 
+export const DOMAINS_VIEWS = ["home", "security", "security-details", ...AREA_CARDS_DOMAINS]
+
 export const DEVICE_CLASSES = {
   sensor: ["illuminance", "temperature", "humidity", "battery", "energy", "power"],
   binary_sensor: ["motion", "door", "window", "vibration", "moisture", "smoke"],

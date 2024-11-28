@@ -341,7 +341,6 @@ class HomeView extends AbstractView {
       groupedSections.push(floorSection);
     }
 
-
     return groupedSections;
   }
 }

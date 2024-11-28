@@ -125,10 +125,9 @@ export async function createChipsFromList(chipsList: string[], chipOptions?: Par
 
     const area_slugs = area_slug ? Array.isArray(area_slug) ? area_slug : [area_slug] : [];
 
-    const domains = area_slugs.reduce((acc, area_slug) => {
-        acc.push(...Object.keys(Helper.areas[area_slug]?.domains ?? {}));
-        return acc;
-    }, [] as string[])
+    const domains = magic_device_id === "global"
+        ? Object.keys(Helper.domains)
+        : area_slugs.flatMap(area_slug => Object.keys(Helper.areas[area_slug]?.domains ?? {}));
 
     for (let chipType of chipsList) {
         if (!domains.includes(chipType)) continue;

@@ -1,7 +1,7 @@
 import { Helper } from "./Helper";
 import { generic } from "./types/strategy/generic";
 import { LovelaceConfig, LovelaceViewConfig } from "./types/homeassistant/data/lovelace";
-import { AREA_CARDS_DOMAINS, DEVICE_CLASSES, DOMAIN_ICONS } from "./variables";
+import { AREA_CARDS_DOMAINS, DEVICE_CLASSES, DOMAIN_ICONS, DOMAINS_VIEWS } from "./variables";
 import { AreaView } from "./views/AreaView";
 import { getAreaName, getFloorName } from "./utils";
 import { FloorView } from "./views/FloorView";
@@ -54,6 +54,7 @@ class LinusStrategy extends HTMLTemplateElement {
    */
   private static createDomainSubviews(views: LovelaceViewConfig[]) {
     for (let domainId of Helper.getExposedViewIds()) {
+      if (!DOMAINS_VIEWS.includes(domainId)) continue;
       if (AREA_CARDS_DOMAINS.includes(domainId) && (Helper.domains[domainId] ?? []).length === 0) continue;
       views.push({
         title: domainId,

@@ -83,7 +83,7 @@ class AreaView {
     }
 
 
-    const areaChips = await createChipsFromList(AREA_EXPOSED_CHIPS, { show_content: true }, this.area.slug);
+    const areaChips = await createChipsFromList(AREA_EXPOSED_CHIPS, { show_content: true }, this.area.slug, this.area.slug);
     if (areaChips) {
       chips.push(...areaChips);
     }

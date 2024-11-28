@@ -120,10 +120,18 @@ export function groupEntitiesByDomain(entity_ids: string[]): Record<string, stri
 }
 
 // Numeric chips.
-export async function createChipsFromList(chipsList: string[], chipOptions?: Partial<chips.AggregateChipOptions>, area_slug?: string) {
+export async function createChipsFromList(chipsList: string[], chipOptions?: Partial<chips.AggregateChipOptions>, magic_device_id: string = "global", area_slug?: string | string[]) {
     const chips: LovelaceChipConfig[] = [];
+
+    const area_slugs = area_slug ? Array.isArray(area_slug) ? area_slug : [area_slug] : [];
+
+    const domains = area_slugs.reduce((acc, area_slug) => {
+        acc.push(...Object.keys(Helper.areas[area_slug]?.domains ?? {}));
+        return acc;
+    }, [] as string[])
+
     for (let chipType of chipsList) {
-        if (((area_slug ? Helper.areas[area_slug] : Helper)?.domains[chipType] ?? []).length === 0) continue;
+        if (!domains.includes(chipType)) continue;
 
         const className = Helper.sanitizeClassName(chipType + "Chip");
 
@@ -131,7 +139,7 @@ export async function createChipsFromList(chipsList: string[], chipOptions?: Par
             let chipModule;
             if ([...DEVICE_CLASSES.binary_sensor, ...DEVICE_CLASSES.sensor].includes(chipType)) {
                 chipModule = await import("./chips/AggregateChip");
-                const chip = new chipModule.AggregateChip({ ...chipOptions, device_class: chipType, area_slug });
+                const chip = new chipModule.AggregateChip({ ...chipOptions, device_class: chipType, area_slug, magic_device_id });
                 chips.push(chip.getChip());
             } else {
                 chipModule = await import("./chips/" + className);

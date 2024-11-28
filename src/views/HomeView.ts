@@ -12,6 +12,7 @@ import { SettingsPopup } from "../popups/SettingsPopup";
 import { HOME_EXPOSED_CHIPS, UNDISCLOSED } from "../variables";
 import { createChipsFromList, getFloorName, navigateTo, slugify } from "../utils";
 import { WeatherChip } from "../chips/WeatherChip";
+import { AggregateChip } from "../chips/AggregateChip";
 
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
@@ -269,12 +270,21 @@ class HomeView extends AbstractView {
         isFirstLoop = false;
       }
 
+      const aggregate_temperature = Helper.magicAreasDevices[floor.floor_id]?.entities.aggregate_temperature;
+
       floorSection.cards.push(
         {
           type: "heading",
           heading: getFloorName(floor),
           heading_style: "subtitle",
           icon: floor.icon ?? "mdi:floor-plan",
+          badges: aggregate_temperature && [{
+            type: "custom:mushroom-chips-card",
+            alignment: "end",
+            chips: [
+              new AggregateChip({ device_class: "temperature", show_content: true, magic_device_id: floor.floor_id, area_slug: floor.areas_slug }).getChip()
+            ]
+          }],
           tap_action: floor.floor_id !== UNDISCLOSED ? navigateTo(slugify(floor.name)) : undefined,
         }
       );

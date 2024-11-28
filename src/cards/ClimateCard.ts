@@ -22,6 +22,7 @@ class ClimateCard extends AbstractCard {
   #defaultConfig: ClimateCardConfig = {
     type: "thermostat",
     icon: undefined,
+    show_current_as_primary: true,
     vertical: false,
     features: [
       {

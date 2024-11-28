@@ -446,42 +446,34 @@ class Helper {
    * @return {string} The template string.
    * @static
    */
-  static getCountTemplate(domain: string, operator: string, value: string | string[], area_slug?: string): string {
-    // noinspection JSMismatchedCollectionQueryUpdate (False positive per 17-04-2023)
-    /**
-     * Array of entity state-entries, filtered by domain.
-     *
-     * Each element contains a template-string which is used to access home assistant's state machine (state object) in
-     * a template.
-     * E.g. "states['light.kitchen']"
-     *
-     * The array excludes hidden and disabled entities.
-     *
-     * @type {string[]}
-     */
+  static getCountTemplate(domain: string, operator: string, value: string | string[], area_slug?: string | string[]): string {
     const states: string[] = [];
 
     if (!this.isInitialized()) {
       console.warn("Helper class should be initialized before calling this method!");
     }
 
-    if (area_slug) {
-      const newStates = domain === "all"
-        ? this.#areas[area_slug]?.entities.map((entity_id) => `states['${entity_id}']`)
-        : this.#areas[area_slug]?.domains[domain]?.map((entity_id) => `states['${entity_id}']`);
-      if (newStates) {
-        states.push(...newStates);
-      }
-    } else {
-      // Get the ID of the devices which are linked to the given area.
-      for (const area of Object.values(this.#areas)) {
-        if (area.area_id === UNDISCLOSED) continue
+    const areaSlugs = Array.isArray(area_slug) ? area_slug : [area_slug];
 
+    for (const slug of areaSlugs) {
+      if (slug) {
         const newStates = domain === "all"
-          ? this.#areas[area.slug]?.entities.map((entity_id) => `states['${entity_id}']`)
-          : this.#areas[area.slug]?.domains[domain]?.map((entity_id) => `states['${entity_id}']`);
+          ? this.#areas[slug]?.entities.map((entity_id) => `states['${entity_id}']`)
+          : this.#areas[slug]?.domains[domain]?.map((entity_id) => `states['${entity_id}']`);
         if (newStates) {
           states.push(...newStates);
+        }
+      } else {
+        // Get the ID of the devices which are linked to the given area.
+        for (const area of Object.values(this.#areas)) {
+          if (area.area_id === UNDISCLOSED) continue
+
+          const newStates = domain === "all"
+            ? this.#areas[area.slug]?.entities.map((entity_id) => `states['${entity_id}']`)
+            : this.#areas[area.slug]?.domains[domain]?.map((entity_id) => `states['${entity_id}']`);
+          if (newStates) {
+            states.push(...newStates);
+          }
         }
       }
     }
@@ -505,7 +497,7 @@ class Helper {
    * @return {string} The template string.
    * @static
    */
-  static getDeviceClassCountTemplate(device_class: string, operator: string, value: string, area_id?: string): string {
+  static getDeviceClassCountTemplate(device_class: string, operator: string, value: string, area_id?: string | string[]): string {
     // noinspection JSMismatchedCollectionQueryUpdate (False positive per 17-04-2023)
     /**
      * Array of entity state-entries, filtered by domain.
@@ -525,8 +517,8 @@ class Helper {
     }
 
     if (area_id) {
-      const newStates = this.#areas[area_id]?.domains[device_class]?.map((entity_id) => `states['${entity_id}']`);
-      if (newStates) {
+      const newStates = (Array.isArray(area_id) ? area_id : [area_id]).flatMap(id => this.#areas[id]?.domains[device_class]?.map((entity_id) => `states['${entity_id}']`) || []);
+      if (newStates.length) {
         states.push(...newStates);
       }
     } else {
@@ -556,7 +548,7 @@ class Helper {
    * @return {string} The template string.
    * @static
    */
-  static getAverageStateTemplate(device_class: string, area_id?: string): string {
+  static getAverageStateTemplate(device_class: string, area_slug?: string | string[]): string {
     // noinspection JSMismatchedCollectionQueryUpdate (False positive per 17-04-2023)
     /**
      * Array of entity state-entries, filtered by domain.
@@ -576,8 +568,10 @@ class Helper {
     }
 
 
-    if (area_id) {
-      const newStates = this.#areas[area_id].domains[device_class]?.map((entity_id) => `states['${entity_id}']`);
+    if (area_slug) {
+      const newStates = Array.isArray(area_slug)
+        ? area_slug.flatMap(slug => this.#areas[slug]?.domains[device_class]?.map((entity_id) => `states['${entity_id}']`) || [])
+        : this.#areas[area_slug]?.domains[device_class]?.map((entity_id) => `states['${entity_id}']`);
       if (newStates) {
         states.push(...newStates);
       }
@@ -827,7 +821,7 @@ class Helper {
     return `{% set entities = [${states}] %}{{ '${ifReturn ?? 'white'}' if entities | selectattr('state','${operator ?? 'eq'}', ${formatedValue}) | list | count > 0 else '${elseReturn ?? 'grey'}' }}`;
   }
 
-  static getBinarySensorColorFromState(device_class: string, operator: string, value: string, ifReturn: string, elseReturn: string, area_slug?: string): string {
+  static getBinarySensorColorFromState(device_class: string, operator: string, value: string, ifReturn: string, elseReturn: string, area_slug?: string | string[]): string {
 
     const states: string[] = [];
 
@@ -837,7 +831,9 @@ class Helper {
 
 
     if (area_slug) {
-      const newStates = this.#areas[area_slug]?.domains[device_class]?.map((entity_id) => `states['${entity_id}']`);
+      const newStates = Array.isArray(area_slug)
+        ? area_slug.flatMap(slug => this.#areas[slug]?.domains[device_class]?.map((entity_id) => `states['${entity_id}']`) || [])
+        : this.#areas[area_slug]?.domains[device_class]?.map((entity_id) => `states['${entity_id}']`);
       if (newStates) {
         states.push(...newStates);
       }
@@ -858,7 +854,7 @@ class Helper {
       {{ '${ifReturn}' if entities | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | selectattr('state','${operator}','${value}') | list | count else '${elseReturn}' }}`;
   }
 
-  static getSensorColorFromState(device_class: string, area_slug?: string): string | undefined {
+  static getSensorColorFromState(device_class: string, area_slug?: string | string[]): string | undefined {
 
     const states: string[] = [];
 
@@ -868,7 +864,9 @@ class Helper {
 
 
     if (area_slug) {
-      const newStates = this.#areas[area_slug]?.domains[device_class]?.map((entity_id) => `states['${entity_id}']`);
+      const newStates = Array.isArray(area_slug)
+        ? area_slug.flatMap(slug => this.#areas[slug]?.domains[device_class]?.map((entity_id) => `states['${entity_id}']`) || [])
+        : this.#areas[area_slug]?.domains[device_class]?.map((entity_id) => `states['${entity_id}']`);
       if (newStates) {
         states.push(...newStates);
       }
@@ -932,7 +930,7 @@ class Helper {
     return undefined
   }
 
-  static getSensorIconFromState(device_class: string, area_slug?: string): string | undefined {
+  static getSensorIconFromState(device_class: string, area_slug?: string | string[]): string | undefined {
 
     const states: string[] = [];
 
@@ -941,7 +939,9 @@ class Helper {
     }
 
     if (area_slug) {
-      const newStates = this.#areas[area_slug]?.domains[device_class]?.map((entity_id) => `states['${entity_id}']`);
+      const newStates = Array.isArray(area_slug)
+        ? area_slug.flatMap(slug => this.#areas[slug]?.domains[device_class]?.map((entity_id) => `states['${entity_id}']`) || [])
+        : this.#areas[area_slug]?.domains[device_class]?.map((entity_id) => `states['${entity_id}']`);
       if (newStates) {
         states.push(...newStates);
       }

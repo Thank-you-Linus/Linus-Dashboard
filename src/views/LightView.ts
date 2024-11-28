@@ -62,7 +62,8 @@ class LightView extends AbstractView {
       {
         ...this.#viewControllerCardConfig,
         ...Helper.strategyOptions.domains.light.controllerCardOptions,
-      }, LightView.#domain).createCard();
+      }, LightView.#domain, "global").createCard();
+
   }
 }
 

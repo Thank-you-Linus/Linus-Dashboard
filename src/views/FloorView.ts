@@ -89,8 +89,7 @@ class FloorView {
       chips.push(new AreaStateChip(device, true).getChip());
     }
 
-
-    const areaChips = await createChipsFromList(AREA_EXPOSED_CHIPS, { show_content: true }, this.floor.floor_id);
+    const areaChips = await createChipsFromList(AREA_EXPOSED_CHIPS, { show_content: true }, this.floor.floor_id, this.floor.areas_slug);
     if (areaChips) {
       chips.push(...areaChips);
     }
@@ -155,7 +154,7 @@ class FloorView {
                 ...Helper.strategyOptions.domains[domain].controllerCardOptions,
                 subtitle: area.name,
                 domain,
-                subtitleIcon: DOMAIN_ICONS[domain as keyof typeof DOMAIN_ICONS],
+                subtitleIcon: area.icon,
                 subtitleNavigate: area.slug,
               };
 

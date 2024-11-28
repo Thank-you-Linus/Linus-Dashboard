@@ -22,9 +22,9 @@ class AreaStateChip extends AbstractChip {
 
     const { area_state, presence_hold, all_media_players, aggregate_motion } = device?.entities ?? {}
     return {
-      "type": "template",
-      "entity": area_state?.entity_id,
-      "icon_color": `
+      type: "template",
+      entity: area_state?.entity_id,
+      icon_color: `
           {% set presence_hold = states('${presence_hold?.entity_id}')%}
           {% set motion = states('${aggregate_motion?.entity_id}')%}
           {% set media_player = states('${all_media_players?.entity_id}')%}
@@ -45,7 +45,7 @@ class AreaStateChip extends AbstractChip {
               transparent
           {% endif %}
         `,
-      "icon": `
+      icon: `
           {% set presence_hold = states('${presence_hold?.entity_id}')%}
           {% set motion = states('${aggregate_motion?.entity_id}')%}
           {% set media_player = states('${all_media_players?.entity_id}')%}
@@ -65,7 +65,7 @@ class AreaStateChip extends AbstractChip {
           {% else %}
             ${AREA_STATE_ICONS.clear}
           {% endif %}`,
-      "content": showContent ? `
+      content: showContent ? `
           {% set presence_hold = states('${presence_hold?.entity_id}')%}
           {% set bl = state_attr('${area_state?.entity_id}', 'states')%}
           {% if presence_hold == 'on' %}
@@ -79,7 +79,7 @@ class AreaStateChip extends AbstractChip {
           {% else %}
             clear
           {% endif %}` : "",
-      "tap_action": new AreaInformations(device, true).getPopup() as any
+      tap_action: new AreaInformations(device, true).getPopup() as any
     }
   }
 

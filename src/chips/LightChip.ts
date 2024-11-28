@@ -44,7 +44,8 @@ class LightChip extends AbstractChip {
 
     this.#defaultConfig.icon_color = Helper.getFromDomainState({ domain: "light", area_slug: options?.area_slug })
 
-    const magicAreasEntity = getMAEntity(options?.area_slug ?? options?.floor_id ?? "global", "light");
+    const areaOrFloorId = Array.isArray(options?.area_slug) ? options?.area_slug[0] : options?.area_slug ?? options?.floor_id ?? "global";
+    const magicAreasEntity = getMAEntity(areaOrFloorId, "light");
 
     if (magicAreasEntity) {
       this.#defaultConfig.entity = magicAreasEntity.entity_id;

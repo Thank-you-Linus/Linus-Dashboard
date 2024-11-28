@@ -1,20 +1,23 @@
 {
   "name": "linus-dashboard",
   "version": "2.1.1",
-  "description": "Automatically create a dashboard using Mushroom cards",
+  "description": "Your ultimate smart home assistant, redefined.",
   "keywords": [
-    "strategy",
-    "mushroom"
+    "smart home",
+    "home assistant",
+    "dashboard",
+    "automation",
+    "linus"
   ],
   "homepage": "https://github.com/Thank-you-Linus/Linus-Dashboard",
   "bugs": "https://github.com/Thank-you-Linus/Linus-Dashboard/issues",
   "license": "MIT",
   "author": {
-    "name": "Aalian Khan"
+    "name": "Thank You Linus Team"
   },
   "contributors": [
     {
-      "name": "Ferry Cools"
+      "name": "Aalian Khan"
     }
   ],
   "repository": {

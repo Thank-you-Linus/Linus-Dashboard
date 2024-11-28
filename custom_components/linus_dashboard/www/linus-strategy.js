@@ -4547,19 +4547,19 @@ __webpack_require__.r(__webpack_exports__);
 
 
 /**
- * Mushroom Dashboard Strategy.<br>
+ * Linus Dashboard Strategy.<br>
  * <br>
- * Mushroom dashboard strategy provides a strategy for Home-Assistant to create a dashboard automatically.<br>
- * The strategy makes use Mushroom and Mini Graph cards to represent your entities.<br>
+ * Linus dashboard strategy provides a strategy for Home-Assistant to create a dashboard automatically.<br>
+ * The strategy makes use of Mushroom and Mini Graph cards to represent your entities.<br>
  * <br>
  * Features:<br>
- *     🛠 Automatically create dashboard with three lines of yaml.<br>
- *     😍 Built-in Views for several standard domains.<br>
+ *     🛠 Automatically create a dashboard with minimal configuration.<br>
+ *     😍 Built-in views for several standard domains.<br>
  *     🎨 Many options to customize to your needs.<br>
  * <br>
  * Check the [Repository]{@link https://github.com/AalianKhan/linus-strategy} for more information.
  */
-class MushroomStrategy extends HTMLTemplateElement {
+class LinusStrategy extends HTMLTemplateElement {
     /**
      * Generate a dashboard.
      *
@@ -4571,9 +4571,22 @@ class MushroomStrategy extends HTMLTemplateElement {
     static async generateDashboard(info) {
         console.log('info', info);
         await _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.initialize(info);
-        // Create views.
         const views = info.config?.views ?? [];
-        // Create a view for each exposed domain.
+        await LinusStrategy.createDomainViews(views);
+        await LinusStrategy.createUnavailableEntitiesView(views);
+        LinusStrategy.createAreaSubviews(views);
+        LinusStrategy.createFloorSubviews(views);
+        if (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.extra_views) {
+            views.push(..._Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.extra_views);
+        }
+        return { views };
+    }
+    /**
+     * Create views for each domain.
+     *
+     * @param {LovelaceViewConfig[]} views Array of Lovelace view configurations.
+     */
+    static async createDomainViews(views) {
         for (let viewId of _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getExposedViewIds()) {
             if (_variables__WEBPACK_IMPORTED_MODULE_1__.AREA_CARDS_DOMAINS.includes(viewId) && (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.domains[viewId] ?? []).length === 0)
                 continue;
@@ -4595,7 +4608,13 @@ class MushroomStrategy extends HTMLTemplateElement {
                 _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.logError(`View '${viewId}' couldn't be loaded!`, e);
             }
         }
-        // Create unavailable entities view
+    }
+    /**
+     * Create a view for unavailable entities.
+     *
+     * @param {LovelaceViewConfig[]} views Array of Lovelace view configurations.
+     */
+    static async createUnavailableEntitiesView(views) {
         try {
             const viewModule = await Promise.resolve(/*! import() */).then(__webpack_require__.bind(__webpack_require__, /*! ./views/UnavailableView */ "./src/views/UnavailableView.ts"));
             const view = new viewModule.UnavailableView();
@@ -4604,7 +4623,13 @@ class MushroomStrategy extends HTMLTemplateElement {
         catch (e) {
             _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.logError(`View 'Unavailable' couldn't be loaded!`, e);
         }
-        // Create subviews for each area.
+    }
+    /**
+     * Create subviews for each area.
+     *
+     * @param {LovelaceViewConfig[]} views Array of Lovelace view configurations.
+     */
+    static createAreaSubviews(views) {
         for (let area of _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.orderedAreas) {
             if (!area.hidden) {
                 views.push({
@@ -4613,14 +4638,18 @@ class MushroomStrategy extends HTMLTemplateElement {
                     subview: true,
                     strategy: {
                         type: "custom:linus-strategy",
-                        options: {
-                            area,
-                        },
+                        options: { area },
                     },
                 });
             }
         }
-        // Create subviews for each area.
+    }
+    /**
+     * Create subviews for each floor.
+     *
+     * @param {LovelaceViewConfig[]} views Array of Lovelace view configurations.
+     */
+    static createFloorSubviews(views) {
         for (let floor of _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.orderedFloors) {
             if (!floor.hidden) {
                 views.push({
@@ -4629,21 +4658,11 @@ class MushroomStrategy extends HTMLTemplateElement {
                     subview: true,
                     strategy: {
                         type: "custom:linus-strategy",
-                        options: {
-                            floor,
-                        },
+                        options: { floor },
                     },
                 });
             }
         }
-        // Add custom views.
-        if (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.extra_views) {
-            views.push(..._Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.extra_views);
-        }
-        // Return the created views.
-        return {
-            views: views,
-        };
     }
     /**
      * Generate a view.
@@ -4657,7 +4676,6 @@ class MushroomStrategy extends HTMLTemplateElement {
         const floor = info.view.strategy?.options?.floor;
         const area = info.view.strategy?.options?.area;
         let view = {};
-        // Create a view for each exposed domain.
         try {
             if (area) {
                 view = await new _views_AreaView__WEBPACK_IMPORTED_MODULE_2__.AreaView(area).getView();
@@ -4669,11 +4687,10 @@ class MushroomStrategy extends HTMLTemplateElement {
         catch (e) {
             _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.logError(`View for '${info.view.strategy?.options}' couldn't be loaded!`, e);
         }
-        // Return the created view.
         return view;
     }
 }
-customElements.define("ll-strategy-linus-strategy", MushroomStrategy);
+customElements.define("ll-strategy-linus-strategy", LinusStrategy);
 const version = "v0.0.1";
 console.info("%c Linus Strategy %c ".concat(version, " "), "color: #F5F5DC; background: #004225; font-weight: 700;", "color: #004225; background: #F5F5DC; font-weight: 700;");
 

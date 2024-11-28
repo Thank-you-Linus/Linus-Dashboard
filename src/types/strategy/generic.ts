@@ -80,7 +80,7 @@ export namespace generic {
   export interface ViewInfo {
     view: LovelaceViewConfig & {
       strategy?: {
-        options?: StrategyConfig & { area: StrategyArea, floor: StrategyFloor }
+        options?: StrategyConfig & { domainId: string, area: StrategyArea, floor: StrategyFloor }
       }
     };
     config: LovelaceConfig

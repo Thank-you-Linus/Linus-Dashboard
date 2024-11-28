@@ -54,26 +54,6 @@ class UnavailableView {
   /**
    * Create the cards to include in the view.
    *
-   * @return {Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig)[]>} Promise a View Card array.
-   * @override
-   */
-  async createViewCards(): Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig)[]> {
-    return []
-  }
-
-  /**
-   * Create the cards to include in the view.
-   *
-   * @return {Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig)[]>} Promise a View Card array.
-   * @override
-   */
-  async createSectionBadges(): Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig)[]> {
-    return []
-  }
-
-  /**
-   * Create the cards to include in the view.
-   *
    * @return {Promise<LovelaceGridCardConfig[]>} Promise a View Card array.
    * @override
    */
@@ -136,9 +116,7 @@ class UnavailableView {
   async getView(): Promise<LovelaceViewConfig | LovelaceSectionConfig> {
     return {
       ...this.config,
-      badges: await this.createSectionBadges(),
       sections: await this.createSectionCards(),
-      cards: await this.createViewCards(),
     };
   }
 

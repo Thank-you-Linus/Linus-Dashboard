@@ -1,7 +1,7 @@
 import { Helper } from "./Helper";
 import { generic } from "./types/strategy/generic";
 import { LovelaceConfig, LovelaceViewConfig } from "./types/homeassistant/data/lovelace";
-import { AREA_CARDS_DOMAINS, DEVICE_CLASSES } from "./variables";
+import { AREA_CARDS_DOMAINS, DEVICE_CLASSES, DOMAIN_ICONS } from "./variables";
 import { AreaView } from "./views/AreaView";
 import { getAreaName, getFloorName } from "./utils";
 import { FloorView } from "./views/FloorView";
@@ -29,13 +29,14 @@ class LinusStrategy extends HTMLTemplateElement {
    * @return {Promise<LovelaceConfig>}
    */
   static async generateDashboard(info: generic.DashBoardInfo): Promise<LovelaceConfig> {
-    console.log('info', info);
     await Helper.initialize(info);
+
+    console.log('info', info);
 
     const views: LovelaceViewConfig[] = info.config?.views ?? [];
 
-    await LinusStrategy.createDomainViews(views);
-    await LinusStrategy.createUnavailableEntitiesView(views);
+    LinusStrategy.createDomainSubviews(views);
+    LinusStrategy.createUnavailableEntitiesSubview(views);
     LinusStrategy.createAreaSubviews(views);
     LinusStrategy.createFloorSubviews(views);
 
@@ -47,44 +48,41 @@ class LinusStrategy extends HTMLTemplateElement {
   }
 
   /**
-   * Create views for each domain.
+   * Create subviews for each domain.
    *
    * @param {LovelaceViewConfig[]} views Array of Lovelace view configurations.
    */
-  private static async createDomainViews(views: LovelaceViewConfig[]) {
-    for (let viewId of Helper.getExposedViewIds()) {
-      if (AREA_CARDS_DOMAINS.includes(viewId) && (Helper.domains[viewId] ?? []).length === 0) continue;
-      try {
-        let viewModule;
-        if ([...DEVICE_CLASSES.binary_sensor, ...DEVICE_CLASSES.sensor].includes(viewId)) {
-          viewModule = await import("./views/AggregateView");
-          const view = new viewModule.AggregateView({ device_class: viewId });
-          views.push(await view.getView());
-        } else {
-          const viewType = Helper.sanitizeClassName(viewId + "View");
-          viewModule = await import(`./views/${viewType}`);
-          const view = new viewModule[viewType](Helper.strategyOptions.views[viewId]);
-          views.push(await view.getView());
-        }
-      } catch (e) {
-        Helper.logError(`View '${viewId}' couldn't be loaded!`, e);
-      }
+  private static createDomainSubviews(views: LovelaceViewConfig[]) {
+    for (let domainId of Helper.getExposedViewIds()) {
+      if (AREA_CARDS_DOMAINS.includes(domainId) && (Helper.domains[domainId] ?? []).length === 0) continue;
+      views.push({
+        title: domainId,
+        icon: DOMAIN_ICONS[domainId as keyof typeof DOMAIN_ICONS],
+        path: domainId,
+        subview: !Object.keys(DOMAIN_ICONS).includes(domainId),
+        strategy: {
+          type: "custom:linus-strategy",
+          options: { domainId },
+        },
+      });
     }
   }
 
   /**
-   * Create a view for unavailable entities.
+   * Create a subview for unavailable entities.
    *
    * @param {LovelaceViewConfig[]} views Array of Lovelace view configurations.
    */
-  private static async createUnavailableEntitiesView(views: LovelaceViewConfig[]) {
-    try {
-      const viewModule = await import("./views/UnavailableView");
-      const view = new viewModule.UnavailableView();
-      views.push(await view.getView());
-    } catch (e) {
-      Helper.logError(`View 'Unavailable' couldn't be loaded!`, e);
-    }
+  private static createUnavailableEntitiesSubview(views: LovelaceViewConfig[]) {
+    views.push({
+      title: "Unavailable",
+      path: "unavailable",
+      subview: true,
+      strategy: {
+        type: "custom:linus-strategy",
+        options: { domainId: "unavailable" },
+      },
+    });
   }
 
   /**
@@ -137,18 +135,46 @@ class LinusStrategy extends HTMLTemplateElement {
    * @param {generic.ViewInfo} info The view's strategy information object.
    * @return {Promise<LovelaceViewConfig>}
    */
+  /**
+   * Generate a view.
+   *
+   * Called when opening a subview.
+   *
+   * @param {generic.ViewInfo} info The view's strategy information object.
+   * @return {Promise<LovelaceViewConfig>}
+   */
   static async generateView(info: generic.ViewInfo): Promise<LovelaceViewConfig> {
-    const floor = info.view.strategy?.options?.floor;
-    const area = info.view.strategy?.options?.area;
-
-    let view = {} as LovelaceViewConfig;
+    const { domainId, floor, area } = info.view.strategy?.options ?? {};
+    let view: LovelaceViewConfig = {};
 
     try {
       if (area) {
+
         view = await new AreaView(area).getView();
-      }
-      if (floor) {
+
+      } else if (floor) {
+
         view = await new FloorView(floor).getView();
+
+      } else if (domainId) {
+
+        if (domainId === "unavailable") {
+
+          const viewModule = await import("./views/UnavailableView");
+          view = await new viewModule.UnavailableView().getView();
+
+        } else if ([...DEVICE_CLASSES.binary_sensor, ...DEVICE_CLASSES.sensor].includes(domainId)) {
+
+          const viewModule = await import("./views/AggregateView");
+          view = await new viewModule.AggregateView({ device_class: domainId }).getView();
+
+        } else {
+
+          const viewType = Helper.sanitizeClassName(domainId + "View");
+          const viewModule = await import(`./views/${viewType}`);
+          view = await new viewModule[viewType](Helper.strategyOptions.views[domainId]).getView();
+
+        }
       }
     } catch (e) {
       Helper.logError(`View for '${info.view.strategy?.options}' couldn't be loaded!`, e);

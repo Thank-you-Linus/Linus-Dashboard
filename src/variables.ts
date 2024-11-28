@@ -71,6 +71,8 @@ export const DOMAIN_STATE_ICONS = {
 };
 
 export const DOMAIN_ICONS = {
+  home: "mdi:home-assistant",
+  security: "mdi:security",
   light: "mdi:lightbulb",
   climate: "mdi:thermostat",
   switch: "mdi:power-plug",
@@ -107,6 +109,7 @@ export const DOMAIN_ICONS = {
   plant: 'mdi:flower',
   input_boolean: 'mdi:toggle-switch',
   health: 'mdi:shield-check-outline',
+  battery: 'mdi:battery',
 };
 
 export const AREA_STATE_ICONS = {

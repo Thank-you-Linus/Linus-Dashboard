@@ -10,6 +10,8 @@ import { HassServiceTarget } from "home-assistant-js-websocket";
 import { SwipeCard } from "../cards/SwipeCard";
 import { ControllerCard } from "../cards/ControllerCard";
 import { DOMAIN_ICONS } from "../variables";
+import { AbstractView } from "./AbstractView";
+import { views } from "../types/strategy/views";
 
 /**
  * Security View Class.
@@ -19,13 +21,14 @@ import { DOMAIN_ICONS } from "../variables";
  * @class
  * @abstract
  */
-abstract class SecurityView {
+class SecurityView extends AbstractView {
   /**
-   * Configuration of the view.
+   * Default configuration of the view.
    *
-   * @type {LovelaceViewConfig}
+   * @type {views.ViewConfig}
+   * @private
    */
-  config: LovelaceViewConfig = {
+  #defaultConfig: views.ViewConfig = {
     title: Helper.localize("component.binary_sensor.entity_component.safety.name"),
     path: "security",
     type: "sections",
@@ -33,33 +36,22 @@ abstract class SecurityView {
   };
 
   /**
-   * A card to switch all entities in the view.
-   *
-   * @type {StackCardConfig}
-   */
-  viewControllerCard: StackCardConfig = {
-    cards: [],
-    type: "",
-  };
-
-  /**
    * Class constructor.
    *
-   * @throws {Error} If trying to instantiate this class.
-   * @throws {Error} If the Helper module isn't initialized.
+   * @param {views.ViewConfig} [options={}] Options for the view.
    */
-  protected constructor() {
-    if (!Helper.isInitialized()) {
-      throw new Error("The Helper module must be initialized before using this one.");
-    }
+  constructor(options: views.ViewConfig = {}) {
+    super();
+
+    this.config = { ...this.config, ...this.#defaultConfig, ...options };
   }
 
   /**
    * Create the cards to include in the view.
    *
-   * @return {Promise<(StackCardConfig | TitleCardConfig)[]>} An array of card objects.
+   * @return {Promise<LovelaceGridCardConfig[]>} Promise a View Card array.
    */
-  async createSectionCards(): Promise<(StackCardConfig | TitleCardConfig)[]> {
+  async createSectionCards(): Promise<LovelaceGridCardConfig[]> {
     const globalSection: LovelaceGridCardConfig = {
       type: "grid",
       column_span: 1,
@@ -252,20 +244,6 @@ abstract class SecurityView {
     }
 
     return camerasSection;
-  }
-
-  /**
-   * Get a view object.
-   *
-   * The view includes the cards which are created by method createSectionCards().
-   *
-   * @returns {Promise<LovelaceViewConfig>} The view object.
-   */
-  async getView(): Promise<LovelaceViewConfig> {
-    return {
-      ...this.config,
-      sections: await this.createSectionCards(),
-    };
   }
 }
 

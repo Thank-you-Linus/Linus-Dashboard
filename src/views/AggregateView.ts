@@ -5,6 +5,7 @@ import { views } from "../types/strategy/views";
 import { cards } from "../types/strategy/cards";
 import { DEVICE_CLASSES, DEVICE_ICONS, DOMAIN_ICONS, MAGIC_AREAS_AGGREGATE_DOMAINS, SENSOR_DOMAINS } from "../variables";
 import { getDomainTranslationKey, getStateTranslationKey } from "../utils";
+import { AggregateChip } from "../chips/AggregateChip";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**
@@ -53,6 +54,7 @@ class AggregateView extends AbstractView {
     this.#defaultConfig.title = `${Helper.localize(getDomainTranslationKey(domain, options?.device_class))}s`;
     this.#defaultConfig.icon = DOMAIN_ICONS[options?.device_class as keyof typeof DOMAIN_ICONS];
     this.#defaultConfig.path = options?.device_class;
+    this.#defaultConfig.controllerCardOptions = { show_content: true };
 
     this.config = Object.assign(this.config, this.#defaultConfig, options);
 
@@ -64,6 +66,8 @@ class AggregateView extends AbstractView {
         title: this.#defaultConfig.title,
         // subtitle: Helper.getDeviceClassCountTemplate(options?.device_class, "eq", "on") + ` ${Helper.localize(getStateTranslationKey("on", domain, options?.device_class))}s`,
         ...("controllerCardOptions" in this.config ? this.config.controllerCardOptions : {}) as cards.ControllerCardConfig,
+        // controlChip: new AggregateChip({ device_class: options?.device_class, show_content: true, magic_device_id: "global" }),
+        // showControls: true,
       }, options?.device_class).createCard();
 
   }

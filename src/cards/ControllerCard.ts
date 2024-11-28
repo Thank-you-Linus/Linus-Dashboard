@@ -1,8 +1,6 @@
 import { cards } from "../types/strategy/cards";
 import { LovelaceBadgeConfig, LovelaceCardConfig } from "../types/homeassistant/data/lovelace";
 import { Helper } from "../Helper";
-import { generic } from "../types/strategy/generic";
-import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
 import { getMAEntity, navigateTo } from "../utils";
 import { HassServiceTarget } from "home-assistant-js-websocket";
 
@@ -30,7 +28,7 @@ class ControllerCard {
    * @type {string} The target to control the entities of.
    * @private
    */
-  readonly #magic_entity_id?: string;
+  readonly #magic_device_id?: string;
 
   /**
    * Default configuration of the card.
@@ -40,7 +38,7 @@ class ControllerCard {
    */
   readonly #defaultConfig: cards.ControllerCardConfig = {
     type: "custom:mushroom-title-card",
-    showControls: false,
+    showControls: true,
     iconOn: "mdi:power-on",
     iconOff: "mdi:power-off",
     onService: "none",
@@ -53,10 +51,10 @@ class ControllerCard {
    * @param {HassServiceTarget} target The target to control the entities of.
    * @param {cards.ControllerCardOptions} options Controller Card options.
    */
-  constructor(target: HassServiceTarget, options: cards.ControllerCardOptions = {}, domain: string, magic_entity_id?: string) {
+  constructor(target: HassServiceTarget, options: cards.ControllerCardOptions = {}, domain: string, magic_device_id?: string) {
     this.#target = target;
     this.#domain = domain;
-    this.#magic_entity_id = magic_entity_id;
+    this.#magic_device_id = magic_device_id;
     this.#defaultConfig = {
       ...this.#defaultConfig,
       ...options,
@@ -107,24 +105,24 @@ class ControllerCard {
 
     if (this.#defaultConfig.showControls || this.#defaultConfig.extraControls) {
 
-      const magic_device = Helper.magicAreasDevices[this.#magic_entity_id ?? ""]
-      const magicAreasEntity = this.#magic_entity_id && this.#domain && getMAEntity(this.#magic_entity_id, this.#domain);
-
+      const magic_device = Helper.magicAreasDevices[this.#magic_device_id ?? ""]
       const badges: LovelaceBadgeConfig[] = [];
 
-      const icon = Helper.getFromDomainState({ domain: this.#domain!, ifReturn: this.#defaultConfig.iconOn, elseReturn: this.#defaultConfig.iconOff, area_slug: this.#target.area_id })
-      const icon_color = Helper.getFromDomainState({ domain: this.#domain!, area_slug: this.#target.area_id })
-
       if (this.#defaultConfig.showControls) {
+
+        const magic_entity_id = this.#magic_device_id && this.#domain && getMAEntity(this.#magic_device_id, this.#domain);
+
+        // console.log('this.#defaultConfig :>> ', this.#defaultConfig);
         badges.push({
           type: "custom:mushroom-chips-card",
           chips: [
+            // this.#defaultConfig?.controlChip
             {
               type: "template",
-              entity: magicAreasEntity ? magicAreasEntity?.entity_id : this.#target.entity_id,
-              icon,
-              icon_color,
-              tap_action: magicAreasEntity ? {
+              entity: magic_entity_id ? magic_entity_id?.entity_id : this.#target.entity_id,
+              icon: Helper.getFromDomainState({ domain: this.#domain!, ifReturn: this.#defaultConfig.iconOn, elseReturn: this.#defaultConfig.iconOff, area_slug: this.#target.area_id }),
+              icon_color: Helper.getFromDomainState({ domain: this.#domain!, area_slug: this.#target.area_id }),
+              tap_action: magic_entity_id ? {
                 action: "toggle"
               } : {
                 action: "call-service",
@@ -132,7 +130,7 @@ class ControllerCard {
                 target: this.#target,
                 data: {},
               },
-              ...(magic_device ? {
+              ...(magic_entity_id ? {
                 hold_action: {
                   action: "more-info"
                 }

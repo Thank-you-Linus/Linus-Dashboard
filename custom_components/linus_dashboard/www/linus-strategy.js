@@ -4569,11 +4569,11 @@ class LinusStrategy extends HTMLTemplateElement {
      * @return {Promise<LovelaceConfig>}
      */
     static async generateDashboard(info) {
-        console.log('info', info);
         await _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.initialize(info);
+        console.log('info', info);
         const views = info.config?.views ?? [];
-        await LinusStrategy.createDomainViews(views);
-        await LinusStrategy.createUnavailableEntitiesView(views);
+        LinusStrategy.createDomainSubviews(views);
+        LinusStrategy.createUnavailableEntitiesSubview(views);
         LinusStrategy.createAreaSubviews(views);
         LinusStrategy.createFloorSubviews(views);
         if (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.extra_views) {
@@ -4582,47 +4582,41 @@ class LinusStrategy extends HTMLTemplateElement {
         return { views };
     }
     /**
-     * Create views for each domain.
+     * Create subviews for each domain.
      *
      * @param {LovelaceViewConfig[]} views Array of Lovelace view configurations.
      */
-    static async createDomainViews(views) {
-        for (let viewId of _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getExposedViewIds()) {
-            if (_variables__WEBPACK_IMPORTED_MODULE_1__.AREA_CARDS_DOMAINS.includes(viewId) && (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.domains[viewId] ?? []).length === 0)
+    static createDomainSubviews(views) {
+        for (let domainId of _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getExposedViewIds()) {
+            if (_variables__WEBPACK_IMPORTED_MODULE_1__.AREA_CARDS_DOMAINS.includes(domainId) && (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.domains[domainId] ?? []).length === 0)
                 continue;
-            try {
-                let viewModule;
-                if ([..._variables__WEBPACK_IMPORTED_MODULE_1__.DEVICE_CLASSES.binary_sensor, ..._variables__WEBPACK_IMPORTED_MODULE_1__.DEVICE_CLASSES.sensor].includes(viewId)) {
-                    viewModule = await Promise.resolve(/*! import() */).then(__webpack_require__.bind(__webpack_require__, /*! ./views/AggregateView */ "./src/views/AggregateView.ts"));
-                    const view = new viewModule.AggregateView({ device_class: viewId });
-                    views.push(await view.getView());
-                }
-                else {
-                    const viewType = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.sanitizeClassName(viewId + "View");
-                    viewModule = await __webpack_require__("./src/views lazy recursive ^\\.\\/.*$")(`./${viewType}`);
-                    const view = new viewModule[viewType](_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.views[viewId]);
-                    views.push(await view.getView());
-                }
-            }
-            catch (e) {
-                _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.logError(`View '${viewId}' couldn't be loaded!`, e);
-            }
+            views.push({
+                title: domainId,
+                icon: _variables__WEBPACK_IMPORTED_MODULE_1__.DOMAIN_ICONS[domainId],
+                path: domainId,
+                subview: !Object.keys(_variables__WEBPACK_IMPORTED_MODULE_1__.DOMAIN_ICONS).includes(domainId),
+                strategy: {
+                    type: "custom:linus-strategy",
+                    options: { domainId },
+                },
+            });
         }
     }
     /**
-     * Create a view for unavailable entities.
+     * Create a subview for unavailable entities.
      *
      * @param {LovelaceViewConfig[]} views Array of Lovelace view configurations.
      */
-    static async createUnavailableEntitiesView(views) {
-        try {
-            const viewModule = await Promise.resolve(/*! import() */).then(__webpack_require__.bind(__webpack_require__, /*! ./views/UnavailableView */ "./src/views/UnavailableView.ts"));
-            const view = new viewModule.UnavailableView();
-            views.push(await view.getView());
-        }
-        catch (e) {
-            _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.logError(`View 'Unavailable' couldn't be loaded!`, e);
-        }
+    static createUnavailableEntitiesSubview(views) {
+        views.push({
+            title: "Unavailable",
+            path: "unavailable",
+            subview: true,
+            strategy: {
+                type: "custom:linus-strategy",
+                options: { domainId: "unavailable" },
+            },
+        });
     }
     /**
      * Create subviews for each area.
@@ -4672,16 +4666,38 @@ class LinusStrategy extends HTMLTemplateElement {
      * @param {generic.ViewInfo} info The view's strategy information object.
      * @return {Promise<LovelaceViewConfig>}
      */
+    /**
+     * Generate a view.
+     *
+     * Called when opening a subview.
+     *
+     * @param {generic.ViewInfo} info The view's strategy information object.
+     * @return {Promise<LovelaceViewConfig>}
+     */
     static async generateView(info) {
-        const floor = info.view.strategy?.options?.floor;
-        const area = info.view.strategy?.options?.area;
+        const { domainId, floor, area } = info.view.strategy?.options ?? {};
         let view = {};
         try {
             if (area) {
                 view = await new _views_AreaView__WEBPACK_IMPORTED_MODULE_2__.AreaView(area).getView();
             }
-            if (floor) {
+            else if (floor) {
                 view = await new _views_FloorView__WEBPACK_IMPORTED_MODULE_4__.FloorView(floor).getView();
+            }
+            else if (domainId) {
+                if (domainId === "unavailable") {
+                    const viewModule = await Promise.resolve(/*! import() */).then(__webpack_require__.bind(__webpack_require__, /*! ./views/UnavailableView */ "./src/views/UnavailableView.ts"));
+                    view = await new viewModule.UnavailableView().getView();
+                }
+                else if ([..._variables__WEBPACK_IMPORTED_MODULE_1__.DEVICE_CLASSES.binary_sensor, ..._variables__WEBPACK_IMPORTED_MODULE_1__.DEVICE_CLASSES.sensor].includes(domainId)) {
+                    const viewModule = await Promise.resolve(/*! import() */).then(__webpack_require__.bind(__webpack_require__, /*! ./views/AggregateView */ "./src/views/AggregateView.ts"));
+                    view = await new viewModule.AggregateView({ device_class: domainId }).getView();
+                }
+                else {
+                    const viewType = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.sanitizeClassName(domainId + "View");
+                    const viewModule = await __webpack_require__("./src/views lazy recursive ^\\.\\/.*$")(`./${viewType}`);
+                    view = await new viewModule[viewType](_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.views[domainId]).getView();
+                }
             }
         }
         catch (e) {
@@ -5846,6 +5862,8 @@ const DOMAIN_STATE_ICONS = {
     plant: { on: "mdi:flower", off: "mdi:flower" },
 };
 const DOMAIN_ICONS = {
+    home: "mdi:home-assistant",
+    security: "mdi:security",
     light: "mdi:lightbulb",
     climate: "mdi:thermostat",
     switch: "mdi:power-plug",
@@ -5882,6 +5900,7 @@ const DOMAIN_ICONS = {
     plant: 'mdi:flower',
     input_boolean: 'mdi:toggle-switch',
     health: 'mdi:shield-check-outline',
+    battery: 'mdi:battery',
 };
 const AREA_STATE_ICONS = {
     occupied: "mdi:account",
@@ -7047,15 +7066,6 @@ class HomeView extends _AbstractView__WEBPACK_IMPORTED_MODULE_1__.AbstractView {
      * @return {Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig)[]>} Promise a View Card array.
      * @override
      */
-    async createViewCards() {
-        return [];
-    }
-    /**
-     * Create the cards to include in the view.
-     *
-     * @return {Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig)[]>} Promise a View Card array.
-     * @override
-     */
     async createSectionBadges() {
         if (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.home_view.hidden.includes("chips")) {
             // Chips section is hidden.
@@ -8117,24 +8127,6 @@ class UnavailableView {
     /**
      * Create the cards to include in the view.
      *
-     * @return {Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig)[]>} Promise a View Card array.
-     * @override
-     */
-    async createViewCards() {
-        return [];
-    }
-    /**
-     * Create the cards to include in the view.
-     *
-     * @return {Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig)[]>} Promise a View Card array.
-     * @override
-     */
-    async createSectionBadges() {
-        return [];
-    }
-    /**
-     * Create the cards to include in the view.
-     *
      * @return {Promise<LovelaceGridCardConfig[]>} Promise a View Card array.
      * @override
      */
@@ -8188,9 +8180,7 @@ class UnavailableView {
     async getView() {
         return {
             ...this.config,
-            badges: await this.createSectionBadges(),
             sections: await this.createSectionCards(),
-            cards: await this.createViewCards(),
         };
     }
     /**

@@ -487,13 +487,12 @@ class Helper {
                 }
             }
             else {
-                // Get the ID of the devices which are linked to the given area.
                 for (const area of Object.values(__classPrivateFieldGet(this, _a, "f", _Helper_areas))) {
                     if (area.area_id === _variables__WEBPACK_IMPORTED_MODULE_2__.UNDISCLOSED)
                         continue;
                     const newStates = domain === "all"
-                        ? __classPrivateFieldGet(this, _a, "f", _Helper_areas)[area.slug]?.entities.map((entity_id) => `states['${entity_id}']`)
-                        : __classPrivateFieldGet(this, _a, "f", _Helper_areas)[area.slug]?.domains[domain]?.map((entity_id) => `states['${entity_id}']`);
+                        ? area.entities.map((entity_id) => `states['${entity_id}']`)
+                        : area.domains[domain]?.map((entity_id) => `states['${entity_id}']`);
                     if (newStates) {
                         states.push(...newStates);
                     }
@@ -518,38 +517,14 @@ class Helper {
      * @static
      */
     static getDeviceClassCountTemplate(device_class, operator, value, area_id) {
-        // noinspection JSMismatchedCollectionQueryUpdate (False positive per 17-04-2023)
-        /**
-         * Array of entity state-entries, filtered by domain.
-         *
-         * Each element contains a template-string which is used to access home assistant's state machine (state object) in
-         * a template.
-         * E.g. "states['light.kitchen']"
-         *
-         * The array excludes hidden and disabled entities.
-         *
-         * @type {string[]}
-         */
         const states = [];
         if (!this.isInitialized()) {
             console.warn("Helper class should be initialized before calling this method!");
         }
-        if (area_id) {
-            const newStates = (Array.isArray(area_id) ? area_id : [area_id]).flatMap(id => __classPrivateFieldGet(this, _a, "f", _Helper_areas)[id]?.domains[device_class]?.map((entity_id) => `states['${entity_id}']`) || []);
-            if (newStates.length) {
-                states.push(...newStates);
-            }
-        }
-        else {
-            // Get the ID of the devices which are linked to the given area.
-            for (const area of Object.values(__classPrivateFieldGet(this, _a, "f", _Helper_areas))) {
-                if (area.area_id === _variables__WEBPACK_IMPORTED_MODULE_2__.UNDISCLOSED)
-                    continue;
-                const newStates = __classPrivateFieldGet(this, _a, "f", _Helper_areas)[area.slug]?.domains[device_class]?.map((entity_id) => `states['${entity_id}']`);
-                if (newStates) {
-                    states.push(...newStates);
-                }
-            }
+        const areaIds = Array.isArray(area_id) ? area_id : [area_id];
+        for (const id of areaIds) {
+            const newStates = id ? __classPrivateFieldGet(this, _a, "f", _Helper_areas)[id]?.domains[device_class]?.map((entity_id) => `states['${entity_id}']`) || [] : [];
+            states.push(...newStates);
         }
         const formattedValue = Array.isArray(value) ? JSON.stringify(value).replace(/"/g, "'") : `'${value}'`;
         return `{% set entities = [${states}] %}{{ entities | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | selectattr('state','${operator}',${formattedValue}) | list | count }}`;
@@ -566,40 +541,14 @@ class Helper {
      * @static
      */
     static getAverageStateTemplate(device_class, area_slug) {
-        // noinspection JSMismatchedCollectionQueryUpdate (False positive per 17-04-2023)
-        /**
-         * Array of entity state-entries, filtered by domain.
-         *
-         * Each element contains a template-string which is used to access home assistant's state machine (state object) in
-         * a template.
-         * E.g. "states['light.kitchen']"
-         *
-         * The array excludes hidden and disabled entities.
-         *
-         * @type {string[]}
-         */
         const states = [];
         if (!this.isInitialized()) {
             console.warn("Helper class should be initialized before calling this method!");
         }
-        if (area_slug) {
-            const newStates = Array.isArray(area_slug)
-                ? area_slug.flatMap(slug => __classPrivateFieldGet(this, _a, "f", _Helper_areas)[slug]?.domains[device_class]?.map((entity_id) => `states['${entity_id}']`) || [])
-                : __classPrivateFieldGet(this, _a, "f", _Helper_areas)[area_slug]?.domains[device_class]?.map((entity_id) => `states['${entity_id}']`);
-            if (newStates) {
-                states.push(...newStates);
-            }
-        }
-        else {
-            // Get the ID of the devices which are linked to the given area.
-            for (const area of Object.values(__classPrivateFieldGet(this, _a, "f", _Helper_areas))) {
-                if (area.area_id === _variables__WEBPACK_IMPORTED_MODULE_2__.UNDISCLOSED)
-                    continue;
-                const newStates = __classPrivateFieldGet(this, _a, "f", _Helper_areas)[area.slug].domains[device_class]?.map((entity_id) => `states['${entity_id}']`);
-                if (newStates) {
-                    states.push(...newStates);
-                }
-            }
+        const areaSlugs = Array.isArray(area_slug) ? area_slug : [area_slug];
+        for (const slug of areaSlugs) {
+            const newStates = slug ? __classPrivateFieldGet(this, _a, "f", _Helper_areas)[slug]?.domains[device_class]?.map((entity_id) => `states['${entity_id}']`) || [] : [];
+            states.push(...newStates);
         }
         return `{% set entities = [${states}] %}{{ (entities | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | sum / entities | length) | round(1) }} {{ ${states[0]}.attributes.unit_of_measurement }}`;
     }

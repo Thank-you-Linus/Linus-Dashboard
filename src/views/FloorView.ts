@@ -180,7 +180,7 @@ class FloorView {
             ...Helper.strategyOptions.domains[domain].controllerCardOptions,
             title: Helper.localize(getDomainTranslationKey(domain)),
             titleIcon: DOMAIN_ICONS[domain as keyof typeof DOMAIN_ICONS] ?? "mdi:floor-plan",
-            titleNavigate: domain + "s",
+            titleNavigate: domain,
           };
           if (domain) {
             titleSectionOptions.showControls = Helper.strategyOptions.domains[domain].showControls;

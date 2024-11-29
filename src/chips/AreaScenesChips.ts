@@ -4,7 +4,7 @@ import { generic } from "../types/strategy/generic";
 import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
 import StrategyArea = generic.StrategyArea;
 import { LovelaceChipConfig, TemplateChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
-import { DOMAIN, todOrder } from "../variables";
+import { MAGIC_AREAS_DOMAIN, TOD_ORDER } from "../variables";
 import { slugify } from "../utils";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
@@ -28,7 +28,7 @@ class AreaScenesChips {
    */
   getDefaultConfig(device: MagicAreaRegistryEntry, area: StrategyArea): TemplateChipConfig[] {
 
-    const selects = todOrder.map(tod => Helper.getEntityState(device?.entities[`scene_${tod as 'morning'}`]?.entity_id)).filter(Boolean)
+    const selects = TOD_ORDER.map(tod => Helper.getEntityState(device?.entities[`scene_${tod as 'morning'}`]?.entity_id)).filter(Boolean)
 
     const chips = [] as TemplateChipConfig[]
 
@@ -39,7 +39,7 @@ class AreaScenesChips {
         content: "AD",
         tap_action: {
           action: "call-service",
-          service: `${DOMAIN}.area_light_adapt`,
+          service: `${MAGIC_AREAS_DOMAIN}.area_light_adapt`,
           data: {
             area: slugify(device.name),
           }
@@ -49,12 +49,12 @@ class AreaScenesChips {
 
     selects.forEach((scene, index) => {
       if (scene?.state === "Scène instantanée") {
-        const entity_id = `scene.${slugify(device.name)}_${todOrder[index]}_snapshot_scene`
+        const entity_id = `scene.${slugify(device.name)}_${TOD_ORDER[index]}_snapshot_scene`
         chips.push({
           type: "template",
           entity: scene?.entity_id,
           icon: scene?.attributes.icon,
-          content: todOrder[index],
+          content: TOD_ORDER[index],
           tap_action: {
             action: "call-service",
             service: "scene.turn_on",
@@ -70,7 +70,7 @@ class AreaScenesChips {
           type: "template",
           entity: scene?.entity_id,
           icon: scene?.attributes.icon,
-          content: todOrder[index],
+          content: TOD_ORDER[index],
           tap_action: {
             action: "call-service",
             service: "scene.turn_on",

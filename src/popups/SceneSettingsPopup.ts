@@ -1,7 +1,7 @@
 
 import { PopupActionConfig } from "../types/homeassistant/data/lovelace";
 import { slugify } from "../utils";
-import { DOMAIN, todOrder } from "../variables";
+import { MAGIC_AREAS_DOMAIN, TOD_ORDER } from "../variables";
 import { AbstractPopup } from "./AbstractPopup";
 import { generic } from "../types/strategy/generic";
 import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
@@ -28,7 +28,7 @@ class SceneSettings extends AbstractPopup {
           content: {
             type: "vertical-stack",
             cards: [
-              ...(selectControl.length ? todOrder.map(tod => (
+              ...(selectControl.length ? TOD_ORDER.map(tod => (
                 {
                   type: "custom:config-template-card",
                   variables: {
@@ -86,7 +86,7 @@ class SceneSettings extends AbstractPopup {
                           layout: "vertical",
                           tap_action: {
                             action: "call-service",
-                            service: `${DOMAIN}.snapshot_lights_as_tod_scene`,
+                            service: `${MAGIC_AREAS_DOMAIN}.snapshot_lights_as_tod_scene`,
                             data: {
                               area: slugify(device.name),
                               tod

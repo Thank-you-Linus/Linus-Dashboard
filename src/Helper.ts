@@ -10,7 +10,7 @@ import StrategyEntity = generic.StrategyEntity;
 import StrategyDevice = generic.StrategyDevice;
 import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
 import { FloorRegistryEntry } from "./types/homeassistant/data/floor_registry";
-import { DEVICE_CLASSES, DOMAIN, NAME, UNDISCLOSED, UNKNOWN } from "./variables";
+import { DEVICE_CLASSES, MAGIC_AREAS_DOMAIN, MAGIC_AREAS_NAME, UNDISCLOSED } from "./variables";
 import { getMagicAreaSlug, groupEntitiesByDomain, slugify } from "./utils";
 import { EntityRegistryEntry } from "./types/homeassistant/data/entity_registry";
 
@@ -288,7 +288,7 @@ class Helper {
 
       acc[entity.entity_id] = enrichedEntity;
 
-      if (entity.platform !== DOMAIN) {
+      if (entity.platform !== MAGIC_AREAS_DOMAIN) {
         const areaId = entity.area_id ?? devicesByAreaIdMap[entity.device_id ?? ""] ?? UNDISCLOSED;
         if (!entitiesByAreaId[areaId]) entitiesByAreaId[areaId] = [];
         entitiesByAreaId[areaId].push(enrichedEntity);
@@ -325,13 +325,13 @@ class Helper {
 
       acc[device.id] = enrichedDevice;
 
-      if (device.manufacturer !== NAME) {
+      if (device.manufacturer !== MAGIC_AREAS_NAME) {
         const areaId = device.area_id ?? UNDISCLOSED;
         if (!devicesByAreaId[areaId]) devicesByAreaId[areaId] = [];
         devicesByAreaId[areaId].push(enrichedDevice);
       }
 
-      if (device.manufacturer === NAME) {
+      if (device.manufacturer === MAGIC_AREAS_NAME) {
         this.#magicAreasDevices[getMagicAreaSlug(device as MagicAreaRegistryEntry)] = {
           ...device,
           area_name: device.name!,
@@ -371,7 +371,7 @@ class Helper {
         slug,
         domains: groupEntitiesByDomain(areaEntities) ?? {},
         devices: devicesByAreaId[area.area_id]?.map(device => device.id) || [],
-        magicAreaDevice: Object.values(this.#devices).find(device => device.manufacturer === NAME && device.name === area.name),
+        magicAreaDevice: Object.values(this.#devices).find(device => device.manufacturer === MAGIC_AREAS_NAME && device.name === area.name),
         entities: areaEntities,
       };
 

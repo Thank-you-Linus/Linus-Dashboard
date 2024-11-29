@@ -142,7 +142,7 @@ class AreaView {
             subtitle: Helper.localize(getDomainTranslationKey(domain)),
             domain,
             subtitleIcon: DOMAIN_ICONS[domain as keyof typeof DOMAIN_ICONS],
-            subtitleNavigate: domain + "s",
+            subtitleNavigate: domain,
           };
 
           if (domain) {

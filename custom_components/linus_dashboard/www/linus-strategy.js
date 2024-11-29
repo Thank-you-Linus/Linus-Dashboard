@@ -345,7 +345,7 @@ class Helper {
                 floor_id: floor.floor_id || null,
             };
             acc[entity.entity_id] = enrichedEntity;
-            if (entity.platform !== _variables__WEBPACK_IMPORTED_MODULE_2__.DOMAIN) {
+            if (entity.platform !== _variables__WEBPACK_IMPORTED_MODULE_2__.MAGIC_AREAS_DOMAIN) {
                 const areaId = entity.area_id ?? devicesByAreaIdMap[entity.device_id ?? ""] ?? _variables__WEBPACK_IMPORTED_MODULE_2__.UNDISCLOSED;
                 if (!entitiesByAreaId[areaId])
                     entitiesByAreaId[areaId] = [];
@@ -378,13 +378,13 @@ class Helper {
                 entities: entitiesInDevice.map(entity => entity.entity_id),
             };
             acc[device.id] = enrichedDevice;
-            if (device.manufacturer !== _variables__WEBPACK_IMPORTED_MODULE_2__.NAME) {
+            if (device.manufacturer !== _variables__WEBPACK_IMPORTED_MODULE_2__.MAGIC_AREAS_NAME) {
                 const areaId = device.area_id ?? _variables__WEBPACK_IMPORTED_MODULE_2__.UNDISCLOSED;
                 if (!devicesByAreaId[areaId])
                     devicesByAreaId[areaId] = [];
                 devicesByAreaId[areaId].push(enrichedDevice);
             }
-            if (device.manufacturer === _variables__WEBPACK_IMPORTED_MODULE_2__.NAME) {
+            if (device.manufacturer === _variables__WEBPACK_IMPORTED_MODULE_2__.MAGIC_AREAS_NAME) {
                 __classPrivateFieldGet(this, _a, "f", _Helper_magicAreasDevices)[(0,_utils__WEBPACK_IMPORTED_MODULE_3__.getMagicAreaSlug)(device)] = {
                     ...device,
                     area_name: device.name,
@@ -415,7 +415,7 @@ class Helper {
                 slug,
                 domains: (0,_utils__WEBPACK_IMPORTED_MODULE_3__.groupEntitiesByDomain)(areaEntities) ?? {},
                 devices: devicesByAreaId[area.area_id]?.map(device => device.id) || [],
-                magicAreaDevice: Object.values(__classPrivateFieldGet(this, _a, "f", _Helper_devices)).find(device => device.manufacturer === _variables__WEBPACK_IMPORTED_MODULE_2__.NAME && device.name === area.name),
+                magicAreaDevice: Object.values(__classPrivateFieldGet(this, _a, "f", _Helper_devices)).find(device => device.manufacturer === _variables__WEBPACK_IMPORTED_MODULE_2__.MAGIC_AREAS_NAME && device.name === area.name),
                 entities: areaEntities,
             };
             acc[slug] = enrichedArea;
@@ -2943,7 +2943,7 @@ class AreaScenesChips {
      *
      */
     getDefaultConfig(device, area) {
-        const selects = _variables__WEBPACK_IMPORTED_MODULE_1__.todOrder.map(tod => _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getEntityState(device?.entities[`scene_${tod}`]?.entity_id)).filter(Boolean);
+        const selects = _variables__WEBPACK_IMPORTED_MODULE_1__.TOD_ORDER.map(tod => _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getEntityState(device?.entities[`scene_${tod}`]?.entity_id)).filter(Boolean);
         const chips = [];
         if (selects.find(scene => scene?.state == "Adaptive lighting")) {
             chips.push({
@@ -2952,7 +2952,7 @@ class AreaScenesChips {
                 content: "AD",
                 tap_action: {
                     action: "call-service",
-                    service: `${_variables__WEBPACK_IMPORTED_MODULE_1__.DOMAIN}.area_light_adapt`,
+                    service: `${_variables__WEBPACK_IMPORTED_MODULE_1__.MAGIC_AREAS_DOMAIN}.area_light_adapt`,
                     data: {
                         area: (0,_utils__WEBPACK_IMPORTED_MODULE_2__.slugify)(device.name),
                     }
@@ -2961,12 +2961,12 @@ class AreaScenesChips {
         }
         selects.forEach((scene, index) => {
             if (scene?.state === "Scène instantanée") {
-                const entity_id = `scene.${(0,_utils__WEBPACK_IMPORTED_MODULE_2__.slugify)(device.name)}_${_variables__WEBPACK_IMPORTED_MODULE_1__.todOrder[index]}_snapshot_scene`;
+                const entity_id = `scene.${(0,_utils__WEBPACK_IMPORTED_MODULE_2__.slugify)(device.name)}_${_variables__WEBPACK_IMPORTED_MODULE_1__.TOD_ORDER[index]}_snapshot_scene`;
                 chips.push({
                     type: "template",
                     entity: scene?.entity_id,
                     icon: scene?.attributes.icon,
-                    content: _variables__WEBPACK_IMPORTED_MODULE_1__.todOrder[index],
+                    content: _variables__WEBPACK_IMPORTED_MODULE_1__.TOD_ORDER[index],
                     tap_action: {
                         action: "call-service",
                         service: "scene.turn_on",
@@ -2983,7 +2983,7 @@ class AreaScenesChips {
                     type: "template",
                     entity: scene?.entity_id,
                     icon: scene?.attributes.icon,
-                    content: _variables__WEBPACK_IMPORTED_MODULE_1__.todOrder[index],
+                    content: _variables__WEBPACK_IMPORTED_MODULE_1__.TOD_ORDER[index],
                     tap_action: {
                         action: "call-service",
                         service: "scene.turn_on",
@@ -4002,7 +4002,7 @@ class ToggleSceneChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.Abstrac
             // icon_color: "{% if is_state(config.entity, 'on') %}green{% else %}red{% endif %}",
             tap_action: {
                 action: "call-service",
-                service: `${_variables__WEBPACK_IMPORTED_MODULE_0__.DOMAIN}.area_scene_toggle`,
+                service: `${_variables__WEBPACK_IMPORTED_MODULE_0__.MAGIC_AREAS_DOMAIN}.area_scene_toggle`,
                 data: {
                     area: device?.name,
                 }
@@ -4232,12 +4232,10 @@ const configurationDefaults = {
             hide_config_entities: false,
         },
         default: {
-            title: "Divers",
             showControls: false,
             hidden: false,
         },
         light: {
-            // title: "Lights",
             showControls: true,
             extraControls: (device) => {
                 const chips = [];
@@ -4260,7 +4258,6 @@ const configurationDefaults = {
             order: 1
         },
         climate: {
-            title: "Climates",
             showControls: true,
             controllerCardOptions: {
                 iconOn: _variables__WEBPACK_IMPORTED_MODULE_5__.DOMAIN_STATE_ICONS.climate.on,
@@ -4280,7 +4277,6 @@ const configurationDefaults = {
             },
         },
         media_player: {
-            title: "Media Players",
             showControls: true,
             controllerCardOptions: {
                 iconOn: _variables__WEBPACK_IMPORTED_MODULE_5__.DOMAIN_STATE_ICONS.media_player.on,
@@ -4300,7 +4296,6 @@ const configurationDefaults = {
             },
         },
         cover: {
-            title: "Covers",
             showControls: true,
             controllerCardOptions: {
                 iconOn: _variables__WEBPACK_IMPORTED_MODULE_5__.DOMAIN_STATE_ICONS.cover.on,
@@ -4313,7 +4308,6 @@ const configurationDefaults = {
             order: 4
         },
         scene: {
-            title: "Scènes",
             showControls: false,
             extraControls: (device) => {
                 const chips = [];
@@ -4329,7 +4323,6 @@ const configurationDefaults = {
             order: 5
         },
         fan: {
-            title: "Fans",
             showControls: true,
             controllerCardOptions: {
                 iconOn: _variables__WEBPACK_IMPORTED_MODULE_5__.DOMAIN_STATE_ICONS.fan.on,
@@ -4342,7 +4335,6 @@ const configurationDefaults = {
             order: 6
         },
         switch: {
-            title: "Switches",
             showControls: true,
             controllerCardOptions: {
                 iconOn: _variables__WEBPACK_IMPORTED_MODULE_5__.DOMAIN_STATE_ICONS.switch.on,
@@ -4355,7 +4347,6 @@ const configurationDefaults = {
             order: 7
         },
         camera: {
-            title: "Cameras",
             showControls: false,
             controllerCardOptions: {
                 iconOn: _variables__WEBPACK_IMPORTED_MODULE_5__.DOMAIN_STATE_ICONS.camera.on,
@@ -4365,7 +4356,6 @@ const configurationDefaults = {
             order: 8
         },
         lock: {
-            title: "Locks",
             showControls: false,
             controllerCardOptions: {
                 iconOn: _variables__WEBPACK_IMPORTED_MODULE_5__.DOMAIN_STATE_ICONS.lock.on,
@@ -4375,7 +4365,6 @@ const configurationDefaults = {
             order: 9
         },
         vacuum: {
-            title: "Vacuums",
             showControls: true,
             controllerCardOptions: {
                 iconOn: _variables__WEBPACK_IMPORTED_MODULE_5__.DOMAIN_STATE_ICONS.vacuum.on,
@@ -4387,17 +4376,18 @@ const configurationDefaults = {
             order: 10
         },
         sensor: {
-            title: "Sensors",
             showControls: false,
             hidden: false,
         },
         binary_sensor: {
-            title: "Binary Sensors",
             showControls: false,
             hidden: false,
         },
         number: {
-            title: "Numbers",
+            showControls: false,
+            hidden: false,
+        },
+        temperature: {
             showControls: false,
             hidden: false,
         },
@@ -4538,9 +4528,9 @@ class LinusStrategy extends HTMLTemplateElement {
      */
     static createDomainSubviews(views) {
         for (let domainId of _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getExposedViewIds()) {
-            if (!_variables__WEBPACK_IMPORTED_MODULE_1__.DOMAINS_VIEWS.includes(domainId))
+            if (![..._variables__WEBPACK_IMPORTED_MODULE_1__.CUSTOM_VIEWS, ..._variables__WEBPACK_IMPORTED_MODULE_1__.DOMAINS_VIEWS].includes(domainId))
                 continue;
-            if (_variables__WEBPACK_IMPORTED_MODULE_1__.AREA_CARDS_DOMAINS.includes(domainId) && (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.domains[domainId] ?? []).length === 0)
+            if (_variables__WEBPACK_IMPORTED_MODULE_1__.DOMAINS_VIEWS.includes(domainId) && (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.domains[domainId] ?? []).length === 0)
                 continue;
             views.push({
                 title: domainId,
@@ -5071,7 +5061,7 @@ class LightSettings extends _AbstractPopup__WEBPACK_IMPORTED_MODULE_3__.Abstract
                                         layout: "vertical",
                                         tap_action: {
                                             action: "call-service",
-                                            service: `${_variables__WEBPACK_IMPORTED_MODULE_2__.DOMAIN}.area_lux_for_lighting_max`,
+                                            service: `${_variables__WEBPACK_IMPORTED_MODULE_2__.MAGIC_AREAS_DOMAIN}.area_lux_for_lighting_max`,
                                             data: {
                                                 area: device?.name
                                             }
@@ -5222,7 +5212,7 @@ class SceneSettings extends _AbstractPopup__WEBPACK_IMPORTED_MODULE_2__.Abstract
                     content: {
                         type: "vertical-stack",
                         cards: [
-                            ...(selectControl.length ? _variables__WEBPACK_IMPORTED_MODULE_1__.todOrder.map(tod => ({
+                            ...(selectControl.length ? _variables__WEBPACK_IMPORTED_MODULE_1__.TOD_ORDER.map(tod => ({
                                 type: "custom:config-template-card",
                                 variables: {
                                     SCENE_STATE: `states['${device?.entities[('scene_' + tod)]?.entity_id}'].state`
@@ -5276,7 +5266,7 @@ class SceneSettings extends _AbstractPopup__WEBPACK_IMPORTED_MODULE_2__.Abstract
                                                 layout: "vertical",
                                                 tap_action: {
                                                     action: "call-service",
-                                                    service: `${_variables__WEBPACK_IMPORTED_MODULE_1__.DOMAIN}.snapshot_lights_as_tod_scene`,
+                                                    service: `${_variables__WEBPACK_IMPORTED_MODULE_1__.MAGIC_AREAS_DOMAIN}.snapshot_lights_as_tod_scene`,
                                                     data: {
                                                         area: (0,_utils__WEBPACK_IMPORTED_MODULE_0__.slugify)(device.name),
                                                         tod
@@ -5627,10 +5617,10 @@ function getAggregateEntity(device, domains, device_classes) {
                 }
             });
         }
-        if (_variables__WEBPACK_IMPORTED_MODULE_1__.MAGIC_AREAS_GROUP_DOMAINS.includes(domain)) {
+        if (_variables__WEBPACK_IMPORTED_MODULE_1__.GROUP_DOMAINS.includes(domain)) {
             aggregateKeys.push(device?.entities[`${domain}_group`]);
         }
-        if (_variables__WEBPACK_IMPORTED_MODULE_1__.MAGIC_AREAS_AGGREGATE_DOMAINS.includes(domain)) {
+        if (_variables__WEBPACK_IMPORTED_MODULE_1__.AGGREGATE_DOMAINS.includes(domain)) {
             for (const device_class of Array.isArray(device_classes) ? device_classes : [device_classes]) {
                 aggregateKeys.push(device?.entities[`aggregate_${device_class}`]);
             }
@@ -5641,9 +5631,9 @@ function getAggregateEntity(device, domains, device_classes) {
 function getMAEntity(area_slug, domain, device_class) {
     const magicAreaDevice = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices[area_slug];
     // TODO remove '' when new release
-    if (domain === _variables__WEBPACK_IMPORTED_MODULE_1__.MAGIC_AREAS_LIGHT_DOMAINS)
+    if (domain === _variables__WEBPACK_IMPORTED_MODULE_1__.LIGHT_DOMAIN)
         return magicAreaDevice?.entities?.[''] ?? magicAreaDevice?.entities?.['all_lights'];
-    if (_variables__WEBPACK_IMPORTED_MODULE_1__.MAGIC_AREAS_GROUP_DOMAINS.includes(domain))
+    if (_variables__WEBPACK_IMPORTED_MODULE_1__.GROUP_DOMAINS.includes(domain))
         return magicAreaDevice?.entities?.[`${domain}_group`];
     if (device_class && [..._variables__WEBPACK_IMPORTED_MODULE_1__.DEVICE_CLASSES.binary_sensor, ..._variables__WEBPACK_IMPORTED_MODULE_1__.DEVICE_CLASSES.sensor].includes(device_class))
         return magicAreaDevice?.entities?.[`aggregate_${device_class}`];
@@ -5702,14 +5692,14 @@ async function createChipsFromList(chipsList, chipOptions, magic_device_id = "gl
 function getDomainTranslationKey(domain, device_class) {
     if (domain === 'scene')
         return 'ui.dialogs.quick-bar.commands.navigation.scene';
-    if (_variables__WEBPACK_IMPORTED_MODULE_1__.MAGIC_AREAS_AGGREGATE_DOMAINS.includes(domain) && device_class)
+    if (_variables__WEBPACK_IMPORTED_MODULE_1__.AGGREGATE_DOMAINS.includes(domain) && device_class)
         return `component.${domain}.entity_component.${device_class}.name`;
     return `component.${domain}.entity_component._.name`;
 }
 function getStateTranslationKey(state, domain, device_class) {
     if (domain === 'scene')
         return 'ui.dialogs.quick-bar.commands.navigation.scene';
-    if (_variables__WEBPACK_IMPORTED_MODULE_1__.MAGIC_AREAS_AGGREGATE_DOMAINS.includes(domain))
+    if (_variables__WEBPACK_IMPORTED_MODULE_1__.AGGREGATE_DOMAINS.includes(domain))
         return `component.${domain}.entity_component.${device_class}.state.${state}`;
     return `component.${domain}.entity_component._.name`;
 }
@@ -5732,63 +5722,43 @@ function getAreaName(area) {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   ALERT_DOMAINS: () => (/* binding */ ALERT_DOMAINS),
+/* harmony export */   AGGREGATE_DOMAINS: () => (/* binding */ AGGREGATE_DOMAINS),
 /* harmony export */   AREA_CARDS_DOMAINS: () => (/* binding */ AREA_CARDS_DOMAINS),
-/* harmony export */   AREA_CARD_SENSORS_CLASS: () => (/* binding */ AREA_CARD_SENSORS_CLASS),
 /* harmony export */   AREA_CONTROL_ICONS: () => (/* binding */ AREA_CONTROL_ICONS),
 /* harmony export */   AREA_EXPOSED_CHIPS: () => (/* binding */ AREA_EXPOSED_CHIPS),
 /* harmony export */   AREA_STATE_ICONS: () => (/* binding */ AREA_STATE_ICONS),
-/* harmony export */   CLIMATE_DOMAINS: () => (/* binding */ CLIMATE_DOMAINS),
+/* harmony export */   CUSTOM_VIEWS: () => (/* binding */ CUSTOM_VIEWS),
 /* harmony export */   DEVICE_CLASSES: () => (/* binding */ DEVICE_CLASSES),
 /* harmony export */   DEVICE_ICONS: () => (/* binding */ DEVICE_ICONS),
-/* harmony export */   DOMAIN: () => (/* binding */ DOMAIN),
 /* harmony export */   DOMAINS_VIEWS: () => (/* binding */ DOMAINS_VIEWS),
 /* harmony export */   DOMAIN_ICONS: () => (/* binding */ DOMAIN_ICONS),
 /* harmony export */   DOMAIN_STATE_ICONS: () => (/* binding */ DOMAIN_STATE_ICONS),
+/* harmony export */   GROUP_DOMAINS: () => (/* binding */ GROUP_DOMAINS),
 /* harmony export */   HOME_EXPOSED_CHIPS: () => (/* binding */ HOME_EXPOSED_CHIPS),
-/* harmony export */   HOUSE_INFORMATION_DOMAINS: () => (/* binding */ HOUSE_INFORMATION_DOMAINS),
-/* harmony export */   MAGIC_AREAS_AGGREGATE_DOMAINS: () => (/* binding */ MAGIC_AREAS_AGGREGATE_DOMAINS),
-/* harmony export */   MAGIC_AREAS_DOMAINS: () => (/* binding */ MAGIC_AREAS_DOMAINS),
-/* harmony export */   MAGIC_AREAS_GROUP_DOMAINS: () => (/* binding */ MAGIC_AREAS_GROUP_DOMAINS),
-/* harmony export */   MAGIC_AREAS_LIGHT_DOMAINS: () => (/* binding */ MAGIC_AREAS_LIGHT_DOMAINS),
-/* harmony export */   NAME: () => (/* binding */ NAME),
-/* harmony export */   OTHER_DOMAINS: () => (/* binding */ OTHER_DOMAINS),
-/* harmony export */   SENSOR_DOMAINS: () => (/* binding */ SENSOR_DOMAINS),
-/* harmony export */   STATES_OFF: () => (/* binding */ STATES_OFF),
-/* harmony export */   TOGGLE_DOMAINS: () => (/* binding */ TOGGLE_DOMAINS),
+/* harmony export */   LIGHT_DOMAIN: () => (/* binding */ LIGHT_DOMAIN),
+/* harmony export */   MAGIC_AREAS_DOMAIN: () => (/* binding */ MAGIC_AREAS_DOMAIN),
+/* harmony export */   MAGIC_AREAS_NAME: () => (/* binding */ MAGIC_AREAS_NAME),
+/* harmony export */   TOD_ORDER: () => (/* binding */ TOD_ORDER),
 /* harmony export */   UNAVAILABLE: () => (/* binding */ UNAVAILABLE),
-/* harmony export */   UNAVAILABLE_STATES: () => (/* binding */ UNAVAILABLE_STATES),
-/* harmony export */   UNDISCLOSED: () => (/* binding */ UNDISCLOSED),
-/* harmony export */   UNKNOWN: () => (/* binding */ UNKNOWN),
-/* harmony export */   todOrder: () => (/* binding */ todOrder)
+/* harmony export */   UNDISCLOSED: () => (/* binding */ UNDISCLOSED)
 /* harmony export */ });
-const DOMAIN = "magic_areas";
-const NAME = "Magic Areas";
+const MAGIC_AREAS_DOMAIN = "magic_areas";
+const MAGIC_AREAS_NAME = "Magic Areas";
 const UNAVAILABLE = "unavailable";
-const UNKNOWN = "unknown";
 const UNDISCLOSED = "undisclosed";
-const todOrder = ["morning", "daytime", "evening", "night"];
-const STATES_OFF = ["closed", "locked", "off", "docked", "idle", "standby", "paused", "auto", "ok"];
-const UNAVAILABLE_STATES = ['unavailable', "unknown"];
-const MAGIC_AREAS_LIGHT_DOMAINS = "light";
-const MAGIC_AREAS_GROUP_DOMAINS = ["climate", "media_player", "cover"];
-const MAGIC_AREAS_AGGREGATE_DOMAINS = ["binary_sensor", "sensor"];
-const MAGIC_AREAS_DOMAINS = [MAGIC_AREAS_LIGHT_DOMAINS, ...MAGIC_AREAS_GROUP_DOMAINS, ...MAGIC_AREAS_AGGREGATE_DOMAINS];
-const SENSOR_DOMAINS = ["sensor"];
-const ALERT_DOMAINS = ["binary_sensor", "health"];
-const TOGGLE_DOMAINS = [MAGIC_AREAS_LIGHT_DOMAINS, "switch"];
-const CLIMATE_DOMAINS = ["climate", "fan"];
-const HOUSE_INFORMATION_DOMAINS = ["camera", "cover", "vacuum", "media_player", "lock", "plant"];
-const OTHER_DOMAINS = ["camera", "cover", "vacuum", "media_player", "lock", "scene", "plant"];
-const AREA_CARDS_DOMAINS = [...TOGGLE_DOMAINS, ...CLIMATE_DOMAINS, ...OTHER_DOMAINS, "binary_sensor", "sensor"];
-const DOMAINS_VIEWS = ["home", "security", "security-details", ...AREA_CARDS_DOMAINS];
+const TOD_ORDER = ["morning", "daytime", "evening", "night"];
+const LIGHT_DOMAIN = "light";
+const GROUP_DOMAINS = ["climate", "media_player", "cover"];
+const AGGREGATE_DOMAINS = ["binary_sensor", "sensor"];
 const DEVICE_CLASSES = {
     sensor: ["illuminance", "temperature", "humidity", "battery", "energy", "power"],
     binary_sensor: ["motion", "door", "window", "vibration", "moisture", "smoke"],
 };
-const HOME_EXPOSED_CHIPS = ["weather", "alarm", "spotify", MAGIC_AREAS_LIGHT_DOMAINS, ...MAGIC_AREAS_GROUP_DOMAINS, "fan", "switch", "safety", "motion", "door", "window"];
-const AREA_EXPOSED_CHIPS = [MAGIC_AREAS_LIGHT_DOMAINS, ...MAGIC_AREAS_GROUP_DOMAINS, "fan", "switch", "safety", ...DEVICE_CLASSES.binary_sensor, ...DEVICE_CLASSES.sensor];
-const AREA_CARD_SENSORS_CLASS = ["temperature"];
+const AREA_CARDS_DOMAINS = [LIGHT_DOMAIN, "switch", "climate", "fan", "camera", "cover", "vacuum", "media_player", "lock", "scene", "plant", "binary_sensor", "sensor"];
+const CUSTOM_VIEWS = ["home", "security", "security-details"];
+const DOMAINS_VIEWS = [...AREA_CARDS_DOMAINS, ...DEVICE_CLASSES.binary_sensor, ...DEVICE_CLASSES.sensor];
+const HOME_EXPOSED_CHIPS = ["weather", "alarm", "spotify", LIGHT_DOMAIN, ...GROUP_DOMAINS, "fan", "switch", "safety", "motion", "door", "window"];
+const AREA_EXPOSED_CHIPS = [LIGHT_DOMAIN, ...GROUP_DOMAINS, "fan", "switch", "safety", ...DEVICE_CLASSES.binary_sensor, ...DEVICE_CLASSES.sensor];
 const DEVICE_ICONS = {
     presence_hold: 'mdi:car-brake-hold'
 };
@@ -6292,7 +6262,7 @@ class AreaView {
                         subtitle: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize((0,_utils__WEBPACK_IMPORTED_MODULE_6__.getDomainTranslationKey)(domain)),
                         domain,
                         subtitleIcon: _variables__WEBPACK_IMPORTED_MODULE_4__.DOMAIN_ICONS[domain],
-                        subtitleNavigate: domain + "s",
+                        subtitleNavigate: domain,
                     };
                     if (domain) {
                         titleCardOptions.showControls = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain].showControls;
@@ -6601,7 +6571,7 @@ class CoverView extends _AbstractView__WEBPACK_IMPORTED_MODULE_2__.AbstractView 
          */
         _CoverView_defaultConfig.set(this, {
             title: "Covers",
-            path: "covers",
+            path: "cover",
             icon: "mdi:window-open",
             subview: false,
         });
@@ -6872,7 +6842,7 @@ class FloorView {
                         ..._Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain].controllerCardOptions,
                         title: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize((0,_utils__WEBPACK_IMPORTED_MODULE_5__.getDomainTranslationKey)(domain)),
                         titleIcon: _variables__WEBPACK_IMPORTED_MODULE_3__.DOMAIN_ICONS[domain] ?? "mdi:floor-plan",
-                        titleNavigate: domain + "s",
+                        titleNavigate: domain,
                     };
                     if (domain) {
                         titleSectionOptions.showControls = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain].showControls;

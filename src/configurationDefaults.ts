@@ -40,12 +40,10 @@ export const configurationDefaults: StrategyDefaults = {
       hide_config_entities: false,
     },
     default: {
-      title: "Divers",
       showControls: false,
       hidden: false,
     },
     light: {
-      // title: "Lights",
       showControls: true,
       extraControls: (device: MagicAreaRegistryEntry) => {
         const chips = [];
@@ -68,7 +66,6 @@ export const configurationDefaults: StrategyDefaults = {
       order: 1
     },
     climate: {
-      title: "Climates",
       showControls: true,
       controllerCardOptions: {
         iconOn: DOMAIN_STATE_ICONS.climate.on,
@@ -88,7 +85,6 @@ export const configurationDefaults: StrategyDefaults = {
       },
     },
     media_player: {
-      title: "Media Players",
       showControls: true,
       controllerCardOptions: {
         iconOn: DOMAIN_STATE_ICONS.media_player.on,
@@ -108,7 +104,6 @@ export const configurationDefaults: StrategyDefaults = {
       },
     },
     cover: {
-      title: "Covers",
       showControls: true,
       controllerCardOptions: {
         iconOn: DOMAIN_STATE_ICONS.cover.on,
@@ -121,7 +116,6 @@ export const configurationDefaults: StrategyDefaults = {
       order: 4
     },
     scene: {
-      title: "Scènes",
       showControls: false,
       extraControls: (device: MagicAreaRegistryEntry) => {
         const chips = [];
@@ -137,7 +131,6 @@ export const configurationDefaults: StrategyDefaults = {
       order: 5
     },
     fan: {
-      title: "Fans",
       showControls: true,
       controllerCardOptions: {
         iconOn: DOMAIN_STATE_ICONS.fan.on,
@@ -150,7 +143,6 @@ export const configurationDefaults: StrategyDefaults = {
       order: 6
     },
     switch: {
-      title: "Switches",
       showControls: true,
       controllerCardOptions: {
         iconOn: DOMAIN_STATE_ICONS.switch.on,
@@ -163,7 +155,6 @@ export const configurationDefaults: StrategyDefaults = {
       order: 7
     },
     camera: {
-      title: "Cameras",
       showControls: false,
       controllerCardOptions: {
         iconOn: DOMAIN_STATE_ICONS.camera.on,
@@ -173,7 +164,6 @@ export const configurationDefaults: StrategyDefaults = {
       order: 8
     },
     lock: {
-      title: "Locks",
       showControls: false,
       controllerCardOptions: {
         iconOn: DOMAIN_STATE_ICONS.lock.on,
@@ -183,7 +173,6 @@ export const configurationDefaults: StrategyDefaults = {
       order: 9
     },
     vacuum: {
-      title: "Vacuums",
       showControls: true,
       controllerCardOptions: {
         iconOn: DOMAIN_STATE_ICONS.vacuum.on,
@@ -195,17 +184,18 @@ export const configurationDefaults: StrategyDefaults = {
       order: 10
     },
     sensor: {
-      title: "Sensors",
       showControls: false,
       hidden: false,
     },
     binary_sensor: {
-      title: "Binary Sensors",
       showControls: false,
       hidden: false,
     },
     number: {
-      title: "Numbers",
+      showControls: false,
+      hidden: false,
+    },
+    temperature: {
       showControls: false,
       hidden: false,
     },

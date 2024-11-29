@@ -3,9 +3,8 @@ import { ControllerCard } from "../cards/ControllerCard";
 import { AbstractView } from "./AbstractView";
 import { views } from "../types/strategy/views";
 import { cards } from "../types/strategy/cards";
-import { DEVICE_CLASSES, DEVICE_ICONS, DOMAIN_ICONS, MAGIC_AREAS_AGGREGATE_DOMAINS, SENSOR_DOMAINS } from "../variables";
-import { getDomainTranslationKey, getStateTranslationKey } from "../utils";
-import { AggregateChip } from "../chips/AggregateChip";
+import { DEVICE_CLASSES, DOMAIN_ICONS } from "../variables";
+import { getDomainTranslationKey } from "../utils";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**

@@ -1,49 +1,28 @@
-export const DOMAIN = "magic_areas";
-export const NAME = "Magic Areas";
+export const MAGIC_AREAS_DOMAIN = "magic_areas";
+export const MAGIC_AREAS_NAME = "Magic Areas";
 
 export const UNAVAILABLE = "unavailable";
-export const UNKNOWN = "unknown";
 export const UNDISCLOSED = "undisclosed";
 
+export const TOD_ORDER = ["morning", "daytime", "evening", "night"];
 
-export const todOrder = ["morning", "daytime", "evening", "night"];
-
-
-export const STATES_OFF = ["closed", "locked", "off", "docked", "idle", "standby", "paused", "auto", "ok"];
-
-export const UNAVAILABLE_STATES = ['unavailable', "unknown"];
-
-export const MAGIC_AREAS_LIGHT_DOMAINS = "light";
-export const MAGIC_AREAS_GROUP_DOMAINS = ["climate", "media_player", "cover"];
-export const MAGIC_AREAS_AGGREGATE_DOMAINS = ["binary_sensor", "sensor"];
-
-export const MAGIC_AREAS_DOMAINS = [MAGIC_AREAS_LIGHT_DOMAINS, ...MAGIC_AREAS_GROUP_DOMAINS, ...MAGIC_AREAS_AGGREGATE_DOMAINS];
-
-export const SENSOR_DOMAINS = ["sensor"];
-
-export const ALERT_DOMAINS = ["binary_sensor", "health"];
-
-export const TOGGLE_DOMAINS = [MAGIC_AREAS_LIGHT_DOMAINS, "switch"];
-
-export const CLIMATE_DOMAINS = ["climate", "fan"];
-
-export const HOUSE_INFORMATION_DOMAINS = ["camera", "cover", "vacuum", "media_player", "lock", "plant"];
-
-export const OTHER_DOMAINS = ["camera", "cover", "vacuum", "media_player", "lock", "scene", "plant"];
-
-export const AREA_CARDS_DOMAINS = [...TOGGLE_DOMAINS, ...CLIMATE_DOMAINS, ...OTHER_DOMAINS, "binary_sensor", "sensor"];
-
-export const DOMAINS_VIEWS = ["home", "security", "security-details", ...AREA_CARDS_DOMAINS]
+export const LIGHT_DOMAIN = "light";
+export const GROUP_DOMAINS = ["climate", "media_player", "cover"];
+export const AGGREGATE_DOMAINS = ["binary_sensor", "sensor"];
 
 export const DEVICE_CLASSES = {
   sensor: ["illuminance", "temperature", "humidity", "battery", "energy", "power"],
   binary_sensor: ["motion", "door", "window", "vibration", "moisture", "smoke"],
 };
 
-export const HOME_EXPOSED_CHIPS = ["weather", "alarm", "spotify", MAGIC_AREAS_LIGHT_DOMAINS, ...MAGIC_AREAS_GROUP_DOMAINS, "fan", "switch", "safety", "motion", "door", "window"];
-export const AREA_EXPOSED_CHIPS = [MAGIC_AREAS_LIGHT_DOMAINS, ...MAGIC_AREAS_GROUP_DOMAINS, "fan", "switch", "safety", ...DEVICE_CLASSES.binary_sensor, ...DEVICE_CLASSES.sensor];
+export const AREA_CARDS_DOMAINS = [LIGHT_DOMAIN, "switch", "climate", "fan", "camera", "cover", "vacuum", "media_player", "lock", "scene", "plant", "binary_sensor", "sensor"];
 
-export const AREA_CARD_SENSORS_CLASS = ["temperature"];
+export const CUSTOM_VIEWS = ["home", "security", "security-details"];
+
+export const DOMAINS_VIEWS = [...AREA_CARDS_DOMAINS, ...DEVICE_CLASSES.binary_sensor, ...DEVICE_CLASSES.sensor];
+
+export const HOME_EXPOSED_CHIPS = ["weather", "alarm", "spotify", LIGHT_DOMAIN, ...GROUP_DOMAINS, "fan", "switch", "safety", "motion", "door", "window"];
+export const AREA_EXPOSED_CHIPS = [LIGHT_DOMAIN, ...GROUP_DOMAINS, "fan", "switch", "safety", ...DEVICE_CLASSES.binary_sensor, ...DEVICE_CLASSES.sensor];
 
 export const DEVICE_ICONS = {
   presence_hold: 'mdi:car-brake-hold'
@@ -128,4 +107,3 @@ export const AREA_CONTROL_ICONS = {
   climate: "mdi:thermostat-auto",
   media_player: "mdi:auto-mode",
 };
-

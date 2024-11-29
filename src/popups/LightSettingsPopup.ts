@@ -3,7 +3,7 @@ import { generic } from "../types/strategy/generic";
 import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
 import { PopupActionConfig } from "../types/homeassistant/data/lovelace";
 import { slugify } from "../utils";
-import { DOMAIN } from "../variables";
+import { MAGIC_AREAS_DOMAIN } from "../variables";
 import { AbstractPopup } from "./AbstractPopup";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
@@ -92,7 +92,7 @@ class LightSettings extends AbstractPopup {
                     layout: "vertical",
                     tap_action: {
                       action: "call-service",
-                      service: `${DOMAIN}.area_lux_for_lighting_max`,
+                      service: `${MAGIC_AREAS_DOMAIN}.area_lux_for_lighting_max`,
                       data: {
                         area: device?.name
                       }

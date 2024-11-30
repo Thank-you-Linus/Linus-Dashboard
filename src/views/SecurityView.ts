@@ -1,7 +1,6 @@
 import { Helper } from "../Helper";
 import { LovelaceGridCardConfig, StackCardConfig } from "../types/homeassistant/lovelace/cards/types";
-import { LovelaceCardConfig, LovelaceViewConfig } from "../types/homeassistant/data/lovelace";
-import { TitleCardConfig } from "../types/lovelace-mushroom/cards/title-card-config";
+import { LovelaceCardConfig, LovelaceSectionConfig, LovelaceViewConfig } from "../types/homeassistant/data/lovelace";
 import { AlarmCard } from "../cards/AlarmCard";
 import { PersonCard } from "../cards/PersonCard";
 import { BinarySensorCard } from "../cards/BinarySensorCard";
@@ -21,29 +20,37 @@ import { views } from "../types/strategy/views";
  * @class
  * @abstract
  */
-class SecurityView extends AbstractView {
+class SecurityView {
   /**
    * Default configuration of the view.
    *
    * @type {views.ViewConfig}
    * @private
    */
-  #defaultConfig: views.ViewConfig = {
-    title: Helper.localize("component.binary_sensor.entity_component.safety.name"),
+  config: views.ViewConfig = {
     path: "security",
-    type: "sections",
+    title: Helper.localize("component.binary_sensor.entity_component.safety.name"),
     icon: "mdi:security",
+    type: "sections",
   };
+
+  /**
+   * A card to switch all entities in the view.
+   *
+   * @type {LovelaceCardConfig[]}
+   */
+  viewControllerCard: LovelaceCardConfig[] = []
 
   /**
    * Class constructor.
    *
-   * @param {views.ViewConfig} [options={}] Options for the view.
+   * @throws {Error} If trying to instantiate this class.
+   * @throws {Error} If the Helper module isn't initialized.
    */
-  constructor(options: views.ViewConfig = {}) {
-    super();
-
-    this.config = { ...this.config, ...this.#defaultConfig, ...options };
+  constructor() {
+    if (!Helper.isInitialized()) {
+      throw new Error("The Helper module must be initialized before using this one.");
+    }
   }
 
   /**
@@ -244,6 +251,20 @@ class SecurityView extends AbstractView {
     }
 
     return camerasSection;
+  }
+
+  /**
+   * Get a view object.
+   *
+   * The view includes the cards which are created by method createViewCards().
+   *
+   * @returns {Promise<LovelaceViewConfig>} The view object.
+   */
+  async getView(): Promise<LovelaceViewConfig | LovelaceSectionConfig> {
+    return {
+      ...this.config,
+      sections: await this.createSectionCards(),
+    };
   }
 }
 

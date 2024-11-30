@@ -89,8 +89,8 @@ export function getAggregateEntity(device: MagicAreaRegistryEntry, domains: stri
     return aggregateKeys.filter(Boolean)
 }
 
-export function getMAEntity(area_slug: string, domain: string, device_class?: string): EntityRegistryEntry | undefined {
-    const magicAreaDevice = Helper.magicAreasDevices[area_slug];
+export function getMAEntity(magic_device_id: string, domain: string, device_class?: string): EntityRegistryEntry | undefined {
+    const magicAreaDevice = Helper.magicAreasDevices[magic_device_id];
 
     // TODO remove '' when new release
     if (domain === LIGHT_DOMAIN) return magicAreaDevice?.entities?.[''] ?? magicAreaDevice?.entities?.['all_lights']

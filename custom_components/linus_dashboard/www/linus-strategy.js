@@ -364,7 +364,8 @@ class Helper {
             }
             if (!__classPrivateFieldGet(this, _a, "f", _Helper_domains)[domain])
                 __classPrivateFieldGet(this, _a, "f", _Helper_domains)[domain] = [];
-            __classPrivateFieldGet(this, _a, "f", _Helper_domains)[domain].push(enrichedEntity);
+            if (entity.platform !== _variables__WEBPACK_IMPORTED_MODULE_2__.MAGIC_AREAS_DOMAIN)
+                __classPrivateFieldGet(this, _a, "f", _Helper_domains)[domain].push(enrichedEntity);
             return acc;
         }, {}), "f", _Helper_entities);
         // Enrichir les appareils
@@ -516,14 +517,16 @@ class Helper {
      * @return {string} The template string.
      * @static
      */
-    static getDeviceClassCountTemplate(device_class, operator, value, area_id) {
+    static getDeviceClassCountTemplate(device_class, operator, value, area_slug = "global") {
         const states = [];
         if (!this.isInitialized()) {
             console.warn("Helper class should be initialized before calling this method!");
         }
-        const areaIds = Array.isArray(area_id) ? area_id : [area_id];
-        for (const id of areaIds) {
-            const newStates = id ? __classPrivateFieldGet(this, _a, "f", _Helper_areas)[id]?.domains[device_class]?.map((entity_id) => `states['${entity_id}']`) || [] : [];
+        const area_slugs = Array.isArray(area_slug) ? area_slug : [area_slug];
+        for (const slug of area_slugs) {
+            const newStates = slug === "global"
+                ? this.domains[device_class]?.map((entity) => `states['${entity.entity_id}']`) ?? []
+                : __classPrivateFieldGet(this, _a, "f", _Helper_areas)[slug]?.domains[device_class]?.map((entity_id) => `states['${entity_id}']`) ?? [];
             states.push(...newStates);
         }
         const formattedValue = Array.isArray(value) ? JSON.stringify(value).replace(/"/g, "'") : `'${value}'`;
@@ -540,14 +543,28 @@ class Helper {
      * @return {string} The template string.
      * @static
      */
-    static getAverageStateTemplate(device_class, area_slug) {
+    /**
+     * Get a template string to define the average state of sensor entities with a given device class.
+     *
+     * @param {string} device_class The device class of the entities.
+     * @param {string | string[]} area_slug The area slug(s) to filter entities by.
+     *
+     * @return {string} The template string.
+     * @static
+     */
+    static getAverageStateTemplate(device_class, area_slug = "global") {
         const states = [];
         if (!this.isInitialized()) {
             console.warn("Helper class should be initialized before calling this method!");
         }
         const areaSlugs = Array.isArray(area_slug) ? area_slug : [area_slug];
         for (const slug of areaSlugs) {
-            const newStates = slug ? __classPrivateFieldGet(this, _a, "f", _Helper_areas)[slug]?.domains[device_class]?.map((entity_id) => `states['${entity_id}']`) || [] : [];
+            const magic_entity = (0,_utils__WEBPACK_IMPORTED_MODULE_3__.getMAEntity)(slug, "sensor", device_class);
+            const newStates = magic_entity
+                ? [`states['${magic_entity.entity_id}']`]
+                : slug
+                    ? __classPrivateFieldGet(this, _a, "f", _Helper_areas)[slug]?.domains[device_class]?.map((entity_id) => `states['${entity_id}']`) || []
+                    : [];
             states.push(...newStates);
         }
         return `{% set entities = [${states}] %}{{ (entities | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | sum / entities | length) | round(1) }} {{ ${states[0]}.attributes.unit_of_measurement }}`;
@@ -1501,7 +1518,7 @@ class ControllerCard {
      * @param {HassServiceTarget} target The target to control the entities of.
      * @param {cards.ControllerCardOptions} options Controller Card options.
      */
-    constructor(target, options = {}, domain, magic_device_id) {
+    constructor(target, options = {}, domain, magic_device_id = "global") {
         /**
          * @type {ExtendedHassServiceTarget} The target to control the entities of.
          * @private
@@ -1582,32 +1599,17 @@ class ControllerCard {
             const magic_device = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices[__classPrivateFieldGet(this, _ControllerCard_magic_device_id, "f") ?? ""];
             const badges = [];
             if (__classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").showControls) {
-                const magic_entity_id = __classPrivateFieldGet(this, _ControllerCard_magic_device_id, "f") && __classPrivateFieldGet(this, _ControllerCard_domain, "f") && (0,_utils__WEBPACK_IMPORTED_MODULE_1__.getMAEntity)(__classPrivateFieldGet(this, _ControllerCard_magic_device_id, "f"), __classPrivateFieldGet(this, _ControllerCard_domain, "f"));
-                // console.log('this.#defaultConfig :>> ', this.#defaultConfig);
+                const chipModule = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[__classPrivateFieldGet(this, _ControllerCard_domain, "f")]?.controlChip;
+                const chipOptions = {
+                    show_content: true,
+                    magic_device_id: __classPrivateFieldGet(this, _ControllerCard_magic_device_id, "f"),
+                    tap_action: { action: "more-info" },
+                    ...__classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").controlChipOptions,
+                };
+                const chip = typeof chipModule === 'function' && new chipModule(chipOptions).getChip();
                 badges.push({
                     type: "custom:mushroom-chips-card",
-                    chips: [
-                        // this.#defaultConfig?.controlChip
-                        {
-                            type: "template",
-                            entity: magic_entity_id ? magic_entity_id?.entity_id : __classPrivateFieldGet(this, _ControllerCard_target, "f").entity_id,
-                            icon: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getFromDomainState({ domain: __classPrivateFieldGet(this, _ControllerCard_domain, "f"), ifReturn: __classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").iconOn, elseReturn: __classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").iconOff, area_slug: __classPrivateFieldGet(this, _ControllerCard_target, "f").area_id }),
-                            icon_color: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getFromDomainState({ domain: __classPrivateFieldGet(this, _ControllerCard_domain, "f"), area_slug: __classPrivateFieldGet(this, _ControllerCard_target, "f").area_id }),
-                            tap_action: magic_entity_id ? {
-                                action: "toggle"
-                            } : {
-                                action: "call-service",
-                                service: __classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").toggleService ?? __classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").offService,
-                                target: __classPrivateFieldGet(this, _ControllerCard_target, "f"),
-                                data: {},
-                            },
-                            ...(magic_entity_id ? {
-                                hold_action: {
-                                    action: "more-info"
-                                }
-                            } : {})
-                        }
-                    ]
+                    chips: [chip]
                 });
             }
             if (magic_device && __classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").extraControls) {
@@ -2790,7 +2792,7 @@ class AggregateChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.AbstractC
      * @type {TemplateChipConfig | undefined}
      *
      */
-    getDefaultConfig({ device_class, show_content = true, magic_device_id = "global", area_slug }) {
+    getDefaultConfig({ device_class, show_content = true, magic_device_id = "global", area_slug, tap_action }) {
         const domain = _variables__WEBPACK_IMPORTED_MODULE_0__.DEVICE_CLASSES.sensor.includes(device_class) ? "sensor" : "binary_sensor";
         let icon = _variables__WEBPACK_IMPORTED_MODULE_0__.DOMAIN_ICONS[device_class];
         let icon_color = "";
@@ -2820,13 +2822,12 @@ class AggregateChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.AbstractC
         if (device_class === "health") {
             icon_color = `{{ 'red' if is_state(entity, 'on') else 'green' }}`;
         }
-        const tap_action = (0,_utils__WEBPACK_IMPORTED_MODULE_3__.navigateTo)(device_class);
         return {
             entity: magicEntity?.entity_id,
             icon_color,
             icon,
             content: content,
-            tap_action,
+            tap_action: tap_action ?? (0,_utils__WEBPACK_IMPORTED_MODULE_3__.navigateTo)(device_class),
         };
     }
     /**
@@ -2836,8 +2837,7 @@ class AggregateChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.AbstractC
      */
     constructor(options) {
         super();
-        const { device_class, show_content = false, magic_device_id, area_slug } = options;
-        const defaultConfig = this.getDefaultConfig({ device_class, show_content, magic_device_id, area_slug });
+        const defaultConfig = this.getDefaultConfig(options);
         this.config = Object.assign(this.config, defaultConfig);
     }
 }
@@ -3188,15 +3188,14 @@ class ClimateChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.AbstractChi
             content: "",
             tap_action: {
                 action: "navigate",
-                navigation_path: "climates",
+                navigation_path: "climate",
             },
         });
         if (options?.show_content) {
             __classPrivateFieldGet(this, _ClimateChip_defaultConfig, "f").content = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getCountTemplate("climate", "ne", "off", options?.area_slug);
         }
         __classPrivateFieldGet(this, _ClimateChip_defaultConfig, "f").icon_color = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getFromDomainState({ domain: "climate", area_slug: options?.area_slug });
-        const areaOrFloorId = Array.isArray(options?.area_slug) ? options?.area_slug[0] : options?.area_slug ?? options?.floor_id ?? "global";
-        const magicAreasEntity = (0,_utils__WEBPACK_IMPORTED_MODULE_2__.getMAEntity)(areaOrFloorId, "climate");
+        const magicAreasEntity = (0,_utils__WEBPACK_IMPORTED_MODULE_2__.getMAEntity)(options.magic_device_id ?? "global", "climate");
         if (magicAreasEntity) {
             __classPrivateFieldGet(this, _ClimateChip_defaultConfig, "f").entity = magicAreasEntity.entity_id;
         }
@@ -3380,7 +3379,7 @@ class CoverChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.AbstractChip 
             content: "",
             tap_action: {
                 action: "navigate",
-                navigation_path: "covers",
+                navigation_path: "cover",
             },
         });
         if (options?.show_content) {
@@ -3520,8 +3519,7 @@ class LightChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.AbstractChip 
             __classPrivateFieldGet(this, _LightChip_defaultConfig, "f").content = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getCountTemplate("light", "eq", "on", options?.area_slug);
         }
         __classPrivateFieldGet(this, _LightChip_defaultConfig, "f").icon_color = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getFromDomainState({ domain: "light", area_slug: options?.area_slug });
-        const areaOrFloorId = Array.isArray(options?.area_slug) ? options?.area_slug[0] : options?.area_slug ?? options?.floor_id ?? "global";
-        const magicAreasEntity = (0,_utils__WEBPACK_IMPORTED_MODULE_2__.getMAEntity)(areaOrFloorId, "light");
+        const magicAreasEntity = (0,_utils__WEBPACK_IMPORTED_MODULE_2__.getMAEntity)(options?.magic_device_id ?? "global", "light");
         if (magicAreasEntity) {
             __classPrivateFieldGet(this, _LightChip_defaultConfig, "f").entity = magicAreasEntity.entity_id;
         }
@@ -3594,8 +3592,7 @@ class MediaPlayerChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.Abstrac
             __classPrivateFieldGet(this, _MediaPlayerChip_defaultConfig, "f").content = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getCountTemplate("media_player", "eq", "playing", options?.area_slug);
         }
         __classPrivateFieldGet(this, _MediaPlayerChip_defaultConfig, "f").icon_color = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getFromDomainState({ domain: "media_player", area_slug: options?.area_slug });
-        const areaOrFloorId = Array.isArray(options?.area_slug) ? options?.area_slug[0] : options?.area_slug ?? options?.floor_id ?? "global";
-        const magicAreasEntity = (0,_utils__WEBPACK_IMPORTED_MODULE_3__.getMAEntity)(areaOrFloorId, "media_player");
+        const magicAreasEntity = (0,_utils__WEBPACK_IMPORTED_MODULE_3__.getMAEntity)(options?.magic_device_id ?? "global", "media_player");
         if (magicAreasEntity) {
             __classPrivateFieldGet(this, _MediaPlayerChip_defaultConfig, "f").entity = magicAreasEntity.entity_id;
         }
@@ -4194,6 +4191,20 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _chips_ToggleSceneChip__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./chips/ToggleSceneChip */ "./src/chips/ToggleSceneChip.ts");
 /* harmony import */ var _popups_SceneSettingsPopup__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./popups/SceneSettingsPopup */ "./src/popups/SceneSettingsPopup.ts");
 /* harmony import */ var _variables__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./variables */ "./src/variables.ts");
+/* harmony import */ var _chips_ClimateChip__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./chips/ClimateChip */ "./src/chips/ClimateChip.ts");
+/* harmony import */ var _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./chips/AggregateChip */ "./src/chips/AggregateChip.ts");
+/* harmony import */ var _chips_LightChip__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./chips/LightChip */ "./src/chips/LightChip.ts");
+/* harmony import */ var _chips_MediaPlayerChip__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./chips/MediaPlayerChip */ "./src/chips/MediaPlayerChip.ts");
+/* harmony import */ var _chips_CoverChip__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./chips/CoverChip */ "./src/chips/CoverChip.ts");
+/* harmony import */ var _chips_FanChip__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ./chips/FanChip */ "./src/chips/FanChip.ts");
+/* harmony import */ var _chips_SwitchChip__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ./chips/SwitchChip */ "./src/chips/SwitchChip.ts");
+
+
+
+
+
+
+
 
 
 
@@ -4237,6 +4248,7 @@ const configurationDefaults = {
         },
         light: {
             showControls: true,
+            controlChip: _chips_LightChip__WEBPACK_IMPORTED_MODULE_8__.LightChip,
             extraControls: (device) => {
                 const chips = [];
                 if (device?.entities.light_control?.entity_id) {
@@ -4248,8 +4260,6 @@ const configurationDefaults = {
                 return chips;
             },
             controllerCardOptions: {
-                iconOn: _variables__WEBPACK_IMPORTED_MODULE_5__.DOMAIN_STATE_ICONS.light.on,
-                iconOff: _variables__WEBPACK_IMPORTED_MODULE_5__.DOMAIN_STATE_ICONS.light.off,
                 onService: "light.turn_on",
                 offService: "light.turn_off",
                 toggleService: "light.toggle",
@@ -4259,9 +4269,8 @@ const configurationDefaults = {
         },
         climate: {
             showControls: true,
+            controlChip: _chips_ClimateChip__WEBPACK_IMPORTED_MODULE_6__.ClimateChip,
             controllerCardOptions: {
-                iconOn: _variables__WEBPACK_IMPORTED_MODULE_5__.DOMAIN_STATE_ICONS.climate.on,
-                iconOff: _variables__WEBPACK_IMPORTED_MODULE_5__.DOMAIN_STATE_ICONS.climate.off,
                 onService: "climate.turn_on",
                 offService: "climate.turn_off",
                 toggleService: "climate.toggle",
@@ -4278,9 +4287,8 @@ const configurationDefaults = {
         },
         media_player: {
             showControls: true,
+            controlChip: _chips_MediaPlayerChip__WEBPACK_IMPORTED_MODULE_9__.MediaPlayerChip,
             controllerCardOptions: {
-                iconOn: _variables__WEBPACK_IMPORTED_MODULE_5__.DOMAIN_STATE_ICONS.media_player.on,
-                iconOff: _variables__WEBPACK_IMPORTED_MODULE_5__.DOMAIN_STATE_ICONS.media_player.off,
                 onService: "media_player.turn_on",
                 offService: "media_player.turn_off",
                 toggleService: "media_player.toggle",
@@ -4297,9 +4305,8 @@ const configurationDefaults = {
         },
         cover: {
             showControls: true,
+            controlChip: _chips_CoverChip__WEBPACK_IMPORTED_MODULE_10__.CoverChip,
             controllerCardOptions: {
-                iconOn: _variables__WEBPACK_IMPORTED_MODULE_5__.DOMAIN_STATE_ICONS.cover.on,
-                iconOff: _variables__WEBPACK_IMPORTED_MODULE_5__.DOMAIN_STATE_ICONS.cover.off,
                 onService: "cover.open_cover",
                 offService: "cover.close_cover",
                 toggleService: "cover.toggle",
@@ -4324,9 +4331,8 @@ const configurationDefaults = {
         },
         fan: {
             showControls: true,
+            controlChip: _chips_FanChip__WEBPACK_IMPORTED_MODULE_11__.FanChip,
             controllerCardOptions: {
-                iconOn: _variables__WEBPACK_IMPORTED_MODULE_5__.DOMAIN_STATE_ICONS.fan.on,
-                iconOff: _variables__WEBPACK_IMPORTED_MODULE_5__.DOMAIN_STATE_ICONS.fan.off,
                 onService: "fan.turn_on",
                 offService: "fan.turn_off",
                 toggleService: "fan.toggle",
@@ -4336,9 +4342,8 @@ const configurationDefaults = {
         },
         switch: {
             showControls: true,
+            controlChip: _chips_SwitchChip__WEBPACK_IMPORTED_MODULE_12__.SwitchChip,
             controllerCardOptions: {
-                iconOn: _variables__WEBPACK_IMPORTED_MODULE_5__.DOMAIN_STATE_ICONS.switch.on,
-                iconOff: _variables__WEBPACK_IMPORTED_MODULE_5__.DOMAIN_STATE_ICONS.switch.off,
                 onService: "switch.turn_on",
                 offService: "switch.turn_off",
                 toggleService: "switch.toggle",
@@ -4348,27 +4353,19 @@ const configurationDefaults = {
         },
         camera: {
             showControls: false,
-            controllerCardOptions: {
-                iconOn: _variables__WEBPACK_IMPORTED_MODULE_5__.DOMAIN_STATE_ICONS.camera.on,
-                iconOff: _variables__WEBPACK_IMPORTED_MODULE_5__.DOMAIN_STATE_ICONS.camera.on,
-            },
+            controllerCardOptions: {},
             hidden: false,
             order: 8
         },
         lock: {
             showControls: false,
-            controllerCardOptions: {
-                iconOn: _variables__WEBPACK_IMPORTED_MODULE_5__.DOMAIN_STATE_ICONS.lock.on,
-                iconOff: _variables__WEBPACK_IMPORTED_MODULE_5__.DOMAIN_STATE_ICONS.lock.off,
-            },
+            controllerCardOptions: {},
             hidden: false,
             order: 9
         },
         vacuum: {
             showControls: true,
             controllerCardOptions: {
-                iconOn: _variables__WEBPACK_IMPORTED_MODULE_5__.DOMAIN_STATE_ICONS.vacuum.on,
-                iconOff: _variables__WEBPACK_IMPORTED_MODULE_5__.DOMAIN_STATE_ICONS.vacuum.off,
                 onService: "vacuum.start",
                 offService: "vacuum.stop",
             },
@@ -4376,11 +4373,13 @@ const configurationDefaults = {
             order: 10
         },
         sensor: {
-            showControls: false,
+            controlChip: _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_7__.AggregateChip,
+            showControls: true,
             hidden: false,
         },
         binary_sensor: {
-            showControls: false,
+            controlChip: _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_7__.AggregateChip,
+            showControls: true,
             hidden: false,
         },
         number: {
@@ -4388,7 +4387,7 @@ const configurationDefaults = {
             hidden: false,
         },
         temperature: {
-            showControls: false,
+            showControls: true,
             hidden: false,
         },
     },
@@ -4619,14 +4618,24 @@ class LinusStrategy extends HTMLTemplateElement {
     static async generateView(info) {
         const { domainId, floor, area } = info.view.strategy?.options ?? {};
         let view = {};
-        try {
-            if (area) {
+        if (area) {
+            try {
                 view = await new _views_AreaView__WEBPACK_IMPORTED_MODULE_2__.AreaView(area).getView();
             }
-            else if (floor) {
+            catch (e) {
+                _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.logError(`View for '${area?.name}' couldn't be loaded!`, e);
+            }
+        }
+        else if (floor) {
+            try {
                 view = await new _views_FloorView__WEBPACK_IMPORTED_MODULE_4__.FloorView(floor).getView();
             }
-            else if (domainId) {
+            catch (e) {
+                _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.logError(`View for '${floor?.name}' couldn't be loaded!`, e);
+            }
+        }
+        else if (domainId) {
+            try {
                 if (domainId === "unavailable") {
                     const viewModule = await Promise.resolve(/*! import() */).then(__webpack_require__.bind(__webpack_require__, /*! ./views/UnavailableView */ "./src/views/UnavailableView.ts"));
                     view = await new viewModule.UnavailableView().getView();
@@ -4641,9 +4650,9 @@ class LinusStrategy extends HTMLTemplateElement {
                     view = await new viewModule[viewType](_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.views[domainId]).getView();
                 }
             }
-        }
-        catch (e) {
-            _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.logError(`View for '${info.view.strategy?.options}' couldn't be loaded!`, e);
+            catch (e) {
+                _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.logError(`View for '${domainId}' couldn't be loaded!`, e);
+            }
         }
         return view;
     }
@@ -5628,8 +5637,8 @@ function getAggregateEntity(device, domains, device_classes) {
     }
     return aggregateKeys.filter(Boolean);
 }
-function getMAEntity(area_slug, domain, device_class) {
-    const magicAreaDevice = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices[area_slug];
+function getMAEntity(magic_device_id, domain, device_class) {
+    const magicAreaDevice = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices[magic_device_id];
     // TODO remove '' when new release
     if (domain === _variables__WEBPACK_IMPORTED_MODULE_1__.LIGHT_DOMAIN)
         return magicAreaDevice?.entities?.[''] ?? magicAreaDevice?.entities?.['all_lights'];
@@ -5893,7 +5902,7 @@ class AbstractView {
      * @throws {Error} If trying to instantiate this class.
      * @throws {Error} If the Helper module isn't initialized.
      */
-    constructor(domain = "", device_class) {
+    constructor(domain, device_class) {
         /**
          * Configuration of the view.
          *
@@ -5989,6 +5998,7 @@ class AbstractView {
                     if (__classPrivateFieldGet(this, _AbstractView_domain, "f")) {
                         titleCardOptions.showControls = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.strategyOptions.domains[__classPrivateFieldGet(this, _AbstractView_domain, "f")].showControls;
                         titleCardOptions.extraControls = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.strategyOptions.domains[__classPrivateFieldGet(this, _AbstractView_domain, "f")].extraControls;
+                        titleCardOptions.controlChipOptions = { device_class: __classPrivateFieldGet(this, _AbstractView_device_class, "f"), area_slug: area.slug };
                     }
                     const areaControllerCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_2__.ControllerCard(target, titleCardOptions, __classPrivateFieldGet(this, _AbstractView_domain, "f"), area.slug).createCard();
                     floorCards.push(...areaControllerCard, ...areaCards);
@@ -6004,6 +6014,10 @@ class AbstractView {
                 if (__classPrivateFieldGet(this, _AbstractView_domain, "f")) {
                     titleSectionOptions.showControls = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.strategyOptions.domains[__classPrivateFieldGet(this, _AbstractView_domain, "f")].showControls;
                     titleSectionOptions.extraControls = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.strategyOptions.domains[__classPrivateFieldGet(this, _AbstractView_domain, "f")].extraControls;
+                    titleSectionOptions.controlChipOptions = {
+                        device_class: __classPrivateFieldGet(this, _AbstractView_device_class, "f"),
+                        area_slug: floor.areas_slug
+                    };
                 }
                 const area_ids = floor.areas_slug.map(area_slug => _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.areas[area_slug].area_id);
                 const floorControllerCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_2__.ControllerCard({ area_id: area_ids }, titleSectionOptions, __classPrivateFieldGet(this, _AbstractView_domain, "f"), floor.floor_id).createCard();
@@ -6069,12 +6083,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _AbstractView__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./AbstractView */ "./src/views/AbstractView.ts");
 /* harmony import */ var _variables__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../variables */ "./src/variables.ts");
 /* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../utils */ "./src/utils.ts");
-var __classPrivateFieldGet = (undefined && undefined.__classPrivateFieldGet) || function (receiver, state, kind, f) {
-    if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a getter");
-    if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
-    return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
-};
-var _AggregateView_defaultConfig, _AggregateView_viewControllerCardConfig;
+var _AggregateView_defaultConfig;
 
 
 
@@ -6110,32 +6119,15 @@ class AggregateView extends _AbstractView__WEBPACK_IMPORTED_MODULE_2__.AbstractV
             icon: "mdi:fan",
             subview: true,
         });
-        /**
-         * Default configuration of the view's Controller card.
-         *
-         * @type {cards.ControllerCardOptions}
-         * @private
-         */
-        _AggregateView_viewControllerCardConfig.set(this, {
-        // title: `${Helper.localize(`component.fan.entity_component._.name`)}s`,
-        });
-        __classPrivateFieldGet(this, _AggregateView_defaultConfig, "f").title = `${_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize((0,_utils__WEBPACK_IMPORTED_MODULE_4__.getDomainTranslationKey)(domain, options?.device_class))}s`;
-        __classPrivateFieldGet(this, _AggregateView_defaultConfig, "f").icon = _variables__WEBPACK_IMPORTED_MODULE_3__.DOMAIN_ICONS[options?.device_class];
-        __classPrivateFieldGet(this, _AggregateView_defaultConfig, "f").path = options?.device_class;
-        __classPrivateFieldGet(this, _AggregateView_defaultConfig, "f").controllerCardOptions = { show_content: true };
-        this.config = Object.assign(this.config, __classPrivateFieldGet(this, _AggregateView_defaultConfig, "f"), options);
         // Create a Controller card to switch all entities of the domain.
         this.viewControllerCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_1__.ControllerCard(this.targetDomain(options?.device_class), {
-            ...__classPrivateFieldGet(this, _AggregateView_viewControllerCardConfig, "f"),
-            title: __classPrivateFieldGet(this, _AggregateView_defaultConfig, "f").title,
+            title: `${_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize((0,_utils__WEBPACK_IMPORTED_MODULE_4__.getDomainTranslationKey)(domain, options?.device_class))}s`,
             // subtitle: Helper.getDeviceClassCountTemplate(options?.device_class, "eq", "on") + ` ${Helper.localize(getStateTranslationKey("on", domain, options?.device_class))}s`,
-            ...("controllerCardOptions" in this.config ? this.config.controllerCardOptions : {}),
-            // controlChip: new AggregateChip({ device_class: options?.device_class, show_content: true, magic_device_id: "global" }),
-            // showControls: true,
-        }, options?.device_class).createCard();
+            controlChipOptions: { device_class: options?.device_class },
+        }, domain, "global").createCard();
     }
 }
-_AggregateView_defaultConfig = new WeakMap(), _AggregateView_viewControllerCardConfig = new WeakMap();
+_AggregateView_defaultConfig = new WeakMap();
 
 
 
@@ -6267,6 +6259,7 @@ class AreaView {
                     if (domain) {
                         titleCardOptions.showControls = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain].showControls;
                         titleCardOptions.extraControls = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain].extraControls;
+                        titleCardOptions.controlChipOptions = { area_slug: this.area.slug };
                     }
                     const titleCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_2__.ControllerCard(target, titleCardOptions, domain, this.area.slug).createCard();
                     const entityCards = entities
@@ -6828,6 +6821,7 @@ class FloorView {
                             if (domain) {
                                 titleCardOptions.showControls = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain].showControls;
                                 titleCardOptions.extraControls = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain].extraControls;
+                                titleCardOptions.controlChipOptions = { area_slug: area.slug };
                             }
                             const titleCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_2__.ControllerCard(target, titleCardOptions, domain, area.slug).createCard();
                             let areaCards;
@@ -6847,6 +6841,7 @@ class FloorView {
                     if (domain) {
                         titleSectionOptions.showControls = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain].showControls;
                         titleSectionOptions.extraControls = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain].extraControls;
+                        titleSectionOptions.controlChipOptions = { area_slug: this.floor.areas_slug };
                     }
                     const area_ids = this.floor.areas_slug.map(area_slug => _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas[area_slug].area_id);
                     const domainControllerCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_2__.ControllerCard({ area_id: area_ids }, titleSectionOptions, domain, this.floor.floor_id).createCard();
@@ -6929,21 +6924,19 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   HomeView: () => (/* binding */ HomeView)
 /* harmony export */ });
 /* harmony import */ var _Helper__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../Helper */ "./src/Helper.ts");
-/* harmony import */ var _AbstractView__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./AbstractView */ "./src/views/AbstractView.ts");
-/* harmony import */ var _chips_SettingsChip__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../chips/SettingsChip */ "./src/chips/SettingsChip.ts");
-/* harmony import */ var _popups_SettingsPopup__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../popups/SettingsPopup */ "./src/popups/SettingsPopup.ts");
-/* harmony import */ var _variables__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../variables */ "./src/variables.ts");
-/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../utils */ "./src/utils.ts");
-/* harmony import */ var _chips_WeatherChip__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../chips/WeatherChip */ "./src/chips/WeatherChip.ts");
-/* harmony import */ var _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../chips/AggregateChip */ "./src/chips/AggregateChip.ts");
-/* harmony import */ var _cards_PersonCard__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../cards/PersonCard */ "./src/cards/PersonCard.ts");
+/* harmony import */ var _chips_SettingsChip__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../chips/SettingsChip */ "./src/chips/SettingsChip.ts");
+/* harmony import */ var _popups_SettingsPopup__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../popups/SettingsPopup */ "./src/popups/SettingsPopup.ts");
+/* harmony import */ var _variables__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../variables */ "./src/variables.ts");
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../utils */ "./src/utils.ts");
+/* harmony import */ var _chips_WeatherChip__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../chips/WeatherChip */ "./src/chips/WeatherChip.ts");
+/* harmony import */ var _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../chips/AggregateChip */ "./src/chips/AggregateChip.ts");
+/* harmony import */ var _cards_PersonCard__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../cards/PersonCard */ "./src/cards/PersonCard.ts");
 var __classPrivateFieldGet = (undefined && undefined.__classPrivateFieldGet) || function (receiver, state, kind, f) {
     if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a getter");
     if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
     return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
 };
-var _HomeView_instances, _HomeView_defaultConfig, _HomeView_createPersonCards, _HomeView_createAreaSection;
-
+var _HomeView_instances, _HomeView_createPersonCards, _HomeView_createAreaSection;
 
 
 
@@ -6959,16 +6952,15 @@ var _HomeView_instances, _HomeView_defaultConfig, _HomeView_createPersonCards, _
  * Used to create a Home view.
  *
  * @class HomeView
- * @extends AbstractView
  */
-class HomeView extends _AbstractView__WEBPACK_IMPORTED_MODULE_1__.AbstractView {
+class HomeView {
     /**
      * Class constructor.
      *
-     * @param {views.ViewConfig} [options={}] Options for the view.
+     * @throws {Error} If trying to instantiate this class.
+     * @throws {Error} If the Helper module isn't initialized.
      */
-    constructor(options = {}) {
-        super();
+    constructor() {
         _HomeView_instances.add(this);
         /**
          * Default configuration of the view.
@@ -6976,14 +6968,16 @@ class HomeView extends _AbstractView__WEBPACK_IMPORTED_MODULE_1__.AbstractView {
          * @type {views.ViewConfig}
          * @private
          */
-        _HomeView_defaultConfig.set(this, {
+        this.config = {
             title: "Home",
             icon: "mdi:home-assistant",
             type: "sections",
             path: "home",
             subview: false,
-        });
-        this.config = { ...this.config, ...__classPrivateFieldGet(this, _HomeView_defaultConfig, "f"), ...options };
+        };
+        if (!_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.isInitialized()) {
+            throw new Error("The Helper module must be initialized before using this one.");
+        }
     }
     /**
      * Create the cards to include in the view.
@@ -7003,7 +6997,7 @@ class HomeView extends _AbstractView__WEBPACK_IMPORTED_MODULE_1__.AbstractView {
         const weatherEntityId = chipOptions?.weather_entity ?? _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.domains.weather[0]?.entity_id;
         if (weatherEntityId) {
             try {
-                const weatherChip = new _chips_WeatherChip__WEBPACK_IMPORTED_MODULE_6__.WeatherChip(weatherEntityId);
+                const weatherChip = new _chips_WeatherChip__WEBPACK_IMPORTED_MODULE_5__.WeatherChip(weatherEntityId);
                 chips.push(weatherChip.getChip());
             }
             catch (e) {
@@ -7034,11 +7028,11 @@ class HomeView extends _AbstractView__WEBPACK_IMPORTED_MODULE_1__.AbstractView {
                 _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.logError("An error occurred while creating the spotify chip!", e);
             }
         }
-        const homeChips = await (0,_utils__WEBPACK_IMPORTED_MODULE_5__.createChipsFromList)(_variables__WEBPACK_IMPORTED_MODULE_4__.HOME_EXPOSED_CHIPS, { show_content: true });
+        const homeChips = await (0,_utils__WEBPACK_IMPORTED_MODULE_4__.createChipsFromList)(_variables__WEBPACK_IMPORTED_MODULE_3__.HOME_EXPOSED_CHIPS, { show_content: true });
         if (homeChips) {
             chips.push(...homeChips);
         }
-        const linusSettings = new _chips_SettingsChip__WEBPACK_IMPORTED_MODULE_2__.SettingsChip({ tap_action: new _popups_SettingsPopup__WEBPACK_IMPORTED_MODULE_3__.SettingsPopup().getPopup() });
+        const linusSettings = new _chips_SettingsChip__WEBPACK_IMPORTED_MODULE_1__.SettingsChip({ tap_action: new _popups_SettingsPopup__WEBPACK_IMPORTED_MODULE_2__.SettingsPopup().getPopup() });
         chips.push(linusSettings.getChip());
         return chips.map(chip => ({
             type: "custom:mushroom-chips-card",
@@ -7109,8 +7103,22 @@ class HomeView extends _AbstractView__WEBPACK_IMPORTED_MODULE_1__.AbstractView {
             return [firstSection, ...areaSections];
         });
     }
+    /**
+     * Get a view object.
+     *
+     * The view includes the cards which are created by method createViewCards().
+     *
+     * @returns {Promise<LovelaceViewConfig>} The view object.
+     */
+    async getView() {
+        return {
+            ...this.config,
+            badges: await this.createSectionBadges(),
+            sections: await this.createSectionCards(),
+        };
+    }
 }
-_HomeView_defaultConfig = new WeakMap(), _HomeView_instances = new WeakSet(), _HomeView_createPersonCards = 
+_HomeView_instances = new WeakSet(), _HomeView_createPersonCards = 
 /**
  * Create the person cards to include in the view.
  *
@@ -7127,7 +7135,7 @@ async function _HomeView_createPersonCards() {
             && entity.disabled_by == null;
     });
     for (const person of persons) {
-        cards.push(new _cards_PersonCard__WEBPACK_IMPORTED_MODULE_8__.PersonCard(person).getCard());
+        cards.push(new _cards_PersonCard__WEBPACK_IMPORTED_MODULE_7__.PersonCard(person).getCard());
     }
     return cards;
 }, _HomeView_createAreaSection = 
@@ -7164,17 +7172,17 @@ async function _HomeView_createAreaSection() {
         const aggregate_temperature = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices[floor.floor_id]?.entities.aggregate_temperature;
         floorSection.cards.push({
             type: "heading",
-            heading: (0,_utils__WEBPACK_IMPORTED_MODULE_5__.getFloorName)(floor),
+            heading: (0,_utils__WEBPACK_IMPORTED_MODULE_4__.getFloorName)(floor),
             heading_style: "subtitle",
             icon: floor.icon ?? "mdi:floor-plan",
             badges: aggregate_temperature && [{
                     type: "custom:mushroom-chips-card",
                     alignment: "end",
                     chips: [
-                        new _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_7__.AggregateChip({ device_class: "temperature", show_content: true, magic_device_id: floor.floor_id, area_slug: floor.areas_slug }).getChip()
+                        new _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_6__.AggregateChip({ device_class: "temperature", show_content: true, magic_device_id: floor.floor_id, area_slug: floor.areas_slug }).getChip()
                     ]
                 }],
-            tap_action: floor.floor_id !== _variables__WEBPACK_IMPORTED_MODULE_4__.UNDISCLOSED ? (0,_utils__WEBPACK_IMPORTED_MODULE_5__.navigateTo)((0,_utils__WEBPACK_IMPORTED_MODULE_5__.slugify)(floor.name)) : undefined,
+            tap_action: floor.floor_id !== _variables__WEBPACK_IMPORTED_MODULE_3__.UNDISCLOSED ? (0,_utils__WEBPACK_IMPORTED_MODULE_4__.navigateTo)((0,_utils__WEBPACK_IMPORTED_MODULE_4__.slugify)(floor.name)) : undefined,
         });
         for (const area of floor.areas_slug.map(area_slug => _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas[area_slug]).values()) {
             let module;
@@ -7207,7 +7215,7 @@ async function _HomeView_createAreaSection() {
                 });
             }
         }
-        if (floor.floor_id === _variables__WEBPACK_IMPORTED_MODULE_4__.UNDISCLOSED) {
+        if (floor.floor_id === _variables__WEBPACK_IMPORTED_MODULE_3__.UNDISCLOSED) {
             floorSection.cards.push({
                 type: "custom:mushroom-template-card",
                 primary: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.entity.button.add_new_area.state.on"),
@@ -7601,14 +7609,6 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _cards_SwipeCard__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../cards/SwipeCard */ "./src/cards/SwipeCard.ts");
 /* harmony import */ var _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../cards/ControllerCard */ "./src/cards/ControllerCard.ts");
 /* harmony import */ var _variables__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../variables */ "./src/variables.ts");
-/* harmony import */ var _AbstractView__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./AbstractView */ "./src/views/AbstractView.ts");
-var __classPrivateFieldGet = (undefined && undefined.__classPrivateFieldGet) || function (receiver, state, kind, f) {
-    if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a getter");
-    if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
-    return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
-};
-var _SecurityView_defaultConfig;
-
 
 
 
@@ -7625,27 +7625,35 @@ var _SecurityView_defaultConfig;
  * @class
  * @abstract
  */
-class SecurityView extends _AbstractView__WEBPACK_IMPORTED_MODULE_8__.AbstractView {
+class SecurityView {
     /**
      * Class constructor.
      *
-     * @param {views.ViewConfig} [options={}] Options for the view.
+     * @throws {Error} If trying to instantiate this class.
+     * @throws {Error} If the Helper module isn't initialized.
      */
-    constructor(options = {}) {
-        super();
+    constructor() {
         /**
          * Default configuration of the view.
          *
          * @type {views.ViewConfig}
          * @private
          */
-        _SecurityView_defaultConfig.set(this, {
-            title: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.binary_sensor.entity_component.safety.name"),
+        this.config = {
             path: "security",
-            type: "sections",
+            title: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.binary_sensor.entity_component.safety.name"),
             icon: "mdi:security",
-        });
-        this.config = { ...this.config, ...__classPrivateFieldGet(this, _SecurityView_defaultConfig, "f"), ...options };
+            type: "sections",
+        };
+        /**
+         * A card to switch all entities in the view.
+         *
+         * @type {LovelaceCardConfig[]}
+         */
+        this.viewControllerCard = [];
+        if (!_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.isInitialized()) {
+            throw new Error("The Helper module must be initialized before using this one.");
+        }
     }
     /**
      * Create the cards to include in the view.
@@ -7816,8 +7824,20 @@ class SecurityView extends _AbstractView__WEBPACK_IMPORTED_MODULE_8__.AbstractVi
         }
         return camerasSection;
     }
+    /**
+     * Get a view object.
+     *
+     * The view includes the cards which are created by method createViewCards().
+     *
+     * @returns {Promise<LovelaceViewConfig>} The view object.
+     */
+    async getView() {
+        return {
+            ...this.config,
+            sections: await this.createSectionCards(),
+        };
+    }
 }
-_SecurityView_defaultConfig = new WeakMap();
 
 
 
@@ -8421,12 +8441,10 @@ var map = {
 		"./src/chips/AbstractChip.ts"
 	],
 	"./AggregateChip": [
-		"./src/chips/AggregateChip.ts",
-		"main"
+		"./src/chips/AggregateChip.ts"
 	],
 	"./AggregateChip.ts": [
-		"./src/chips/AggregateChip.ts",
-		"main"
+		"./src/chips/AggregateChip.ts"
 	],
 	"./AlarmChip": [
 		"./src/chips/AlarmChip.ts",
@@ -8451,12 +8469,10 @@ var map = {
 		"./src/chips/AreaStateChip.ts"
 	],
 	"./ClimateChip": [
-		"./src/chips/ClimateChip.ts",
-		"main"
+		"./src/chips/ClimateChip.ts"
 	],
 	"./ClimateChip.ts": [
-		"./src/chips/ClimateChip.ts",
-		"main"
+		"./src/chips/ClimateChip.ts"
 	],
 	"./ConditionalChip": [
 		"./src/chips/ConditionalChip.ts",
@@ -8473,36 +8489,28 @@ var map = {
 		"./src/chips/ControlChip.ts"
 	],
 	"./CoverChip": [
-		"./src/chips/CoverChip.ts",
-		"main"
+		"./src/chips/CoverChip.ts"
 	],
 	"./CoverChip.ts": [
-		"./src/chips/CoverChip.ts",
-		"main"
+		"./src/chips/CoverChip.ts"
 	],
 	"./FanChip": [
-		"./src/chips/FanChip.ts",
-		"main"
+		"./src/chips/FanChip.ts"
 	],
 	"./FanChip.ts": [
-		"./src/chips/FanChip.ts",
-		"main"
+		"./src/chips/FanChip.ts"
 	],
 	"./LightChip": [
-		"./src/chips/LightChip.ts",
-		"main"
+		"./src/chips/LightChip.ts"
 	],
 	"./LightChip.ts": [
-		"./src/chips/LightChip.ts",
-		"main"
+		"./src/chips/LightChip.ts"
 	],
 	"./MediaPlayerChip": [
-		"./src/chips/MediaPlayerChip.ts",
-		"main"
+		"./src/chips/MediaPlayerChip.ts"
 	],
 	"./MediaPlayerChip.ts": [
-		"./src/chips/MediaPlayerChip.ts",
-		"main"
+		"./src/chips/MediaPlayerChip.ts"
 	],
 	"./SafetyChip": [
 		"./src/chips/SafetyChip.ts",
@@ -8527,12 +8535,10 @@ var map = {
 		"main"
 	],
 	"./SwitchChip": [
-		"./src/chips/SwitchChip.ts",
-		"main"
+		"./src/chips/SwitchChip.ts"
 	],
 	"./SwitchChip.ts": [
-		"./src/chips/SwitchChip.ts",
-		"main"
+		"./src/chips/SwitchChip.ts"
 	],
 	"./ToggleSceneChip": [
 		"./src/chips/ToggleSceneChip.ts"

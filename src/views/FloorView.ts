@@ -161,6 +161,7 @@ class FloorView {
               if (domain) {
                 titleCardOptions.showControls = Helper.strategyOptions.domains[domain].showControls;
                 titleCardOptions.extraControls = Helper.strategyOptions.domains[domain].extraControls;
+                titleCardOptions.controlChipOptions = { area_slug: area.slug };
               }
 
               const titleCard = new ControllerCard(target, titleCardOptions, domain, area.slug).createCard();
@@ -174,7 +175,6 @@ class FloorView {
           }
         }
 
-
         if (domainCards.length) {
           const titleSectionOptions: any = {
             ...Helper.strategyOptions.domains[domain].controllerCardOptions,
@@ -185,6 +185,7 @@ class FloorView {
           if (domain) {
             titleSectionOptions.showControls = Helper.strategyOptions.domains[domain].showControls;
             titleSectionOptions.extraControls = Helper.strategyOptions.domains[domain].extraControls;
+            titleSectionOptions.controlChipOptions = { area_slug: this.floor.areas_slug };
           }
 
           const area_ids = this.floor.areas_slug.map(area_slug => Helper.areas[area_slug].area_id);

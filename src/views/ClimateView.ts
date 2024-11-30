@@ -3,6 +3,8 @@ import { ControllerCard } from "../cards/ControllerCard";
 import { AbstractView } from "./AbstractView";
 import { views } from "../types/strategy/views";
 import { cards } from "../types/strategy/cards";
+import { ClimateCard } from "../cards/ClimateCard";
+import { ClimateChip } from "../chips/ClimateChip";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**

@@ -22,13 +22,13 @@ class ControllerCard {
    * @type {string} The target to control the entities of.
    * @private
    */
-  readonly #domain?: string;
+  readonly #domain: string;
 
   /**
    * @type {string} The target to control the entities of.
    * @private
    */
-  readonly #magic_device_id?: string;
+  readonly #magic_device_id: string;
 
   /**
    * Default configuration of the card.
@@ -51,7 +51,7 @@ class ControllerCard {
    * @param {HassServiceTarget} target The target to control the entities of.
    * @param {cards.ControllerCardOptions} options Controller Card options.
    */
-  constructor(target: HassServiceTarget, options: cards.ControllerCardOptions = {}, domain: string, magic_device_id?: string) {
+  constructor(target: HassServiceTarget, options: cards.ControllerCardOptions = {}, domain: string, magic_device_id: string = "global") {
     this.#target = target;
     this.#domain = domain;
     this.#magic_device_id = magic_device_id;
@@ -110,33 +110,18 @@ class ControllerCard {
 
       if (this.#defaultConfig.showControls) {
 
-        const magic_entity_id = this.#magic_device_id && this.#domain && getMAEntity(this.#magic_device_id, this.#domain);
+        const chipModule = Helper.strategyOptions.domains[this.#domain]?.controlChip;
+        const chipOptions = {
+          show_content: true,
+          magic_device_id: this.#magic_device_id,
+          tap_action: { action: "more-info" },
+          ...this.#defaultConfig.controlChipOptions,
+        };
+        const chip = typeof chipModule === 'function' && new chipModule(chipOptions).getChip();
 
-        // console.log('this.#defaultConfig :>> ', this.#defaultConfig);
         badges.push({
           type: "custom:mushroom-chips-card",
-          chips: [
-            // this.#defaultConfig?.controlChip
-            {
-              type: "template",
-              entity: magic_entity_id ? magic_entity_id?.entity_id : this.#target.entity_id,
-              icon: Helper.getFromDomainState({ domain: this.#domain!, ifReturn: this.#defaultConfig.iconOn, elseReturn: this.#defaultConfig.iconOff, area_slug: this.#target.area_id }),
-              icon_color: Helper.getFromDomainState({ domain: this.#domain!, area_slug: this.#target.area_id }),
-              tap_action: magic_entity_id ? {
-                action: "toggle"
-              } : {
-                action: "call-service",
-                service: this.#defaultConfig.toggleService ?? this.#defaultConfig.offService,
-                target: this.#target,
-                data: {},
-              },
-              ...(magic_entity_id ? {
-                hold_action: {
-                  action: "more-info"
-                }
-              } : {})
-            }
-          ]
+          chips: [chip]
         });
       }
 

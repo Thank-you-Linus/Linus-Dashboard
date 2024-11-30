@@ -24,7 +24,7 @@ class CoverChip extends AbstractChip {
     content: "",
     tap_action: {
       action: "navigate",
-      navigation_path: "covers",
+      navigation_path: "cover",
     },
   };
 

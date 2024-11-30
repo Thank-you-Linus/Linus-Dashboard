@@ -148,16 +148,20 @@ class LinusStrategy extends HTMLTemplateElement {
     const { domainId, floor, area } = info.view.strategy?.options ?? {};
     let view: LovelaceViewConfig = {};
 
-    try {
-      if (area) {
-
+    if (area) {
+      try {
         view = await new AreaView(area).getView();
-
-      } else if (floor) {
-
+      } catch (e) {
+        Helper.logError(`View for '${area?.name}' couldn't be loaded!`, e);
+      }
+    } else if (floor) {
+      try {
         view = await new FloorView(floor).getView();
-
-      } else if (domainId) {
+      } catch (e) {
+        Helper.logError(`View for '${floor?.name}' couldn't be loaded!`, e);
+      }
+    } else if (domainId) {
+      try {
 
         if (domainId === "unavailable") {
 
@@ -176,9 +180,10 @@ class LinusStrategy extends HTMLTemplateElement {
           view = await new viewModule[viewType](Helper.strategyOptions.views[domainId]).getView();
 
         }
+      } catch (e) {
+        Helper.logError(`View for '${domainId}' couldn't be loaded!`, e);
       }
-    } catch (e) {
-      Helper.logError(`View for '${info.view.strategy?.options}' couldn't be loaded!`, e);
+
     }
 
     return view;

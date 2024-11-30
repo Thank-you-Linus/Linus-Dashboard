@@ -62,7 +62,7 @@ abstract class AbstractView {
    * @throws {Error} If trying to instantiate this class.
    * @throws {Error} If the Helper module isn't initialized.
    */
-  protected constructor(domain: string = "", device_class?: string) {
+  protected constructor(domain: string, device_class?: string) {
     if (!Helper.isInitialized()) {
       throw new Error("The Helper module must be initialized before using this one.");
     }
@@ -137,6 +137,7 @@ abstract class AbstractView {
           if (this.#domain) {
             titleCardOptions.showControls = Helper.strategyOptions.domains[this.#domain].showControls;
             titleCardOptions.extraControls = Helper.strategyOptions.domains[this.#domain].extraControls;
+            titleCardOptions.controlChipOptions = { device_class: this.#device_class, area_slug: area.slug }
           }
           const areaControllerCard = new ControllerCard(target, titleCardOptions, this.#domain, area.slug).createCard();
 
@@ -154,6 +155,10 @@ abstract class AbstractView {
         if (this.#domain) {
           titleSectionOptions.showControls = Helper.strategyOptions.domains[this.#domain].showControls;
           titleSectionOptions.extraControls = Helper.strategyOptions.domains[this.#domain].extraControls;
+          titleSectionOptions.controlChipOptions = {
+            device_class: this.#device_class,
+            area_slug: floor.areas_slug
+          }
         }
 
         const area_ids = floor.areas_slug.map(area_slug => Helper.areas[area_slug].area_id);

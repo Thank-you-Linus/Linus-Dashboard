@@ -11,7 +11,7 @@ import StrategyDevice = generic.StrategyDevice;
 import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
 import { FloorRegistryEntry } from "./types/homeassistant/data/floor_registry";
 import { DEVICE_CLASSES, MAGIC_AREAS_DOMAIN, MAGIC_AREAS_NAME, UNDISCLOSED } from "./variables";
-import { getMagicAreaSlug, groupEntitiesByDomain, slugify } from "./utils";
+import { getMAEntity, getMagicAreaSlug, groupEntitiesByDomain, slugify } from "./utils";
 import { EntityRegistryEntry } from "./types/homeassistant/data/entity_registry";
 
 /**
@@ -306,7 +306,7 @@ class Helper {
         if (entityState?.attributes?.device_class) domain = entityState.attributes.device_class
       }
       if (!this.#domains[domain]) this.#domains[domain] = [];
-      this.#domains[domain].push(enrichedEntity);
+      if (entity.platform !== MAGIC_AREAS_DOMAIN) this.#domains[domain].push(enrichedEntity);
 
       return acc;
     }, {} as Record<string, StrategyEntity>);
@@ -496,17 +496,19 @@ class Helper {
    * @return {string} The template string.
    * @static
    */
-  static getDeviceClassCountTemplate(device_class: string, operator: string, value: string, area_id?: string | string[]): string {
+  static getDeviceClassCountTemplate(device_class: string, operator: string, value: string, area_slug: string | string[] = "global"): string {
     const states: string[] = [];
 
     if (!this.isInitialized()) {
       console.warn("Helper class should be initialized before calling this method!");
     }
 
-    const areaIds = Array.isArray(area_id) ? area_id : [area_id];
+    const area_slugs = Array.isArray(area_slug) ? area_slug : [area_slug];
 
-    for (const id of areaIds) {
-      const newStates = id ? this.#areas[id]?.domains[device_class]?.map((entity_id) => `states['${entity_id}']`) || [] : [];
+    for (const slug of area_slugs) {
+      const newStates = slug === "global"
+        ? this.domains[device_class]?.map((entity) => `states['${entity.entity_id}']`) ?? []
+        : this.#areas[slug]?.domains[device_class]?.map((entity_id) => `states['${entity_id}']`) ?? [];
       states.push(...newStates);
     }
 
@@ -525,7 +527,16 @@ class Helper {
    * @return {string} The template string.
    * @static
    */
-  static getAverageStateTemplate(device_class: string, area_slug?: string | string[]): string {
+  /**
+   * Get a template string to define the average state of sensor entities with a given device class.
+   *
+   * @param {string} device_class The device class of the entities.
+   * @param {string | string[]} area_slug The area slug(s) to filter entities by.
+   *
+   * @return {string} The template string.
+   * @static
+   */
+  static getAverageStateTemplate(device_class: string, area_slug: string | string[] = "global"): string {
     const states: string[] = [];
 
     if (!this.isInitialized()) {
@@ -535,7 +546,12 @@ class Helper {
     const areaSlugs = Array.isArray(area_slug) ? area_slug : [area_slug];
 
     for (const slug of areaSlugs) {
-      const newStates = slug ? this.#areas[slug]?.domains[device_class]?.map((entity_id) => `states['${entity_id}']`) || [] : [];
+      const magic_entity = getMAEntity(slug!, "sensor", device_class);
+      const newStates = magic_entity
+        ? [`states['${magic_entity.entity_id}']`]
+        : slug
+          ? this.#areas[slug]?.domains[device_class]?.map((entity_id) => `states['${entity_id}']`) || []
+          : [];
       states.push(...newStates);
     }
 

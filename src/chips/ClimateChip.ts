@@ -25,7 +25,7 @@ class ClimateChip extends AbstractChip {
     content: "",
     tap_action: {
       action: "navigate",
-      navigation_path: "climates",
+      navigation_path: "climate",
     },
   };
 
@@ -43,8 +43,7 @@ class ClimateChip extends AbstractChip {
 
     this.#defaultConfig.icon_color = Helper.getFromDomainState({ domain: "climate", area_slug: options?.area_slug })
 
-    const areaOrFloorId = Array.isArray(options?.area_slug) ? options?.area_slug[0] : options?.area_slug ?? options?.floor_id ?? "global";
-    const magicAreasEntity = getMAEntity(areaOrFloorId, "climate");
+    const magicAreasEntity = getMAEntity(options.magic_device_id ?? "global", "climate");
 
     if (magicAreasEntity) {
       this.#defaultConfig.entity = magicAreasEntity.entity_id;

@@ -148,6 +148,7 @@ class AreaView {
           if (domain) {
             titleCardOptions.showControls = Helper.strategyOptions.domains[domain].showControls;
             titleCardOptions.extraControls = Helper.strategyOptions.domains[domain].extraControls;
+            titleCardOptions.controlChipOptions = { area_slug: this.area.slug };
           }
 
           const titleCard = new ControllerCard(target, titleCardOptions, domain, this.area.slug).createCard();

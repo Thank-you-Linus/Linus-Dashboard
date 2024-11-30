@@ -31,43 +31,22 @@ class AggregateView extends AbstractView {
   };
 
   /**
-   * Default configuration of the view's Controller card.
-   *
-   * @type {cards.ControllerCardOptions}
-   * @private
-   */
-  #viewControllerCardConfig: cards.ControllerCardOptions = {
-    // title: `${Helper.localize(`component.fan.entity_component._.name`)}s`,
-  };
-
-  /**
    * Class constructor.
    *
    * @param {views.AggregateViewOptions} [options={}] Options for the view.
    */
   constructor(options: views.AggregateViewOptions) {
     const domain = DEVICE_CLASSES.sensor.includes(options?.device_class) ? "sensor" : "binary_sensor";
-
     super(domain, options?.device_class);
-
-    this.#defaultConfig.title = `${Helper.localize(getDomainTranslationKey(domain, options?.device_class))}s`;
-    this.#defaultConfig.icon = DOMAIN_ICONS[options?.device_class as keyof typeof DOMAIN_ICONS];
-    this.#defaultConfig.path = options?.device_class;
-    this.#defaultConfig.controllerCardOptions = { show_content: true };
-
-    this.config = Object.assign(this.config, this.#defaultConfig, options);
 
     // Create a Controller card to switch all entities of the domain.
     this.viewControllerCard = new ControllerCard(
       this.targetDomain(options?.device_class),
       {
-        ...this.#viewControllerCardConfig,
-        title: this.#defaultConfig.title,
+        title: `${Helper.localize(getDomainTranslationKey(domain, options?.device_class))}s`,
         // subtitle: Helper.getDeviceClassCountTemplate(options?.device_class, "eq", "on") + ` ${Helper.localize(getStateTranslationKey("on", domain, options?.device_class))}s`,
-        ...("controllerCardOptions" in this.config ? this.config.controllerCardOptions : {}) as cards.ControllerCardConfig,
-        // controlChip: new AggregateChip({ device_class: options?.device_class, show_content: true, magic_device_id: "global" }),
-        // showControls: true,
-      }, options?.device_class).createCard();
+        controlChipOptions: { device_class: options?.device_class },
+      }, domain, "global").createCard();
 
   }
 }

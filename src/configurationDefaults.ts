@@ -6,7 +6,14 @@ import { SettingsChip } from "./chips/SettingsChip";
 import { LightSettings } from "./popups/LightSettingsPopup";
 import { ToggleSceneChip } from "./chips/ToggleSceneChip";
 import { SceneSettings } from "./popups/SceneSettingsPopup";
-import { DOMAIN_STATE_ICONS, UNDISCLOSED } from "./variables";
+import { UNDISCLOSED } from "./variables";
+import { ClimateChip } from "./chips/ClimateChip";
+import { AggregateChip } from "./chips/AggregateChip";
+import { LightChip } from "./chips/LightChip";
+import { MediaPlayerChip } from "./chips/MediaPlayerChip";
+import { CoverChip } from "./chips/CoverChip";
+import { FanChip } from "./chips/FanChip";
+import { SwitchChip } from "./chips/SwitchChip";
 
 /**
  * Default configuration for the mushroom strategy.
@@ -45,6 +52,7 @@ export const configurationDefaults: StrategyDefaults = {
     },
     light: {
       showControls: true,
+      controlChip: LightChip,
       extraControls: (device: MagicAreaRegistryEntry) => {
         const chips = [];
         if (device?.entities.light_control?.entity_id) {
@@ -56,8 +64,6 @@ export const configurationDefaults: StrategyDefaults = {
         return chips
       },
       controllerCardOptions: {
-        iconOn: DOMAIN_STATE_ICONS.light.on,
-        iconOff: DOMAIN_STATE_ICONS.light.off,
         onService: "light.turn_on",
         offService: "light.turn_off",
         toggleService: "light.toggle",
@@ -67,9 +73,8 @@ export const configurationDefaults: StrategyDefaults = {
     },
     climate: {
       showControls: true,
+      controlChip: ClimateChip,
       controllerCardOptions: {
-        iconOn: DOMAIN_STATE_ICONS.climate.on,
-        iconOff: DOMAIN_STATE_ICONS.climate.off,
         onService: "climate.turn_on",
         offService: "climate.turn_off",
         toggleService: "climate.toggle",
@@ -86,9 +91,8 @@ export const configurationDefaults: StrategyDefaults = {
     },
     media_player: {
       showControls: true,
+      controlChip: MediaPlayerChip,
       controllerCardOptions: {
-        iconOn: DOMAIN_STATE_ICONS.media_player.on,
-        iconOff: DOMAIN_STATE_ICONS.media_player.off,
         onService: "media_player.turn_on",
         offService: "media_player.turn_off",
         toggleService: "media_player.toggle",
@@ -105,9 +109,8 @@ export const configurationDefaults: StrategyDefaults = {
     },
     cover: {
       showControls: true,
+      controlChip: CoverChip,
       controllerCardOptions: {
-        iconOn: DOMAIN_STATE_ICONS.cover.on,
-        iconOff: DOMAIN_STATE_ICONS.cover.off,
         onService: "cover.open_cover",
         offService: "cover.close_cover",
         toggleService: "cover.toggle",
@@ -132,9 +135,8 @@ export const configurationDefaults: StrategyDefaults = {
     },
     fan: {
       showControls: true,
+      controlChip: FanChip,
       controllerCardOptions: {
-        iconOn: DOMAIN_STATE_ICONS.fan.on,
-        iconOff: DOMAIN_STATE_ICONS.fan.off,
         onService: "fan.turn_on",
         offService: "fan.turn_off",
         toggleService: "fan.toggle",
@@ -144,9 +146,8 @@ export const configurationDefaults: StrategyDefaults = {
     },
     switch: {
       showControls: true,
+      controlChip: SwitchChip,
       controllerCardOptions: {
-        iconOn: DOMAIN_STATE_ICONS.switch.on,
-        iconOff: DOMAIN_STATE_ICONS.switch.off,
         onService: "switch.turn_on",
         offService: "switch.turn_off",
         toggleService: "switch.toggle",
@@ -157,8 +158,6 @@ export const configurationDefaults: StrategyDefaults = {
     camera: {
       showControls: false,
       controllerCardOptions: {
-        iconOn: DOMAIN_STATE_ICONS.camera.on,
-        iconOff: DOMAIN_STATE_ICONS.camera.on,
       },
       hidden: false,
       order: 8
@@ -166,8 +165,6 @@ export const configurationDefaults: StrategyDefaults = {
     lock: {
       showControls: false,
       controllerCardOptions: {
-        iconOn: DOMAIN_STATE_ICONS.lock.on,
-        iconOff: DOMAIN_STATE_ICONS.lock.off,
       },
       hidden: false,
       order: 9
@@ -175,8 +172,6 @@ export const configurationDefaults: StrategyDefaults = {
     vacuum: {
       showControls: true,
       controllerCardOptions: {
-        iconOn: DOMAIN_STATE_ICONS.vacuum.on,
-        iconOff: DOMAIN_STATE_ICONS.vacuum.off,
         onService: "vacuum.start",
         offService: "vacuum.stop",
       },
@@ -184,11 +179,13 @@ export const configurationDefaults: StrategyDefaults = {
       order: 10
     },
     sensor: {
-      showControls: false,
+      controlChip: AggregateChip,
+      showControls: true,
       hidden: false,
     },
     binary_sensor: {
-      showControls: false,
+      controlChip: AggregateChip,
+      showControls: true,
       hidden: false,
     },
     number: {
@@ -196,7 +193,7 @@ export const configurationDefaults: StrategyDefaults = {
       hidden: false,
     },
     temperature: {
-      showControls: false,
+      showControls: true,
       hidden: false,
     },
   },

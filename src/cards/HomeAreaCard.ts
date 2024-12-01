@@ -132,23 +132,23 @@ class HomeAreaCard extends AbstractCard {
         ).getChip(),
         new ConditionalChip(
           [{ entity: aggregate_window?.entity_id, state: "on" }],
-          new AggregateChip({ device_class: "window", show_content: false }).getChip()
+          new AggregateChip({ magic_device_id: area.slug, area_slug: area.slug, device_class: "window", show_content: false }).getChip()
         ).getChip(),
         new ConditionalChip(
           [{ entity: aggregate_door?.entity_id, state: "on" }],
-          new AggregateChip({ device_class: "door", show_content: false }).getChip()
+          new AggregateChip({ magic_device_id: area.slug, area_slug: area.slug, device_class: "door", show_content: false }).getChip()
         ).getChip(),
         new ConditionalChip(
           [{ entity: aggregate_cover?.entity_id, state: "on" }],
-          new AggregateChip({ device_class: "cover", show_content: false }).getChip()
+          new AggregateChip({ magic_device_id: area.slug, area_slug: area.slug, device_class: "cover", show_content: false }).getChip()
         ).getChip(),
         new ConditionalChip(
           [{ entity: aggregate_climate?.entity_id, state_not: UNAVAILABLE }],
-          new ClimateChip().getChip()
+          new ClimateChip({ magic_device_id: area.slug, area_slug: area.slug }).getChip()
         ).getChip(),
         new ConditionalChip(
           [{ entity: all_lights?.entity_id, state_not: UNAVAILABLE, }],
-          new LightChip({ area_slug: area.slug, tap_action: { action: "toggle" } }).getChip()
+          new LightChip({ area_slug: area.slug, magic_device_id: area.slug, tap_action: { action: "toggle" } }).getChip()
         ).getChip(),
         new ConditionalChip(
           [{ entity: all_lights?.entity_id, state_not: UNAVAILABLE }],

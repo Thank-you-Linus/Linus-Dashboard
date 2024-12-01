@@ -773,7 +773,6 @@ class Helper {
               ? this.domains[domain]?.map((entity) => `states['${entity.entity_id}']`)
               : this.#areas[slug]?.domains[domain]?.map((entity_id) => `states['${entity_id}']`);
         if (newStates) {
-          console.log('newStates :>> ', newStates);
           states.push(...newStates);
         }
       } else {

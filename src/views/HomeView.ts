@@ -279,7 +279,14 @@ class HomeView {
                 [{ entity: temperatureEntity?.entity_id!, state_not: UNAVAILABLE }],
                 new AggregateChip({ device_class: "temperature", show_content: true, magic_device_id: floor.floor_id, area_slug: floor.areas_slug }).getChip()
               ).getChip(),
-            ]
+            ],
+            card_mod: {
+              style: `
+                ha-card {
+                  min-width: 80px;
+                }
+              `,
+            }
           }],
           tap_action: floor.floor_id !== UNDISCLOSED ? navigateTo(slugify(floor.name)) : undefined,
         }

@@ -726,7 +726,6 @@ class Helper {
                         ? this.domains[domain]?.map((entity) => `states['${entity.entity_id}']`)
                         : __classPrivateFieldGet(this, _a, "f", _Helper_areas)[slug]?.domains[domain]?.map((entity_id) => `states['${entity_id}']`);
                 if (newStates) {
-                    console.log('newStates :>> ', newStates);
                     states.push(...newStates);
                 }
             }
@@ -1610,7 +1609,14 @@ class ControllerCard {
                 const chip = typeof chipModule === 'function' && new chipModule(chipOptions).getChip();
                 badges.push({
                     type: "custom:mushroom-chips-card",
-                    chips: [chip]
+                    chips: [chip],
+                    card_mod: {
+                        style: `
+            ha-card {
+              min-width: 80px;
+            }
+          `,
+                    }
                 });
             }
             if (magic_device && __classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").extraControls) {
@@ -7134,7 +7140,14 @@ async function _HomeView_createAreaSection() {
                     alignment: "end",
                     chips: [
                         new _chips_ConditionalChip__WEBPACK_IMPORTED_MODULE_8__.ConditionalChip([{ entity: temperatureEntity?.entity_id, state_not: _variables__WEBPACK_IMPORTED_MODULE_3__.UNAVAILABLE }], new _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_6__.AggregateChip({ device_class: "temperature", show_content: true, magic_device_id: floor.floor_id, area_slug: floor.areas_slug }).getChip()).getChip(),
-                    ]
+                    ],
+                    card_mod: {
+                        style: `
+                ha-card {
+                  min-width: 80px;
+                }
+              `,
+                    }
                 }],
             tap_action: floor.floor_id !== _variables__WEBPACK_IMPORTED_MODULE_3__.UNDISCLOSED ? (0,_utils__WEBPACK_IMPORTED_MODULE_4__.navigateTo)((0,_utils__WEBPACK_IMPORTED_MODULE_4__.slugify)(floor.name)) : undefined,
         });

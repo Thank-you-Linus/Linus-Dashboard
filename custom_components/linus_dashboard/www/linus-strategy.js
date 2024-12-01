@@ -4525,11 +4525,12 @@ class LinusStrategy extends HTMLTemplateElement {
      * @param {LovelaceViewConfig[]} views Array of Lovelace view configurations.
      */
     static createDomainSubviews(views) {
-        for (let domainId of _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getExposedViewIds()) {
+        const exposedViewIds = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getExposedViewIds();
+        exposedViewIds.forEach(domainId => {
             if (![..._variables__WEBPACK_IMPORTED_MODULE_1__.CUSTOM_VIEWS, ..._variables__WEBPACK_IMPORTED_MODULE_1__.DOMAINS_VIEWS].includes(domainId))
-                continue;
+                return;
             if (_variables__WEBPACK_IMPORTED_MODULE_1__.DOMAINS_VIEWS.includes(domainId) && (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.domains[domainId] ?? []).length === 0)
-                continue;
+                return;
             views.push({
                 title: domainId,
                 icon: _variables__WEBPACK_IMPORTED_MODULE_1__.DOMAIN_ICONS[domainId],
@@ -4540,7 +4541,7 @@ class LinusStrategy extends HTMLTemplateElement {
                     options: { domainId },
                 },
             });
-        }
+        });
     }
     /**
      * Create a subview for unavailable entities.
@@ -5617,23 +5618,25 @@ function navigateTo(path) {
 }
 function getAggregateEntity(device, domains, device_classes) {
     const aggregateKeys = [];
-    for (const domain of Array.isArray(domains) ? domains : [domains]) {
+    const domainList = Array.isArray(domains) ? domains : [domains];
+    const deviceClassList = Array.isArray(device_classes) ? device_classes : [device_classes];
+    domainList.forEach(domain => {
         if (domain === "light") {
-            Object.values(device?.entities ?? {})?.map(entity => {
+            Object.values(device?.entities ?? {}).forEach(entity => {
                 if (entity.entity_id.endsWith('_lights')) {
                     aggregateKeys.push(entity);
                 }
             });
         }
-        if (_variables__WEBPACK_IMPORTED_MODULE_1__.GROUP_DOMAINS.includes(domain)) {
+        else if (_variables__WEBPACK_IMPORTED_MODULE_1__.GROUP_DOMAINS.includes(domain)) {
             aggregateKeys.push(device?.entities[`${domain}_group`]);
         }
-        if (_variables__WEBPACK_IMPORTED_MODULE_1__.AGGREGATE_DOMAINS.includes(domain)) {
-            for (const device_class of Array.isArray(device_classes) ? device_classes : [device_classes]) {
+        else if (_variables__WEBPACK_IMPORTED_MODULE_1__.AGGREGATE_DOMAINS.includes(domain)) {
+            deviceClassList.forEach(device_class => {
                 aggregateKeys.push(device?.entities[`aggregate_${device_class}`]);
-            }
+            });
         }
-    }
+    });
     return aggregateKeys.filter(Boolean);
 }
 function getMAEntity(magic_device_id, domain, device_class) {

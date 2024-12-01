@@ -1882,9 +1882,9 @@ class HomeAreaCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractCa
             chips: [
                 new _chips_ConditionalChip__WEBPACK_IMPORTED_MODULE_8__.ConditionalChip([{ entity: area_state?.entity_id, state_not: _variables__WEBPACK_IMPORTED_MODULE_9__.UNAVAILABLE }], new _chips_AreaStateChip__WEBPACK_IMPORTED_MODULE_4__.AreaStateChip(device).getChip()).getChip(),
                 new _chips_ConditionalChip__WEBPACK_IMPORTED_MODULE_8__.ConditionalChip([{ entity: aggregate_health?.entity_id, state_not: "on" }], new _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_3__.AggregateChip({ device_class: "health" }).getChip()).getChip(),
-                new _chips_ConditionalChip__WEBPACK_IMPORTED_MODULE_8__.ConditionalChip([{ entity: aggregate_window?.entity_id, state_not: "on" }], new _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_3__.AggregateChip({ device_class: "window" }).getChip()).getChip(),
-                new _chips_ConditionalChip__WEBPACK_IMPORTED_MODULE_8__.ConditionalChip([{ entity: aggregate_door?.entity_id, state_not: "on" }], new _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_3__.AggregateChip({ device_class: "door" }).getChip()).getChip(),
-                new _chips_ConditionalChip__WEBPACK_IMPORTED_MODULE_8__.ConditionalChip([{ entity: aggregate_cover?.entity_id, state_not: "on" }], new _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_3__.AggregateChip({ device_class: "cover" }).getChip()).getChip(),
+                new _chips_ConditionalChip__WEBPACK_IMPORTED_MODULE_8__.ConditionalChip([{ entity: aggregate_window?.entity_id, state: "on" }], new _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_3__.AggregateChip({ device_class: "window", show_content: false }).getChip()).getChip(),
+                new _chips_ConditionalChip__WEBPACK_IMPORTED_MODULE_8__.ConditionalChip([{ entity: aggregate_door?.entity_id, state: "on" }], new _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_3__.AggregateChip({ device_class: "door", show_content: false }).getChip()).getChip(),
+                new _chips_ConditionalChip__WEBPACK_IMPORTED_MODULE_8__.ConditionalChip([{ entity: aggregate_cover?.entity_id, state: "on" }], new _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_3__.AggregateChip({ device_class: "cover", show_content: false }).getChip()).getChip(),
                 new _chips_ConditionalChip__WEBPACK_IMPORTED_MODULE_8__.ConditionalChip([{ entity: aggregate_climate?.entity_id, state_not: _variables__WEBPACK_IMPORTED_MODULE_9__.UNAVAILABLE }], new _chips_ClimateChip__WEBPACK_IMPORTED_MODULE_6__.ClimateChip().getChip()).getChip(),
                 new _chips_ConditionalChip__WEBPACK_IMPORTED_MODULE_8__.ConditionalChip([{ entity: all_lights?.entity_id, state_not: _variables__WEBPACK_IMPORTED_MODULE_9__.UNAVAILABLE, }], new _chips_LightChip__WEBPACK_IMPORTED_MODULE_7__.LightChip({ area_slug: area.slug, tap_action: { action: "toggle" } }).getChip()).getChip(),
                 new _chips_ConditionalChip__WEBPACK_IMPORTED_MODULE_8__.ConditionalChip([{ entity: all_lights?.entity_id, state_not: _variables__WEBPACK_IMPORTED_MODULE_9__.UNAVAILABLE }], new _chips_ControlChip__WEBPACK_IMPORTED_MODULE_2__.ControlChip("light", light_control?.entity_id).getChip()).getChip()
@@ -3252,7 +3252,6 @@ class ConditionalChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_0__.Abstrac
          */
         _ConditionalChip_defaultConfig.set(this, {
             type: "conditional",
-            conditions: [],
         });
         __classPrivateFieldGet(this, _ConditionalChip_defaultConfig, "f").conditions = conditions;
         __classPrivateFieldGet(this, _ConditionalChip_defaultConfig, "f").chip = chip;

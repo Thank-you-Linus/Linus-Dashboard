@@ -24,7 +24,6 @@ class ConditionalChip extends AbstractChip {
    */
   readonly #defaultConfig: ConditionalChipConfig = {
     type: "conditional",
-    conditions: [],
   };
 
   /**
@@ -33,7 +32,7 @@ class ConditionalChip extends AbstractChip {
    * @param {MagicAreaRegistryEntry} device The chip device.
    * @param {ConditionalChipOptions} options The chip options.
    */
-  constructor(conditions: [{ entity: string; state_not: string; }], chip: LovelaceChipConfig) {
+  constructor(conditions: [{ entity: string; state_not: string; } | { entity: string; state: string; }], chip: LovelaceChipConfig) {
     super();
 
     this.#defaultConfig.conditions = conditions;

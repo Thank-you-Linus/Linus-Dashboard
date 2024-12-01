@@ -161,7 +161,7 @@ export type TemplateChipConfig = {
 export interface ConditionalChipConfig {
   type: "conditional";
   chip?: LovelaceChipConfig;
-  conditions: any[];
+  conditions?: [{ entity: string; state_not: string } | { entity: string; state: string }];
 }
 
 /**

@@ -131,16 +131,16 @@ class HomeAreaCard extends AbstractCard {
           new AggregateChip({ device_class: "health" }).getChip()
         ).getChip(),
         new ConditionalChip(
-          [{ entity: aggregate_window?.entity_id, state_not: "on" }],
-          new AggregateChip({ device_class: "window" }).getChip()
+          [{ entity: aggregate_window?.entity_id, state: "on" }],
+          new AggregateChip({ device_class: "window", show_content: false }).getChip()
         ).getChip(),
         new ConditionalChip(
-          [{ entity: aggregate_door?.entity_id, state_not: "on" }],
-          new AggregateChip({ device_class: "door" }).getChip()
+          [{ entity: aggregate_door?.entity_id, state: "on" }],
+          new AggregateChip({ device_class: "door", show_content: false }).getChip()
         ).getChip(),
         new ConditionalChip(
-          [{ entity: aggregate_cover?.entity_id, state_not: "on" }],
-          new AggregateChip({ device_class: "cover" }).getChip()
+          [{ entity: aggregate_cover?.entity_id, state: "on" }],
+          new AggregateChip({ device_class: "cover", show_content: false }).getChip()
         ).getChip(),
         new ConditionalChip(
           [{ entity: aggregate_climate?.entity_id, state_not: UNAVAILABLE }],

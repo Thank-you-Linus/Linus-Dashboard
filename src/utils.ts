@@ -61,32 +61,27 @@ export function navigateTo(path: string): ActionConfig {
 }
 
 export function getAggregateEntity(device: MagicAreaRegistryEntry, domains: string | string[], device_classes?: string | string[]): EntityRegistryEntry[] {
+    const aggregateKeys: EntityRegistryEntry[] = [];
+    const domainList = Array.isArray(domains) ? domains : [domains];
+    const deviceClassList = Array.isArray(device_classes) ? device_classes : [device_classes];
 
-    const aggregateKeys = []
-
-    for (const domain of Array.isArray(domains) ? domains : [domains]) {
-
+    domainList.forEach(domain => {
         if (domain === "light") {
-            Object.values(device?.entities ?? {})?.map(entity => {
+            Object.values(device?.entities ?? {}).forEach(entity => {
                 if (entity.entity_id.endsWith('_lights')) {
-                    aggregateKeys.push(entity)
+                    aggregateKeys.push(entity);
                 }
-            })
+            });
+        } else if (GROUP_DOMAINS.includes(domain)) {
+            aggregateKeys.push(device?.entities[`${domain}_group` as 'cover_group']);
+        } else if (AGGREGATE_DOMAINS.includes(domain)) {
+            deviceClassList.forEach(device_class => {
+                aggregateKeys.push(device?.entities[`aggregate_${device_class}` as 'aggregate_motion']);
+            });
         }
+    });
 
-        if (GROUP_DOMAINS.includes(domain)) {
-            aggregateKeys.push(device?.entities[`${domain}_group` as 'cover_group'])
-        }
-
-        if (AGGREGATE_DOMAINS.includes(domain)) {
-            for (const device_class of Array.isArray(device_classes) ? device_classes : [device_classes]) {
-                aggregateKeys.push(device?.entities[`aggregate_${device_class}` as 'aggregate_motion'])
-            }
-
-        }
-    }
-
-    return aggregateKeys.filter(Boolean)
+    return aggregateKeys.filter(Boolean);
 }
 
 export function getMAEntity(magic_device_id: string, domain: string, device_class?: string): EntityRegistryEntry | undefined {

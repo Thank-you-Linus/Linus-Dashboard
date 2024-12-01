@@ -53,9 +53,10 @@ class LinusStrategy extends HTMLTemplateElement {
    * @param {LovelaceViewConfig[]} views Array of Lovelace view configurations.
    */
   private static createDomainSubviews(views: LovelaceViewConfig[]) {
-    for (let domainId of Helper.getExposedViewIds()) {
-      if (![...CUSTOM_VIEWS, ...DOMAINS_VIEWS].includes(domainId)) continue;
-      if (DOMAINS_VIEWS.includes(domainId) && (Helper.domains[domainId] ?? []).length === 0) continue;
+    const exposedViewIds = Helper.getExposedViewIds();
+    exposedViewIds.forEach(domainId => {
+      if (![...CUSTOM_VIEWS, ...DOMAINS_VIEWS].includes(domainId)) return;
+      if (DOMAINS_VIEWS.includes(domainId) && (Helper.domains[domainId] ?? []).length === 0) return;
       views.push({
         title: domainId,
         icon: DOMAIN_ICONS[domainId as keyof typeof DOMAIN_ICONS],
@@ -66,7 +67,7 @@ class LinusStrategy extends HTMLTemplateElement {
           options: { domainId },
         },
       });
-    }
+    });
   }
 
   /**

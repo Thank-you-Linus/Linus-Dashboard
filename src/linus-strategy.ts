@@ -1,10 +1,11 @@
 import { Helper } from "./Helper";
 import { generic } from "./types/strategy/generic";
 import { LovelaceConfig, LovelaceViewConfig } from "./types/homeassistant/data/lovelace";
-import { CUSTOM_VIEWS, DEVICE_CLASSES, DOMAIN_ICONS, DOMAINS_VIEWS } from "./variables";
+import { CUSTOM_VIEWS, DEVICE_CLASSES, DOMAINS_VIEWS, VIEWS_ICONS } from "./variables";
 import { AreaView } from "./views/AreaView";
 import { getAreaName, getFloorName } from "./utils";
 import { FloorView } from "./views/FloorView";
+import { ResourceKeys } from "./types/homeassistant/data/frontend";
 
 /**
  * Linus Dashboard Strategy.<br>
@@ -54,17 +55,30 @@ class LinusStrategy extends HTMLTemplateElement {
    */
   private static createDomainSubviews(views: LovelaceViewConfig[]) {
     const exposedViewIds = Helper.getExposedViewIds();
-    exposedViewIds.forEach(domainId => {
-      if (![...CUSTOM_VIEWS, ...DOMAINS_VIEWS].includes(domainId)) return;
-      if (DOMAINS_VIEWS.includes(domainId) && (Helper.domains[domainId] ?? []).length === 0) return;
+    exposedViewIds.forEach(viewId => {
+      if (![...CUSTOM_VIEWS, ...DOMAINS_VIEWS].includes(viewId)) return;
+      if (DOMAINS_VIEWS.includes(viewId) && (Helper.domains[viewId] ?? []).length === 0) return;
+
+      let domain = viewId;
+      let device_class = "_";
+
+      if (DEVICE_CLASSES.binary_sensor.includes(viewId)) {
+        domain = "binary_sensor";
+        device_class = viewId;
+      } else if (DEVICE_CLASSES.sensor.includes(viewId)) {
+        domain = "sensor";
+        device_class = viewId;
+      }
+
       views.push({
-        title: domainId,
-        icon: DOMAIN_ICONS[domainId as keyof typeof DOMAIN_ICONS],
-        path: domainId,
-        subview: !Object.keys(DOMAIN_ICONS).includes(domainId),
+        title: viewId,
+        icon: (VIEWS_ICONS as Record<string, string>)[viewId] ?? Helper.icons[domain as ResourceKeys]?.[device_class]?.default,
+        path: viewId,
+        // subview: !Object.keys(ResourceKeys).includes(viewId),
+        subview: false,
         strategy: {
           type: "custom:linus-strategy",
-          options: { domainId },
+          options: { viewId },
         },
       });
     });
@@ -82,7 +96,7 @@ class LinusStrategy extends HTMLTemplateElement {
       subview: true,
       strategy: {
         type: "custom:linus-strategy",
-        options: { domainId: "unavailable" },
+        options: { viewId: "unavailable" },
       },
     });
   }
@@ -146,7 +160,7 @@ class LinusStrategy extends HTMLTemplateElement {
    * @return {Promise<LovelaceViewConfig>}
    */
   static async generateView(info: generic.ViewInfo): Promise<LovelaceViewConfig> {
-    const { domainId, floor, area } = info.view.strategy?.options ?? {};
+    const { viewId, floor, area } = info.view.strategy?.options ?? {};
     let view: LovelaceViewConfig = {};
 
     if (area) {
@@ -161,28 +175,28 @@ class LinusStrategy extends HTMLTemplateElement {
       } catch (e) {
         Helper.logError(`View for '${floor?.name}' couldn't be loaded!`, e);
       }
-    } else if (domainId) {
+    } else if (viewId) {
       try {
 
-        if (domainId === "unavailable") {
+        if (viewId === "unavailable") {
 
           const viewModule = await import("./views/UnavailableView");
           view = await new viewModule.UnavailableView().getView();
 
-        } else if ([...DEVICE_CLASSES.binary_sensor, ...DEVICE_CLASSES.sensor].includes(domainId)) {
+        } else if ([...DEVICE_CLASSES.binary_sensor, ...DEVICE_CLASSES.sensor].includes(viewId)) {
 
           const viewModule = await import("./views/AggregateView");
-          view = await new viewModule.AggregateView({ device_class: domainId }).getView();
+          view = await new viewModule.AggregateView({ device_class: viewId }).getView();
 
         } else {
 
-          const viewType = Helper.sanitizeClassName(domainId + "View");
+          const viewType = Helper.sanitizeClassName(viewId + "View");
           const viewModule = await import(`./views/${viewType}`);
-          view = await new viewModule[viewType](Helper.strategyOptions.views[domainId]).getView();
+          view = await new viewModule[viewType](Helper.strategyOptions.views[viewId]).getView();
 
         }
       } catch (e) {
-        Helper.logError(`View for '${domainId}' couldn't be loaded!`, e);
+        Helper.logError(`View for '${viewId}' couldn't be loaded!`, e);
       }
 
     }

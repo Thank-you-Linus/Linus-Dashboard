@@ -2,8 +2,9 @@ import { AreaInformations } from "../popups/AreaInformationsPopup";
 import { generic } from "../types/strategy/generic";
 import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
 import { TemplateChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
-import { AREA_STATE_ICONS, DEVICE_ICONS, DOMAIN_ICONS } from "../variables";
+import { AREA_STATE_ICONS, DEVICE_ICONS } from "../variables";
 import { AbstractChip } from "./AbstractChip";
+import { Helper } from "../Helper";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**
@@ -51,9 +52,9 @@ class AreaStateChip extends AbstractChip {
           {% set media_player = states('${all_media_players?.entity_id}')%}
           {% set bl = state_attr('${area_state?.entity_id}', 'states')%}
           {% if motion == 'on' %}
-            ${DOMAIN_ICONS.motion}
+            ${Helper.icons.binary_sensor.motion?.default}
           {% elif media_player in ['on', 'playing'] %}
-            ${DOMAIN_ICONS.media_player}
+            ${Helper.icons.media_player._?.default}
           {% elif presence_hold == 'on' %}
             ${DEVICE_ICONS.presence_hold}
           {% elif 'sleep' in bl %}

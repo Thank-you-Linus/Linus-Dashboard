@@ -9,11 +9,12 @@ import { ActionConfig, LovelaceSectionConfig, LovelaceViewConfig } from "../type
 import { PersonCardConfig } from "../types/lovelace-mushroom/cards/person-card-config";
 import { SettingsChip } from "../chips/SettingsChip";
 import { SettingsPopup } from "../popups/SettingsPopup";
-import { HOME_EXPOSED_CHIPS, UNDISCLOSED } from "../variables";
-import { createChipsFromList, getFloorName, navigateTo, slugify } from "../utils";
+import { HOME_EXPOSED_CHIPS, UNAVAILABLE, UNDISCLOSED } from "../variables";
+import { createChipsFromList, getFloorName, getMAEntity, navigateTo, slugify } from "../utils";
 import { WeatherChip } from "../chips/WeatherChip";
 import { AggregateChip } from "../chips/AggregateChip";
 import { PersonCard } from "../cards/PersonCard";
+import { ConditionalChip } from "../chips/ConditionalChip";
 
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
@@ -261,7 +262,8 @@ class HomeView {
         isFirstLoop = false;
       }
 
-      const aggregate_temperature = Helper.magicAreasDevices[floor.floor_id]?.entities.aggregate_temperature;
+      const temperatureEntity = getMAEntity(floor.floor_id, "sensor", "temperature");
+
 
       floorSection.cards.push(
         {
@@ -269,11 +271,14 @@ class HomeView {
           heading: getFloorName(floor),
           heading_style: "subtitle",
           icon: floor.icon ?? "mdi:floor-plan",
-          badges: aggregate_temperature && [{
+          badges: [{
             type: "custom:mushroom-chips-card",
             alignment: "end",
             chips: [
-              new AggregateChip({ device_class: "temperature", show_content: true, magic_device_id: floor.floor_id, area_slug: floor.areas_slug }).getChip()
+              new ConditionalChip(
+                [{ entity: temperatureEntity?.entity_id!, state_not: UNAVAILABLE }],
+                new AggregateChip({ device_class: "temperature", show_content: true, magic_device_id: floor.floor_id, area_slug: floor.areas_slug }).getChip()
+              ).getChip(),
             ]
           }],
           tap_action: floor.floor_id !== UNDISCLOSED ? navigateTo(slugify(floor.name)) : undefined,

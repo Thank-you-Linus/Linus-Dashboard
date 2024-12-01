@@ -2,7 +2,6 @@ import { Helper } from "../Helper";
 import { AbstractChip } from "./AbstractChip";
 import { chips } from "../types/strategy/chips";
 import { TemplateChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
-import { DOMAIN_ICONS } from "../variables";
 import { getMAEntity } from "../utils";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
@@ -22,7 +21,7 @@ class MediaPlayerChip extends AbstractChip {
    */
   readonly #defaultConfig: TemplateChipConfig = {
     type: "template",
-    icon: DOMAIN_ICONS["media_player"],
+    icon: Helper.icons.media_player._.default,
     content: "",
     tap_action: {
       action: "navigate",

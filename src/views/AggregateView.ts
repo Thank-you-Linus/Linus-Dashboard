@@ -2,8 +2,7 @@ import { Helper } from "../Helper";
 import { ControllerCard } from "../cards/ControllerCard";
 import { AbstractView } from "./AbstractView";
 import { views } from "../types/strategy/views";
-import { cards } from "../types/strategy/cards";
-import { DEVICE_CLASSES, DOMAIN_ICONS } from "../variables";
+import { DEVICE_CLASSES } from "../variables";
 import { getDomainTranslationKey } from "../utils";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.

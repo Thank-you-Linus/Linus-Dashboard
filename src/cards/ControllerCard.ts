@@ -121,7 +121,14 @@ class ControllerCard {
 
         badges.push({
           type: "custom:mushroom-chips-card",
-          chips: [chip]
+          chips: [chip],
+          card_mod: {
+            style: `
+            ha-card {
+              min-width: 80px;
+            }
+          `,
+          }
         });
       }
 

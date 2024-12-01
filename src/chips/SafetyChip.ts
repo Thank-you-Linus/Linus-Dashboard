@@ -2,7 +2,6 @@ import { Helper } from "../Helper";
 import { AbstractChip } from "./AbstractChip";
 import { chips } from "../types/strategy/chips";
 import { TemplateChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
-import { DOMAIN_STATE_ICONS } from "../variables";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**
@@ -21,7 +20,7 @@ class SafetyChip extends AbstractChip {
    */
   readonly #defaultConfig: TemplateChipConfig = {
     type: "template",
-    icon: DOMAIN_STATE_ICONS.binary_sensor.safety.on,
+    icon: Helper.icons.binary_sensor.safety?.default,
     icon_color: "grey",
     content: Helper.getDeviceClassCountTemplate("safety", "ne", "off"),
     tap_action: {

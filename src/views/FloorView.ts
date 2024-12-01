@@ -10,8 +10,7 @@ import { SwipeCard } from "../cards/SwipeCard";
 import { EntityCardConfig } from "../types/lovelace-mushroom/cards/entity-card-config";
 import { ControllerCard } from "../cards/ControllerCard";
 import { HassServiceTarget } from "home-assistant-js-websocket";
-import { ImageAreaCard } from "../cards/ImageAreaCard";
-import { AREA_EXPOSED_CHIPS, DOMAIN_ICONS, UNDISCLOSED } from "../variables";
+import { AREA_EXPOSED_CHIPS } from "../variables";
 import { LovelaceChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
 import { AreaStateChip } from "../chips/AreaStateChip";
 import { createChipsFromList, getDomainTranslationKey } from "../utils";
@@ -179,7 +178,7 @@ class FloorView {
           const titleSectionOptions: any = {
             ...Helper.strategyOptions.domains[domain].controllerCardOptions,
             title: Helper.localize(getDomainTranslationKey(domain)),
-            titleIcon: DOMAIN_ICONS[domain as keyof typeof DOMAIN_ICONS] ?? "mdi:floor-plan",
+            titleIcon: Helper.icons[domain as keyof typeof Helper.icons]._?.default ?? "mdi:floor-plan",
             titleNavigate: domain,
           };
           if (domain) {

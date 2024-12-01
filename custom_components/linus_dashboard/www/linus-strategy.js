@@ -172,7 +172,7 @@ var __classPrivateFieldSet = (undefined && undefined.__classPrivateFieldSet) || 
     if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot write private member to an object whose class did not declare it");
     return (kind === "a" ? f.call(receiver, value) : f ? f.value = value : state.set(receiver, value)), value;
 };
-var _a, _Helper_entities, _Helper_domains, _Helper_devices, _Helper_areas, _Helper_floors, _Helper_hassStates, _Helper_hassLocalize, _Helper_initialized, _Helper_strategyOptions, _Helper_magicAreasDevices, _Helper_debug, _Helper_getObjectKeysByPropertyValue;
+var _a, _Helper_entities, _Helper_domains, _Helper_devices, _Helper_areas, _Helper_floors, _Helper_hassStates, _Helper_hassLocalize, _Helper_initialized, _Helper_strategyOptions, _Helper_magicAreasDevices, _Helper_debug, _Helper_icons, _Helper_getObjectKeysByPropertyValue;
 
 
 
@@ -292,6 +292,15 @@ class Helper {
         return __classPrivateFieldGet(this, _a, "f", _Helper_domains);
     }
     /**
+     * Get the icons from Home Assistant's frontend.
+     *
+     * @returns {IconResources}
+     * @static
+     */
+    static get icons() {
+        return __classPrivateFieldGet(this, _a, "f", _Helper_icons);
+    }
+    /**
      * Get the current debug mode of the mushroom strategy.
      *
      * @returns {boolean}
@@ -321,13 +330,17 @@ class Helper {
                 info.hass.callWS({ type: "config/device_registry/list" }),
                 info.hass.callWS({ type: "config/area_registry/list" }),
                 info.hass.callWS({ type: "config/floor_registry/list" }),
+                info.hass.callWS({ type: "frontend/get_icons", category: "entity_component" }),
+                info.hass.callWS({ type: "frontend/get_icons", category: "services" }),
             ]);
         }
         catch (e) {
             _a.logError("An error occurred while querying Home assistant's registries!", e);
             throw 'Check the console for details';
         }
-        const [entities, devices, areas, floors] = homeAssistantRegistries;
+        const [entities, devices, areas, floors, entity_component_icons, services_icons] = homeAssistantRegistries;
+        __classPrivateFieldSet(this, _a, deepmerge__WEBPACK_IMPORTED_MODULE_1___default()(entity_component_icons.resources, services_icons.resources), "f", _Helper_icons);
+        console.log('this.#icons :>> ', __classPrivateFieldGet(this, _a, "f", _Helper_icons));
         // Dictionnaires pour un accès rapide
         const areasById = Object.fromEntries(areas.map(a => [a.area_id, a]));
         const floorsById = Object.fromEntries(floors.map(f => [f.floor_id, f]));
@@ -705,10 +718,15 @@ class Helper {
         const areaSlugs = Array.isArray(area_slug) ? area_slug : [area_slug];
         for (const slug of areaSlugs) {
             if (slug) {
+                const magic_entity = (0,_utils__WEBPACK_IMPORTED_MODULE_3__.getMAEntity)(slug, domain);
                 const newStates = domain === "all"
                     ? __classPrivateFieldGet(this, _a, "f", _Helper_areas)[slug]?.entities.map((entity_id) => `states['${entity_id}']`)
-                    : __classPrivateFieldGet(this, _a, "f", _Helper_areas)[slug]?.domains[domain]?.map((entity_id) => `states['${entity_id}']`);
+                    : magic_entity
+                        ? [`states['${magic_entity.entity_id}']`] : area_slug === "global"
+                        ? this.domains[domain]?.map((entity) => `states['${entity.entity_id}']`)
+                        : __classPrivateFieldGet(this, _a, "f", _Helper_areas)[slug]?.domains[domain]?.map((entity_id) => `states['${entity_id}']`);
                 if (newStates) {
+                    console.log('newStates :>> ', newStates);
                     states.push(...newStates);
                 }
             }
@@ -751,57 +769,41 @@ class Helper {
         const formatedValue = Array.isArray(value) ? JSON.stringify(value).replaceAll('"', "'") : `'${value ?? 'on'}'`;
         return `{% set entities = [${states}] %}{{ '${ifReturn ?? 'white'}' if entities | selectattr('state','${operator ?? 'eq'}', ${formatedValue}) | list | count > 0 else '${elseReturn ?? 'grey'}' }}`;
     }
-    static getBinarySensorColorFromState(device_class, operator, value, ifReturn, elseReturn, area_slug) {
+    static getBinarySensorColorFromState(device_class, operator, value, ifReturn, elseReturn, area_slug = "global") {
         const states = [];
         if (!this.isInitialized()) {
             console.warn("Helper class should be initialized before calling this method!");
         }
-        if (area_slug) {
-            const newStates = Array.isArray(area_slug)
-                ? area_slug.flatMap(slug => __classPrivateFieldGet(this, _a, "f", _Helper_areas)[slug]?.domains[device_class]?.map((entity_id) => `states['${entity_id}']`) || [])
-                : __classPrivateFieldGet(this, _a, "f", _Helper_areas)[area_slug]?.domains[device_class]?.map((entity_id) => `states['${entity_id}']`);
-            if (newStates) {
+        const areaSlugs = Array.isArray(area_slug) ? area_slug : [area_slug];
+        for (const slug of areaSlugs) {
+            const magic_entity = (0,_utils__WEBPACK_IMPORTED_MODULE_3__.getMAEntity)(slug, "binary_sensor", device_class);
+            const newStates = magic_entity
+                ? [`states['${magic_entity.entity_id}']`]
+                : area_slug === "global"
+                    ? this.domains[device_class]?.map((entity) => `states['${entity.entity_id}']`)
+                    : __classPrivateFieldGet(this, _a, "f", _Helper_areas)[slug]?.domains[device_class]?.map((entity_id) => `states['${entity_id}']`);
+            if (newStates)
                 states.push(...newStates);
-            }
-        }
-        else {
-            // Get the ID of the devices which are linked to the given area.
-            for (const area of Object.values(__classPrivateFieldGet(this, _a, "f", _Helper_areas))) {
-                if (area.area_id === _variables__WEBPACK_IMPORTED_MODULE_2__.UNDISCLOSED)
-                    continue;
-                const newStates = __classPrivateFieldGet(this, _a, "f", _Helper_areas)[area.slug]?.domains[device_class]?.map((entity_id) => `states['${entity_id}']`);
-                if (newStates) {
-                    states.push(...newStates);
-                }
-            }
         }
         return `
       {% set entities = [${states}] %}
       {{ '${ifReturn}' if entities | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | selectattr('state','${operator}','${value}') | list | count else '${elseReturn}' }}`;
     }
-    static getSensorColorFromState(device_class, area_slug) {
+    static getSensorColorFromState(device_class, area_slug = "global") {
         const states = [];
         if (!this.isInitialized()) {
             console.warn("Helper class should be initialized before calling this method!");
         }
-        if (area_slug) {
-            const newStates = Array.isArray(area_slug)
-                ? area_slug.flatMap(slug => __classPrivateFieldGet(this, _a, "f", _Helper_areas)[slug]?.domains[device_class]?.map((entity_id) => `states['${entity_id}']`) || [])
-                : __classPrivateFieldGet(this, _a, "f", _Helper_areas)[area_slug]?.domains[device_class]?.map((entity_id) => `states['${entity_id}']`);
-            if (newStates) {
+        const areaSlugs = Array.isArray(area_slug) ? area_slug : [area_slug];
+        for (const slug of areaSlugs) {
+            const magic_entity = (0,_utils__WEBPACK_IMPORTED_MODULE_3__.getMAEntity)(slug, "binary_sensor", device_class);
+            const newStates = magic_entity
+                ? [`states['${magic_entity.entity_id}']`]
+                : area_slug === "global"
+                    ? this.domains[device_class]?.map((entity) => `states['${entity.entity_id}']`)
+                    : __classPrivateFieldGet(this, _a, "f", _Helper_areas)[slug]?.domains[device_class]?.map((entity_id) => `states['${entity_id}']`);
+            if (newStates)
                 states.push(...newStates);
-            }
-        }
-        else {
-            // Get the ID of the devices which are linked to the given area.
-            for (const area of Object.values(__classPrivateFieldGet(this, _a, "f", _Helper_areas))) {
-                if (area.area_id === _variables__WEBPACK_IMPORTED_MODULE_2__.UNDISCLOSED)
-                    continue;
-                const newStates = __classPrivateFieldGet(this, _a, "f", _Helper_areas)[area.slug]?.domains[device_class]?.map((entity_id) => `states['${entity_id}']`);
-                if (newStates) {
-                    states.push(...newStates);
-                }
-            }
         }
         if (device_class === "battery") {
             return `
@@ -848,52 +850,44 @@ class Helper {
         }
         return undefined;
     }
-    static getSensorIconFromState(device_class, area_slug) {
+    static getSensorIconFromState(device_class, area_slug = "global") {
         const states = [];
         if (!this.isInitialized()) {
             console.warn("Helper class should be initialized before calling this method!");
         }
-        if (area_slug) {
-            const newStates = Array.isArray(area_slug)
-                ? area_slug.flatMap(slug => __classPrivateFieldGet(this, _a, "f", _Helper_areas)[slug]?.domains[device_class]?.map((entity_id) => `states['${entity_id}']`) || [])
-                : __classPrivateFieldGet(this, _a, "f", _Helper_areas)[area_slug]?.domains[device_class]?.map((entity_id) => `states['${entity_id}']`);
-            if (newStates) {
-                states.push(...newStates);
-            }
-        }
-        else {
-            // Get the ID of the devices which are linked to the given area.
-            for (const area of Object.values(__classPrivateFieldGet(this, _a, "f", _Helper_areas))) {
-                if (area.area_id === _variables__WEBPACK_IMPORTED_MODULE_2__.UNDISCLOSED)
-                    continue;
-                const newStates = __classPrivateFieldGet(this, _a, "f", _Helper_areas)[area.slug]?.domains[device_class]?.map((entity_id) => `states['${entity_id}']`);
-                if (newStates) {
-                    states.push(...newStates);
-                }
-            }
+        const areaSlugs = Array.isArray(area_slug) ? area_slug : [area_slug];
+        for (const slug of areaSlugs) {
+            const magic_entity = (0,_utils__WEBPACK_IMPORTED_MODULE_3__.getMAEntity)(slug, "sensor", device_class);
+            const newStates = magic_entity
+                ? [`states['${magic_entity.entity_id}']`]
+                : slug
+                    ? __classPrivateFieldGet(this, _a, "f", _Helper_areas)[slug]?.domains[device_class]?.map((entity_id) => `states['${entity_id}']`) || []
+                    : [];
+            states.push(...newStates);
         }
         if (device_class === "battery") {
             return `
-      {% set entities = [${states}] %}
-      {% set bl = entities | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute = 'state') | map('float') | sum / entities | length %}
-      {% if bl == 'unknown' or bl == 'unavailable' %}
-      {% elif bl | int() < 10 %} mdi:battery-outline
-      {% elif bl | int() < 20 %} mdi:battery-10
-      {% elif bl | int() < 30 %} mdi:battery-20
-      {% elif bl | int() < 40 %} mdi:battery-30
-      {% elif bl | int() < 50 %} mdi:battery-40
-      {% elif bl | int() < 60 %} mdi:battery-50
-      {% elif bl | int() < 70 %} mdi:battery-60
-      {% elif bl | int() < 80 %} mdi:battery-70
-      {% elif bl | int() < 90 %} mdi:battery-80
-      {% elif bl | int() < 100 %} mdi:battery-90
-      {% elif bl | int() == 100 %} mdi:battery
-      {% else %} mdi:battery{% endif %} `;
+        {% set entities = [${states}] %}
+        {% set bl = entities | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | sum / entities | length %}
+        {% if bl == 'unknown' or bl == 'unavailable' %}
+        {% elif bl < 10 %} mdi:battery-outline
+        {% elif bl < 20 %} mdi:battery-10
+        {% elif bl < 30 %} mdi:battery-20
+        {% elif bl < 40 %} mdi:battery-30
+        {% elif bl < 50 %} mdi:battery-40
+        {% elif bl < 60 %} mdi:battery-50
+        {% elif bl < 70 %} mdi:battery-60
+        {% elif bl < 80 %} mdi:battery-70
+        {% elif bl < 90 %} mdi:battery-80
+        {% elif bl < 100 %} mdi:battery-90
+        {% elif bl == 100 %} mdi:battery
+        {% else %} mdi:battery{% endif %}
+      `;
         }
         if (device_class === "temperature") {
             return `
         {% set entities = [${states}] %}
-        {% set bl = (entities | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute = 'state') | map('float') | sum / entities | length) %}
+        {% set bl = entities | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | sum / entities | length %}
         {% if bl < 20 %}
           mdi:thermometer-low
         {% elif bl < 30 %}
@@ -994,6 +988,13 @@ _Helper_magicAreasDevices = { value: {} };
  * @private
  */
 _Helper_debug = { value: void 0 };
+/**
+ * Set to true for more verbose information in the console.
+ *
+ * @type {IconResources}
+ * @private
+ */
+_Helper_icons = { value: void 0 };
 
 
 
@@ -2794,7 +2795,7 @@ class AggregateChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.AbstractC
      */
     getDefaultConfig({ device_class, show_content = true, magic_device_id = "global", area_slug, tap_action }) {
         const domain = _variables__WEBPACK_IMPORTED_MODULE_0__.DEVICE_CLASSES.sensor.includes(device_class) ? "sensor" : "binary_sensor";
-        let icon = _variables__WEBPACK_IMPORTED_MODULE_0__.DOMAIN_ICONS[device_class];
+        let icon = _Helper__WEBPACK_IMPORTED_MODULE_2__.Helper.icons[domain][device_class]?.default;
         let icon_color = "";
         let content = "";
         const device = _Helper__WEBPACK_IMPORTED_MODULE_2__.Helper.magicAreasDevices[magic_device_id];
@@ -2806,7 +2807,7 @@ class AggregateChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.AbstractC
         if (domain === "sensor") {
             content = show_content ? _Helper__WEBPACK_IMPORTED_MODULE_2__.Helper.getAverageStateTemplate(device_class, area_slug) : "";
             icon_color = _Helper__WEBPACK_IMPORTED_MODULE_2__.Helper.getSensorColorFromState(device_class, area_slug) ?? "white";
-            icon = _Helper__WEBPACK_IMPORTED_MODULE_2__.Helper.getSensorIconFromState(device_class, area_slug) ?? _variables__WEBPACK_IMPORTED_MODULE_0__.DOMAIN_ICONS[device_class];
+            icon = _Helper__WEBPACK_IMPORTED_MODULE_2__.Helper.getSensorIconFromState(device_class, area_slug) ?? icon;
             if (device_class === "illuminance") {
                 if (magicEntity) {
                     icon_color = `{{ 'blue' if 'dark' in state_attr('${device?.entities.area_state?.entity_id}', 'states') else 'amber' }}`;
@@ -3042,6 +3043,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _popups_AreaInformationsPopup__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../popups/AreaInformationsPopup */ "./src/popups/AreaInformationsPopup.ts");
 /* harmony import */ var _variables__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../variables */ "./src/variables.ts");
 /* harmony import */ var _AbstractChip__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./AbstractChip */ "./src/chips/AbstractChip.ts");
+/* harmony import */ var _Helper__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../Helper */ "./src/Helper.ts");
+
 
 
 
@@ -3090,9 +3093,9 @@ class AreaStateChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_2__.AbstractC
           {% set media_player = states('${all_media_players?.entity_id}')%}
           {% set bl = state_attr('${area_state?.entity_id}', 'states')%}
           {% if motion == 'on' %}
-            ${_variables__WEBPACK_IMPORTED_MODULE_1__.DOMAIN_ICONS.motion}
+            ${_Helper__WEBPACK_IMPORTED_MODULE_3__.Helper.icons.binary_sensor.motion?.default}
           {% elif media_player in ['on', 'playing'] %}
-            ${_variables__WEBPACK_IMPORTED_MODULE_1__.DOMAIN_ICONS.media_player}
+            ${_Helper__WEBPACK_IMPORTED_MODULE_3__.Helper.icons.media_player._?.default}
           {% elif presence_hold == 'on' %}
             ${_variables__WEBPACK_IMPORTED_MODULE_1__.DEVICE_ICONS.presence_hold}
           {% elif 'sleep' in bl %}
@@ -3544,15 +3547,13 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var _Helper__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../Helper */ "./src/Helper.ts");
 /* harmony import */ var _AbstractChip__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./AbstractChip */ "./src/chips/AbstractChip.ts");
-/* harmony import */ var _variables__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../variables */ "./src/variables.ts");
-/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../utils */ "./src/utils.ts");
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../utils */ "./src/utils.ts");
 var __classPrivateFieldGet = (undefined && undefined.__classPrivateFieldGet) || function (receiver, state, kind, f) {
     if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a getter");
     if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
     return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
 };
 var _MediaPlayerChip_defaultConfig;
-
 
 
 
@@ -3580,7 +3581,7 @@ class MediaPlayerChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.Abstrac
          */
         _MediaPlayerChip_defaultConfig.set(this, {
             type: "template",
-            icon: _variables__WEBPACK_IMPORTED_MODULE_2__.DOMAIN_ICONS["media_player"],
+            icon: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.icons.media_player._.default,
             content: "",
             tap_action: {
                 action: "navigate",
@@ -3591,7 +3592,7 @@ class MediaPlayerChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.Abstrac
             __classPrivateFieldGet(this, _MediaPlayerChip_defaultConfig, "f").content = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getCountTemplate("media_player", "eq", "playing", options?.area_slug);
         }
         __classPrivateFieldGet(this, _MediaPlayerChip_defaultConfig, "f").icon_color = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getFromDomainState({ domain: "media_player", area_slug: options?.area_slug });
-        const magicAreasEntity = (0,_utils__WEBPACK_IMPORTED_MODULE_3__.getMAEntity)(options?.magic_device_id ?? "global", "media_player");
+        const magicAreasEntity = (0,_utils__WEBPACK_IMPORTED_MODULE_2__.getMAEntity)(options?.magic_device_id ?? "global", "media_player");
         if (magicAreasEntity) {
             __classPrivateFieldGet(this, _MediaPlayerChip_defaultConfig, "f").entity = magicAreasEntity.entity_id;
         }
@@ -3617,14 +3618,12 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var _Helper__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../Helper */ "./src/Helper.ts");
 /* harmony import */ var _AbstractChip__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./AbstractChip */ "./src/chips/AbstractChip.ts");
-/* harmony import */ var _variables__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../variables */ "./src/variables.ts");
 var __classPrivateFieldGet = (undefined && undefined.__classPrivateFieldGet) || function (receiver, state, kind, f) {
     if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a getter");
     if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
     return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
 };
 var _SafetyChip_defaultConfig;
-
 
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
@@ -3651,7 +3650,7 @@ class SafetyChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.AbstractChip
          */
         _SafetyChip_defaultConfig.set(this, {
             type: "template",
-            icon: _variables__WEBPACK_IMPORTED_MODULE_2__.DOMAIN_STATE_ICONS.binary_sensor.safety.on,
+            icon: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.icons.binary_sensor.safety?.default,
             icon_color: "grey",
             content: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getDeviceClassCountTemplate("safety", "ne", "off"),
             tap_action: {
@@ -4526,19 +4525,30 @@ class LinusStrategy extends HTMLTemplateElement {
      */
     static createDomainSubviews(views) {
         const exposedViewIds = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getExposedViewIds();
-        exposedViewIds.forEach(domainId => {
-            if (![..._variables__WEBPACK_IMPORTED_MODULE_1__.CUSTOM_VIEWS, ..._variables__WEBPACK_IMPORTED_MODULE_1__.DOMAINS_VIEWS].includes(domainId))
+        exposedViewIds.forEach(viewId => {
+            if (![..._variables__WEBPACK_IMPORTED_MODULE_1__.CUSTOM_VIEWS, ..._variables__WEBPACK_IMPORTED_MODULE_1__.DOMAINS_VIEWS].includes(viewId))
                 return;
-            if (_variables__WEBPACK_IMPORTED_MODULE_1__.DOMAINS_VIEWS.includes(domainId) && (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.domains[domainId] ?? []).length === 0)
+            if (_variables__WEBPACK_IMPORTED_MODULE_1__.DOMAINS_VIEWS.includes(viewId) && (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.domains[viewId] ?? []).length === 0)
                 return;
+            let domain = viewId;
+            let device_class = "_";
+            if (_variables__WEBPACK_IMPORTED_MODULE_1__.DEVICE_CLASSES.binary_sensor.includes(viewId)) {
+                domain = "binary_sensor";
+                device_class = viewId;
+            }
+            else if (_variables__WEBPACK_IMPORTED_MODULE_1__.DEVICE_CLASSES.sensor.includes(viewId)) {
+                domain = "sensor";
+                device_class = viewId;
+            }
             views.push({
-                title: domainId,
-                icon: _variables__WEBPACK_IMPORTED_MODULE_1__.DOMAIN_ICONS[domainId],
-                path: domainId,
-                subview: !Object.keys(_variables__WEBPACK_IMPORTED_MODULE_1__.DOMAIN_ICONS).includes(domainId),
+                title: viewId,
+                icon: _variables__WEBPACK_IMPORTED_MODULE_1__.VIEWS_ICONS[viewId] ?? _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.icons[domain]?.[device_class]?.default,
+                path: viewId,
+                // subview: !Object.keys(ResourceKeys).includes(viewId),
+                subview: false,
                 strategy: {
                     type: "custom:linus-strategy",
-                    options: { domainId },
+                    options: { viewId },
                 },
             });
         });
@@ -4555,7 +4565,7 @@ class LinusStrategy extends HTMLTemplateElement {
             subview: true,
             strategy: {
                 type: "custom:linus-strategy",
-                options: { domainId: "unavailable" },
+                options: { viewId: "unavailable" },
             },
         });
     }
@@ -4616,7 +4626,7 @@ class LinusStrategy extends HTMLTemplateElement {
      * @return {Promise<LovelaceViewConfig>}
      */
     static async generateView(info) {
-        const { domainId, floor, area } = info.view.strategy?.options ?? {};
+        const { viewId, floor, area } = info.view.strategy?.options ?? {};
         let view = {};
         if (area) {
             try {
@@ -4634,24 +4644,24 @@ class LinusStrategy extends HTMLTemplateElement {
                 _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.logError(`View for '${floor?.name}' couldn't be loaded!`, e);
             }
         }
-        else if (domainId) {
+        else if (viewId) {
             try {
-                if (domainId === "unavailable") {
+                if (viewId === "unavailable") {
                     const viewModule = await Promise.resolve(/*! import() */).then(__webpack_require__.bind(__webpack_require__, /*! ./views/UnavailableView */ "./src/views/UnavailableView.ts"));
                     view = await new viewModule.UnavailableView().getView();
                 }
-                else if ([..._variables__WEBPACK_IMPORTED_MODULE_1__.DEVICE_CLASSES.binary_sensor, ..._variables__WEBPACK_IMPORTED_MODULE_1__.DEVICE_CLASSES.sensor].includes(domainId)) {
+                else if ([..._variables__WEBPACK_IMPORTED_MODULE_1__.DEVICE_CLASSES.binary_sensor, ..._variables__WEBPACK_IMPORTED_MODULE_1__.DEVICE_CLASSES.sensor].includes(viewId)) {
                     const viewModule = await Promise.resolve(/*! import() */).then(__webpack_require__.bind(__webpack_require__, /*! ./views/AggregateView */ "./src/views/AggregateView.ts"));
-                    view = await new viewModule.AggregateView({ device_class: domainId }).getView();
+                    view = await new viewModule.AggregateView({ device_class: viewId }).getView();
                 }
                 else {
-                    const viewType = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.sanitizeClassName(domainId + "View");
+                    const viewType = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.sanitizeClassName(viewId + "View");
                     const viewModule = await __webpack_require__("./src/views lazy recursive ^\\.\\/.*$")(`./${viewType}`);
-                    view = await new viewModule[viewType](_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.views[domainId]).getView();
+                    view = await new viewModule[viewType](_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.views[viewId]).getView();
                 }
             }
             catch (e) {
-                _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.logError(`View for '${domainId}' couldn't be loaded!`, e);
+                _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.logError(`View for '${viewId}' couldn't be loaded!`, e);
             }
         }
         return view;
@@ -5742,8 +5752,6 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   DEVICE_CLASSES: () => (/* binding */ DEVICE_CLASSES),
 /* harmony export */   DEVICE_ICONS: () => (/* binding */ DEVICE_ICONS),
 /* harmony export */   DOMAINS_VIEWS: () => (/* binding */ DOMAINS_VIEWS),
-/* harmony export */   DOMAIN_ICONS: () => (/* binding */ DOMAIN_ICONS),
-/* harmony export */   DOMAIN_STATE_ICONS: () => (/* binding */ DOMAIN_STATE_ICONS),
 /* harmony export */   GROUP_DOMAINS: () => (/* binding */ GROUP_DOMAINS),
 /* harmony export */   HOME_EXPOSED_CHIPS: () => (/* binding */ HOME_EXPOSED_CHIPS),
 /* harmony export */   LIGHT_DOMAIN: () => (/* binding */ LIGHT_DOMAIN),
@@ -5751,7 +5759,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   MAGIC_AREAS_NAME: () => (/* binding */ MAGIC_AREAS_NAME),
 /* harmony export */   TOD_ORDER: () => (/* binding */ TOD_ORDER),
 /* harmony export */   UNAVAILABLE: () => (/* binding */ UNAVAILABLE),
-/* harmony export */   UNDISCLOSED: () => (/* binding */ UNDISCLOSED)
+/* harmony export */   UNDISCLOSED: () => (/* binding */ UNDISCLOSED),
+/* harmony export */   VIEWS_ICONS: () => (/* binding */ VIEWS_ICONS)
 /* harmony export */ });
 const MAGIC_AREAS_DOMAIN = "magic_areas";
 const MAGIC_AREAS_NAME = "Magic Areas";
@@ -5773,68 +5782,9 @@ const AREA_EXPOSED_CHIPS = [LIGHT_DOMAIN, ...GROUP_DOMAINS, "fan", "switch", "sa
 const DEVICE_ICONS = {
     presence_hold: 'mdi:car-brake-hold'
 };
-const DOMAIN_STATE_ICONS = {
-    light: { on: "mdi:lightbulb-group", off: "mdi:lightbulb-group-off" },
-    switch: { on: "mdi:power-plug", off: "mdi:power-plug" },
-    fan: { on: "mdi:fan", off: "mdi:fan-off" },
-    sensor: { humidity: "mdi:water-percent", temperature: "mdi:thermometer", pressure: "mdi:gauge" },
-    binary_sensor: {
-        motion: { on: "mdi:motion-sensor", off: "mdi:motion-sensor-off" },
-        door: { on: "mdi:door-open", off: "mdi:door-closed" },
-        window: { on: "mdi:window-open-variant", off: "mdi:window-closed-variant" },
-        safety: { on: "mdi:alert-circle", off: "mdi:check-circle" },
-        vibration: "mdi:vibrate",
-        moisture: "mdi:water-alert",
-        smoke: "mdi:smoke-detector-variant-alert",
-    },
-    vacuum: { on: "mdi:robot-vacuum", off: "mdi:robot-vacuum-off" },
-    media_player: { on: "mdi:cast-connected", off: "mdi:cast-off" },
-    lock: { on: "mdi:lock-open", off: "mdi:lock-close" },
-    climate: { on: "mdi:thermostat", off: "mdi:thermostat" },
-    camera: { on: "mdi:video" },
-    cover: { on: "mdi:window-shutter-open", off: "mdi:window-shutter" },
-    plant: { on: "mdi:flower", off: "mdi:flower" },
-};
-const DOMAIN_ICONS = {
+const VIEWS_ICONS = {
     home: "mdi:home-assistant",
     security: "mdi:security",
-    light: "mdi:lightbulb",
-    climate: "mdi:thermostat",
-    switch: "mdi:power-plug",
-    fan: "mdi:fan",
-    sensor: "mdi:eye",
-    humidity: "mdi:water-percent",
-    pressure: "mdi:gauge",
-    illuminance: "mdi:brightness-5",
-    temperature: "mdi:thermometer",
-    energy: "mdi:lightning-bolt",
-    power: "mdi:flash",
-    binary_sensor: "mdi:radiobox-blank",
-    motion: "mdi:motion-sensor",
-    door: "mdi:door-open",
-    window: "mdi:window-open-variant",
-    vibration: "mdi:vibrate",
-    moisture: "mdi:water-alert",
-    vacuum: "mdi:robot-vacuum",
-    media_player: "mdi:cast-connected",
-    camera: "mdi:video",
-    cover: "mdi:window-shutter",
-    remote: "mdi:remote",
-    scene: "mdi:palette",
-    number: "mdi:ray-vertex",
-    button: "mdi:gesture-tap-button",
-    water_heater: "mdi:thermometer",
-    select: "mdi:format-list-bulleted",
-    lock: "mdi:lock",
-    device_tracker: "mdi:radar",
-    person: "mdi:account-multiple",
-    weather: "mdi:weather-cloudy",
-    automation: "mdi:robot-outline",
-    alarm_control_panel: "mdi:shield-home",
-    plant: 'mdi:flower',
-    input_boolean: 'mdi:toggle-switch',
-    health: 'mdi:shield-check-outline',
-    battery: 'mdi:battery',
 };
 const AREA_STATE_ICONS = {
     occupied: "mdi:account",
@@ -6255,7 +6205,7 @@ class AreaView {
                         ..._Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain].controllerCardOptions,
                         subtitle: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize((0,_utils__WEBPACK_IMPORTED_MODULE_6__.getDomainTranslationKey)(domain)),
                         domain,
-                        subtitleIcon: _variables__WEBPACK_IMPORTED_MODULE_4__.DOMAIN_ICONS[domain],
+                        subtitleIcon: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.icons[domain]._?.default,
                         subtitleNavigate: domain,
                     };
                     if (domain) {
@@ -6837,7 +6787,7 @@ class FloorView {
                     const titleSectionOptions = {
                         ..._Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain].controllerCardOptions,
                         title: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize((0,_utils__WEBPACK_IMPORTED_MODULE_5__.getDomainTranslationKey)(domain)),
-                        titleIcon: _variables__WEBPACK_IMPORTED_MODULE_3__.DOMAIN_ICONS[domain] ?? "mdi:floor-plan",
+                        titleIcon: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.icons[domain]._?.default ?? "mdi:floor-plan",
                         titleNavigate: domain,
                     };
                     if (domain) {
@@ -6933,12 +6883,14 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _chips_WeatherChip__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../chips/WeatherChip */ "./src/chips/WeatherChip.ts");
 /* harmony import */ var _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../chips/AggregateChip */ "./src/chips/AggregateChip.ts");
 /* harmony import */ var _cards_PersonCard__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../cards/PersonCard */ "./src/cards/PersonCard.ts");
+/* harmony import */ var _chips_ConditionalChip__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../chips/ConditionalChip */ "./src/chips/ConditionalChip.ts");
 var __classPrivateFieldGet = (undefined && undefined.__classPrivateFieldGet) || function (receiver, state, kind, f) {
     if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a getter");
     if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
     return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
 };
 var _HomeView_instances, _HomeView_createPersonCards, _HomeView_createAreaSection;
+
 
 
 
@@ -7171,17 +7123,17 @@ async function _HomeView_createAreaSection() {
             });
             isFirstLoop = false;
         }
-        const aggregate_temperature = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices[floor.floor_id]?.entities.aggregate_temperature;
+        const temperatureEntity = (0,_utils__WEBPACK_IMPORTED_MODULE_4__.getMAEntity)(floor.floor_id, "sensor", "temperature");
         floorSection.cards.push({
             type: "heading",
             heading: (0,_utils__WEBPACK_IMPORTED_MODULE_4__.getFloorName)(floor),
             heading_style: "subtitle",
             icon: floor.icon ?? "mdi:floor-plan",
-            badges: aggregate_temperature && [{
+            badges: [{
                     type: "custom:mushroom-chips-card",
                     alignment: "end",
                     chips: [
-                        new _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_6__.AggregateChip({ device_class: "temperature", show_content: true, magic_device_id: floor.floor_id, area_slug: floor.areas_slug }).getChip()
+                        new _chips_ConditionalChip__WEBPACK_IMPORTED_MODULE_8__.ConditionalChip([{ entity: temperatureEntity?.entity_id, state_not: _variables__WEBPACK_IMPORTED_MODULE_3__.UNAVAILABLE }], new _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_6__.AggregateChip({ device_class: "temperature", show_content: true, magic_device_id: floor.floor_id, area_slug: floor.areas_slug }).getChip()).getChip(),
                     ]
                 }],
             tap_action: floor.floor_id !== _variables__WEBPACK_IMPORTED_MODULE_3__.UNDISCLOSED ? (0,_utils__WEBPACK_IMPORTED_MODULE_4__.navigateTo)((0,_utils__WEBPACK_IMPORTED_MODULE_4__.slugify)(floor.name)) : undefined,
@@ -7610,8 +7562,6 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../utils */ "./src/utils.ts");
 /* harmony import */ var _cards_SwipeCard__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../cards/SwipeCard */ "./src/cards/SwipeCard.ts");
 /* harmony import */ var _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../cards/ControllerCard */ "./src/cards/ControllerCard.ts");
-/* harmony import */ var _variables__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../variables */ "./src/variables.ts");
-
 
 
 
@@ -7734,14 +7684,14 @@ class SecurityView {
             cards: [
                 {
                     type: "heading",
-                    heading: `${_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize(`component.${domain}.entity_component._.name`)}s`,
+                    heading: `${_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize(`component.camera.entity_component._.name`)}s`,
                     heading_style: "title",
                     badges: [],
                     layout_options: {
                         grid_columns: "full",
                         grid_rows: 1
                     },
-                    icon: _variables__WEBPACK_IMPORTED_MODULE_7__.DOMAIN_ICONS[domain],
+                    icon: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.icons[domain]._?.default,
                 }
             ]
         };

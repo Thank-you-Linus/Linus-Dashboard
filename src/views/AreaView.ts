@@ -11,10 +11,11 @@ import { EntityCardConfig } from "../types/lovelace-mushroom/cards/entity-card-c
 import { ControllerCard } from "../cards/ControllerCard";
 import { HassServiceTarget } from "home-assistant-js-websocket";
 import { ImageAreaCard } from "../cards/ImageAreaCard";
-import { AREA_EXPOSED_CHIPS, DOMAIN_ICONS, UNDISCLOSED } from "../variables";
+import { AREA_EXPOSED_CHIPS, UNDISCLOSED } from "../variables";
 import { LovelaceChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
 import { AreaStateChip } from "../chips/AreaStateChip";
 import { createChipsFromList, getDomainTranslationKey } from "../utils";
+import { ResourceKeys } from "../types/homeassistant/data/frontend";
 
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
@@ -141,7 +142,7 @@ class AreaView {
             ...Helper.strategyOptions.domains[domain].controllerCardOptions,
             subtitle: Helper.localize(getDomainTranslationKey(domain)),
             domain,
-            subtitleIcon: DOMAIN_ICONS[domain as keyof typeof DOMAIN_ICONS],
+            subtitleIcon: Helper.icons[domain as ResourceKeys]._?.default,
             subtitleNavigate: domain,
           };
 

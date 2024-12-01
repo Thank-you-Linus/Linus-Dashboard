@@ -8,8 +8,6 @@ import { getAreaName, getFloorName, navigateTo } from "../utils";
 import { HassServiceTarget } from "home-assistant-js-websocket";
 import { SwipeCard } from "../cards/SwipeCard";
 import { ControllerCard } from "../cards/ControllerCard";
-import { DOMAIN_ICONS } from "../variables";
-import { AbstractView } from "./AbstractView";
 import { views } from "../types/strategy/views";
 
 /**
@@ -145,14 +143,14 @@ class SecurityView {
       cards: [
         {
           type: "heading",
-          heading: `${Helper.localize(`component.${domain}.entity_component._.name`)}s`,
+          heading: `${Helper.localize(`component.camera.entity_component._.name`)}s`,
           heading_style: "title",
           badges: [],
           layout_options: {
             grid_columns: "full",
             grid_rows: 1
           },
-          icon: DOMAIN_ICONS[domain],
+          icon: Helper.icons[domain]._?.default,
         }]
     };
 

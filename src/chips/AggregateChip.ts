@@ -1,5 +1,5 @@
 import { chips } from "../types/strategy/chips";
-import { DEVICE_CLASSES, DOMAIN_ICONS } from "../variables";
+import { DEVICE_CLASSES } from "../variables";
 import { AbstractChip } from "./AbstractChip";
 import { Helper } from "../Helper";
 import { navigateTo } from "../utils";
@@ -20,7 +20,7 @@ class AggregateChip extends AbstractChip {
   getDefaultConfig({ device_class, show_content = true, magic_device_id = "global", area_slug, tap_action }: chips.AggregateChipOptions) {
 
     const domain = DEVICE_CLASSES.sensor.includes(device_class) ? "sensor" : "binary_sensor"
-    let icon = DOMAIN_ICONS[device_class as "motion"]
+    let icon = Helper.icons[domain][device_class]?.default
     let icon_color = ""
     let content = ""
 
@@ -36,7 +36,7 @@ class AggregateChip extends AbstractChip {
 
       content = show_content ? Helper.getAverageStateTemplate(device_class, area_slug) : ""
       icon_color = Helper.getSensorColorFromState(device_class, area_slug!) ?? "white"
-      icon = Helper.getSensorIconFromState(device_class, area_slug!) ?? DOMAIN_ICONS[device_class as "motion"]
+      icon = Helper.getSensorIconFromState(device_class, area_slug!) ?? icon
 
       if (device_class === "illuminance") {
         if (magicEntity) {

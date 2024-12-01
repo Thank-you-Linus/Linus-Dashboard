@@ -13,6 +13,7 @@ import { FloorRegistryEntry } from "./types/homeassistant/data/floor_registry";
 import { DEVICE_CLASSES, MAGIC_AREAS_DOMAIN, MAGIC_AREAS_NAME, UNDISCLOSED } from "./variables";
 import { getMAEntity, getMagicAreaSlug, groupEntitiesByDomain, slugify } from "./utils";
 import { EntityRegistryEntry } from "./types/homeassistant/data/entity_registry";
+import { FrontendEntityComponentIconResources, IconResources } from "./types/homeassistant/data/frontend";
 
 /**
  * Helper Class
@@ -107,6 +108,14 @@ class Helper {
    * @private
    */
   static #debug: boolean;
+
+  /**
+   * Set to true for more verbose information in the console.
+   *
+   * @type {IconResources}
+   * @private
+   */
+  static #icons: IconResources;
 
   /**
    * Class constructor.
@@ -225,6 +234,16 @@ class Helper {
   }
 
   /**
+   * Get the icons from Home Assistant's frontend.
+   *
+   * @returns {IconResources}
+   * @static
+   */
+  static get icons(): IconResources {
+    return this.#icons;
+  }
+
+  /**
    * Get the current debug mode of the mushroom strategy.
    *
    * @returns {boolean}
@@ -258,6 +277,8 @@ class Helper {
         info.hass.callWS({ type: "config/device_registry/list" }) as Promise<DeviceRegistryEntry[]>,
         info.hass.callWS({ type: "config/area_registry/list" }) as Promise<AreaRegistryEntry[]>,
         info.hass.callWS({ type: "config/floor_registry/list" }) as Promise<FloorRegistryEntry[]>,
+        info.hass.callWS({ type: "frontend/get_icons", category: "entity_component" }) as Promise<FrontendEntityComponentIconResources>,
+        info.hass.callWS({ type: "frontend/get_icons", category: "services" }) as Promise<FrontendEntityComponentIconResources>,
       ]);
 
     } catch (e) {
@@ -265,7 +286,11 @@ class Helper {
       throw 'Check the console for details';
     }
 
-    const [entities, devices, areas, floors] = homeAssistantRegistries;
+    const [entities, devices, areas, floors, entity_component_icons, services_icons] = homeAssistantRegistries;
+
+    this.#icons = deepmerge(entity_component_icons.resources, services_icons.resources);
+
+    console.log('this.#icons :>> ', this.#icons);
 
     // Dictionnaires pour un accès rapide
     const areasById = Object.fromEntries(areas.map(a => [a.area_id, a]));
@@ -740,10 +765,15 @@ class Helper {
 
     for (const slug of areaSlugs) {
       if (slug) {
+        const magic_entity = getMAEntity(slug!, domain);
         const newStates = domain === "all"
           ? this.#areas[slug]?.entities.map((entity_id) => `states['${entity_id}']`)
-          : this.#areas[slug]?.domains[domain]?.map((entity_id) => `states['${entity_id}']`);
+          : magic_entity
+            ? [`states['${magic_entity.entity_id}']`] : area_slug === "global"
+              ? this.domains[domain]?.map((entity) => `states['${entity.entity_id}']`)
+              : this.#areas[slug]?.domains[domain]?.map((entity_id) => `states['${entity_id}']`);
         if (newStates) {
+          console.log('newStates :>> ', newStates);
           states.push(...newStates);
         }
       } else {
@@ -789,32 +819,25 @@ class Helper {
     return `{% set entities = [${states}] %}{{ '${ifReturn ?? 'white'}' if entities | selectattr('state','${operator ?? 'eq'}', ${formatedValue}) | list | count > 0 else '${elseReturn ?? 'grey'}' }}`;
   }
 
-  static getBinarySensorColorFromState(device_class: string, operator: string, value: string, ifReturn: string, elseReturn: string, area_slug?: string | string[]): string {
-
+  static getBinarySensorColorFromState(device_class: string, operator: string, value: string, ifReturn: string, elseReturn: string, area_slug: string | string[] = "global"): string {
     const states: string[] = [];
 
     if (!this.isInitialized()) {
       console.warn("Helper class should be initialized before calling this method!");
     }
 
+    const areaSlugs = Array.isArray(area_slug) ? area_slug : [area_slug];
 
-    if (area_slug) {
-      const newStates = Array.isArray(area_slug)
-        ? area_slug.flatMap(slug => this.#areas[slug]?.domains[device_class]?.map((entity_id) => `states['${entity_id}']`) || [])
-        : this.#areas[area_slug]?.domains[device_class]?.map((entity_id) => `states['${entity_id}']`);
-      if (newStates) {
-        states.push(...newStates);
-      }
-    } else {
-      // Get the ID of the devices which are linked to the given area.
-      for (const area of Object.values(this.#areas)) {
-        if (area.area_id === UNDISCLOSED) continue
+    for (const slug of areaSlugs) {
+      const magic_entity = getMAEntity(slug!, "binary_sensor", device_class);
 
-        const newStates = this.#areas[area.slug]?.domains[device_class]?.map((entity_id) => `states['${entity_id}']`);
-        if (newStates) {
-          states.push(...newStates);
-        }
-      }
+      const newStates = magic_entity
+        ? [`states['${magic_entity.entity_id}']`]
+        : area_slug === "global"
+          ? this.domains[device_class]?.map((entity) => `states['${entity.entity_id}']`)
+          : this.#areas[slug]?.domains[device_class]?.map((entity_id) => `states['${entity_id}']`);
+
+      if (newStates) states.push(...newStates);
     }
 
     return `
@@ -822,32 +845,26 @@ class Helper {
       {{ '${ifReturn}' if entities | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | selectattr('state','${operator}','${value}') | list | count else '${elseReturn}' }}`;
   }
 
-  static getSensorColorFromState(device_class: string, area_slug?: string | string[]): string | undefined {
-
+  static getSensorColorFromState(device_class: string, area_slug: string | string[] = "global"): string | undefined {
     const states: string[] = [];
 
     if (!this.isInitialized()) {
       console.warn("Helper class should be initialized before calling this method!");
     }
 
+    const areaSlugs = Array.isArray(area_slug) ? area_slug : [area_slug];
 
-    if (area_slug) {
-      const newStates = Array.isArray(area_slug)
-        ? area_slug.flatMap(slug => this.#areas[slug]?.domains[device_class]?.map((entity_id) => `states['${entity_id}']`) || [])
-        : this.#areas[area_slug]?.domains[device_class]?.map((entity_id) => `states['${entity_id}']`);
-      if (newStates) {
-        states.push(...newStates);
-      }
-    } else {
-      // Get the ID of the devices which are linked to the given area.
-      for (const area of Object.values(this.#areas)) {
-        if (area.area_id === UNDISCLOSED) continue
 
-        const newStates = this.#areas[area.slug]?.domains[device_class]?.map((entity_id) => `states['${entity_id}']`);
-        if (newStates) {
-          states.push(...newStates);
-        }
-      }
+    for (const slug of areaSlugs) {
+      const magic_entity = getMAEntity(slug!, "binary_sensor", device_class);
+
+      const newStates = magic_entity
+        ? [`states['${magic_entity.entity_id}']`]
+        : area_slug === "global"
+          ? this.domains[device_class]?.map((entity) => `states['${entity.entity_id}']`)
+          : this.#areas[slug]?.domains[device_class]?.map((entity_id) => `states['${entity_id}']`);
+
+      if (newStates) states.push(...newStates);
     }
 
     if (device_class === "battery") {
@@ -863,7 +880,7 @@ class Helper {
         {% else %}
           disabled
         {% endif %}
-      `
+      `;
     }
 
     if (device_class === "temperature") {
@@ -879,8 +896,9 @@ class Helper {
         {% else %}
           disabled
         {% endif %}
-      `
+      `;
     }
+
     if (device_class === "humidity") {
       return `
         {% set entities = [${states}] %}
@@ -892,62 +910,55 @@ class Helper {
         {% else %}
           red
         {% endif %}
-      `
+      `;
     }
 
-    return undefined
+    return undefined;
   }
 
-  static getSensorIconFromState(device_class: string, area_slug?: string | string[]): string | undefined {
-
+  static getSensorIconFromState(device_class: string, area_slug: string | string[] = "global"): string | undefined {
     const states: string[] = [];
 
     if (!this.isInitialized()) {
       console.warn("Helper class should be initialized before calling this method!");
     }
 
-    if (area_slug) {
-      const newStates = Array.isArray(area_slug)
-        ? area_slug.flatMap(slug => this.#areas[slug]?.domains[device_class]?.map((entity_id) => `states['${entity_id}']`) || [])
-        : this.#areas[area_slug]?.domains[device_class]?.map((entity_id) => `states['${entity_id}']`);
-      if (newStates) {
-        states.push(...newStates);
-      }
-    } else {
-      // Get the ID of the devices which are linked to the given area.
-      for (const area of Object.values(this.#areas)) {
-        if (area.area_id === UNDISCLOSED) continue
+    const areaSlugs = Array.isArray(area_slug) ? area_slug : [area_slug];
 
-        const newStates = this.#areas[area.slug]?.domains[device_class]?.map((entity_id) => `states['${entity_id}']`);
-        if (newStates) {
-          states.push(...newStates);
-        }
-      }
+    for (const slug of areaSlugs) {
+      const magic_entity = getMAEntity(slug!, "sensor", device_class);
+      const newStates = magic_entity
+        ? [`states['${magic_entity.entity_id}']`]
+        : slug
+          ? this.#areas[slug]?.domains[device_class]?.map((entity_id) => `states['${entity_id}']`) || []
+          : [];
+      states.push(...newStates);
     }
 
     if (device_class === "battery") {
       return `
-      {% set entities = [${states}] %}
-      {% set bl = entities | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute = 'state') | map('float') | sum / entities | length %}
-      {% if bl == 'unknown' or bl == 'unavailable' %}
-      {% elif bl | int() < 10 %} mdi:battery-outline
-      {% elif bl | int() < 20 %} mdi:battery-10
-      {% elif bl | int() < 30 %} mdi:battery-20
-      {% elif bl | int() < 40 %} mdi:battery-30
-      {% elif bl | int() < 50 %} mdi:battery-40
-      {% elif bl | int() < 60 %} mdi:battery-50
-      {% elif bl | int() < 70 %} mdi:battery-60
-      {% elif bl | int() < 80 %} mdi:battery-70
-      {% elif bl | int() < 90 %} mdi:battery-80
-      {% elif bl | int() < 100 %} mdi:battery-90
-      {% elif bl | int() == 100 %} mdi:battery
-      {% else %} mdi:battery{% endif %} `
+        {% set entities = [${states}] %}
+        {% set bl = entities | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | sum / entities | length %}
+        {% if bl == 'unknown' or bl == 'unavailable' %}
+        {% elif bl < 10 %} mdi:battery-outline
+        {% elif bl < 20 %} mdi:battery-10
+        {% elif bl < 30 %} mdi:battery-20
+        {% elif bl < 40 %} mdi:battery-30
+        {% elif bl < 50 %} mdi:battery-40
+        {% elif bl < 60 %} mdi:battery-50
+        {% elif bl < 70 %} mdi:battery-60
+        {% elif bl < 80 %} mdi:battery-70
+        {% elif bl < 90 %} mdi:battery-80
+        {% elif bl < 100 %} mdi:battery-90
+        {% elif bl == 100 %} mdi:battery
+        {% else %} mdi:battery{% endif %}
+      `;
     }
 
     if (device_class === "temperature") {
       return `
         {% set entities = [${states}] %}
-        {% set bl = (entities | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute = 'state') | map('float') | sum / entities | length) %}
+        {% set bl = entities | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | sum / entities | length %}
         {% if bl < 20 %}
           mdi:thermometer-low
         {% elif bl < 30 %}
@@ -957,10 +968,10 @@ class Helper {
         {% else %}
           disabled
         {% endif %}
-      `
+      `;
     }
 
-    return undefined
+    return undefined;
   }
 }
 

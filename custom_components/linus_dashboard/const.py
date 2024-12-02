@@ -12,4 +12,6 @@ ICON = "mdi:bow-tie"
 URL_PANEL = "linus_dashboard_panel"
 
 CONF_ALARM_ENTITY = "alarm_entity"
+CONF_ALARM_ENTITY_ID = "alarm_entity_id"
 CONF_WEATHER_ENTITY = "weather_entity"
+CONF_WEATHER_ENTITY_ID = "weather_entity_id"

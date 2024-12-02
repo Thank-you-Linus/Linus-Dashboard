@@ -72,7 +72,7 @@ class HomeView {
     let chipModule;
 
     // Weather chip.
-    const weatherEntityId = chipOptions?.weather_entity ?? Helper.domains.weather[0]?.entity_id;
+    const weatherEntityId = Helper.linus_dashboard_config?.weather_entity_id;
 
     if (weatherEntityId) {
       try {
@@ -84,7 +84,7 @@ class HomeView {
     }
 
     // Alarm chip.
-    const alarmEntityId = chipOptions?.alarm_entity ?? Helper.domains.alarm_control_panel[0]?.entity_id;
+    const alarmEntityId = Helper.linus_dashboard_config?.alarm_entity_id
 
     if (alarmEntityId) {
       try {

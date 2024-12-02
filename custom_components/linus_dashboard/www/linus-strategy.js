@@ -172,7 +172,7 @@ var __classPrivateFieldSet = (undefined && undefined.__classPrivateFieldSet) || 
     if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot write private member to an object whose class did not declare it");
     return (kind === "a" ? f.call(receiver, value) : f ? f.value = value : state.set(receiver, value)), value;
 };
-var _a, _Helper_entities, _Helper_domains, _Helper_devices, _Helper_areas, _Helper_floors, _Helper_hassStates, _Helper_hassLocalize, _Helper_initialized, _Helper_strategyOptions, _Helper_magicAreasDevices, _Helper_debug, _Helper_icons, _Helper_getObjectKeysByPropertyValue;
+var _a, _Helper_entities, _Helper_domains, _Helper_devices, _Helper_areas, _Helper_floors, _Helper_hassStates, _Helper_hassLocalize, _Helper_initialized, _Helper_strategyOptions, _Helper_magicAreasDevices, _Helper_debug, _Helper_icons, _Helper_linus_dashboard_config, _Helper_getObjectKeysByPropertyValue;
 
 
 
@@ -301,6 +301,15 @@ class Helper {
         return __classPrivateFieldGet(this, _a, "f", _Helper_icons);
     }
     /**
+     * Get the linus_dashboard_config from Home Assistant's frontend.
+     *
+     * @returns {LinusDashboardConfig}
+     * @static
+     */
+    static get linus_dashboard_config() {
+        return __classPrivateFieldGet(this, _a, "f", _Helper_linus_dashboard_config);
+    }
+    /**
      * Get the current debug mode of the mushroom strategy.
      *
      * @returns {boolean}
@@ -332,15 +341,16 @@ class Helper {
                 info.hass.callWS({ type: "config/floor_registry/list" }),
                 info.hass.callWS({ type: "frontend/get_icons", category: "entity_component" }),
                 info.hass.callWS({ type: "frontend/get_icons", category: "services" }),
+                info.hass.callWS({ type: "linus_dashboard/get_config" }),
             ]);
         }
         catch (e) {
             _a.logError("An error occurred while querying Home assistant's registries!", e);
             throw 'Check the console for details';
         }
-        const [entities, devices, areas, floors, entity_component_icons, services_icons] = homeAssistantRegistries;
+        const [entities, devices, areas, floors, entity_component_icons, services_icons, linus_dashboard_config] = homeAssistantRegistries;
         __classPrivateFieldSet(this, _a, deepmerge__WEBPACK_IMPORTED_MODULE_1___default()(entity_component_icons.resources, services_icons.resources), "f", _Helper_icons);
-        console.log('this.#icons :>> ', __classPrivateFieldGet(this, _a, "f", _Helper_icons));
+        __classPrivateFieldSet(this, _a, linus_dashboard_config, "f", _Helper_linus_dashboard_config);
         // Dictionnaires pour un accès rapide
         const areasById = Object.fromEntries(areas.map(a => [a.area_id, a]));
         const floorsById = Object.fromEntries(floors.map(f => [f.floor_id, f]));
@@ -994,6 +1004,13 @@ _Helper_debug = { value: void 0 };
  * @private
  */
 _Helper_icons = { value: void 0 };
+/**
+ * Set to true for more verbose information in the console.
+ *
+ * @type {LinusDashboardConfig}
+ * @private
+ */
+_Helper_linus_dashboard_config = { value: void 0 };
 
 
 
@@ -6954,7 +6971,7 @@ class HomeView {
         const chipOptions = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.chips;
         let chipModule;
         // Weather chip.
-        const weatherEntityId = chipOptions?.weather_entity ?? _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.domains.weather[0]?.entity_id;
+        const weatherEntityId = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.linus_dashboard_config?.weather_entity_id;
         if (weatherEntityId) {
             try {
                 const weatherChip = new _chips_WeatherChip__WEBPACK_IMPORTED_MODULE_5__.WeatherChip(weatherEntityId);
@@ -6965,7 +6982,7 @@ class HomeView {
             }
         }
         // Alarm chip.
-        const alarmEntityId = chipOptions?.alarm_entity ?? _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.domains.alarm_control_panel[0]?.entity_id;
+        const alarmEntityId = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.linus_dashboard_config?.alarm_entity_id;
         if (alarmEntityId) {
             try {
                 chipModule = await Promise.resolve(/*! import() */).then(__webpack_require__.bind(__webpack_require__, /*! ../chips/AlarmChip */ "./src/chips/AlarmChip.ts"));

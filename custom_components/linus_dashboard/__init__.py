@@ -2,6 +2,7 @@
 
 import logging
 from pathlib import Path
+import voluptuous as vol
 
 from homeassistant.components.frontend import (
     async_remove_panel,
@@ -11,9 +12,16 @@ from homeassistant.components.lovelace import _register_panel
 from homeassistant.components.lovelace.dashboard import LovelaceYAML
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.components import websocket_api
 
 from custom_components.linus_dashboard import utils
 from custom_components.linus_dashboard.const import DOMAIN
+from .const import (
+    CONF_ALARM_ENTITY,
+    CONF_ALARM_ENTITY_ID,
+    CONF_WEATHER_ENTITY,
+    CONF_WEATHER_ENTITY_ID,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,6 +30,8 @@ async def async_setup(hass: HomeAssistant, _config: dict) -> bool:
     """Set up Linus Dashboard."""
     _LOGGER.info("Setting up Linus Dashboard")
     hass.data.setdefault(DOMAIN, {})
+
+    hass.components.websocket_api.async_register_command(websocket_get_entities)
 
     return True
 
@@ -105,3 +115,18 @@ async def register_static_paths_and_resources(
     # fix from https://github.com/hmmbob/WebRTC/blob/a0783df2e5426118599edc50bfd0466b1b0f0716/custom_components/webrtc/__init__.py#L83
     version = getattr(hass.data["integrations"][DOMAIN], "version", 0)
     await utils.init_resource(hass, js_url, str(version))
+
+
+@websocket_api.websocket_command({vol.Required("type"): "linus_dashboard/get_config"})
+@websocket_api.async_response
+async def websocket_get_entities(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+) -> None:
+    """Handle request for getting entities."""
+    config_entries = hass.config_entries.async_entries(DOMAIN)
+    config = {
+        CONF_ALARM_ENTITY_ID: config_entries[0].options.get(CONF_ALARM_ENTITY),
+        CONF_WEATHER_ENTITY_ID: config_entries[0].options.get(CONF_WEATHER_ENTITY),
+    }
+
+    connection.send_message(websocket_api.result_message(msg["id"], config))

@@ -14,6 +14,7 @@ import { DEVICE_CLASSES, MAGIC_AREAS_DOMAIN, MAGIC_AREAS_NAME, UNDISCLOSED } fro
 import { getMAEntity, getMagicAreaSlug, groupEntitiesByDomain, slugify } from "./utils";
 import { EntityRegistryEntry } from "./types/homeassistant/data/entity_registry";
 import { FrontendEntityComponentIconResources, IconResources } from "./types/homeassistant/data/frontend";
+import { LinusDashboardConfig } from "./types/homeassistant/data/linus_dashboard";
 
 /**
  * Helper Class
@@ -116,6 +117,14 @@ class Helper {
    * @private
    */
   static #icons: IconResources;
+
+  /**
+   * Set to true for more verbose information in the console.
+   *
+   * @type {LinusDashboardConfig}
+   * @private
+   */
+  static #linus_dashboard_config: LinusDashboardConfig;
 
   /**
    * Class constructor.
@@ -244,6 +253,16 @@ class Helper {
   }
 
   /**
+   * Get the linus_dashboard_config from Home Assistant's frontend.
+   *
+   * @returns {LinusDashboardConfig}
+   * @static
+   */
+  static get linus_dashboard_config(): LinusDashboardConfig {
+    return this.#linus_dashboard_config;
+  }
+
+  /**
    * Get the current debug mode of the mushroom strategy.
    *
    * @returns {boolean}
@@ -279,6 +298,7 @@ class Helper {
         info.hass.callWS({ type: "config/floor_registry/list" }) as Promise<FloorRegistryEntry[]>,
         info.hass.callWS({ type: "frontend/get_icons", category: "entity_component" }) as Promise<FrontendEntityComponentIconResources>,
         info.hass.callWS({ type: "frontend/get_icons", category: "services" }) as Promise<FrontendEntityComponentIconResources>,
+        info.hass.callWS({ type: "linus_dashboard/get_config" }) as Promise<LinusDashboardConfig>,
       ]);
 
     } catch (e) {
@@ -286,11 +306,10 @@ class Helper {
       throw 'Check the console for details';
     }
 
-    const [entities, devices, areas, floors, entity_component_icons, services_icons] = homeAssistantRegistries;
+    const [entities, devices, areas, floors, entity_component_icons, services_icons, linus_dashboard_config] = homeAssistantRegistries;
 
     this.#icons = deepmerge(entity_component_icons.resources, services_icons.resources);
-
-    console.log('this.#icons :>> ', this.#icons);
+    this.#linus_dashboard_config = linus_dashboard_config;
 
     // Dictionnaires pour un accès rapide
     const areasById = Object.fromEntries(areas.map(a => [a.area_id, a]));

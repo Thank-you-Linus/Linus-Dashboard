@@ -44,6 +44,9 @@
                     "on": "Reload Magic Areas",
                     "off": "Restart HA"
                 }
+            },
+            "area_state_popup": {
+                "name": "Sensors used for presence detection:"
             }
         }
     }

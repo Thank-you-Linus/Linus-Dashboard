@@ -1,0 +1,53 @@
+{
+    "config": {
+        "step": {
+            "init": {
+                "title": "Paramètres du tableau de bord Linus",
+                "description": "",
+                "data": {
+                    "alarm_entity": "Sélectionnez l'entité d'alarme",
+                    "weather_entity": "Sélectionnez l'entité météo"
+                }
+            }
+        },
+        "abort": {
+            "single_instance_allowed": "Une seule configuration du tableau de bord Linus est autorisée."
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Paramètres du tableau de bord Linus",
+                "description": "",
+                "data": {
+                    "alarm_entity": "Entité d'alarme",
+                    "weather_entity": "Entité météo"
+                }
+            }
+        }
+    },
+    "entity": {
+        "button": {
+            "floor_not_found": {
+                "name": "Étage non trouvé"
+            },
+            "add_new_area": {
+                "name": "Zone non trouvée",
+                "state": {
+                    "on": "Ajouter une nouvelle zone",
+                    "off": "Cliquez ici pour aller à la page des zones"
+                }
+            },
+            "settings_chip": {
+                "name": "Paramètres Linus",
+                "state": {
+                    "on": "Recharger les zones magiques",
+                    "off": "Redémarrer HA"
+                }
+            },
+            "area_state_popup": {
+                "name": "Capteurs utilisés pour la détection de présence :"
+            }
+        }
+    }
+}

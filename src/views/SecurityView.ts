@@ -26,7 +26,6 @@ class SecurityView {
    * @private
    */
   config: views.ViewConfig = {
-    path: "security",
     title: Helper.localize("component.binary_sensor.entity_component.safety.name"),
     icon: "mdi:security",
     type: "sections",

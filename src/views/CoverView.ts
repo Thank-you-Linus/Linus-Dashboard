@@ -31,7 +31,6 @@ class CoverView extends AbstractView {
    */
   #defaultConfig: views.ViewConfig = {
     title: "Covers",
-    path: "cover",
     icon: "mdi:window-open",
     subview: false,
   };

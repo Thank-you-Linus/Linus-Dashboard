@@ -36,7 +36,6 @@ class AreaView {
   config: views.ViewConfig = {
     icon: "mdi:home-assistant",
     type: "sections",
-    path: "home",
     subview: true,
   };
 

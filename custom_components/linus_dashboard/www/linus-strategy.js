@@ -470,7 +470,7 @@ class Helper {
         __classPrivateFieldGet(this, _a, "f", _Helper_strategyOptions).domains = Object.fromEntries(Object.entries(__classPrivateFieldGet(this, _a, "f", _Helper_strategyOptions).domains).sort(([, a], [, b]) => {
             return (a.order ?? Infinity) - (b.order ?? Infinity) || (a.title ?? "undefined").localeCompare(b.title ?? "undefined");
         }));
-        console.log('this.#areas', __classPrivateFieldGet(this, _a, "f", _Helper_areas), __classPrivateFieldGet(this, _a, "f", _Helper_magicAreasDevices));
+        // console.log('this.#areas', this.#areas, this.#magicAreasDevices)
         __classPrivateFieldSet(this, _a, true, "f", _Helper_initialized);
     }
     /**
@@ -3469,7 +3469,7 @@ class FanChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.AbstractChip {
             content: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getCountTemplate("fan", "eq", "on"),
             tap_action: {
                 action: "navigate",
-                navigation_path: "fans",
+                navigation_path: "fan",
             },
         });
         if (options?.show_content) {
@@ -3537,7 +3537,7 @@ class LightChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.AbstractChip 
             content: "",
             tap_action: {
                 action: "navigate",
-                navigation_path: "lights",
+                navigation_path: "light",
             },
         });
         if (options?.show_content) {
@@ -3608,7 +3608,7 @@ class MediaPlayerChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.Abstrac
             content: "",
             tap_action: {
                 action: "navigate",
-                navigation_path: "media_players",
+                navigation_path: "media_player",
             },
         });
         if (options?.show_content) {
@@ -3968,7 +3968,7 @@ class SwitchChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.AbstractChip
             content: "",
             tap_action: {
                 action: "navigate",
-                navigation_path: "switches",
+                navigation_path: "switch",
             },
         });
         if (options?.show_content) {
@@ -4530,7 +4530,7 @@ class LinusStrategy extends HTMLTemplateElement {
     static async generateDashboard(info) {
         if (!_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.isInitialized())
             await _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.initialize(info);
-        console.log('info', info);
+        // console.log('info', info);
         const views = info.config?.views ?? [];
         LinusStrategy.createDomainSubviews(views);
         LinusStrategy.createUnavailableEntitiesSubview(views);
@@ -4564,11 +4564,10 @@ class LinusStrategy extends HTMLTemplateElement {
                 device_class = viewId;
             }
             views.push({
-                title: viewId,
-                icon: _variables__WEBPACK_IMPORTED_MODULE_1__.VIEWS_ICONS[viewId] ?? _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.icons[domain]?.[device_class]?.default,
+                title: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize((0,_utils__WEBPACK_IMPORTED_MODULE_3__.getDomainTranslationKey)(domain, device_class)),
+                icon: _variables__WEBPACK_IMPORTED_MODULE_1__.VIEWS_ICONS[viewId] ?? _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.icons[device_class === "battery" ? "binary_sensor" : domain]?.[device_class]?.default,
                 path: viewId,
-                // subview: !Object.keys(ResourceKeys).includes(viewId),
-                subview: false,
+                subview: !Object.keys(_variables__WEBPACK_IMPORTED_MODULE_1__.VIEWS_ICONS).includes(viewId),
                 strategy: {
                     type: "custom:linus-strategy",
                     options: { viewId },
@@ -6090,7 +6089,6 @@ class AggregateView extends _AbstractView__WEBPACK_IMPORTED_MODULE_2__.AbstractV
          */
         _AggregateView_defaultConfig.set(this, {
             title: "Aggregates",
-            path: "aggregates",
             icon: "mdi:fan",
             subview: true,
         });
@@ -6157,7 +6155,6 @@ class AreaView {
         this.config = {
             icon: "mdi:home-assistant",
             type: "sections",
-            path: "home",
             subview: true,
         };
         this.area = area;
@@ -6371,7 +6368,6 @@ class CameraView extends _AbstractView__WEBPACK_IMPORTED_MODULE_1__.AbstractView
          */
         _CameraView_defaultConfig.set(this, {
             title: "Cameras",
-            path: "cameras",
             icon: "mdi:cctv",
             subview: false,
         });
@@ -6455,7 +6451,6 @@ class ClimateView extends _AbstractView__WEBPACK_IMPORTED_MODULE_2__.AbstractVie
          */
         _ClimateView_defaultConfig.set(this, {
             title: "Climates",
-            path: "climates",
             icon: "mdi:thermostat",
             subview: false,
         });
@@ -6539,7 +6534,6 @@ class CoverView extends _AbstractView__WEBPACK_IMPORTED_MODULE_2__.AbstractView 
          */
         _CoverView_defaultConfig.set(this, {
             title: "Covers",
-            path: "cover",
             icon: "mdi:window-open",
             subview: false,
         });
@@ -6623,7 +6617,6 @@ class FanView extends _AbstractView__WEBPACK_IMPORTED_MODULE_2__.AbstractView {
          */
         _FanView_defaultConfig.set(this, {
             title: "Fans",
-            path: "fans",
             icon: "mdi:fan",
             subview: false,
         });
@@ -6706,7 +6699,6 @@ class FloorView {
         this.config = {
             icon: "mdi:home-assistant",
             type: "sections",
-            path: "home",
             subview: true,
         };
         /**
@@ -6949,7 +6941,6 @@ class HomeView {
             title: "Home",
             icon: "mdi:home-assistant",
             type: "sections",
-            path: "home",
             subview: false,
         };
         if (!_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.isInitialized()) {
@@ -7273,7 +7264,6 @@ class LightView extends _AbstractView__WEBPACK_IMPORTED_MODULE_2__.AbstractView 
          * @private
          */
         _LightView_defaultConfig.set(this, {
-            path: "lights",
             icon: "mdi:lightbulb-group",
             subview: false,
         });
@@ -7357,7 +7347,6 @@ class MediaPlayerView extends _AbstractView__WEBPACK_IMPORTED_MODULE_2__.Abstrac
          */
         _MediaPlayerView_defaultConfig.set(this, {
             title: "MediaPlayers",
-            path: "media_players",
             icon: "mdi:cast",
             subview: false,
         });
@@ -7441,7 +7430,6 @@ class SceneView extends _AbstractView__WEBPACK_IMPORTED_MODULE_2__.AbstractView 
          */
         _SceneView_defaultConfig.set(this, {
             title: "Scenes",
-            path: "scenes",
             icon: "mdi:palette",
             subview: false,
         });
@@ -7515,7 +7503,6 @@ class SecurityDetailsView {
          */
         this.config = {
             title: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.binary_sensor.entity_component.safety.name"),
-            path: "security-details",
             icon: "mdi:security",
             subview: true,
         };
@@ -7622,7 +7609,6 @@ class SecurityView {
          * @private
          */
         this.config = {
-            path: "security",
             title: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.binary_sensor.entity_component.safety.name"),
             icon: "mdi:security",
             type: "sections",
@@ -7873,7 +7859,6 @@ class SensorView extends _AbstractView__WEBPACK_IMPORTED_MODULE_2__.AbstractView
          */
         _SensorView_defaultConfig.set(this, {
             title: "Sensors",
-            path: "scenes",
             icon: "mdi:palette",
             subview: false,
         });
@@ -7957,7 +7942,6 @@ class SwitchView extends _AbstractView__WEBPACK_IMPORTED_MODULE_2__.AbstractView
          */
         _SwitchView_defaultConfig.set(this, {
             title: "Switches",
-            path: "switches",
             icon: "mdi:dip-switch",
             subview: false,
         });
@@ -8034,7 +8018,6 @@ class UnavailableView {
          * @type {views.ViewConfig}
          */
         this.config = {
-            path: "unavailable",
             title: _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.localize("state.default.unavailable"),
             icon: "mdi:view-dashboard",
             type: "sections",
@@ -8175,7 +8158,6 @@ class VacuumView extends _AbstractView__WEBPACK_IMPORTED_MODULE_2__.AbstractView
          */
         _VacuumView_defaultConfig.set(this, {
             title: "Vacuums",
-            path: "vacuums",
             icon: "mdi:robot-vacuum",
             subview: false,
         });

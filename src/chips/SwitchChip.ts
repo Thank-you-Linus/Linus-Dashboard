@@ -24,7 +24,7 @@ class SwitchChip extends AbstractChip {
     content: "",
     tap_action: {
       action: "navigate",
-      navigation_path: "switches",
+      navigation_path: "switch",
     },
   };
 

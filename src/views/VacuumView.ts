@@ -31,7 +31,6 @@ class VacuumView extends AbstractView {
    */
   #defaultConfig: views.ViewConfig = {
     title: "Vacuums",
-    path: "vacuums",
     icon: "mdi:robot-vacuum",
     subview: false,
   };

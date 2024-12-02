@@ -31,7 +31,6 @@ class MediaPlayerView extends AbstractView {
    */
   #defaultConfig: views.ViewConfig = {
     title: "MediaPlayers",
-    path: "media_players",
     icon: "mdi:cast",
     subview: false,
   };

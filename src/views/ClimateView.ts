@@ -33,7 +33,6 @@ class ClimateView extends AbstractView {
    */
   #defaultConfig: views.ViewConfig = {
     title: "Climates",
-    path: "climates",
     icon: "mdi:thermostat",
     subview: false,
   };

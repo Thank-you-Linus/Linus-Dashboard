@@ -31,7 +31,6 @@ class SensorView extends AbstractView {
    */
   #defaultConfig: views.ViewConfig = {
     title: "Sensors",
-    path: "scenes",
     icon: "mdi:palette",
     subview: false,
   };

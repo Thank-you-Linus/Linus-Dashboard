@@ -462,7 +462,7 @@ class Helper {
       }),
     );
 
-    console.log('this.#areas', this.#areas, this.#magicAreasDevices)
+    // console.log('this.#areas', this.#areas, this.#magicAreasDevices)
 
     this.#initialized = true;
   }

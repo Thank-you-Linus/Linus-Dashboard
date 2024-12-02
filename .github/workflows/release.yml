@@ -14,15 +14,32 @@ jobs:
     permissions:
       contents: write
     steps:
+      # 1. Checkout le code source
       - name: "Checkout the repository"
         uses: "actions/checkout@v4.2.2"
 
+      # 2. Configurer Node.js
+      - name: "Set up Node.js"
+        uses: "actions/setup-node@v3"
+        with:
+          node-version: 16 # Ajuste la version si nécessaire
+
+      # 3. Installer les dépendances
+      - name: "Install dependencies"
+        run: npm install
+
+      # 4. Compiler le code
+      - name: "Build the project"
+        run: npm run build
+
+      # 5. Créer l'archive ZIP
       - name: "ZIP the integration directory"
         shell: "bash"
         run: |
           cd "${{ github.workspace }}/custom_components/Linus-Dashboard"
           zip Linus-Dashboard.zip -r ./
 
+      # 6. Télécharger l'archive ZIP dans la release
       - name: "Upload the ZIP file to the release"
         uses: "softprops/action-gh-release@v2.1.0"
         with:

@@ -2,20 +2,19 @@
 
 import logging
 from pathlib import Path
-import voluptuous as vol
 
-from homeassistant.components.frontend import (
-    async_remove_panel,
-)
+import voluptuous as vol
+from homeassistant.components import websocket_api
+from homeassistant.components.frontend import async_remove_panel
 from homeassistant.components.http import StaticPathConfig
 from homeassistant.components.lovelace import _register_panel
 from homeassistant.components.lovelace.dashboard import LovelaceYAML
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.components import websocket_api
 
 from custom_components.linus_dashboard import utils
 from custom_components.linus_dashboard.const import DOMAIN
+
 from .const import (
     CONF_ALARM_ENTITY,
     CONF_ALARM_ENTITY_ID,

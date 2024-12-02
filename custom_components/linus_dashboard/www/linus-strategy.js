@@ -4915,7 +4915,7 @@ class AreaInformations extends _AbstractPopup__WEBPACK_IMPORTED_MODULE_2__.Abstr
                             ] : []),
                             {
                                 type: "custom:mushroom-template-card",
-                                primary: `Capteurs utilisé pour la détection de présence :`,
+                                primary: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.entity.button.area_state_popup.name"),
                                 card_mod: {
                                     style: `ha-card {padding: 4px 12px!important;}`
                                 }

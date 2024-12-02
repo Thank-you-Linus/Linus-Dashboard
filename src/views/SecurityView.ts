@@ -63,8 +63,8 @@ class SecurityView {
       cards: []
     };
 
-    const alarmEntity = Helper.domains.alarm_control_panel[0]
-    if (alarmEntity?.entity_id) {
+    const alarmEntityId = Helper.linus_dashboard_config?.alarm_entity_id
+    if (alarmEntityId) {
       globalSection.cards.push(
         {
           type: "heading",
@@ -78,7 +78,7 @@ class SecurityView {
           heading: "Alarme",
           heading_style: "subtitle",
         })
-      globalSection.cards.push(new AlarmCard(alarmEntity).getCard())
+      globalSection.cards.push(new AlarmCard(Helper.entities[alarmEntityId]).getCard())
     }
 
     const persons = Helper.domains.person

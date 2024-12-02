@@ -7648,8 +7648,8 @@ class SecurityView {
             column_span: 1,
             cards: []
         };
-        const alarmEntity = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.domains.alarm_control_panel[0];
-        if (alarmEntity?.entity_id) {
+        const alarmEntityId = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.linus_dashboard_config?.alarm_entity_id;
+        if (alarmEntityId) {
             globalSection.cards.push({
                 type: "heading",
                 heading: "Sécurité",
@@ -7660,7 +7660,7 @@ class SecurityView {
                 heading: "Alarme",
                 heading_style: "subtitle",
             });
-            globalSection.cards.push(new _cards_AlarmCard__WEBPACK_IMPORTED_MODULE_1__.AlarmCard(alarmEntity).getCard());
+            globalSection.cards.push(new _cards_AlarmCard__WEBPACK_IMPORTED_MODULE_1__.AlarmCard(_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.entities[alarmEntityId]).getCard());
         }
         const persons = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.domains.person;
         if (persons?.length) {

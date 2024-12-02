@@ -31,7 +31,6 @@ class FanView extends AbstractView {
    */
   #defaultConfig: views.ViewConfig = {
     title: "Fans",
-    path: "fans",
     icon: "mdi:fan",
     subview: false,
   };

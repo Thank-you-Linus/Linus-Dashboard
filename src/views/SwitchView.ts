@@ -31,7 +31,6 @@ class SwitchView extends AbstractView {
    */
   #defaultConfig: views.ViewConfig = {
     title: "Switches",
-    path: "switches",
     icon: "mdi:dip-switch",
     subview: false,
   };

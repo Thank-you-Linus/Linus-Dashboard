@@ -30,7 +30,6 @@ class LightView extends AbstractView {
    * @private
    */
   #defaultConfig: views.ViewConfig = {
-    path: "lights",
     icon: "mdi:lightbulb-group",
     subview: false,
   };

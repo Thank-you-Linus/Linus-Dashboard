@@ -20,7 +20,6 @@ abstract class SecurityDetailsView {
    */
   config: LovelaceViewConfig = {
     title: Helper.localize("component.binary_sensor.entity_component.safety.name"),
-    path: "security-details",
     icon: "mdi:security",
     subview: true,
   };

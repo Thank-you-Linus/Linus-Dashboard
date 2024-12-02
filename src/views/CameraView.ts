@@ -31,7 +31,6 @@ class CameraView extends AbstractView {
    */
   #defaultConfig: views.ViewConfig = {
     title: "Cameras",
-    path: "cameras",
     icon: "mdi:cctv",
     subview: false,
   };

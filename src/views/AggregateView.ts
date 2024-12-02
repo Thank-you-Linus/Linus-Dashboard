@@ -24,7 +24,6 @@ class AggregateView extends AbstractView {
    */
   #defaultConfig: views.ViewConfig = {
     title: "Aggregates",
-    path: "aggregates",
     icon: "mdi:fan",
     subview: true,
   };

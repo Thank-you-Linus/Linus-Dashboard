@@ -25,7 +25,6 @@ class UnavailableView {
    * @type {views.ViewConfig}
    */
   config: views.ViewConfig = {
-    path: "unavailable",
     title: Helper.localize("state.default.unavailable"),
     icon: "mdi:view-dashboard",
     type: "sections",

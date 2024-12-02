@@ -36,7 +36,6 @@ class HomeView {
     title: "Home",
     icon: "mdi:home-assistant",
     type: "sections",
-    path: "home",
     subview: false,
   };
 

@@ -26,7 +26,7 @@ class LightChip extends AbstractChip {
     content: "",
     tap_action: {
       action: "navigate",
-      navigation_path: "lights",
+      navigation_path: "light",
     },
   };
 

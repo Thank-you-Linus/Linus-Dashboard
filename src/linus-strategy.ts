@@ -3,7 +3,7 @@ import { generic } from "./types/strategy/generic";
 import { LovelaceConfig, LovelaceViewConfig } from "./types/homeassistant/data/lovelace";
 import { CUSTOM_VIEWS, DEVICE_CLASSES, DOMAINS_VIEWS, VIEWS_ICONS } from "./variables";
 import { AreaView } from "./views/AreaView";
-import { getAreaName, getFloorName } from "./utils";
+import { getAreaName, getDomainTranslationKey, getFloorName } from "./utils";
 import { FloorView } from "./views/FloorView";
 import { ResourceKeys } from "./types/homeassistant/data/frontend";
 
@@ -32,7 +32,7 @@ class LinusStrategy extends HTMLTemplateElement {
   static async generateDashboard(info: generic.DashBoardInfo): Promise<LovelaceConfig> {
     if (!Helper.isInitialized()) await Helper.initialize(info);
 
-    console.log('info', info);
+    // console.log('info', info);
 
     const views: LovelaceViewConfig[] = info.config?.views ?? [];
 
@@ -71,11 +71,10 @@ class LinusStrategy extends HTMLTemplateElement {
       }
 
       views.push({
-        title: viewId,
-        icon: (VIEWS_ICONS as Record<string, string>)[viewId] ?? Helper.icons[domain as ResourceKeys]?.[device_class]?.default,
+        title: Helper.localize(getDomainTranslationKey(domain, device_class)),
+        icon: (VIEWS_ICONS as Record<string, string>)[viewId] ?? Helper.icons[device_class === "battery" ? "binary_sensor" : domain as ResourceKeys]?.[device_class]?.default,
         path: viewId,
-        // subview: !Object.keys(ResourceKeys).includes(viewId),
-        subview: false,
+        subview: !Object.keys(VIEWS_ICONS).includes(viewId),
         strategy: {
           type: "custom:linus-strategy",
           options: { viewId },

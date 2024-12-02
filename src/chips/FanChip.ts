@@ -24,7 +24,7 @@ class FanChip extends AbstractChip {
     content: Helper.getCountTemplate("fan", "eq", "on"),
     tap_action: {
       action: "navigate",
-      navigation_path: "fans",
+      navigation_path: "fan",
     },
   };
 

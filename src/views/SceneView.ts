@@ -31,7 +31,6 @@ class SceneView extends AbstractView {
    */
   #defaultConfig: views.ViewConfig = {
     title: "Scenes",
-    path: "scenes",
     icon: "mdi:palette",
     subview: false,
   };

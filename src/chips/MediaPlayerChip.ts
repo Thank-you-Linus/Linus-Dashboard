@@ -25,7 +25,7 @@ class MediaPlayerChip extends AbstractChip {
     content: "",
     tap_action: {
       action: "navigate",
-      navigation_path: "media_players",
+      navigation_path: "media_player",
     },
   };
 

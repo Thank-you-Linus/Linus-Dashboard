@@ -10,6 +10,9 @@
     <a href="https://thankyou-linus.com/"><strong>Discover More »</strong></a>
     <br />
     <br />
+    <a href="https://community.home-assistant.io/t/looking-for-beta-testers-for-linus-dashboard-integration/804564">
+      <img src="https://img.shields.io/badge/Home%20Assistant-Community%20Forum-blue?logo=home-assistant" alt="Home Assistant Community Forum"/>
+    </a>
     <a href="https://discord.gg/cZ7NH4ex">
       <img src="https://discordapp.com/api/guilds/1104794215440978042/widget.png?style=shield" alt="Discord Community"/>
     </a>
@@ -17,6 +20,8 @@
       <img src="https://img.shields.io/github/stars/Thank-you-Linus/Linus-Dashboard?style=social" alt="GitHub Stars"/>
     </a>
   </p>
+
+  ![Validate Status](https://github.com/Thank-you-Linus/Linus-Dashboard/actions/workflows/validate.yml/badge.svg) ![Lint Status](https://github.com/Thank-you-Linus/Linus-Dashboard/actions/workflows/lint.yml/badge.svg) [![Latest release](https://img.shields.io/github/v/release/Thank-you-Linus/Linus-Dashboard.svg)](https://github.com/Thank-you-Linus/Linus-Dashboard/releases) [![GitHub latest commit](https://badgen.net/github/last-commit/Thank-you-Linus/Linus-Dashboard)](https://github.com/Thank-you-Linus/Linus-Dashboard/commit/) [![GitHub contributors](https://badgen.net/github/contributors/Thank-you-Linus/Linus-Dashboard)](https://GitHub.com/Thank-you-Linus/Linus-Dashboard/graphs/contributors/)
 
   <!-- Social icons section -->
   <p align="center">

@@ -1,7 +1,7 @@
 {
     "config": {
         "step": {
-            "init": {
+            "user": {
                 "title": "Paramètres du tableau de bord Linus",
                 "description": "",
                 "data": {
@@ -20,8 +20,8 @@
                 "title": "Paramètres du tableau de bord Linus",
                 "description": "",
                 "data": {
-                    "alarm_entity": "Entité d'alarme",
-                    "weather_entity": "Entité météo"
+                    "alarm_entity": "Sélectionnez l'entité d'alarme",
+                    "weather_entity": "Sélectionnez l'entité météo"
                 }
             }
         }

@@ -1,7 +1,7 @@
 {
     "config": {
         "step": {
-            "init": {
+            "user": {
                 "title": "Linus Dashboard Settings",
                 "description": "",
                 "data": {
@@ -20,8 +20,8 @@
                 "title": "Linus Dashboard Settings",
                 "description": "",
                 "data": {
-                    "alarm_entity": "Alarm entity",
-                    "weather_entity": "Weather entity"
+                    "alarm_entity": "Select alarm entity",
+                    "weather_entity": "Select weather entity"
                 }
             }
         }

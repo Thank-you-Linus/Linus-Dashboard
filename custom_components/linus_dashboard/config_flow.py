@@ -2,10 +2,23 @@
 
 import voluptuous as vol
 from homeassistant import config_entries
+from homeassistant.components.alarm_control_panel.const import DOMAIN as ALARM_DOMAIN
+from homeassistant.components.weather.const import DOMAIN as WEATHER_DOMAIN
 from homeassistant.core import callback
-from homeassistant.helpers import selector
+from homeassistant.helpers.selector import EntitySelector, EntitySelectorConfig
 
 from .const import CONF_ALARM_ENTITY, CONF_WEATHER_ENTITY, DOMAIN
+
+
+class NullableEntitySelector(EntitySelector):
+    """Entity selector that supports null values."""
+
+    def __call__(self, data: str | None) -> str | None:
+        """Validate the passed selection, if passed."""
+        if data in (None, ""):
+            return data
+
+        return super().__call__(data)
 
 
 class LinusDashboardConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -29,21 +42,27 @@ class LinusDashboardConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 data=self._config,
             )
 
-        # Récupérer les entités disponibles dans Home Assistant
-        alarm_entities = list(self.hass.states.async_entity_ids("alarm_control_panel"))
-        weather_entities = list(self.hass.states.async_entity_ids("weather"))
-
         # Création du schéma pour le formulaire
-        schema = vol.Schema(
-            {
-                vol.Required(CONF_ALARM_ENTITY): vol.In(alarm_entities),
-                vol.Required(CONF_WEATHER_ENTITY): vol.In(weather_entities),
-            }
-        )
+        schema = {
+            vol.Optional(
+                CONF_ALARM_ENTITY,
+            ): NullableEntitySelector(
+                EntitySelectorConfig(
+                    domain=ALARM_DOMAIN,
+                ),
+            ),
+            vol.Optional(
+                CONF_WEATHER_ENTITY,
+            ): NullableEntitySelector(
+                EntitySelectorConfig(
+                    domain=WEATHER_DOMAIN,
+                ),
+            ),
+        }
 
         return self.async_show_form(
             step_id="user",
-            data_schema=schema,
+            data_schema=vol.Schema(schema),
             errors={},
         )
 
@@ -74,18 +93,20 @@ class LinusDashboardOptionsFlowHandler(config_entries.OptionsFlow):
         schema = {
             vol.Optional(
                 CONF_ALARM_ENTITY,
-                default=self.config_entry.options.get(CONF_ALARM_ENTITY, ""),
-            ): selector.EntitySelector(
-                selector.EntitySelectorConfig(
-                    domain="alarm_control_panel",
+                default=self.config_entry.options.get(CONF_ALARM_ENTITY)
+                or self.config_entry.data.get(CONF_ALARM_ENTITY),
+            ): NullableEntitySelector(
+                EntitySelectorConfig(
+                    domain=ALARM_DOMAIN,
                 ),
             ),
             vol.Optional(
                 CONF_WEATHER_ENTITY,
-                default=self.config_entry.options.get(CONF_WEATHER_ENTITY, ""),
-            ): selector.EntitySelector(
-                selector.EntitySelectorConfig(
-                    domain="weather",
+                default=self.config_entry.options.get(CONF_WEATHER_ENTITY)
+                or self.config_entry.data.get(CONF_WEATHER_ENTITY),
+            ): NullableEntitySelector(
+                EntitySelectorConfig(
+                    domain=WEATHER_DOMAIN,
                 ),
             ),
         }

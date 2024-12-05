@@ -48,7 +48,7 @@
 ---
 
 <p align="center">
-  <a href="README.md"><strong>🇬🇧 Lire en anglais</strong></a>
+  <a href="README.md"><strong>🇬🇧 Read in english</strong></a>
 </p>
 
 ## ✨ Qu'est-ce que Linus Dashboard ?

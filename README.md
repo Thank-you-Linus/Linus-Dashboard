@@ -143,6 +143,22 @@ Quickly identify and troubleshoot unavailable devices.
 
 ---
 
+### 🛠️ Setup and Usage
+
+After installation, follow these steps to configure and access Linus Dashboard:
+
+1. **Restart Home Assistant** after installing Linus Dashboard via HACS.
+2. Go to the **Integrations page** in Home Assistant.
+3. Search for and add **Linus Dashboard** as a new integration.
+4. During the setup process, optionally select a weather or alarm entity (these steps are optional).
+5. Once setup is complete, a new **icon with a bowtie** will appear in the left-hand menu. Click it to access Linus Dashboard directly.
+
+
+#### ✨ Tip
+- If the icon doesn’t appear immediately, try restarting Home Assistant again.
+
+---
+
 ## 📣 Join Our Community
 
 - 🌟 **Show Your Support**: [GitHub Stars](https://github.com/Thank-you-Linus/Linus-Dashboard/stargazers)

@@ -192,10 +192,6 @@ export const configurationDefaults: StrategyDefaults = {
       showControls: false,
       hidden: false,
     },
-    temperature: {
-      showControls: true,
-      hidden: false,
-    },
   },
   home_view: {
     hidden: [],
@@ -248,19 +244,229 @@ export const configurationDefaults: StrategyDefaults = {
     securityDetails: {
       hidden: false,
     },
-    motion: {
+    battery: {
       hidden: false,
     },
-    window: {
+    battery_charging: {
+      hidden: false,
+    },
+    carbon_monoxide: {
+      hidden: false,
+    },
+    cold: {
+      hidden: false,
+    },
+    connectivity: {
       hidden: false,
     },
     door: {
       hidden: false,
     },
-    battery: {
+    garage_door: {
+      hidden: false,
+    },
+    gas: {
+      hidden: false,
+    },
+    heat: {
+      hidden: false,
+    },
+    lock: {
+      hidden: false,
+    },
+    moisture: {
+      hidden: false,
+    },
+    motion: {
+      hidden: false,
+    },
+    moving: {
+      hidden: false,
+    },
+    occupancy: {
+      hidden: false,
+    },
+    opening: {
+      hidden: false,
+    },
+    plug: {
+      hidden: false,
+    },
+    power: {
+      hidden: false,
+    },
+    presence: {
+      hidden: false,
+    },
+    problem: {
+      hidden: false,
+    },
+    running: {
+      hidden: false,
+    },
+    safety: {
+      hidden: false,
+    },
+    smoke: {
+      hidden: false,
+    },
+    sound: {
+      hidden: false,
+    },
+    tamper: {
+      hidden: false,
+    },
+    update: {
+      hidden: false,
+    },
+    vibration: {
+      hidden: false,
+    },
+    window: {
+      hidden: false,
+    },
+    apparent_power: {
+      hidden: false,
+    },
+    aqi: {
+      hidden: false,
+    },
+    area: {
+      hidden: false,
+    },
+    atmospheric_pressure: {
+      hidden: false,
+    },
+    blood_glucose_concentration: {
+      hidden: false,
+    },
+    carbon_dioxide: {
+      hidden: false,
+    },
+    current: {
+      hidden: false,
+    },
+    data_rate: {
+      hidden: false,
+    },
+    data_size: {
+      hidden: false,
+    },
+    date: {
+      hidden: false,
+    },
+    distance: {
+      hidden: false,
+    },
+    duration: {
+      hidden: false,
+    },
+    energy: {
+      hidden: false,
+    },
+    energy_storage: {
+      hidden: false,
+    },
+    enum: {
+      hidden: false,
+    },
+    frequency: {
+      hidden: false,
+    },
+    humidity: {
+      hidden: false,
+    },
+    illuminance: {
+      hidden: false,
+    },
+    irradiance: {
+      hidden: false,
+    },
+    monetary: {
+      hidden: false,
+    },
+    nitrogen_dioxide: {
+      hidden: false,
+    },
+    nitrogen_monoxide: {
+      hidden: false,
+    },
+    nitrous_oxide: {
+      hidden: false,
+    },
+    ozone: {
+      hidden: false,
+    },
+    ph: {
+      hidden: false,
+    },
+    pm1: {
+      hidden: false,
+    },
+    pm25: {
+      hidden: false,
+    },
+    pm10: {
+      hidden: false,
+    },
+    power_factor: {
+      hidden: false,
+    },
+    precipitation: {
+      hidden: false,
+    },
+    precipitation_intensity: {
+      hidden: false,
+    },
+    pressure: {
+      hidden: false,
+    },
+    reactive_power: {
+      hidden: false,
+    },
+    signal_strength: {
+      hidden: false,
+    },
+    sound_pressure: {
+      hidden: false,
+    },
+    speed: {
+      hidden: false,
+    },
+    sulphur_dioxide: {
       hidden: false,
     },
     temperature: {
+      hidden: false,
+    },
+    timestamp: {
+      hidden: false,
+    },
+    volatile_organic_compounds: {
+      hidden: false,
+    },
+    volatile_organic_compounds_parts: {
+      hidden: false,
+    },
+    voltage: {
+      hidden: false,
+    },
+    volume: {
+      hidden: false,
+    },
+    volume_flow_rate: {
+      hidden: false,
+    },
+    volume_storage: {
+      hidden: false,
+    },
+    water: {
+      hidden: false,
+    },
+    weight: {
+      hidden: false,
+    },
+    wind_speed: {
       hidden: false,
     },
   }

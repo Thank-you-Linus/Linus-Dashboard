@@ -20,7 +20,7 @@ class AggregateChip extends AbstractChip {
   getDefaultConfig({ device_class, show_content = true, magic_device_id = "global", area_slug, tap_action }: chips.AggregateChipOptions) {
 
     const domain = DEVICE_CLASSES.sensor.includes(device_class) ? "sensor" : "binary_sensor"
-    let icon = Helper.icons[domain][device_class]?.default
+    let icon = device_class !== "motion" ? Helper.icons[domain][device_class]?.default : Helper.icons[domain][device_class]?.state?.on
     let icon_color = ""
     let content = ""
 
@@ -62,7 +62,7 @@ class AggregateChip extends AbstractChip {
       icon_color,
       icon,
       content: content,
-      tap_action: tap_action ?? navigateTo(device_class),
+      tap_action: magicEntity?.entity_id ? tap_action : navigateTo(device_class),
     }
   }
 

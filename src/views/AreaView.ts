@@ -16,6 +16,7 @@ import { LovelaceChipConfig } from "../types/lovelace-mushroom/utils/lovelace/ch
 import { AreaStateChip } from "../chips/AreaStateChip";
 import { createChipsFromList, getDomainTranslationKey } from "../utils";
 import { ResourceKeys } from "../types/homeassistant/data/frontend";
+import { UnavailableChip } from "../chips/UnavailableChip";
 
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
@@ -87,6 +88,9 @@ class AreaView {
     if (areaChips) {
       chips.push(...areaChips);
     }
+
+    const unavailableChip = new UnavailableChip({ area_slug: this.area.slug }).getChip();
+    if (unavailableChip) chips.push(unavailableChip);
 
     // (device?.entities.all_lights && device?.entities.all_lights.entity_id !== "unavailable" ? {
     //   type: "custom:mushroom-chips-card",

@@ -17,18 +17,6 @@ import { getDomainTranslationKey } from "../utils";
 class AggregateView extends AbstractView {
 
   /**
-   * Default configuration of the view.
-   *
-   * @type {views.ViewConfig}
-   * @private
-   */
-  #defaultConfig: views.ViewConfig = {
-    title: "Aggregates",
-    icon: "mdi:fan",
-    subview: true,
-  };
-
-  /**
    * Class constructor.
    *
    * @param {views.AggregateViewOptions} [options={}] Options for the view.
@@ -41,7 +29,7 @@ class AggregateView extends AbstractView {
     this.viewControllerCard = new ControllerCard(
       this.targetDomain(options?.device_class),
       {
-        title: `${Helper.localize(getDomainTranslationKey(domain, options?.device_class))}s`,
+        title: Helper.localize(getDomainTranslationKey(domain, options?.device_class)),
         // subtitle: Helper.getDeviceClassCountTemplate(options?.device_class, "eq", "on") + ` ${Helper.localize(getStateTranslationKey("on", domain, options?.device_class))}s`,
         controlChipOptions: { device_class: options?.device_class },
       }, domain, "global").createCard();

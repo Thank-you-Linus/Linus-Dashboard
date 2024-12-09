@@ -15,6 +15,7 @@ import { WeatherChip } from "../chips/WeatherChip";
 import { AggregateChip } from "../chips/AggregateChip";
 import { PersonCard } from "../cards/PersonCard";
 import { ConditionalChip } from "../chips/ConditionalChip";
+import { UnavailableChip } from "../chips/UnavailableChip";
 
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
@@ -116,6 +117,9 @@ class HomeView {
     if (homeChips) {
       chips.push(...homeChips);
     }
+
+    const unavailableChip = new UnavailableChip().getChip();
+    if (unavailableChip) chips.push(unavailableChip);
 
     const linusSettings = new SettingsChip({ tap_action: new SettingsPopup().getPopup() })
 
@@ -240,9 +244,10 @@ class HomeView {
     }
 
     const groupedSections: LovelaceGridCardConfig[] = [];
+    const floors = Helper.orderedFloors
     let isFirstLoop = true;
 
-    for (const floor of Helper.orderedFloors) {
+    for (const floor of floors) {
       if (floor.areas_slug.length === 0) continue
 
       let floorSection = {
@@ -263,33 +268,34 @@ class HomeView {
 
       const temperatureEntity = getMAEntity(floor.floor_id, "sensor", "temperature");
 
-
-      floorSection.cards.push(
-        {
-          type: "heading",
-          heading: getFloorName(floor),
-          heading_style: "subtitle",
-          icon: floor.icon ?? "mdi:floor-plan",
-          badges: [{
-            type: "custom:mushroom-chips-card",
-            alignment: "end",
-            chips: [
-              new ConditionalChip(
-                [{ entity: temperatureEntity?.entity_id!, state_not: UNAVAILABLE }],
-                new AggregateChip({ device_class: "temperature", show_content: true, magic_device_id: floor.floor_id, area_slug: floor.areas_slug }).getChip()
-              ).getChip(),
-            ],
-            card_mod: {
-              style: `
+      if (floors.length > 1) {
+        floorSection.cards.push(
+          {
+            type: "heading",
+            heading: getFloorName(floor),
+            heading_style: "subtitle",
+            icon: floor.icon ?? "mdi:floor-plan",
+            badges: [{
+              type: "custom:mushroom-chips-card",
+              alignment: "end",
+              chips: [
+                new ConditionalChip(
+                  [{ entity: temperatureEntity?.entity_id!, state_not: UNAVAILABLE }],
+                  new AggregateChip({ device_class: "temperature", show_content: true, magic_device_id: floor.floor_id, area_slug: floor.areas_slug }).getChip()
+                ).getChip(),
+              ],
+              card_mod: {
+                style: `
                 ha-card {
                   min-width: 80px;
                 }
               `,
-            }
-          }],
-          tap_action: floor.floor_id !== UNDISCLOSED ? navigateTo(slugify(floor.name)) : undefined,
-        }
-      );
+              }
+            }],
+            tap_action: floor.floor_id !== UNDISCLOSED ? navigateTo(slugify(floor.name)) : undefined,
+          }
+        );
+      }
 
       for (const area of floor.areas_slug.map(area_slug => Helper.areas[area_slug]).values()) {
 

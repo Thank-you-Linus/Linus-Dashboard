@@ -103,7 +103,9 @@ abstract class AbstractView {
       || Helper.strategyOptions.domains["_"].hide_config_entities;
     let isFirstLoop = true;
 
-    for (const floor of Helper.orderedFloors) {
+    const floors = Helper.orderedFloors;
+
+    for (const floor of floors) {
       if (floor.areas_slug.length === 0 || !AREA_CARDS_DOMAINS.includes(this.#domain ?? "")) continue;
 
       const floorCards = [];
@@ -162,12 +164,12 @@ abstract class AbstractView {
         }
 
         const area_ids = floor.areas_slug.map(area_slug => Helper.areas[area_slug].area_id);
-        const floorControllerCard = new ControllerCard(
+        const floorControllerCard = floors.length > 1 ? new ControllerCard(
           { area_id: area_ids },
           titleSectionOptions,
           this.#domain,
           floor.floor_id
-        ).createCard();
+        ).createCard() : [];
 
         const section = { type: "grid", cards: [] } as LovelaceGridCardConfig;
         if (isFirstLoop) {

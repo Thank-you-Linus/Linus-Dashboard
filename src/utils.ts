@@ -146,9 +146,6 @@ export async function createChipsFromList(chipsList: string[], chipOptions?: Par
         }
     }
 
-    const unavailableChip = new UnavailableChip({ area_slug }).getChip();
-    if (unavailableChip) chips.push(unavailableChip);
-
     return chips;
 }
 

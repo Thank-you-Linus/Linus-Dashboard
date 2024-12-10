@@ -7184,7 +7184,7 @@ var __classPrivateFieldGet = (undefined && undefined.__classPrivateFieldGet) || 
     if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
     return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
 };
-var _HomeView_instances, _HomeView_createPersonCards, _HomeView_createAreaSection;
+var _HomeView_instances, _HomeView_createPersonCards;
 
 
 
@@ -7299,61 +7299,149 @@ class HomeView {
      * @override
      */
     async createSectionCards() {
-        return await Promise.all([
-            __classPrivateFieldGet(this, _HomeView_instances, "m", _HomeView_createPersonCards).call(this),
-            __classPrivateFieldGet(this, _HomeView_instances, "m", _HomeView_createAreaSection).call(this),
-        ]).then(([personCards, areaSections]) => {
+        if (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.home_view.hidden.includes("areas")) {
+            // Areas section is hidden.
+            return [];
+        }
+        const groupedSections = [];
+        const floors = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.orderedFloors;
+        let isFirstLoop = true;
+        for (const floor of floors) {
+            if (floor.areas_slug.length === 0)
+                continue;
             const options = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions;
-            const firstSection = {
+            let floorSection = {
                 type: "grid",
                 column_span: 1,
-                cards: []
+                cards: [],
             };
-            if (personCards.length) {
-                // TODO: Create the stack at this.#createPersonCards()
-                firstSection.cards.push({
+            if (isFirstLoop) {
+                const personCards = await __classPrivateFieldGet(this, _HomeView_instances, "m", _HomeView_createPersonCards).call(this);
+                floorSection.cards.push({
                     type: "horizontal-stack",
                     cards: personCards,
                 });
-            }
-            if (!_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.home_view.hidden.includes("greeting")) {
-                const tod = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices.global?.entities.time_of_the_day;
-                firstSection.cards.push({
-                    type: "custom:mushroom-template-card",
-                    primary: `
+                if (!_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.home_view.hidden.includes("greeting")) {
+                    const tod = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices.global?.entities.time_of_the_day;
+                    floorSection.cards.push({
+                        type: "custom:mushroom-template-card",
+                        primary: `
           {% set tod = states("${tod?.entity_id}") %}
           {% if (tod == "evening") %} Bonne soirée, {{user}} !
           {% elif (tod == "daytime") %} Bonne après-midi, {{user}} !
           {% elif (tod == "night") %} Bonne nuit, {{user}} !
           {% else %} Bonjour, {{user}} !
           {% endif %}`,
-                    icon: "mdi:hand-wave",
-                    icon_color: "orange",
+                        icon: "mdi:hand-wave",
+                        icon_color: "orange",
+                        layout_options: {
+                            grid_columns: 4,
+                            grid_rows: 1,
+                        },
+                        tap_action: {
+                            action: "none",
+                        },
+                        double_tap_action: {
+                            action: "none",
+                        },
+                        hold_action: {
+                            action: "none",
+                        },
+                    });
+                }
+                // Add quick access cards.
+                if (options.quick_access_cards) {
+                    floorSection.cards.push(...options.quick_access_cards);
+                }
+                // Add custom cards.
+                if (options.extra_cards) {
+                    floorSection.cards.push(...options.extra_cards);
+                }
+            }
+            if (isFirstLoop && !_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.home_view.hidden.includes("areasTitle")) {
+                floorSection.cards.push({
+                    type: "heading",
+                    heading: `${_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("ui.components.area-picker.area")}s`,
+                    heading_style: "title",
+                });
+                isFirstLoop = false;
+            }
+            const temperatureEntity = (0,_utils__WEBPACK_IMPORTED_MODULE_4__.getMAEntity)(floor.floor_id, "sensor", "temperature");
+            if (floors.length > 1) {
+                floorSection.cards.push({
+                    type: "heading",
+                    heading: (0,_utils__WEBPACK_IMPORTED_MODULE_4__.getFloorName)(floor),
+                    heading_style: "subtitle",
+                    icon: floor.icon ?? "mdi:floor-plan",
+                    badges: [{
+                            type: "custom:mushroom-chips-card",
+                            alignment: "end",
+                            chips: [
+                                new _chips_ConditionalChip__WEBPACK_IMPORTED_MODULE_8__.ConditionalChip([{ entity: temperatureEntity?.entity_id, state_not: _variables__WEBPACK_IMPORTED_MODULE_3__.UNAVAILABLE }], new _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_6__.AggregateChip({ device_class: "temperature", show_content: true, magic_device_id: floor.floor_id, area_slug: floor.areas_slug }).getChip()).getChip(),
+                            ],
+                            card_mod: {
+                                style: `
+                ha-card {
+                  min-width: 80px;
+                }
+              `,
+                            }
+                        }],
+                    tap_action: floor.floor_id !== _variables__WEBPACK_IMPORTED_MODULE_3__.UNDISCLOSED ? (0,_utils__WEBPACK_IMPORTED_MODULE_4__.navigateTo)((0,_utils__WEBPACK_IMPORTED_MODULE_4__.slugify)(floor.name)) : undefined,
+                });
+            }
+            for (const area of floor.areas_slug.map(area_slug => _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas[area_slug]).values()) {
+                let module;
+                let moduleName = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.areas[area.slug]?.type ??
+                    _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.areas["_"]?.type ??
+                    "default";
+                // Load module by type in strategy options.
+                try {
+                    module = await __webpack_require__("./src/cards lazy recursive ^\\.\\/.*$")(`./${moduleName}`);
+                }
+                catch (e) {
+                    // Fallback to the default strategy card.
+                    module = await Promise.resolve(/*! import() */).then(__webpack_require__.bind(__webpack_require__, /*! ../cards/HomeAreaCard */ "./src/cards/HomeAreaCard.ts"));
+                    if (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.debug && moduleName !== "default") {
+                        console.error(e);
+                    }
+                }
+                // Get a card for the area.
+                if (!_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.areas[area.slug]?.hidden) {
+                    let options = {
+                        ..._Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.areas["_"],
+                        ..._Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.areas[area.slug],
+                        area_slug: area.slug,
+                    };
+                    floorSection.cards.push({
+                        ...new module.HomeAreaCard(options).getCard(),
+                        layout_options: {
+                            grid_columns: 2
+                        }
+                    });
+                }
+            }
+            if (floor.floor_id === _variables__WEBPACK_IMPORTED_MODULE_3__.UNDISCLOSED) {
+                floorSection.cards.push({
+                    type: "custom:mushroom-template-card",
+                    primary: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.entity.button.add_new_area.state.on"),
+                    secondary: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.entity.button.add_new_area.state.off"),
+                    multiline_secondary: true,
+                    icon: "mdi:view-dashboard-variant",
+                    fill_container: true,
                     layout_options: {
                         grid_columns: 4,
                         grid_rows: 1,
                     },
                     tap_action: {
-                        action: "none",
-                    },
-                    double_tap_action: {
-                        action: "none",
-                    },
-                    hold_action: {
-                        action: "none",
+                        action: "navigate",
+                        navigation_path: "/config/areas/dashboard",
                     },
                 });
             }
-            // Add quick access cards.
-            if (options.quick_access_cards) {
-                firstSection.cards.push(...options.quick_access_cards);
-            }
-            // Add custom cards.
-            if (options.extra_cards) {
-                firstSection.cards.push(...options.extra_cards);
-            }
-            return [firstSection, ...areaSections];
-        });
+            groupedSections.push(floorSection);
+        }
+        return groupedSections;
     }
     /**
      * Get a view object.
@@ -7390,114 +7478,6 @@ async function _HomeView_createPersonCards() {
         cards.push(new _cards_PersonCard__WEBPACK_IMPORTED_MODULE_7__.PersonCard(person).getCard());
     }
     return cards;
-}, _HomeView_createAreaSection = 
-/**
- * Create the area cards to include in the view.
- *
- * Area cards are grouped into two areas per row.
- *
- * @return {Promise<LovelaceGridCardConfig[]>} Promise an Area Card Section.
- */
-async function _HomeView_createAreaSection() {
-    if (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.home_view.hidden.includes("areas")) {
-        // Areas section is hidden.
-        return [];
-    }
-    const groupedSections = [];
-    const floors = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.orderedFloors;
-    let isFirstLoop = true;
-    for (const floor of floors) {
-        if (floor.areas_slug.length === 0)
-            continue;
-        let floorSection = {
-            type: "grid",
-            column_span: 1,
-            cards: [],
-        };
-        if (isFirstLoop && !_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.home_view.hidden.includes("areasTitle")) {
-            floorSection.cards.push({
-                type: "heading",
-                heading: `${_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("ui.components.area-picker.area")}s`,
-                heading_style: "title",
-            });
-            isFirstLoop = false;
-        }
-        const temperatureEntity = (0,_utils__WEBPACK_IMPORTED_MODULE_4__.getMAEntity)(floor.floor_id, "sensor", "temperature");
-        if (floors.length > 1) {
-            floorSection.cards.push({
-                type: "heading",
-                heading: (0,_utils__WEBPACK_IMPORTED_MODULE_4__.getFloorName)(floor),
-                heading_style: "subtitle",
-                icon: floor.icon ?? "mdi:floor-plan",
-                badges: [{
-                        type: "custom:mushroom-chips-card",
-                        alignment: "end",
-                        chips: [
-                            new _chips_ConditionalChip__WEBPACK_IMPORTED_MODULE_8__.ConditionalChip([{ entity: temperatureEntity?.entity_id, state_not: _variables__WEBPACK_IMPORTED_MODULE_3__.UNAVAILABLE }], new _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_6__.AggregateChip({ device_class: "temperature", show_content: true, magic_device_id: floor.floor_id, area_slug: floor.areas_slug }).getChip()).getChip(),
-                        ],
-                        card_mod: {
-                            style: `
-                ha-card {
-                  min-width: 80px;
-                }
-              `,
-                        }
-                    }],
-                tap_action: floor.floor_id !== _variables__WEBPACK_IMPORTED_MODULE_3__.UNDISCLOSED ? (0,_utils__WEBPACK_IMPORTED_MODULE_4__.navigateTo)((0,_utils__WEBPACK_IMPORTED_MODULE_4__.slugify)(floor.name)) : undefined,
-            });
-        }
-        for (const area of floor.areas_slug.map(area_slug => _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas[area_slug]).values()) {
-            let module;
-            let moduleName = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.areas[area.slug]?.type ??
-                _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.areas["_"]?.type ??
-                "default";
-            // Load module by type in strategy options.
-            try {
-                module = await __webpack_require__("./src/cards lazy recursive ^\\.\\/.*$")(`./${moduleName}`);
-            }
-            catch (e) {
-                // Fallback to the default strategy card.
-                module = await Promise.resolve(/*! import() */).then(__webpack_require__.bind(__webpack_require__, /*! ../cards/HomeAreaCard */ "./src/cards/HomeAreaCard.ts"));
-                if (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.debug && moduleName !== "default") {
-                    console.error(e);
-                }
-            }
-            // Get a card for the area.
-            if (!_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.areas[area.slug]?.hidden) {
-                let options = {
-                    ..._Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.areas["_"],
-                    ..._Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.areas[area.slug],
-                    area_slug: area.slug,
-                };
-                floorSection.cards.push({
-                    ...new module.HomeAreaCard(options).getCard(),
-                    layout_options: {
-                        grid_columns: 2
-                    }
-                });
-            }
-        }
-        if (floor.floor_id === _variables__WEBPACK_IMPORTED_MODULE_3__.UNDISCLOSED) {
-            floorSection.cards.push({
-                type: "custom:mushroom-template-card",
-                primary: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.entity.button.add_new_area.state.on"),
-                secondary: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.entity.button.add_new_area.state.off"),
-                multiline_secondary: true,
-                icon: "mdi:view-dashboard-variant",
-                fill_container: true,
-                layout_options: {
-                    grid_columns: 4,
-                    grid_rows: 1,
-                },
-                tap_action: {
-                    action: "navigate",
-                    navigation_path: "/config/areas/dashboard",
-                },
-            });
-        }
-        groupedSections.push(floorSection);
-    }
-    return groupedSections;
 };
 
 

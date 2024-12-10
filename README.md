@@ -157,6 +157,34 @@ After installation, follow these steps to configure and access Linus Dashboard:
 #### ✨ Tip
 - If the icon doesn’t appear immediately, try restarting Home Assistant again.
 
+
+---
+
+### ❗ Troubleshooting
+
+#### Fixing Timeout or Red Error Messages
+
+If you encounter an error message like the one below when trying to use Linus Dashboard:
+
+![Timeout Error](https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/images/timeout-error.png)
+
+**Follow these steps to resolve the issue**:
+
+1. **Clear your cache**:
+   - For browsers: Clear your browser cache.
+   - For the Home Assistant mobile app: Clear the app cache via your device settings.
+   - If you're using a reverse proxy or a DNS service like Cloudflare: Clear the cache there as well.
+
+2. **Force a refresh**:
+   - On **Windows**: Press `CTRL + F5`.
+   - On **Mac**:
+     - Hold `⇧ Shift` and click the Reload button.
+     - Or, hold down `⌘ Cmd` and `⇧ Shift` key, then press `R`.
+
+3. **Check your setup**: Ensure your Home Assistant instance is correctly set up and that there are no network-related issues.
+
+If these steps don’t resolve the issue, feel free to open an issue on the [GitHub repository](https://github.com/Thank-you-Linus/Linus-Dashboard/issues) with details about your setup and the error message.
+
 ---
 
 ## 📣 Join Our Community

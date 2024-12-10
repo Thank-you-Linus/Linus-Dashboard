@@ -154,9 +154,35 @@ Une fois l'installation terminée, voici comment configurer et accéder à Linus
 4. Pendant la configuration, sélectionnez une entité météo ou d’alarme si nécessaire (ces étapes sont facultatives).
 5. Une fois la configuration terminée, un nouvel **icône avec un nœud papillon** apparaîtra dans le menu de gauche. Cliquez dessus pour accéder directement à Linus Dashboard.
 
-
 #### ✨ Astuce
 - Si l’icône n’apparaît pas immédiatement, essayez de redémarrer Home Assistant une nouvelle fois.
+
+---
+
+### ❗ Dépannage
+
+#### Résolution des erreurs de timeout ou des messages d’erreur en rouge
+
+Si vous rencontrez un message d’erreur comme celui-ci en essayant d’utiliser Linus Dashboard :
+
+![Erreur de Timeout](https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/images/timeout-error.png)
+
+**Suivez ces étapes pour résoudre le problème** :
+
+1. **Videz votre cache** :
+   - Pour les navigateurs : Videz le cache de votre navigateur.
+   - Pour l’application mobile Home Assistant : Effacez le cache de l’application via les paramètres de votre appareil.
+   - Si vous utilisez un proxy inverse ou un service DNS comme Cloudflare : Videz également le cache là-bas.
+
+2. **Forcez un rafraîchissement** :
+   - Sur **Windows** : Appuyez sur `CTRL + F5`.
+   - Sur **Mac** :
+     - Maintenez `⇧ Shift` et cliquez sur le bouton Recharger.
+     - Ou maintenez les touches `⌘ Cmd` et `⇧ Shift`, puis appuyez sur `R`.
+
+3. **Vérifiez votre configuration** : Assurez-vous que votre instance Home Assistant est correctement configurée et qu’il n’y a pas de problèmes liés au réseau.
+
+Si ces étapes ne résolvent pas le problème, n’hésitez pas à ouvrir une issue sur le [dépôt GitHub](https://github.com/Thank-you-Linus/Linus-Dashboard/issues) en fournissant des détails sur votre configuration et le message d’erreur.
 
 ---
 

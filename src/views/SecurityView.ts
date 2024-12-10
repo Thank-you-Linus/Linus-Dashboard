@@ -4,11 +4,15 @@ import { LovelaceCardConfig, LovelaceSectionConfig, LovelaceViewConfig } from ".
 import { AlarmCard } from "../cards/AlarmCard";
 import { PersonCard } from "../cards/PersonCard";
 import { BinarySensorCard } from "../cards/BinarySensorCard";
-import { getAreaName, getFloorName, navigateTo } from "../utils";
+import { createChipsFromList, getAreaName, getFloorName, navigateTo } from "../utils";
 import { HassServiceTarget } from "home-assistant-js-websocket";
 import { SwipeCard } from "../cards/SwipeCard";
 import { ControllerCard } from "../cards/ControllerCard";
 import { views } from "../types/strategy/views";
+import { ChipsCardConfig } from "../types/lovelace-mushroom/cards/chips-card";
+import { TemplateCardConfig } from "../types/lovelace-mushroom/cards/template-card-config";
+import { LovelaceChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
+import { SECURITY_EXPOSED_CHIPS } from "../variables";
 
 /**
  * Security View Class.
@@ -48,6 +52,52 @@ class SecurityView {
     if (!Helper.isInitialized()) {
       throw new Error("The Helper module must be initialized before using this one.");
     }
+  }
+
+
+
+  /**
+   * Create the cards to include in the view.
+   *
+   * @return {Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig)[]>} Promise a View Card array.
+   * @override
+   */
+  async createViewBadges(): Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig)[]> {
+
+    if (Helper.strategyOptions.home_view.hidden.includes("chips")) {
+      // Chips section is hidden.
+
+      return [];
+    }
+
+    const chips: LovelaceChipConfig[] = [];
+
+    let chipModule;
+
+    // Alarm chip.
+    const alarmEntityId = Helper.linus_dashboard_config?.alarm_entity_id
+
+    if (alarmEntityId) {
+      try {
+        chipModule = await import("../chips/AlarmChip");
+        const alarmChip = new chipModule.AlarmChip(alarmEntityId);
+
+        chips.push(alarmChip.getChip());
+      } catch (e) {
+        Helper.logError("An error occurred while creating the alarm chip!", e);
+      }
+    }
+
+    const homeChips = await createChipsFromList(SECURITY_EXPOSED_CHIPS, { show_content: true });
+    if (homeChips) {
+      chips.push(...homeChips);
+    }
+
+    return chips.map(chip => ({
+      type: "custom:mushroom-chips-card",
+      alignment: "center",
+      chips: [chip],
+    }));
   }
 
   /**
@@ -100,16 +150,11 @@ class SecurityView {
 
     const globalDevice = Helper.magicAreasDevices["global"];
 
-    if (!globalDevice) {
-      console.debug("Security view : Global device not found");
-      return [];
-    }
-
     const {
       aggregate_motion,
       aggregate_door,
       aggregate_window,
-    } = globalDevice?.entities;
+    } = globalDevice?.entities ?? {};
 
     if (aggregate_motion || aggregate_door || aggregate_window) {
       globalSection.cards.push(
@@ -260,6 +305,7 @@ class SecurityView {
   async getView(): Promise<LovelaceViewConfig | LovelaceSectionConfig> {
     return {
       ...this.config,
+      badges: await this.createViewBadges(),
       sections: await this.createSectionCards(),
     };
   }

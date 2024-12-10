@@ -359,7 +359,7 @@ class Helper {
         const entitiesByAreaId = {};
         const devicesByAreaId = {};
         __classPrivateFieldSet(this, _a, entities.reduce((acc, entity) => {
-            if (!(entity.entity_id in __classPrivateFieldGet(this, _a, "f", _Helper_hassStates)))
+            if (!(entity.entity_id in __classPrivateFieldGet(this, _a, "f", _Helper_hassStates)) || entity.hidden_by)
                 return acc;
             const area = entity.area_id ? areasById[entity.area_id] : {};
             const floor = area.floor_id ? floorsById[area.floor_id] : {};
@@ -2818,7 +2818,7 @@ class AggregateChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.AbstractC
      */
     getDefaultConfig({ device_class, show_content = true, magic_device_id = "global", area_slug, tap_action }) {
         const domain = _variables__WEBPACK_IMPORTED_MODULE_0__.DEVICE_CLASSES.sensor.includes(device_class) ? "sensor" : "binary_sensor";
-        let icon = _Helper__WEBPACK_IMPORTED_MODULE_2__.Helper.icons[domain][device_class]?.default;
+        let icon = device_class !== "motion" ? _Helper__WEBPACK_IMPORTED_MODULE_2__.Helper.icons[domain][device_class]?.default : _Helper__WEBPACK_IMPORTED_MODULE_2__.Helper.icons[domain][device_class]?.state?.on;
         let icon_color = "";
         let content = "";
         const device = _Helper__WEBPACK_IMPORTED_MODULE_2__.Helper.magicAreasDevices[magic_device_id];
@@ -2851,7 +2851,7 @@ class AggregateChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.AbstractC
             icon_color,
             icon,
             content: content,
-            tap_action: tap_action ?? (0,_utils__WEBPACK_IMPORTED_MODULE_3__.navigateTo)(device_class),
+            tap_action: magicEntity?.entity_id ? tap_action : (0,_utils__WEBPACK_IMPORTED_MODULE_3__.navigateTo)(device_class),
         };
     }
     /**
@@ -4407,10 +4407,6 @@ const configurationDefaults = {
             showControls: false,
             hidden: false,
         },
-        temperature: {
-            showControls: true,
-            hidden: false,
-        },
     },
     home_view: {
         hidden: [],
@@ -4463,19 +4459,229 @@ const configurationDefaults = {
         securityDetails: {
             hidden: false,
         },
-        motion: {
+        battery: {
             hidden: false,
         },
-        window: {
+        battery_charging: {
+            hidden: false,
+        },
+        carbon_monoxide: {
+            hidden: false,
+        },
+        cold: {
+            hidden: false,
+        },
+        connectivity: {
             hidden: false,
         },
         door: {
             hidden: false,
         },
-        battery: {
+        garage_door: {
+            hidden: false,
+        },
+        gas: {
+            hidden: false,
+        },
+        heat: {
+            hidden: false,
+        },
+        lock: {
+            hidden: false,
+        },
+        moisture: {
+            hidden: false,
+        },
+        motion: {
+            hidden: false,
+        },
+        moving: {
+            hidden: false,
+        },
+        occupancy: {
+            hidden: false,
+        },
+        opening: {
+            hidden: false,
+        },
+        plug: {
+            hidden: false,
+        },
+        power: {
+            hidden: false,
+        },
+        presence: {
+            hidden: false,
+        },
+        problem: {
+            hidden: false,
+        },
+        running: {
+            hidden: false,
+        },
+        safety: {
+            hidden: false,
+        },
+        smoke: {
+            hidden: false,
+        },
+        sound: {
+            hidden: false,
+        },
+        tamper: {
+            hidden: false,
+        },
+        update: {
+            hidden: false,
+        },
+        vibration: {
+            hidden: false,
+        },
+        window: {
+            hidden: false,
+        },
+        apparent_power: {
+            hidden: false,
+        },
+        aqi: {
+            hidden: false,
+        },
+        area: {
+            hidden: false,
+        },
+        atmospheric_pressure: {
+            hidden: false,
+        },
+        blood_glucose_concentration: {
+            hidden: false,
+        },
+        carbon_dioxide: {
+            hidden: false,
+        },
+        current: {
+            hidden: false,
+        },
+        data_rate: {
+            hidden: false,
+        },
+        data_size: {
+            hidden: false,
+        },
+        date: {
+            hidden: false,
+        },
+        distance: {
+            hidden: false,
+        },
+        duration: {
+            hidden: false,
+        },
+        energy: {
+            hidden: false,
+        },
+        energy_storage: {
+            hidden: false,
+        },
+        enum: {
+            hidden: false,
+        },
+        frequency: {
+            hidden: false,
+        },
+        humidity: {
+            hidden: false,
+        },
+        illuminance: {
+            hidden: false,
+        },
+        irradiance: {
+            hidden: false,
+        },
+        monetary: {
+            hidden: false,
+        },
+        nitrogen_dioxide: {
+            hidden: false,
+        },
+        nitrogen_monoxide: {
+            hidden: false,
+        },
+        nitrous_oxide: {
+            hidden: false,
+        },
+        ozone: {
+            hidden: false,
+        },
+        ph: {
+            hidden: false,
+        },
+        pm1: {
+            hidden: false,
+        },
+        pm25: {
+            hidden: false,
+        },
+        pm10: {
+            hidden: false,
+        },
+        power_factor: {
+            hidden: false,
+        },
+        precipitation: {
+            hidden: false,
+        },
+        precipitation_intensity: {
+            hidden: false,
+        },
+        pressure: {
+            hidden: false,
+        },
+        reactive_power: {
+            hidden: false,
+        },
+        signal_strength: {
+            hidden: false,
+        },
+        sound_pressure: {
+            hidden: false,
+        },
+        speed: {
+            hidden: false,
+        },
+        sulphur_dioxide: {
             hidden: false,
         },
         temperature: {
+            hidden: false,
+        },
+        timestamp: {
+            hidden: false,
+        },
+        volatile_organic_compounds: {
+            hidden: false,
+        },
+        volatile_organic_compounds_parts: {
+            hidden: false,
+        },
+        voltage: {
+            hidden: false,
+        },
+        volume: {
+            hidden: false,
+        },
+        volume_flow_rate: {
+            hidden: false,
+        },
+        volume_storage: {
+            hidden: false,
+        },
+        water: {
+            hidden: false,
+        },
+        weight: {
+            hidden: false,
+        },
+        wind_speed: {
             hidden: false,
         },
     }
@@ -5602,8 +5808,6 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var _Helper__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./Helper */ "./src/Helper.ts");
 /* harmony import */ var _variables__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./variables */ "./src/variables.ts");
-/* harmony import */ var _chips_UnavailableChip__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./chips/UnavailableChip */ "./src/chips/UnavailableChip.ts");
-
 
 
 /**
@@ -5727,9 +5931,6 @@ async function createChipsFromList(chipsList, chipOptions, magic_device_id = "gl
             _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.logError(`An error occurred while creating the ${chipType} chip!`, e);
         }
     }
-    const unavailableChip = new _chips_UnavailableChip__WEBPACK_IMPORTED_MODULE_2__.UnavailableChip({ area_slug }).getChip();
-    if (unavailableChip)
-        chips.push(unavailableChip);
     return chips;
 }
 function getDomainTranslationKey(domain, device_class) {
@@ -5779,6 +5980,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   LIGHT_DOMAIN: () => (/* binding */ LIGHT_DOMAIN),
 /* harmony export */   MAGIC_AREAS_DOMAIN: () => (/* binding */ MAGIC_AREAS_DOMAIN),
 /* harmony export */   MAGIC_AREAS_NAME: () => (/* binding */ MAGIC_AREAS_NAME),
+/* harmony export */   SECURITY_EXPOSED_CHIPS: () => (/* binding */ SECURITY_EXPOSED_CHIPS),
 /* harmony export */   TOD_ORDER: () => (/* binding */ TOD_ORDER),
 /* harmony export */   UNAVAILABLE: () => (/* binding */ UNAVAILABLE),
 /* harmony export */   UNDISCLOSED: () => (/* binding */ UNDISCLOSED),
@@ -5793,14 +5995,98 @@ const LIGHT_DOMAIN = "light";
 const GROUP_DOMAINS = ["climate", "media_player", "cover"];
 const AGGREGATE_DOMAINS = ["binary_sensor", "sensor"];
 const DEVICE_CLASSES = {
-    sensor: ["illuminance", "temperature", "humidity", "battery", "energy", "power"],
-    binary_sensor: ["motion", "door", "window", "vibration", "moisture", "smoke"],
+    sensor: [
+        "temperature",
+        "humidity",
+        "illuminance",
+        "battery",
+        "sensor",
+        "apparent_power",
+        "aqi",
+        "area",
+        "atmospheric_pressure",
+        "blood_glucose_concentration",
+        "carbon_dioxide",
+        "carbon_monoxide",
+        "current",
+        "data_rate",
+        "data_size",
+        "date",
+        "distance",
+        "duration",
+        "energy",
+        "energy_storage",
+        "enum",
+        "frequency",
+        "gas",
+        "irradiance",
+        // "moisture",
+        "monetary",
+        "nitrogen_dioxide",
+        "nitrogen_monoxide",
+        "nitrous_oxide",
+        "ozone",
+        "ph",
+        "pm1",
+        "pm25",
+        "pm10",
+        "power_factor",
+        "power",
+        "precipitation",
+        "precipitation_intensity",
+        "pressure",
+        "reactive_power",
+        "signal_strength",
+        "sound_pressure",
+        "speed",
+        "sulphur_dioxide",
+        "timestamp",
+        "volatile_organic_compounds",
+        "volatile_organic_compounds_parts",
+        "voltage",
+        "volume",
+        "volume_flow_rate",
+        "volume_storage",
+        "water",
+        "weight",
+        "wind_speed",
+    ],
+    binary_sensor: [
+        "battery_charging",
+        "carbon_monoxide",
+        "cold",
+        "connectivity",
+        "door",
+        "garage_door",
+        // "gas",
+        "heat",
+        // "light",
+        "lock",
+        "moisture",
+        "motion",
+        "moving",
+        "occupancy",
+        "opening",
+        "plug",
+        // "power",
+        "presence",
+        "problem",
+        "running",
+        "safety",
+        "smoke",
+        "sound",
+        "tamper",
+        "update",
+        "vibration",
+        "window",
+    ],
 };
 const AREA_CARDS_DOMAINS = [LIGHT_DOMAIN, "switch", "climate", "fan", "camera", "cover", "vacuum", "media_player", "lock", "scene", "plant", "binary_sensor", "sensor"];
 const CUSTOM_VIEWS = ["home", "security", "security-details"];
 const DOMAINS_VIEWS = [...AREA_CARDS_DOMAINS, ...DEVICE_CLASSES.binary_sensor, ...DEVICE_CLASSES.sensor];
-const HOME_EXPOSED_CHIPS = ["weather", "alarm", "spotify", LIGHT_DOMAIN, ...GROUP_DOMAINS, "fan", "switch", "safety", "motion", "door", "window"];
+const HOME_EXPOSED_CHIPS = ["weather", "alarm", "spotify", LIGHT_DOMAIN, ...GROUP_DOMAINS, "fan", "switch", "safety", "motion", "occupancy", "door", "window"];
 const AREA_EXPOSED_CHIPS = [LIGHT_DOMAIN, ...GROUP_DOMAINS, "fan", "switch", "safety", ...DEVICE_CLASSES.binary_sensor, ...DEVICE_CLASSES.sensor];
+const SECURITY_EXPOSED_CHIPS = ["alarm", "safety", "motion", "occupancy", "door", "window"];
 const DEVICE_ICONS = {
     presence_hold: 'mdi:car-brake-hold'
 };
@@ -5942,7 +6228,8 @@ class AbstractView {
         const configEntityHidden = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.strategyOptions.domains[__classPrivateFieldGet(this, _AbstractView_domain, "f") ?? "_"].hide_config_entities
             || _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.strategyOptions.domains["_"].hide_config_entities;
         let isFirstLoop = true;
-        for (const floor of _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.orderedFloors) {
+        const floors = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.orderedFloors;
+        for (const floor of floors) {
             if (floor.areas_slug.length === 0 || !_variables__WEBPACK_IMPORTED_MODULE_0__.AREA_CARDS_DOMAINS.includes(__classPrivateFieldGet(this, _AbstractView_domain, "f") ?? ""))
                 continue;
             const floorCards = [];
@@ -5994,7 +6281,7 @@ class AbstractView {
                     };
                 }
                 const area_ids = floor.areas_slug.map(area_slug => _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.areas[area_slug].area_id);
-                const floorControllerCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_2__.ControllerCard({ area_id: area_ids }, titleSectionOptions, __classPrivateFieldGet(this, _AbstractView_domain, "f"), floor.floor_id).createCard();
+                const floorControllerCard = floors.length > 1 ? new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_2__.ControllerCard({ area_id: area_ids }, titleSectionOptions, __classPrivateFieldGet(this, _AbstractView_domain, "f"), floor.floor_id).createCard() : [];
                 const section = { type: "grid", cards: [] };
                 if (isFirstLoop) {
                     section.cards.push(...this.viewControllerCard);
@@ -6057,7 +6344,6 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _AbstractView__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./AbstractView */ "./src/views/AbstractView.ts");
 /* harmony import */ var _variables__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../variables */ "./src/variables.ts");
 /* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../utils */ "./src/utils.ts");
-var _AggregateView_defaultConfig;
 
 
 
@@ -6081,26 +6367,14 @@ class AggregateView extends _AbstractView__WEBPACK_IMPORTED_MODULE_2__.AbstractV
     constructor(options) {
         const domain = _variables__WEBPACK_IMPORTED_MODULE_3__.DEVICE_CLASSES.sensor.includes(options?.device_class) ? "sensor" : "binary_sensor";
         super(domain, options?.device_class);
-        /**
-         * Default configuration of the view.
-         *
-         * @type {views.ViewConfig}
-         * @private
-         */
-        _AggregateView_defaultConfig.set(this, {
-            title: "Aggregates",
-            icon: "mdi:fan",
-            subview: true,
-        });
         // Create a Controller card to switch all entities of the domain.
         this.viewControllerCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_1__.ControllerCard(this.targetDomain(options?.device_class), {
-            title: `${_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize((0,_utils__WEBPACK_IMPORTED_MODULE_4__.getDomainTranslationKey)(domain, options?.device_class))}s`,
+            title: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize((0,_utils__WEBPACK_IMPORTED_MODULE_4__.getDomainTranslationKey)(domain, options?.device_class)),
             // subtitle: Helper.getDeviceClassCountTemplate(options?.device_class, "eq", "on") + ` ${Helper.localize(getStateTranslationKey("on", domain, options?.device_class))}s`,
             controlChipOptions: { device_class: options?.device_class },
         }, domain, "global").createCard();
     }
 }
-_AggregateView_defaultConfig = new WeakMap();
 
 
 
@@ -6124,6 +6398,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _variables__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../variables */ "./src/variables.ts");
 /* harmony import */ var _chips_AreaStateChip__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../chips/AreaStateChip */ "./src/chips/AreaStateChip.ts");
 /* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../utils */ "./src/utils.ts");
+/* harmony import */ var _chips_UnavailableChip__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../chips/UnavailableChip */ "./src/chips/UnavailableChip.ts");
+
 
 
 
@@ -6180,6 +6456,9 @@ class AreaView {
         if (areaChips) {
             chips.push(...areaChips);
         }
+        const unavailableChip = new _chips_UnavailableChip__WEBPACK_IMPORTED_MODULE_7__.UnavailableChip({ area_slug: this.area.slug }).getChip();
+        if (unavailableChip)
+            chips.push(unavailableChip);
         // (device?.entities.all_lights && device?.entities.all_lights.entity_id !== "unavailable" ? {
         //   type: "custom:mushroom-chips-card",
         //   alignment: "center",
@@ -6899,12 +7178,14 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../chips/AggregateChip */ "./src/chips/AggregateChip.ts");
 /* harmony import */ var _cards_PersonCard__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../cards/PersonCard */ "./src/cards/PersonCard.ts");
 /* harmony import */ var _chips_ConditionalChip__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../chips/ConditionalChip */ "./src/chips/ConditionalChip.ts");
+/* harmony import */ var _chips_UnavailableChip__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../chips/UnavailableChip */ "./src/chips/UnavailableChip.ts");
 var __classPrivateFieldGet = (undefined && undefined.__classPrivateFieldGet) || function (receiver, state, kind, f) {
     if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a getter");
     if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
     return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
 };
 var _HomeView_instances, _HomeView_createPersonCards, _HomeView_createAreaSection;
+
 
 
 
@@ -7000,6 +7281,9 @@ class HomeView {
         if (homeChips) {
             chips.push(...homeChips);
         }
+        const unavailableChip = new _chips_UnavailableChip__WEBPACK_IMPORTED_MODULE_9__.UnavailableChip().getChip();
+        if (unavailableChip)
+            chips.push(unavailableChip);
         const linusSettings = new _chips_SettingsChip__WEBPACK_IMPORTED_MODULE_1__.SettingsChip({ tap_action: new _popups_SettingsPopup__WEBPACK_IMPORTED_MODULE_2__.SettingsPopup().getPopup() });
         chips.push(linusSettings.getChip());
         return chips.map(chip => ({
@@ -7120,8 +7404,9 @@ async function _HomeView_createAreaSection() {
         return [];
     }
     const groupedSections = [];
+    const floors = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.orderedFloors;
     let isFirstLoop = true;
-    for (const floor of _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.orderedFloors) {
+    for (const floor of floors) {
         if (floor.areas_slug.length === 0)
             continue;
         let floorSection = {
@@ -7138,27 +7423,29 @@ async function _HomeView_createAreaSection() {
             isFirstLoop = false;
         }
         const temperatureEntity = (0,_utils__WEBPACK_IMPORTED_MODULE_4__.getMAEntity)(floor.floor_id, "sensor", "temperature");
-        floorSection.cards.push({
-            type: "heading",
-            heading: (0,_utils__WEBPACK_IMPORTED_MODULE_4__.getFloorName)(floor),
-            heading_style: "subtitle",
-            icon: floor.icon ?? "mdi:floor-plan",
-            badges: [{
-                    type: "custom:mushroom-chips-card",
-                    alignment: "end",
-                    chips: [
-                        new _chips_ConditionalChip__WEBPACK_IMPORTED_MODULE_8__.ConditionalChip([{ entity: temperatureEntity?.entity_id, state_not: _variables__WEBPACK_IMPORTED_MODULE_3__.UNAVAILABLE }], new _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_6__.AggregateChip({ device_class: "temperature", show_content: true, magic_device_id: floor.floor_id, area_slug: floor.areas_slug }).getChip()).getChip(),
-                    ],
-                    card_mod: {
-                        style: `
+        if (floors.length > 1) {
+            floorSection.cards.push({
+                type: "heading",
+                heading: (0,_utils__WEBPACK_IMPORTED_MODULE_4__.getFloorName)(floor),
+                heading_style: "subtitle",
+                icon: floor.icon ?? "mdi:floor-plan",
+                badges: [{
+                        type: "custom:mushroom-chips-card",
+                        alignment: "end",
+                        chips: [
+                            new _chips_ConditionalChip__WEBPACK_IMPORTED_MODULE_8__.ConditionalChip([{ entity: temperatureEntity?.entity_id, state_not: _variables__WEBPACK_IMPORTED_MODULE_3__.UNAVAILABLE }], new _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_6__.AggregateChip({ device_class: "temperature", show_content: true, magic_device_id: floor.floor_id, area_slug: floor.areas_slug }).getChip()).getChip(),
+                        ],
+                        card_mod: {
+                            style: `
                 ha-card {
                   min-width: 80px;
                 }
               `,
-                    }
-                }],
-            tap_action: floor.floor_id !== _variables__WEBPACK_IMPORTED_MODULE_3__.UNDISCLOSED ? (0,_utils__WEBPACK_IMPORTED_MODULE_4__.navigateTo)((0,_utils__WEBPACK_IMPORTED_MODULE_4__.slugify)(floor.name)) : undefined,
-        });
+                        }
+                    }],
+                tap_action: floor.floor_id !== _variables__WEBPACK_IMPORTED_MODULE_3__.UNDISCLOSED ? (0,_utils__WEBPACK_IMPORTED_MODULE_4__.navigateTo)((0,_utils__WEBPACK_IMPORTED_MODULE_4__.slugify)(floor.name)) : undefined,
+            });
+        }
         for (const area of floor.areas_slug.map(area_slug => _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas[area_slug]).values()) {
             let module;
             let moduleName = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.areas[area.slug]?.type ??
@@ -7579,6 +7866,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../utils */ "./src/utils.ts");
 /* harmony import */ var _cards_SwipeCard__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../cards/SwipeCard */ "./src/cards/SwipeCard.ts");
 /* harmony import */ var _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../cards/ControllerCard */ "./src/cards/ControllerCard.ts");
+/* harmony import */ var _variables__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../variables */ "./src/variables.ts");
+
 
 
 
@@ -7626,6 +7915,41 @@ class SecurityView {
     /**
      * Create the cards to include in the view.
      *
+     * @return {Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig)[]>} Promise a View Card array.
+     * @override
+     */
+    async createViewBadges() {
+        if (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.home_view.hidden.includes("chips")) {
+            // Chips section is hidden.
+            return [];
+        }
+        const chips = [];
+        let chipModule;
+        // Alarm chip.
+        const alarmEntityId = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.linus_dashboard_config?.alarm_entity_id;
+        if (alarmEntityId) {
+            try {
+                chipModule = await Promise.resolve(/*! import() */).then(__webpack_require__.bind(__webpack_require__, /*! ../chips/AlarmChip */ "./src/chips/AlarmChip.ts"));
+                const alarmChip = new chipModule.AlarmChip(alarmEntityId);
+                chips.push(alarmChip.getChip());
+            }
+            catch (e) {
+                _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.logError("An error occurred while creating the alarm chip!", e);
+            }
+        }
+        const homeChips = await (0,_utils__WEBPACK_IMPORTED_MODULE_4__.createChipsFromList)(_variables__WEBPACK_IMPORTED_MODULE_7__.SECURITY_EXPOSED_CHIPS, { show_content: true });
+        if (homeChips) {
+            chips.push(...homeChips);
+        }
+        return chips.map(chip => ({
+            type: "custom:mushroom-chips-card",
+            alignment: "center",
+            chips: [chip],
+        }));
+    }
+    /**
+     * Create the cards to include in the view.
+     *
      * @return {Promise<LovelaceGridCardConfig[]>} Promise a View Card array.
      */
     async createSectionCards() {
@@ -7664,11 +7988,7 @@ class SecurityView {
             }
         }
         const globalDevice = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices["global"];
-        if (!globalDevice) {
-            console.debug("Security view : Global device not found");
-            return [];
-        }
-        const { aggregate_motion, aggregate_door, aggregate_window, } = globalDevice?.entities;
+        const { aggregate_motion, aggregate_door, aggregate_window, } = globalDevice?.entities ?? {};
         if (aggregate_motion || aggregate_door || aggregate_window) {
             globalSection.cards.push({
                 type: "heading",
@@ -7802,6 +8122,7 @@ class SecurityView {
     async getView() {
         return {
             ...this.config,
+            badges: await this.createViewBadges(),
             sections: await this.createSectionCards(),
         };
     }

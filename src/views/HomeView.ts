@@ -139,107 +139,9 @@ class HomeView {
    * @override
    */
   async createSectionCards(): Promise<LovelaceGridCardConfig[]> {
-    return await Promise.all([
-      this.#createPersonCards(),
-      this.#createAreaSection(),
-    ]).then(([personCards, areaSections]) => {
-      const options = Helper.strategyOptions;
-      const firstSection: LovelaceGridCardConfig = {
-        type: "grid",
-        column_span: 1,
-        cards: []
-      };
 
-      if (personCards.length) {
-        // TODO: Create the stack at this.#createPersonCards()
-        firstSection.cards.push({
-          type: "horizontal-stack",
-          cards: personCards,
-        } as StackCardConfig);
-      }
-
-      if (!Helper.strategyOptions.home_view.hidden.includes("greeting")) {
-        const tod = Helper.magicAreasDevices.global?.entities.time_of_the_day;
-
-        firstSection.cards.push({
-          type: "custom:mushroom-template-card",
-          primary: `
-          {% set tod = states("${tod?.entity_id}") %}
-          {% if (tod == "evening") %} Bonne soirée, {{user}} !
-          {% elif (tod == "daytime") %} Bonne après-midi, {{user}} !
-          {% elif (tod == "night") %} Bonne nuit, {{user}} !
-          {% else %} Bonjour, {{user}} !
-          {% endif %}`,
-          icon: "mdi:hand-wave",
-          icon_color: "orange",
-          layout_options: {
-            grid_columns: 4,
-            grid_rows: 1,
-          },
-          tap_action: {
-            action: "none",
-          } as ActionConfig,
-          double_tap_action: {
-            action: "none",
-          } as ActionConfig,
-          hold_action: {
-            action: "none",
-          } as ActionConfig,
-        } as TemplateCardConfig);
-      }
-
-
-      // Add quick access cards.
-      if (options.quick_access_cards) {
-        firstSection.cards.push(...options.quick_access_cards);
-      }
-
-      // Add custom cards.
-      if (options.extra_cards) {
-        firstSection.cards.push(...options.extra_cards);
-      }
-
-      return [firstSection, ...areaSections];
-    });
-  }
-
-  /**
-   * Create the person cards to include in the view.
-   *
-   * @return {Promise<PersonCardConfig[]>} A Person Card array.
-   */
-  async #createPersonCards(): Promise<PersonCardConfig[]> {
-    if (Helper.strategyOptions.home_view.hidden.includes("persons")) {
-      // Person section is hidden.
-
-      return [];
-    }
-
-    const cards: PersonCardConfig[] = [];
-    const persons = Helper.domains.person.filter((entity) => {
-      return entity.hidden_by == null
-        && entity.disabled_by == null
-    });
-
-    for (const person of persons) {
-      cards.push(new PersonCard(person).getCard());
-    }
-
-
-    return cards;
-  }
-
-  /**
-   * Create the area cards to include in the view.
-   *
-   * Area cards are grouped into two areas per row.
-   *
-   * @return {Promise<LovelaceGridCardConfig[]>} Promise an Area Card Section.
-   */
-  async #createAreaSection(): Promise<LovelaceGridCardConfig[]> {
     if (Helper.strategyOptions.home_view.hidden.includes("areas")) {
       // Areas section is hidden.
-
       return [];
     }
 
@@ -250,11 +152,62 @@ class HomeView {
     for (const floor of floors) {
       if (floor.areas_slug.length === 0) continue
 
+      const options = Helper.strategyOptions;
       let floorSection = {
         type: "grid",
         column_span: 1,
         cards: [],
       } as LovelaceGridCardConfig;
+
+      if (isFirstLoop) {
+        const personCards = await this.#createPersonCards();
+        floorSection.cards.push({
+          type: "horizontal-stack",
+          cards: personCards,
+        } as StackCardConfig);
+
+
+        if (!Helper.strategyOptions.home_view.hidden.includes("greeting")) {
+          const tod = Helper.magicAreasDevices.global?.entities.time_of_the_day;
+
+          floorSection.cards.push({
+            type: "custom:mushroom-template-card",
+            primary: `
+          {% set tod = states("${tod?.entity_id}") %}
+          {% if (tod == "evening") %} Bonne soirée, {{user}} !
+          {% elif (tod == "daytime") %} Bonne après-midi, {{user}} !
+          {% elif (tod == "night") %} Bonne nuit, {{user}} !
+          {% else %} Bonjour, {{user}} !
+          {% endif %}`,
+            icon: "mdi:hand-wave",
+            icon_color: "orange",
+            layout_options: {
+              grid_columns: 4,
+              grid_rows: 1,
+            },
+            tap_action: {
+              action: "none",
+            } as ActionConfig,
+            double_tap_action: {
+              action: "none",
+            } as ActionConfig,
+            hold_action: {
+              action: "none",
+            } as ActionConfig,
+          } as TemplateCardConfig);
+        }
+
+
+        // Add quick access cards.
+        if (options.quick_access_cards) {
+          floorSection.cards.push(...options.quick_access_cards);
+        }
+
+        // Add custom cards.
+        if (options.extra_cards) {
+          floorSection.cards.push(...options.extra_cards);
+        }
+      }
 
       if (isFirstLoop && !Helper.strategyOptions.home_view.hidden.includes("areasTitle")) {
         floorSection.cards.push({
@@ -360,6 +313,32 @@ class HomeView {
     }
 
     return groupedSections;
+  }
+
+  /**
+   * Create the person cards to include in the view.
+   *
+   * @return {Promise<PersonCardConfig[]>} A Person Card array.
+   */
+  async #createPersonCards(): Promise<PersonCardConfig[]> {
+    if (Helper.strategyOptions.home_view.hidden.includes("persons")) {
+      // Person section is hidden.
+
+      return [];
+    }
+
+    const cards: PersonCardConfig[] = [];
+    const persons = Helper.domains.person.filter((entity) => {
+      return entity.hidden_by == null
+        && entity.disabled_by == null
+    });
+
+    for (const person of persons) {
+      cards.push(new PersonCard(person).getCard());
+    }
+
+
+    return cards;
   }
 
   /**

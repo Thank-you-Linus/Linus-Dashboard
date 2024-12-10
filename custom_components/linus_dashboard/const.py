@@ -6,7 +6,7 @@ LOGGER: Logger = getLogger(__package__)
 
 NAME = "Linus Dahboard"
 DOMAIN = "linus_dashboard"
-VERSION = "0.0.1"
+VERSION = "1.0.2"
 ICON = "mdi:bow-tie"
 
 URL_PANEL = "linus_dashboard_panel"

@@ -1,6 +1,6 @@
 {
   "name": "linus-dashboard",
-  "version": "2.1.1",
+  "version": "1.0.3",
   "description": "Your ultimate smart home assistant, redefined.",
   "keywords": [
     "smart home",
@@ -42,6 +42,6 @@
   "scripts": {
     "build-dev": "webpack --config webpack.dev.config.ts --watch",
     "build": "webpack",
-    "bump": "bump --preid alpha package.json package-lock.json README.md ./src/linus-strategy.ts"
+    "bump": "bump --preid alpha package.json package-lock.json README.md ./custom_components/linus_dashboard/manifest.json ./custom_components/linus_dashboard/const.py ./src/linus-strategy.ts"
   }
 }

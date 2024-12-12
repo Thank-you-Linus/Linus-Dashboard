@@ -11,7 +11,7 @@ import StrategyDevice = generic.StrategyDevice;
 import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
 import { FloorRegistryEntry } from "./types/homeassistant/data/floor_registry";
 import { DEVICE_CLASSES, MAGIC_AREAS_DOMAIN, MAGIC_AREAS_NAME, UNDISCLOSED } from "./variables";
-import { getMAEntity, getMagicAreaSlug, groupEntitiesByDomain, slugify } from "./utils";
+import { getEntityDomain, getGlobalEntitiesExceptUndisclosed, getMAEntity, getMagicAreaSlug, groupEntitiesByDomain, slugify } from "./utils";
 import { EntityRegistryEntry } from "./types/homeassistant/data/entity_registry";
 import { FrontendEntityComponentIconResources, IconResources } from "./types/homeassistant/data/frontend";
 import { LinusDashboardConfig } from "./types/homeassistant/data/linus_dashboard";
@@ -33,7 +33,7 @@ class Helper {
   /**
    * An array of entities from Home Assistant's entity registry.
    *
-   * @type {Record<string, StrategyEntity[]}
+   * @type {Record<string, StrategyEntity[]>}
    * @private
    */
   static #domains: Record<string, StrategyEntity[]> = {};
@@ -344,7 +344,7 @@ class Helper {
       }
 
 
-      let domain = this.getEntityDomain(entity.entity_id)
+      let domain = getEntityDomain(entity.entity_id)
       if (Object.keys(DEVICE_CLASSES).includes(domain)) {
         const entityState = Helper.getEntityState(entity.entity_id);
         if (entityState?.attributes?.device_class) domain = entityState.attributes.device_class
@@ -462,7 +462,7 @@ class Helper {
       }),
     );
 
-    // console.log('this.#areas', this.#areas, this.#magicAreasDevices)
+    // console.log('this.#areas', info, this.#areas, this.#magicAreasDevices)
 
     this.#initialized = true;
   }
@@ -550,9 +550,8 @@ class Helper {
     const area_slugs = Array.isArray(area_slug) ? area_slug : [area_slug];
 
     for (const slug of area_slugs) {
-      const newStates = slug === "global"
-        ? this.domains[device_class]?.map((entity) => `states['${entity.entity_id}']`) ?? []
-        : this.#areas[slug]?.domains[device_class]?.map((entity_id) => `states['${entity_id}']`) ?? [];
+      const entities = area_slug === "global" ? getGlobalEntitiesExceptUndisclosed(device_class) : this.#areas[slug]?.domains[device_class]
+      const newStates = entities?.map((entity_id) => `states['${entity_id}']`);
       states.push(...newStates);
     }
 
@@ -746,14 +745,6 @@ class Helper {
     return this.#hassStates[entity_id]
   }
 
-  /**
-   * Get entity domain.
-   *
-   * @return {string}
-   */
-  static getEntityDomain(entityId: string): string {
-    return entityId.split(".")[0];
-  }
 
   /**
    * Get translation.
@@ -785,12 +776,8 @@ class Helper {
     for (const slug of areaSlugs) {
       if (slug) {
         const magic_entity = getMAEntity(slug!, domain);
-        const newStates = domain === "all"
-          ? this.#areas[slug]?.entities.map((entity_id) => `states['${entity_id}']`)
-          : magic_entity
-            ? [`states['${magic_entity.entity_id}']`] : area_slug === "global"
-              ? this.domains[domain]?.map((entity) => `states['${entity.entity_id}']`)
-              : this.#areas[slug]?.domains[domain]?.map((entity_id) => `states['${entity_id}']`);
+        const entities = magic_entity ? [magic_entity] : area_slug === "global" ? getGlobalEntitiesExceptUndisclosed(domain) : this.#areas[slug]?.domains[domain]
+        const newStates = entities?.map((entity_id) => `states['${entity_id}']`);
         if (newStates) {
           states.push(...newStates);
         }
@@ -848,12 +835,8 @@ class Helper {
 
     for (const slug of areaSlugs) {
       const magic_entity = getMAEntity(slug!, "binary_sensor", device_class);
-
-      const newStates = magic_entity
-        ? [`states['${magic_entity.entity_id}']`]
-        : area_slug === "global"
-          ? this.domains[device_class]?.map((entity) => `states['${entity.entity_id}']`)
-          : this.#areas[slug]?.domains[device_class]?.map((entity_id) => `states['${entity_id}']`);
+      const entities = magic_entity ? [magic_entity] : area_slug === "global" ? getGlobalEntitiesExceptUndisclosed(device_class) : this.#areas[slug]?.domains[device_class]
+      const newStates = entities?.map((entity_id) => `states['${entity_id}']`);
 
       if (newStates) states.push(...newStates);
     }
@@ -875,13 +858,8 @@ class Helper {
 
     for (const slug of areaSlugs) {
       const magic_entity = getMAEntity(slug!, "binary_sensor", device_class);
-
-      const newStates = magic_entity
-        ? [`states['${magic_entity.entity_id}']`]
-        : area_slug === "global"
-          ? this.domains[device_class]?.map((entity) => `states['${entity.entity_id}']`)
-          : this.#areas[slug]?.domains[device_class]?.map((entity_id) => `states['${entity_id}']`);
-
+      const entities = magic_entity ? [magic_entity] : area_slug === "global" ? getGlobalEntitiesExceptUndisclosed(device_class) : this.#areas[slug]?.domains[device_class]
+      const newStates = entities?.map((entity_id) => `states['${entity_id}']`);
       if (newStates) states.push(...newStates);
     }
 

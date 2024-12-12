@@ -84,7 +84,7 @@ class FloorView {
     const device = Helper.magicAreasDevices[this.floor.floor_id];
 
     if (device) {
-      chips.push(new AreaStateChip(device, true).getChip());
+      chips.push(new AreaStateChip({ floor: this.floor, showContent: true }).getChip());
     }
 
     const areaChips = await createChipsFromList(AREA_EXPOSED_CHIPS, { show_content: true }, this.floor.floor_id, this.floor.areas_slug);

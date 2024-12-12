@@ -11,7 +11,7 @@ import { EntityCardConfig } from "../types/lovelace-mushroom/cards/entity-card-c
 import { ControllerCard } from "../cards/ControllerCard";
 import { HassServiceTarget } from "home-assistant-js-websocket";
 import { ImageAreaCard } from "../cards/ImageAreaCard";
-import { AREA_EXPOSED_CHIPS, UNDISCLOSED } from "../variables";
+import { AGGREGATE_DOMAINS, AREA_EXPOSED_CHIPS, UNDISCLOSED } from "../variables";
 import { LovelaceChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
 import { AreaStateChip } from "../chips/AreaStateChip";
 import { createChipsFromList, getDomainTranslationKey } from "../utils";
@@ -77,12 +77,7 @@ class AreaView {
 
     const chips: LovelaceChipConfig[] = [];
 
-    const device = Helper.magicAreasDevices[this.area.slug];
-
-    if (device) {
-      chips.push(new AreaStateChip(device, true).getChip());
-    }
-
+    chips.push(new AreaStateChip({ area: this.area, showContent: true }).getChip());
 
     const areaChips = await createChipsFromList(AREA_EXPOSED_CHIPS, { show_content: true }, this.area.slug, this.area.slug);
     if (areaChips) {
@@ -150,9 +145,13 @@ class AreaView {
           };
 
           if (domain) {
-            titleCardOptions.showControls = Helper.strategyOptions.domains[domain].showControls;
-            titleCardOptions.extraControls = Helper.strategyOptions.domains[domain].extraControls;
-            titleCardOptions.controlChipOptions = { area_slug: this.area.slug };
+            if (AGGREGATE_DOMAINS.includes(domain)) {
+              titleCardOptions.showControls = false
+            } else {
+              titleCardOptions.showControls = Helper.strategyOptions.domains[domain].showControls;
+              titleCardOptions.extraControls = Helper.strategyOptions.domains[domain].extraControls;
+              titleCardOptions.controlChipOptions = { area_slug: this.area.slug };
+            }
           }
 
           const titleCard = new ControllerCard(target, titleCardOptions, domain, this.area.slug).createCard();
@@ -207,7 +206,7 @@ class AreaView {
         try {
           const cardModule = await import("../cards/MiscellaneousCard");
 
-          const swipeCard = miscellaneousEntities
+          const miscellaneousEntityCards = miscellaneousEntities
             .filter(entity_id => {
               const entity = Helper.entities[entity_id];
               const cardOptions = Helper.strategyOptions.card_options?.[entity.entity_id];
@@ -216,10 +215,24 @@ class AreaView {
             })
             .map(entity_id => new cardModule.MiscellaneousCard(Helper.entities[entity_id], Helper.strategyOptions.card_options?.[entity_id]).getCard());
 
+          const miscellaneousCards = miscellaneousEntityCards.length > 2 ? [new SwipeCard(miscellaneousEntityCards).getCard()] : miscellaneousEntityCards;
+
+          const titleCard = {
+            type: "heading",
+            heading: Helper.localize("ui.panel.lovelace.editor.card.generic.other_cards"),
+            // icon: this.#defaultConfig.titleIcon,
+            heading_style: "subtitle",
+            badges: [],
+            layout_options: {
+              grid_columns: "full",
+              grid_rows: 1
+            },
+          }
+
           viewSections.push({
             type: "grid",
             column_span: 1,
-            cards: [new SwipeCard(swipeCard).getCard()],
+            cards: [titleCard, ...miscellaneousCards],
           });
         } catch (e) {
           Helper.logError("An error occurred while creating the domain cards!", e);

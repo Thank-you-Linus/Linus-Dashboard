@@ -94,10 +94,16 @@ export function getMAEntity(magic_device_id: string, domain: string, device_clas
     return undefined
 }
 
+
+export function getEntityDomain(entityId: string): string {
+    let domain = entityId.split(".")[0];
+    return domain
+}
+
 export function groupEntitiesByDomain(entity_ids: string[]): Record<string, string[]> {
     return entity_ids
         .reduce((acc: Record<string, string[]>, entity_id) => {
-            let domain = entity_id.split(".")[0];
+            let domain = getEntityDomain(entity_id)
 
             if (Object.keys(DEVICE_CLASSES).includes(domain)) {
                 const entityState = Helper.getEntityState(entity_id);
@@ -170,4 +176,10 @@ export function getFloorName(floor: StrategyFloor): string {
 
 export function getAreaName(area: StrategyArea): string {
     return area.area_id === UNDISCLOSED ? Helper.localize("ui.card.area.area_not_found") : area.name!
+}
+
+export function getGlobalEntitiesExceptUndisclosed(device_class: string): string[] {
+    return Helper.domains[device_class]?.filter(entity =>
+        !Helper.areas[UNDISCLOSED].domains[device_class]?.includes(entity.entity_id)
+    ).map(e => e.entity_id) ?? [];
 }

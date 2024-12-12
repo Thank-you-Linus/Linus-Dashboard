@@ -12,6 +12,7 @@ export namespace views {
   }
 
   export type AggregateViewOptions = { device_class: string } & ViewConfig;
+  export type InputViewOptions = { domain: string } & ViewConfig;
 }
 
 

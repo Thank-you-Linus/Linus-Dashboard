@@ -18,7 +18,7 @@ export const DEVICE_CLASSES = {
 
     "battery",
 
-    "sensor",
+    // "sensor",
     "apparent_power",
     "aqi",
     "area",

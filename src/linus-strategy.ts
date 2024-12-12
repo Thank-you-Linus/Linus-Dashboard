@@ -32,8 +32,6 @@ class LinusStrategy extends HTMLTemplateElement {
   static async generateDashboard(info: generic.DashBoardInfo): Promise<LovelaceConfig> {
     if (!Helper.isInitialized()) await Helper.initialize(info);
 
-    // console.log('info', info);
-
     const views: LovelaceViewConfig[] = info.config?.views ?? [];
 
     LinusStrategy.createDomainSubviews(views);

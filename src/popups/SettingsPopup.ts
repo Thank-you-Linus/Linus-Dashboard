@@ -24,10 +24,10 @@ class SettingsPopup extends AbstractPopup {
           content: {
             type: "vertical-stack",
             cards: [
-              linusDeviceIds.length > 0 && {
+              {
                 type: "horizontal-stack",
                 cards: [
-                  {
+                  linusDeviceIds.length > 0 && {
                     type: "custom:mushroom-template-card",
                     primary: Helper.localize("component.linus_dashboard.entity.button.settings_chip.state.on"),
                     icon: "mdi:refresh",
@@ -48,13 +48,13 @@ class SettingsPopup extends AbstractPopup {
                       service: "homeassistant.restart",
                     }
                   },
-                ]
+                ].filter(Boolean)
               },
               {
                 type: "markdown",
                 content: `Linus dashboard est en version ${version}.`,
               },
-            ].filter(Boolean)
+            ]
           }
         }
       }

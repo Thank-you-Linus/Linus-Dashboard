@@ -324,7 +324,7 @@ class Helper {
       if (!(entity.entity_id in this.#hassStates) || entity.hidden_by) return acc;
 
       const area = entity.area_id ? areasById[entity.area_id] : {} as StrategyArea;
-      const floor = area.floor_id ? floorsById[area.floor_id] : {} as StrategyFloor;
+      const floor = area?.floor_id ? floorsById[area?.floor_id] : {} as StrategyFloor;
       const enrichedEntity = {
         ...entity,
         floor_id: floor.floor_id || null,
@@ -359,7 +359,7 @@ class Helper {
     this.#devices = devices.reduce((acc, device) => {
       const entitiesInDevice = entitiesByDeviceId[device.id] || [];
       const area = device.area_id ? areasById[device.area_id] : {} as StrategyArea;
-      const floor = area.floor_id ? floorsById[area.floor_id] : {} as StrategyFloor;
+      const floor = area?.floor_id ? floorsById[area?.floor_id] : {} as StrategyFloor;
 
       const enrichedDevice = {
         ...device,
@@ -411,7 +411,7 @@ class Helper {
 
       const enrichedArea = {
         ...area,
-        floor_id: area.floor_id || UNDISCLOSED,
+        floor_id: area?.floor_id || UNDISCLOSED,
         slug,
         domains: groupEntitiesByDomain(areaEntities) ?? {},
         devices: devicesByAreaId[area.area_id]?.map(device => device.id) || [],
@@ -437,7 +437,7 @@ class Helper {
 
     // Enrichir les étages
     this.#floors = floors.reduce((acc, floor) => {
-      const areasInFloor = Object.values(this.#areas).filter(area => area.floor_id === floor.floor_id);
+      const areasInFloor = Object.values(this.#areas).filter(area => area?.floor_id === floor.floor_id);
 
       acc[floor.floor_id] = {
         ...floor,

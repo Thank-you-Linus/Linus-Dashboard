@@ -5,9 +5,8 @@ import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
 import StrategyFloor = generic.StrategyFloor;
 import StrategyArea = generic.StrategyArea;
 import { ActionConfig } from "./types/homeassistant/data/lovelace";
-import { DEVICE_CLASSES, AGGREGATE_DOMAINS, GROUP_DOMAINS, LIGHT_DOMAIN, UNDISCLOSED } from "./variables";
+import { DEVICE_CLASSES, AGGREGATE_DOMAINS, GROUP_DOMAINS, LIGHT_DOMAIN, UNDISCLOSED, LIGHT_GROUPS } from "./variables";
 import { LovelaceChipConfig } from "./types/lovelace-mushroom/utils/lovelace/chip/types";
-import { UnavailableChip } from "./chips/UnavailableChip";
 import { chips } from "./types/strategy/chips";
 
 /**
@@ -91,7 +90,7 @@ export function getMAEntity(magic_device_id: string, domain: string, device_clas
     if (domain === LIGHT_DOMAIN) return magicAreaDevice?.entities?.[''] ?? magicAreaDevice?.entities?.['all_lights']
     if (GROUP_DOMAINS.includes(domain)) return magicAreaDevice?.entities?.[`${domain}_group` as 'cover_group']
     if (device_class && [...DEVICE_CLASSES.binary_sensor, ...DEVICE_CLASSES.sensor].includes(device_class)) return magicAreaDevice?.entities?.[`aggregate_${device_class}` as 'aggregate_motion']
-    return undefined
+    return magicAreaDevice?.entities?.[domain] ?? undefined
 }
 
 
@@ -139,7 +138,7 @@ export async function createChipsFromList(chipsList: string[], chipOptions?: Par
             let chipModule;
             if ([...DEVICE_CLASSES.binary_sensor, ...DEVICE_CLASSES.sensor].includes(chipType)) {
                 chipModule = await import("./chips/AggregateChip");
-                const chip = new chipModule.AggregateChip({ ...chipOptions, device_class: chipType, area_slug, magic_device_id });
+                const chip = new chipModule.AggregateChip({ ...chipOptions, device_class: chipType, area_slug, magic_device_id, tap_action: navigateTo(chipType) });
                 chips.push(chip.getChip());
             } else {
                 chipModule = await import("./chips/" + className);
@@ -182,4 +181,27 @@ export function getGlobalEntitiesExceptUndisclosed(device_class: string): string
     return Helper.domains[device_class]?.filter(entity =>
         !Helper.areas[UNDISCLOSED].domains[device_class]?.includes(entity.entity_id)
     ).map(e => e.entity_id) ?? [];
+}
+
+
+export function addLightGroupsToEntities(area: generic.StrategyArea, entities: generic.StrategyEntity[]) {
+    const lightGroups = LIGHT_GROUPS
+        .map(type => getMAEntity(area.slug, type))
+        .filter(Boolean);
+
+    for (const lightGroup of lightGroups) {
+        if (!lightGroup) continue;
+        const lightGroupState = Helper.getEntityState(lightGroup.entity_id);
+        if (lightGroupState.attributes.entity_id?.length) {
+            entities.unshift(lightGroup as generic.StrategyEntity);
+            lightGroupState.attributes.entity_id.forEach((entity_id: string) => {
+                const index = entities.findIndex(entity => entity.entity_id === entity_id);
+                if (index !== -1) {
+                    entities.splice(index, 1);
+                }
+            });
+        }
+    }
+
+    return entities;
 }

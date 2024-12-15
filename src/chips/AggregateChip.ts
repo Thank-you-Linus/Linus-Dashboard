@@ -2,7 +2,6 @@ import { chips } from "../types/strategy/chips";
 import { DEVICE_CLASSES } from "../variables";
 import { AbstractChip } from "./AbstractChip";
 import { Helper } from "../Helper";
-import { navigateTo } from "../utils";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**
@@ -62,7 +61,7 @@ class AggregateChip extends AbstractChip {
       icon_color,
       icon,
       content: content,
-      tap_action: magicEntity?.entity_id ? tap_action : navigateTo(device_class),
+      tap_action: tap_action ?? { action: "none" }
     }
   }
 

@@ -1,7 +1,7 @@
 import { Helper } from "./Helper";
 import { generic } from "./types/strategy/generic";
 import { LovelaceConfig, LovelaceViewConfig } from "./types/homeassistant/data/lovelace";
-import { CUSTOM_VIEWS, DEVICE_CLASSES, DOMAINS_VIEWS, VIEWS_ICONS } from "./variables";
+import { AGGREGATE_DOMAINS, CUSTOM_VIEWS, DEVICE_CLASSES, DOMAINS_VIEWS, VIEWS_ICONS } from "./variables";
 import { AreaView } from "./views/AreaView";
 import { getAreaName, getDomainTranslationKey, getFloorName } from "./utils";
 import { FloorView } from "./views/FloorView";
@@ -180,10 +180,17 @@ class LinusStrategy extends HTMLTemplateElement {
           const viewModule = await import("./views/UnavailableView");
           view = await new viewModule.UnavailableView().getView();
 
-        } else if ([...DEVICE_CLASSES.binary_sensor, ...DEVICE_CLASSES.sensor].includes(viewId)) {
+        } else if (AGGREGATE_DOMAINS.includes(viewId)) {
 
           const viewModule = await import("./views/AggregateView");
-          view = await new viewModule.AggregateView({ device_class: viewId }).getView();
+          view = await new viewModule.AggregateView({ domain: viewId }).getView();
+
+        } else if ([...DEVICE_CLASSES.binary_sensor, ...DEVICE_CLASSES.sensor].includes(viewId)) {
+
+          const domain = DEVICE_CLASSES.binary_sensor.includes(viewId) ? "binary_sensor" : "sensor";
+
+          const viewModule = await import("./views/AggregateView");
+          view = await new viewModule.AggregateView({ domain, device_class: viewId }).getView();
 
         } else {
 

@@ -1,4 +1,4 @@
-import { AREA_CARDS_DOMAINS, UNDISCLOSED } from './../variables';
+import { AGGREGATE_DOMAINS, AREA_CARDS_DOMAINS, UNDISCLOSED } from './../variables';
 import { Helper } from "../Helper";
 import { ControllerCard } from "../cards/ControllerCard";
 import { LovelaceGridCardConfig, StackCardConfig } from "../types/homeassistant/lovelace/cards/types";
@@ -7,7 +7,7 @@ import { HassServiceTarget } from "home-assistant-js-websocket";
 import { TemplateCardConfig } from '../types/lovelace-mushroom/cards/template-card-config';
 import { ChipsCardConfig } from '../types/lovelace-mushroom/cards/chips-card';
 import { SwipeCard } from '../cards/SwipeCard';
-import { getAreaName, getFloorName, slugify } from '../utils';
+import { addLightGroupsToEntities, getAreaName, getFloorName, slugify } from '../utils';
 import { views } from '../types/strategy/views';
 
 /**
@@ -111,16 +111,13 @@ abstract class AbstractView {
       const floorCards = [];
 
       for (const area of floor.areas_slug.map(area_slug => Helper.areas[area_slug])) {
-        const entities = Helper.getAreaEntities(area, this.#device_class ?? this.#domain);
+        let entities = Helper.getAreaEntities(area, this.#device_class ?? this.#domain);
         const className = Helper.sanitizeClassName(this.#domain + "Card");
         const cardModule = await import(`../cards/${className}`);
 
         if (entities.length === 0 || !cardModule) continue;
 
-        let target: HassServiceTarget = { area_id: [area.slug] };
-        if (area.area_id === UNDISCLOSED) {
-          target = { entity_id: entities.map(entity => entity.entity_id) };
-        }
+        if (this.#domain === "light") entities = addLightGroupsToEntities(area, entities);
 
         const entityCards = entities
           .filter(entity => !Helper.strategyOptions.card_options?.[entity.entity_id]?.hidden
@@ -137,11 +134,16 @@ abstract class AbstractView {
             subtitleNavigate: area.slug
           } as any;
           if (this.#domain) {
-            titleCardOptions.showControls = Helper.strategyOptions.domains[this.#domain].showControls;
-            titleCardOptions.extraControls = Helper.strategyOptions.domains[this.#domain].extraControls;
-            titleCardOptions.controlChipOptions = { device_class: this.#device_class, area_slug: area.slug }
+            if (area.slug !== UNDISCLOSED && (!AGGREGATE_DOMAINS.includes(this.#domain) || this.#device_class)) {
+              titleCardOptions.showControls = Helper.strategyOptions.domains[this.#domain].showControls;
+              titleCardOptions.extraControls = Helper.strategyOptions.domains[this.#domain].extraControls;
+              titleCardOptions.controlChipOptions = { device_class: this.#device_class, area_slug: area.slug }
+            } else {
+              titleCardOptions.showControls = false;
+            }
           }
-          const areaControllerCard = new ControllerCard(target, titleCardOptions, this.#domain, area.slug).createCard();
+
+          const areaControllerCard = new ControllerCard(titleCardOptions, this.#domain, area.slug).createCard();
 
           floorCards.push(...areaControllerCard, ...areaCards);
         }
@@ -155,17 +157,19 @@ abstract class AbstractView {
           titleNavigate: slugify(floor.name)
         };
         if (this.#domain) {
-          titleSectionOptions.showControls = Helper.strategyOptions.domains[this.#domain].showControls;
-          titleSectionOptions.extraControls = Helper.strategyOptions.domains[this.#domain].extraControls;
-          titleSectionOptions.controlChipOptions = {
-            device_class: this.#device_class,
-            area_slug: floor.areas_slug
+          if (!AGGREGATE_DOMAINS.includes(this.#domain) || this.#device_class) {
+            titleSectionOptions.showControls = Helper.strategyOptions.domains[this.#domain].showControls;
+            titleSectionOptions.extraControls = Helper.strategyOptions.domains[this.#domain].extraControls;
+            titleSectionOptions.controlChipOptions = {
+              device_class: this.#device_class,
+              area_slug: floor.areas_slug
+            }
+          } else {
+            titleSectionOptions.showControls = false;
           }
         }
 
-        const area_ids = floor.areas_slug.map(area_slug => Helper.areas[area_slug].area_id);
         const floorControllerCard = floors.length > 1 ? new ControllerCard(
-          { area_id: area_ids },
           titleSectionOptions,
           this.#domain,
           floor.floor_id
@@ -221,3 +225,4 @@ abstract class AbstractView {
 }
 
 export { AbstractView };
+

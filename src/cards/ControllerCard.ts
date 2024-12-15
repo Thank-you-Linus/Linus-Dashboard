@@ -2,7 +2,6 @@ import { cards } from "../types/strategy/cards";
 import { LovelaceBadgeConfig, LovelaceCardConfig } from "../types/homeassistant/data/lovelace";
 import { Helper } from "../Helper";
 import { getMAEntity, navigateTo } from "../utils";
-import { HassServiceTarget } from "home-assistant-js-websocket";
 
 /**
  * Controller Card class.
@@ -12,11 +11,6 @@ import { HassServiceTarget } from "home-assistant-js-websocket";
  * @class
  */
 class ControllerCard {
-  /**
-   * @type {ExtendedHassServiceTarget} The target to control the entities of.
-   * @private
-   */
-  readonly #target: HassServiceTarget;
 
   /**
    * @type {string} The target to control the entities of.
@@ -48,11 +42,9 @@ class ControllerCard {
   /**
    * Class constructor.
    *
-   * @param {HassServiceTarget} target The target to control the entities of.
    * @param {cards.ControllerCardOptions} options Controller Card options.
    */
-  constructor(target: HassServiceTarget, options: cards.ControllerCardOptions = {}, domain: string, magic_device_id: string = "global") {
-    this.#target = target;
+  constructor(options: cards.ControllerCardOptions = {}, domain: string, magic_device_id: string = "global") {
     this.#domain = domain;
     this.#magic_device_id = magic_device_id;
     this.#defaultConfig = {
@@ -98,7 +90,7 @@ class ControllerCard {
           grid_rows: 1
         },
         ...(this.#defaultConfig.subtitleNavigate && {
-          tap_action: navigateTo(this.#defaultConfig.subtitleNavigate),
+          tap_action: this.#defaultConfig.tap_action ?? navigateTo(this.#defaultConfig.subtitleNavigate),
         })
       })
     }
@@ -122,10 +114,11 @@ class ControllerCard {
         badges.push({
           type: "custom:mushroom-chips-card",
           chips: [chip],
-          card_mod: {
+          alignment: "end",
+          card_mod: this.#domain === "sensor" && {
             style: `
             ha-card {
-              min-width: 80px;
+              min-width: 100px;
             }
           `,
           }

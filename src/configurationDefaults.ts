@@ -241,6 +241,12 @@ export const configurationDefaults: StrategyDefaults = {
       order: 11,
       hidden: false,
     },
+    sensor: {
+      hidden: false,
+    },
+    binary_sensor: {
+      hidden: false,
+    },
     securityDetails: {
       hidden: false,
     },

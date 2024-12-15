@@ -11,7 +11,7 @@ export namespace views {
     controllerCardOptions?: cards.ControllerCardOptions;
   }
 
-  export type AggregateViewOptions = { device_class: string } & ViewConfig;
+  export type AggregateViewOptions = { domain: string, device_class?: string } & ViewConfig;
   export type InputViewOptions = { domain: string } & ViewConfig;
 }
 

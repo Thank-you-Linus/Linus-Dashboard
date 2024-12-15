@@ -10,10 +10,10 @@ import { SwipeCard } from "../cards/SwipeCard";
 import { EntityCardConfig } from "../types/lovelace-mushroom/cards/entity-card-config";
 import { ControllerCard } from "../cards/ControllerCard";
 import { HassServiceTarget } from "home-assistant-js-websocket";
-import { AREA_EXPOSED_CHIPS } from "../variables";
+import { AGGREGATE_DOMAINS, AREA_EXPOSED_CHIPS } from "../variables";
 import { LovelaceChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
 import { AreaStateChip } from "../chips/AreaStateChip";
-import { createChipsFromList, getDomainTranslationKey } from "../utils";
+import { addLightGroupsToEntities, createChipsFromList, getDomainTranslationKey } from "../utils";
 
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
@@ -110,8 +110,6 @@ class FloorView {
     const exposedDomainIds = Helper.getExposedDomainIds();
     let isFirstLoop = true;
 
-    let target: HassServiceTarget = { area_id: this.floor.areas_slug };
-
     for (const domain of exposedDomainIds) {
       if (domain === "default") continue;
 
@@ -126,9 +124,12 @@ class FloorView {
           if (!area) continue
 
 
-          const areaEntities = Helper.getAreaEntities(area, domain);
+          let areaEntities = Helper.getAreaEntities(area, domain);
 
           if (areaEntities.length) {
+
+            if (domain === "light") areaEntities = addLightGroupsToEntities(area, areaEntities);
+
             const entityCards: EntityCardConfig[] = areaEntities
               .filter(entity => {
                 const cardOptions = Helper.strategyOptions.card_options?.[entity.entity_id];
@@ -157,12 +158,16 @@ class FloorView {
               };
 
               if (domain) {
-                titleCardOptions.showControls = Helper.strategyOptions.domains[domain].showControls;
-                titleCardOptions.extraControls = Helper.strategyOptions.domains[domain].extraControls;
-                titleCardOptions.controlChipOptions = { area_slug: area.slug };
+                if (AGGREGATE_DOMAINS.includes(domain)) {
+                  titleCardOptions.showControls = false
+                } else {
+                  titleCardOptions.showControls = Helper.strategyOptions.domains[domain].showControls;
+                  titleCardOptions.extraControls = Helper.strategyOptions.domains[domain].extraControls;
+                  titleCardOptions.controlChipOptions = { area_slug: area.slug };
+                }
               }
 
-              const titleCard = new ControllerCard(target, titleCardOptions, domain, area.slug).createCard();
+              const titleCard = new ControllerCard(titleCardOptions, domain, area.slug).createCard();
 
               let areaCards;
               areaCards = entityCards.length > 2 ? [new SwipeCard(entityCards).getCard()] : entityCards;
@@ -181,14 +186,16 @@ class FloorView {
             titleNavigate: domain,
           };
           if (domain) {
-            titleSectionOptions.showControls = Helper.strategyOptions.domains[domain].showControls;
-            titleSectionOptions.extraControls = Helper.strategyOptions.domains[domain].extraControls;
-            titleSectionOptions.controlChipOptions = { area_slug: this.floor.areas_slug };
+            if (AGGREGATE_DOMAINS.includes(domain)) {
+              titleSectionOptions.showControls = false
+            } else {
+              titleSectionOptions.showControls = Helper.strategyOptions.domains[domain].showControls;
+              titleSectionOptions.extraControls = Helper.strategyOptions.domains[domain].extraControls;
+              titleSectionOptions.controlChipOptions = { area_slug: this.floor.areas_slug };
+            }
           }
 
-          const area_ids = this.floor.areas_slug.map(area_slug => Helper.areas[area_slug].area_id);
           const domainControllerCard = new ControllerCard(
-            { area_id: area_ids },
             titleSectionOptions,
             domain,
             this.floor.floor_id

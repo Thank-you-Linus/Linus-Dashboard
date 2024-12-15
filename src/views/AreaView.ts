@@ -14,7 +14,7 @@ import { ImageAreaCard } from "../cards/ImageAreaCard";
 import { AGGREGATE_DOMAINS, AREA_EXPOSED_CHIPS, UNDISCLOSED } from "../variables";
 import { LovelaceChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
 import { AreaStateChip } from "../chips/AreaStateChip";
-import { createChipsFromList, getDomainTranslationKey } from "../utils";
+import { addLightGroupsToEntities, createChipsFromList, getDomainTranslationKey } from "../utils";
 import { ResourceKeys } from "../types/homeassistant/data/frontend";
 import { UnavailableChip } from "../chips/UnavailableChip";
 
@@ -119,19 +119,14 @@ class AreaView {
       });
     }
 
-    let target: HassServiceTarget = { area_id: [this.area.slug] };
 
     for (const domain of exposedDomainIds) {
       if (domain === "default") continue;
 
       try {
         const cardModule = await import(`../cards/${Helper.sanitizeClassName(domain + "Card")}`);
-        const entities = Helper.getAreaEntities(this.area, domain);
+        let entities = Helper.getAreaEntities(this.area, domain);
         const configEntityHidden = Helper.strategyOptions.domains[domain]?.hide_config_entities || Helper.strategyOptions.domains["_"].hide_config_entities;
-
-        if (this.area.area_id === UNDISCLOSED) {
-          target = { entity_id: entities.map(entity => entity.entity_id) };
-        }
 
         const domainCards: EntityCardConfig[] = [];
 
@@ -154,7 +149,9 @@ class AreaView {
             }
           }
 
-          const titleCard = new ControllerCard(target, titleCardOptions, domain, this.area.slug).createCard();
+          const titleCard = new ControllerCard(titleCardOptions, domain, this.area.slug).createCard();
+
+          if (domain === "light") entities = addLightGroupsToEntities(this.area, entities);
 
           const entityCards = entities
             .filter(entity => {

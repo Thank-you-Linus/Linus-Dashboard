@@ -22,15 +22,15 @@ class AggregateView extends AbstractView {
    * @param {views.AggregateViewOptions} [options={}] Options for the view.
    */
   constructor(options: views.AggregateViewOptions) {
-    const domain = DEVICE_CLASSES.sensor.includes(options?.device_class) ? "sensor" : "binary_sensor";
+    const domain = options?.device_class ? DEVICE_CLASSES.sensor.includes(options?.device_class) ? "sensor" : "binary_sensor" : options?.domain;
     super(domain, options?.device_class);
 
     // Create a Controller card to switch all entities of the domain.
     this.viewControllerCard = new ControllerCard(
-      this.targetDomain(options?.device_class),
       {
         title: Helper.localize(getDomainTranslationKey(domain, options?.device_class)),
         // subtitle: Helper.getDeviceClassCountTemplate(options?.device_class, "eq", "on") + ` ${Helper.localize(getStateTranslationKey("on", domain, options?.device_class))}s`,
+        showControls: !!options?.device_class,
         controlChipOptions: { device_class: options?.device_class },
       }, domain, "global").createCard();
 

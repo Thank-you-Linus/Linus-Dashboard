@@ -240,7 +240,7 @@ class HomeView {
               card_mod: {
                 style: `
                 ha-card {
-                  min-width: 80px;
+                  min-width: 100px;
                 }
               `,
               }

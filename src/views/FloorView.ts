@@ -6,14 +6,13 @@ import { TemplateCardConfig } from "../types/lovelace-mushroom/cards/template-ca
 import { LovelaceCardConfig, LovelaceViewConfig } from "../types/homeassistant/data/lovelace";
 import { generic } from "../types/strategy/generic";
 import StrategyFloor = generic.StrategyFloor;
-import { SwipeCard } from "../cards/SwipeCard";
 import { EntityCardConfig } from "../types/lovelace-mushroom/cards/entity-card-config";
 import { ControllerCard } from "../cards/ControllerCard";
-import { HassServiceTarget } from "home-assistant-js-websocket";
 import { AGGREGATE_DOMAINS, AREA_EXPOSED_CHIPS } from "../variables";
 import { LovelaceChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
 import { AreaStateChip } from "../chips/AreaStateChip";
 import { addLightGroupsToEntities, createChipsFromList, getDomainTranslationKey } from "../utils";
+import { GroupedCard } from "../cards/GroupedCard";
 
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
@@ -169,8 +168,7 @@ class FloorView {
 
               const titleCard = new ControllerCard(titleCardOptions, domain, area.slug).createCard();
 
-              let areaCards;
-              areaCards = entityCards.length > 2 ? [new SwipeCard(entityCards).getCard()] : entityCards;
+              let areaCards = [new GroupedCard(entityCards).getCard()]
               areaCards.unshift(...titleCard);
 
               domainCards.push(...areaCards);
@@ -212,42 +210,6 @@ class FloorView {
           viewSections.push(section);
         }
 
-
-        // // Handle default domain if not hidden
-        // if (!Helper.strategyOptions.domains.default.hidden) {
-        //   const areaDevices = area.devices.filter(device_id => Helper.devices[device_id].area_id === floor.area_id);
-        //   const miscellaneousEntities = floor.entities.filter(entity_id => {
-        //     const entity = Helper.entities[entity_id];
-        //     const entityLinked = areaDevices.includes(entity.device_id ?? "null") || entity.area_id === floor.area_id;
-        //     const entityUnhidden = entity.hidden_by === null && entity.disabled_by === null;
-        //     const domainExposed = exposedDomainIds.includes(entity.entity_id.split(".", 1)[0]);
-
-        //     return entityUnhidden && !domainExposed && entityLinked;
-        //   });
-
-        //   if (miscellaneousEntities.length) {
-        //     try {
-        //       const cardModule = await import("../cards/MiscellaneousCard");
-
-        //       const swipeCard = miscellaneousEntities
-        //         .filter(entity_id => {
-        //           const entity = Helper.entities[entity_id];
-        //           const cardOptions = Helper.strategyOptions.card_options?.[entity.entity_id];
-        //           const deviceOptions = Helper.strategyOptions.card_options?.[entity.device_id ?? "null"];
-        //           return !cardOptions?.hidden && !deviceOptions?.hidden && !(entity.entity_category === "config" && Helper.strategyOptions.domains["_"].hide_config_entities);
-        //         })
-        //         .map(entity_id => new cardModule.MiscellaneousCard(Helper.entities[entity_id], Helper.strategyOptions.card_options?.[entity_id]).getCard());
-
-        //       viewSections.push({
-        //         type: "grid",
-        //         column_span: 1,
-        //         cards: [new SwipeCard(swipeCard).getCard()],
-        //       });
-        //     } catch (e) {
-        //       Helper.logError("An error occurred while creating the domain cards!", e);
-        //     }
-        //   }
-        // }
       } catch (e) {
         Helper.logError("An error occurred while creating the domain cards!", e);
       }

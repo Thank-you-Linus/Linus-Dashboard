@@ -3,10 +3,9 @@ import { Helper } from "../Helper";
 import { LovelaceGridCardConfig } from "../types/homeassistant/lovelace/cards/types";
 import { LovelaceCardConfig, LovelaceSectionConfig, LovelaceViewConfig } from "../types/homeassistant/data/lovelace";
 import { HassServiceTarget } from "home-assistant-js-websocket";
-
-import { SwipeCard } from '../cards/SwipeCard';
 import { getEntityDomain, getFloorName, slugify } from '../utils';
 import { views } from '../types/strategy/views';
+import { GroupedCard } from '../cards/GroupedCard';
 
 /**
  * Abstract View Class.
@@ -81,8 +80,7 @@ class UnavailableView {
           .map(entity => new cardModule.MiscellaneousCard(entity).getCard());
 
         if (entityCards.length) {
-          const areaCards = entityCards.length > 2 ? [new SwipeCard(entityCards).getCard()] : entityCards;
-          floorCards.push(...areaCards);
+          floorCards.push(new GroupedCard(entityCards).getCard())
         }
       }
 

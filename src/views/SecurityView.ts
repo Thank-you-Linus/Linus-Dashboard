@@ -6,13 +6,13 @@ import { PersonCard } from "../cards/PersonCard";
 import { BinarySensorCard } from "../cards/BinarySensorCard";
 import { createChipsFromList, getAreaName, getFloorName, navigateTo } from "../utils";
 import { HassServiceTarget } from "home-assistant-js-websocket";
-import { SwipeCard } from "../cards/SwipeCard";
 import { ControllerCard } from "../cards/ControllerCard";
 import { views } from "../types/strategy/views";
 import { ChipsCardConfig } from "../types/lovelace-mushroom/cards/chips-card";
 import { TemplateCardConfig } from "../types/lovelace-mushroom/cards/template-card-config";
 import { LovelaceChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
 import { SECURITY_EXPOSED_CHIPS } from "../variables";
+import { GroupedCard } from "../cards/GroupedCard";
 
 /**
  * Security View Class.
@@ -264,11 +264,7 @@ class SecurityView {
         }
 
         if (entityCards.length) {
-          if (entityCards.length > 2) {
-            areaCards.push(new SwipeCard(entityCards).getCard());
-          } else {
-            areaCards.push(...entityCards);
-          }
+          areaCards.push(new GroupedCard(entityCards).getCard())
         }
 
         // Vertical stack the area cards if it has entities.

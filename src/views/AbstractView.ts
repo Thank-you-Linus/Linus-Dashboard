@@ -6,9 +6,9 @@ import { LovelaceCardConfig, LovelaceSectionConfig, LovelaceViewConfig } from ".
 import { HassServiceTarget } from "home-assistant-js-websocket";
 import { TemplateCardConfig } from '../types/lovelace-mushroom/cards/template-card-config';
 import { ChipsCardConfig } from '../types/lovelace-mushroom/cards/chips-card';
-import { SwipeCard } from '../cards/SwipeCard';
 import { addLightGroupsToEntities, getAreaName, getFloorName, slugify } from '../utils';
 import { views } from '../types/strategy/views';
+import { GroupedCard } from '../cards/GroupedCard';
 
 /**
  * Abstract View Class.
@@ -126,7 +126,7 @@ abstract class AbstractView {
           .map(entity => new cardModule[className](entity).getCard());
 
         if (entityCards.length) {
-          const areaCards = entityCards.length > 2 ? [new SwipeCard(entityCards).getCard()] : entityCards;
+          const areaCards = [new GroupedCard(entityCards).getCard()]
           const titleCardOptions = {
             ...Helper.strategyOptions.domains[this.#domain].controllerCardOptions,
             subtitle: getAreaName(area),

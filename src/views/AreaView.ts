@@ -6,10 +6,8 @@ import { TemplateCardConfig } from "../types/lovelace-mushroom/cards/template-ca
 import { LovelaceViewConfig } from "../types/homeassistant/data/lovelace";
 import { generic } from "../types/strategy/generic";
 import StrategyArea = generic.StrategyArea;
-import { SwipeCard } from "../cards/SwipeCard";
 import { EntityCardConfig } from "../types/lovelace-mushroom/cards/entity-card-config";
 import { ControllerCard } from "../cards/ControllerCard";
-import { HassServiceTarget } from "home-assistant-js-websocket";
 import { ImageAreaCard } from "../cards/ImageAreaCard";
 import { AGGREGATE_DOMAINS, AREA_EXPOSED_CHIPS, UNDISCLOSED } from "../variables";
 import { LovelaceChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
@@ -17,6 +15,7 @@ import { AreaStateChip } from "../chips/AreaStateChip";
 import { addLightGroupsToEntities, createChipsFromList, getDomainTranslationKey } from "../utils";
 import { ResourceKeys } from "../types/homeassistant/data/frontend";
 import { UnavailableChip } from "../chips/UnavailableChip";
+import { GroupedCard } from "../cards/GroupedCard";
 
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
@@ -172,7 +171,7 @@ class AreaView {
             });
 
           if (entityCards.length) {
-            domainCards.push(...(entityCards.length > 2 ? [new SwipeCard(entityCards).getCard()] : entityCards));
+            domainCards.push(new GroupedCard(entityCards).getCard())
             domainCards.unshift(...titleCard);
           }
 
@@ -212,7 +211,7 @@ class AreaView {
             })
             .map(entity_id => new cardModule.MiscellaneousCard(Helper.entities[entity_id], Helper.strategyOptions.card_options?.[entity_id]).getCard());
 
-          const miscellaneousCards = miscellaneousEntityCards.length > 2 ? [new SwipeCard(miscellaneousEntityCards).getCard()] : miscellaneousEntityCards;
+          const miscellaneousCards = new GroupedCard(miscellaneousEntityCards).getCard()
 
           const titleCard = {
             type: "heading",
@@ -229,7 +228,7 @@ class AreaView {
           viewSections.push({
             type: "grid",
             column_span: 1,
-            cards: [titleCard, ...miscellaneousCards],
+            cards: [titleCard, miscellaneousCards],
           });
         } catch (e) {
           Helper.logError("An error occurred while creating the domain cards!", e);

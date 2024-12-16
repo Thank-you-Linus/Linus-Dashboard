@@ -1385,12 +1385,14 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   ClimateCard: () => (/* binding */ ClimateCard)
 /* harmony export */ });
 /* harmony import */ var _AbstractCard__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./AbstractCard */ "./src/cards/AbstractCard.ts");
+/* harmony import */ var _Helper__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../Helper */ "./src/Helper.ts");
 var __classPrivateFieldGet = (undefined && undefined.__classPrivateFieldGet) || function (receiver, state, kind, f) {
     if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a getter");
     if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
     return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
 };
 var _ClimateCard_defaultConfig;
+
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**
@@ -1418,47 +1420,35 @@ class ClimateCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractCar
          * @private
          */
         _ClimateCard_defaultConfig.set(this, {
-            type: "thermostat",
+            type: "tile",
             icon: undefined,
             show_current_as_primary: true,
             vertical: false,
-            features: [
-                {
-                    type: "target-temperature"
-                },
-                {
-                    type: "climate-preset-modes",
-                    style: "icons",
-                    preset_modes: ["home", "eco", "comfort", "away", "boost"]
-                },
-                {
-                    type: "climate-hvac-modes",
-                    hvac_modes: [
-                        "auto",
-                        "heat_cool",
-                        "heat",
-                        "cool",
-                        "dry",
-                        "fan_only",
-                        "off",
-                    ]
-                },
-                {
-                    type: "climate-fan-modes",
-                    style: "icons",
-                    fan_modes: [
-                        "off",
-                        "low",
-                        "medium",
-                        "high",
-                    ]
-                }
-            ],
+            features: [],
             layout_options: {
                 grid_columns: 2,
                 grid_rows: 1,
             },
         });
+        const { preset_modes, hvac_modes, fan_modes } = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.getEntityState(entity.entity_id)?.attributes ?? {};
+        if (preset_modes) {
+            __classPrivateFieldGet(this, _ClimateCard_defaultConfig, "f").features.push({
+                type: "climate-preset-modes",
+                preset_modes: preset_modes
+            });
+        }
+        else if (hvac_modes) {
+            __classPrivateFieldGet(this, _ClimateCard_defaultConfig, "f").features.push({
+                type: "climate-hvac-modes",
+                hvac_modes: hvac_modes
+            });
+        }
+        else if (fan_modes) {
+            __classPrivateFieldGet(this, _ClimateCard_defaultConfig, "f").features.push({
+                type: "climate-fan-modes",
+                fan_modes: fan_modes
+            });
+        }
         this.config = Object.assign(this.config, __classPrivateFieldGet(this, _ClimateCard_defaultConfig, "f"), options);
     }
 }
@@ -1744,6 +1734,75 @@ class FanCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractCard {
     }
 }
 _FanCard_defaultConfig = new WeakMap();
+
+
+
+/***/ }),
+
+/***/ "./src/cards/GroupedCard.ts":
+/*!**********************************!*\
+  !*** ./src/cards/GroupedCard.ts ***!
+  \**********************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   GroupedCard: () => (/* binding */ GroupedCard)
+/* harmony export */ });
+/* harmony import */ var _SwipeCard__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./SwipeCard */ "./src/cards/SwipeCard.ts");
+
+// noinspection JSUnusedGlobalSymbols Class is dynamically imported.
+/**
+ * Grouped Card Class
+ *
+ * Used to create a card for controlling an entity of the light domain.
+ *
+ * @class
+ * @extends AbstractCard
+ */
+class GroupedCard {
+    /**
+     * Class constructor.
+     *
+     * @param {AbstractCard[]} cards The hass entity to create a card for.
+     * @throws {Error} If the Helper module isn't initialized.
+     */
+    constructor(cards) {
+        /**
+         * Configuration of the card.
+         *
+         * @type {AbstractCard}
+         */
+        this.config = {
+            cards: [],
+        };
+        this.config.cards = cards;
+    }
+    /**
+     * Get a card.
+     *
+     * @return {AbstractCard} A card object.
+     */
+    getCard() {
+        // Group entity cards into pairs and create vertical stacks
+        const groupedEntityCards = [];
+        for (let i = 0; i < this.config.cards.length; i += 2) {
+            groupedEntityCards.push({
+                type: "vertical-stack",
+                cards: this.config.cards.slice(i, i + 2),
+            });
+        }
+        // If there are more than 2 groups, use a GroupedCard, otherwise use a horizontal stack
+        const groupedCards = groupedEntityCards.length > 2
+            ? new _SwipeCard__WEBPACK_IMPORTED_MODULE_0__.SwipeCard(groupedEntityCards).getCard()
+            : {
+                type: "horizontal-stack",
+                cards: groupedEntityCards,
+            };
+        return groupedCards;
+    }
+}
 
 
 
@@ -2569,9 +2628,7 @@ class SwipeCard {
      * @return {SwipeCardConfig} A card object.
      */
     getCard() {
-        return {
-            ...this.config,
-        };
+        return this.config;
     }
 }
 
@@ -6174,8 +6231,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _variables__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./../variables */ "./src/variables.ts");
 /* harmony import */ var _Helper__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../Helper */ "./src/Helper.ts");
 /* harmony import */ var _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../cards/ControllerCard */ "./src/cards/ControllerCard.ts");
-/* harmony import */ var _cards_SwipeCard__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../cards/SwipeCard */ "./src/cards/SwipeCard.ts");
-/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../utils */ "./src/utils.ts");
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../utils */ "./src/utils.ts");
+/* harmony import */ var _cards_GroupedCard__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../cards/GroupedCard */ "./src/cards/GroupedCard.ts");
 var __classPrivateFieldSet = (undefined && undefined.__classPrivateFieldSet) || function (receiver, state, value, kind, f) {
     if (kind === "m") throw new TypeError("Private method is not writable");
     if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a setter");
@@ -6289,17 +6346,17 @@ class AbstractView {
                 if (entities.length === 0 || !cardModule)
                     continue;
                 if (__classPrivateFieldGet(this, _AbstractView_domain, "f") === "light")
-                    entities = (0,_utils__WEBPACK_IMPORTED_MODULE_4__.addLightGroupsToEntities)(area, entities);
+                    entities = (0,_utils__WEBPACK_IMPORTED_MODULE_3__.addLightGroupsToEntities)(area, entities);
                 const entityCards = entities
                     .filter(entity => !_Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.strategyOptions.card_options?.[entity.entity_id]?.hidden
                     && !_Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.strategyOptions.card_options?.[entity.device_id ?? "null"]?.hidden
                     && !(entity.entity_category === "config" && configEntityHidden))
                     .map(entity => new cardModule[className](entity).getCard());
                 if (entityCards.length) {
-                    const areaCards = entityCards.length > 2 ? [new _cards_SwipeCard__WEBPACK_IMPORTED_MODULE_3__.SwipeCard(entityCards).getCard()] : entityCards;
+                    const areaCards = [new _cards_GroupedCard__WEBPACK_IMPORTED_MODULE_4__.GroupedCard(entityCards).getCard()];
                     const titleCardOptions = {
                         ..._Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.strategyOptions.domains[__classPrivateFieldGet(this, _AbstractView_domain, "f")].controllerCardOptions,
-                        subtitle: (0,_utils__WEBPACK_IMPORTED_MODULE_4__.getAreaName)(area),
+                        subtitle: (0,_utils__WEBPACK_IMPORTED_MODULE_3__.getAreaName)(area),
                         subtitleIcon: area.area_id === _variables__WEBPACK_IMPORTED_MODULE_0__.UNDISCLOSED ? "mdi:help-circle" : area.icon ?? "mdi:floor-plan",
                         subtitleNavigate: area.slug
                     };
@@ -6320,9 +6377,9 @@ class AbstractView {
             if (floorCards.length) {
                 const titleSectionOptions = {
                     ..._Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.strategyOptions.domains[__classPrivateFieldGet(this, _AbstractView_domain, "f")].controllerCardOptions,
-                    title: (0,_utils__WEBPACK_IMPORTED_MODULE_4__.getFloorName)(floor),
+                    title: (0,_utils__WEBPACK_IMPORTED_MODULE_3__.getFloorName)(floor),
                     titleIcon: floor.icon ?? "mdi:floor-plan",
-                    titleNavigate: (0,_utils__WEBPACK_IMPORTED_MODULE_4__.slugify)(floor.name)
+                    titleNavigate: (0,_utils__WEBPACK_IMPORTED_MODULE_3__.slugify)(floor.name)
                 };
                 if (__classPrivateFieldGet(this, _AbstractView_domain, "f")) {
                     if (!_variables__WEBPACK_IMPORTED_MODULE_0__.AGGREGATE_DOMAINS.includes(__classPrivateFieldGet(this, _AbstractView_domain, "f")) || __classPrivateFieldGet(this, _AbstractView_device_class, "f")) {
@@ -6449,13 +6506,13 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   AreaView: () => (/* binding */ AreaView)
 /* harmony export */ });
 /* harmony import */ var _Helper__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../Helper */ "./src/Helper.ts");
-/* harmony import */ var _cards_SwipeCard__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../cards/SwipeCard */ "./src/cards/SwipeCard.ts");
-/* harmony import */ var _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../cards/ControllerCard */ "./src/cards/ControllerCard.ts");
-/* harmony import */ var _cards_ImageAreaCard__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../cards/ImageAreaCard */ "./src/cards/ImageAreaCard.ts");
-/* harmony import */ var _variables__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../variables */ "./src/variables.ts");
-/* harmony import */ var _chips_AreaStateChip__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../chips/AreaStateChip */ "./src/chips/AreaStateChip.ts");
-/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../utils */ "./src/utils.ts");
-/* harmony import */ var _chips_UnavailableChip__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../chips/UnavailableChip */ "./src/chips/UnavailableChip.ts");
+/* harmony import */ var _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../cards/ControllerCard */ "./src/cards/ControllerCard.ts");
+/* harmony import */ var _cards_ImageAreaCard__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../cards/ImageAreaCard */ "./src/cards/ImageAreaCard.ts");
+/* harmony import */ var _variables__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../variables */ "./src/variables.ts");
+/* harmony import */ var _chips_AreaStateChip__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../chips/AreaStateChip */ "./src/chips/AreaStateChip.ts");
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../utils */ "./src/utils.ts");
+/* harmony import */ var _chips_UnavailableChip__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../chips/UnavailableChip */ "./src/chips/UnavailableChip.ts");
+/* harmony import */ var _cards_GroupedCard__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../cards/GroupedCard */ "./src/cards/GroupedCard.ts");
 
 
 
@@ -6505,12 +6562,12 @@ class AreaView {
             return [];
         }
         const chips = [];
-        chips.push(new _chips_AreaStateChip__WEBPACK_IMPORTED_MODULE_5__.AreaStateChip({ area: this.area, showContent: true }).getChip());
-        const areaChips = await (0,_utils__WEBPACK_IMPORTED_MODULE_6__.createChipsFromList)(_variables__WEBPACK_IMPORTED_MODULE_4__.AREA_EXPOSED_CHIPS, { show_content: true }, this.area.slug, this.area.slug);
+        chips.push(new _chips_AreaStateChip__WEBPACK_IMPORTED_MODULE_4__.AreaStateChip({ area: this.area, showContent: true }).getChip());
+        const areaChips = await (0,_utils__WEBPACK_IMPORTED_MODULE_5__.createChipsFromList)(_variables__WEBPACK_IMPORTED_MODULE_3__.AREA_EXPOSED_CHIPS, { show_content: true }, this.area.slug, this.area.slug);
         if (areaChips) {
             chips.push(...areaChips);
         }
-        const unavailableChip = new _chips_UnavailableChip__WEBPACK_IMPORTED_MODULE_7__.UnavailableChip({ area_slug: this.area.slug }).getChip();
+        const unavailableChip = new _chips_UnavailableChip__WEBPACK_IMPORTED_MODULE_6__.UnavailableChip({ area_slug: this.area.slug }).getChip();
         if (unavailableChip)
             chips.push(unavailableChip);
         // (device?.entities.all_lights && device?.entities.all_lights.entity_id !== "unavailable" ? {
@@ -6534,11 +6591,11 @@ class AreaView {
         const viewSections = [];
         const exposedDomainIds = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getExposedDomainIds();
         // Create global section card if area is not undisclosed
-        if (this.area.area_id !== _variables__WEBPACK_IMPORTED_MODULE_4__.UNDISCLOSED && this.area.picture) {
+        if (this.area.area_id !== _variables__WEBPACK_IMPORTED_MODULE_3__.UNDISCLOSED && this.area.picture) {
             viewSections.push({
                 type: "grid",
                 column_span: 1,
-                cards: [new _cards_ImageAreaCard__WEBPACK_IMPORTED_MODULE_3__.ImageAreaCard(this.area.area_id).getCard()],
+                cards: [new _cards_ImageAreaCard__WEBPACK_IMPORTED_MODULE_2__.ImageAreaCard(this.area.area_id).getCard()],
             });
         }
         for (const domain of exposedDomainIds) {
@@ -6552,13 +6609,13 @@ class AreaView {
                 if (entities.length) {
                     const titleCardOptions = {
                         ..._Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain].controllerCardOptions,
-                        subtitle: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize((0,_utils__WEBPACK_IMPORTED_MODULE_6__.getDomainTranslationKey)(domain)),
+                        subtitle: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize((0,_utils__WEBPACK_IMPORTED_MODULE_5__.getDomainTranslationKey)(domain)),
                         domain,
                         subtitleIcon: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.icons[domain]._?.default,
                         subtitleNavigate: domain,
                     };
                     if (domain) {
-                        if (_variables__WEBPACK_IMPORTED_MODULE_4__.AGGREGATE_DOMAINS.includes(domain)) {
+                        if (_variables__WEBPACK_IMPORTED_MODULE_3__.AGGREGATE_DOMAINS.includes(domain)) {
                             titleCardOptions.showControls = false;
                         }
                         else {
@@ -6567,9 +6624,9 @@ class AreaView {
                             titleCardOptions.controlChipOptions = { area_slug: this.area.slug };
                         }
                     }
-                    const titleCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_2__.ControllerCard(titleCardOptions, domain, this.area.slug).createCard();
+                    const titleCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_1__.ControllerCard(titleCardOptions, domain, this.area.slug).createCard();
                     if (domain === "light")
-                        entities = (0,_utils__WEBPACK_IMPORTED_MODULE_6__.addLightGroupsToEntities)(this.area, entities);
+                        entities = (0,_utils__WEBPACK_IMPORTED_MODULE_5__.addLightGroupsToEntities)(this.area, entities);
                     const entityCards = entities
                         .filter(entity => {
                         const cardOptions = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.card_options?.[entity.entity_id];
@@ -6588,7 +6645,7 @@ class AreaView {
                         return new cardModule[_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.sanitizeClassName(domain + "Card")](entity, cardOptions).getCard();
                     });
                     if (entityCards.length) {
-                        domainCards.push(...(entityCards.length > 2 ? [new _cards_SwipeCard__WEBPACK_IMPORTED_MODULE_1__.SwipeCard(entityCards).getCard()] : entityCards));
+                        domainCards.push(new _cards_GroupedCard__WEBPACK_IMPORTED_MODULE_7__.GroupedCard(entityCards).getCard());
                         domainCards.unshift(...titleCard);
                     }
                     viewSections.push({
@@ -6623,7 +6680,7 @@ class AreaView {
                         return !cardOptions?.hidden && !deviceOptions?.hidden && !(entity.entity_category === "config" && _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains["_"].hide_config_entities);
                     })
                         .map(entity_id => new cardModule.MiscellaneousCard(_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.entities[entity_id], _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.card_options?.[entity_id]).getCard());
-                    const miscellaneousCards = miscellaneousEntityCards.length > 2 ? [new _cards_SwipeCard__WEBPACK_IMPORTED_MODULE_1__.SwipeCard(miscellaneousEntityCards).getCard()] : miscellaneousEntityCards;
+                    const miscellaneousCards = new _cards_GroupedCard__WEBPACK_IMPORTED_MODULE_7__.GroupedCard(miscellaneousEntityCards).getCard();
                     const titleCard = {
                         type: "heading",
                         heading: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("ui.panel.lovelace.editor.card.generic.other_cards"),
@@ -6638,7 +6695,7 @@ class AreaView {
                     viewSections.push({
                         type: "grid",
                         column_span: 1,
-                        cards: [titleCard, ...miscellaneousCards],
+                        cards: [titleCard, miscellaneousCards],
                     });
                 }
                 catch (e) {
@@ -7012,11 +7069,11 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   FloorView: () => (/* binding */ FloorView)
 /* harmony export */ });
 /* harmony import */ var _Helper__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../Helper */ "./src/Helper.ts");
-/* harmony import */ var _cards_SwipeCard__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../cards/SwipeCard */ "./src/cards/SwipeCard.ts");
-/* harmony import */ var _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../cards/ControllerCard */ "./src/cards/ControllerCard.ts");
-/* harmony import */ var _variables__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../variables */ "./src/variables.ts");
-/* harmony import */ var _chips_AreaStateChip__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../chips/AreaStateChip */ "./src/chips/AreaStateChip.ts");
-/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../utils */ "./src/utils.ts");
+/* harmony import */ var _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../cards/ControllerCard */ "./src/cards/ControllerCard.ts");
+/* harmony import */ var _variables__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../variables */ "./src/variables.ts");
+/* harmony import */ var _chips_AreaStateChip__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../chips/AreaStateChip */ "./src/chips/AreaStateChip.ts");
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../utils */ "./src/utils.ts");
+/* harmony import */ var _cards_GroupedCard__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../cards/GroupedCard */ "./src/cards/GroupedCard.ts");
 
 
 
@@ -7073,9 +7130,9 @@ class FloorView {
         const chips = [];
         const device = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices[this.floor.floor_id];
         if (device) {
-            chips.push(new _chips_AreaStateChip__WEBPACK_IMPORTED_MODULE_4__.AreaStateChip({ floor: this.floor, showContent: true }).getChip());
+            chips.push(new _chips_AreaStateChip__WEBPACK_IMPORTED_MODULE_3__.AreaStateChip({ floor: this.floor, showContent: true }).getChip());
         }
-        const areaChips = await (0,_utils__WEBPACK_IMPORTED_MODULE_5__.createChipsFromList)(_variables__WEBPACK_IMPORTED_MODULE_3__.AREA_EXPOSED_CHIPS, { show_content: true }, this.floor.floor_id, this.floor.areas_slug);
+        const areaChips = await (0,_utils__WEBPACK_IMPORTED_MODULE_4__.createChipsFromList)(_variables__WEBPACK_IMPORTED_MODULE_2__.AREA_EXPOSED_CHIPS, { show_content: true }, this.floor.floor_id, this.floor.areas_slug);
         if (areaChips) {
             chips.push(...areaChips);
         }
@@ -7108,7 +7165,7 @@ class FloorView {
                     let areaEntities = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getAreaEntities(area, domain);
                     if (areaEntities.length) {
                         if (domain === "light")
-                            areaEntities = (0,_utils__WEBPACK_IMPORTED_MODULE_5__.addLightGroupsToEntities)(area, areaEntities);
+                            areaEntities = (0,_utils__WEBPACK_IMPORTED_MODULE_4__.addLightGroupsToEntities)(area, areaEntities);
                         const entityCards = areaEntities
                             .filter(entity => {
                             const cardOptions = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.card_options?.[entity.entity_id];
@@ -7135,7 +7192,7 @@ class FloorView {
                                 subtitleNavigate: area.slug,
                             };
                             if (domain) {
-                                if (_variables__WEBPACK_IMPORTED_MODULE_3__.AGGREGATE_DOMAINS.includes(domain)) {
+                                if (_variables__WEBPACK_IMPORTED_MODULE_2__.AGGREGATE_DOMAINS.includes(domain)) {
                                     titleCardOptions.showControls = false;
                                 }
                                 else {
@@ -7144,9 +7201,8 @@ class FloorView {
                                     titleCardOptions.controlChipOptions = { area_slug: area.slug };
                                 }
                             }
-                            const titleCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_2__.ControllerCard(titleCardOptions, domain, area.slug).createCard();
-                            let areaCards;
-                            areaCards = entityCards.length > 2 ? [new _cards_SwipeCard__WEBPACK_IMPORTED_MODULE_1__.SwipeCard(entityCards).getCard()] : entityCards;
+                            const titleCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_1__.ControllerCard(titleCardOptions, domain, area.slug).createCard();
+                            let areaCards = [new _cards_GroupedCard__WEBPACK_IMPORTED_MODULE_5__.GroupedCard(entityCards).getCard()];
                             areaCards.unshift(...titleCard);
                             domainCards.push(...areaCards);
                         }
@@ -7155,12 +7211,12 @@ class FloorView {
                 if (domainCards.length) {
                     const titleSectionOptions = {
                         ..._Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain].controllerCardOptions,
-                        title: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize((0,_utils__WEBPACK_IMPORTED_MODULE_5__.getDomainTranslationKey)(domain)),
+                        title: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize((0,_utils__WEBPACK_IMPORTED_MODULE_4__.getDomainTranslationKey)(domain)),
                         titleIcon: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.icons[domain]._?.default ?? "mdi:floor-plan",
                         titleNavigate: domain,
                     };
                     if (domain) {
-                        if (_variables__WEBPACK_IMPORTED_MODULE_3__.AGGREGATE_DOMAINS.includes(domain)) {
+                        if (_variables__WEBPACK_IMPORTED_MODULE_2__.AGGREGATE_DOMAINS.includes(domain)) {
                             titleSectionOptions.showControls = false;
                         }
                         else {
@@ -7169,7 +7225,7 @@ class FloorView {
                             titleSectionOptions.controlChipOptions = { area_slug: this.floor.areas_slug };
                         }
                     }
-                    const domainControllerCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_2__.ControllerCard(titleSectionOptions, domain, this.floor.floor_id).createCard();
+                    const domainControllerCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_1__.ControllerCard(titleSectionOptions, domain, this.floor.floor_id).createCard();
                     const section = { type: "grid", cards: [] };
                     if (isFirstLoop) {
                         section.cards.push(...this.viewControllerCard);
@@ -7179,37 +7235,6 @@ class FloorView {
                     section.cards.push(...domainCards);
                     viewSections.push(section);
                 }
-                // // Handle default domain if not hidden
-                // if (!Helper.strategyOptions.domains.default.hidden) {
-                //   const areaDevices = area.devices.filter(device_id => Helper.devices[device_id].area_id === floor.area_id);
-                //   const miscellaneousEntities = floor.entities.filter(entity_id => {
-                //     const entity = Helper.entities[entity_id];
-                //     const entityLinked = areaDevices.includes(entity.device_id ?? "null") || entity.area_id === floor.area_id;
-                //     const entityUnhidden = entity.hidden_by === null && entity.disabled_by === null;
-                //     const domainExposed = exposedDomainIds.includes(entity.entity_id.split(".", 1)[0]);
-                //     return entityUnhidden && !domainExposed && entityLinked;
-                //   });
-                //   if (miscellaneousEntities.length) {
-                //     try {
-                //       const cardModule = await import("../cards/MiscellaneousCard");
-                //       const swipeCard = miscellaneousEntities
-                //         .filter(entity_id => {
-                //           const entity = Helper.entities[entity_id];
-                //           const cardOptions = Helper.strategyOptions.card_options?.[entity.entity_id];
-                //           const deviceOptions = Helper.strategyOptions.card_options?.[entity.device_id ?? "null"];
-                //           return !cardOptions?.hidden && !deviceOptions?.hidden && !(entity.entity_category === "config" && Helper.strategyOptions.domains["_"].hide_config_entities);
-                //         })
-                //         .map(entity_id => new cardModule.MiscellaneousCard(Helper.entities[entity_id], Helper.strategyOptions.card_options?.[entity_id]).getCard());
-                //       viewSections.push({
-                //         type: "grid",
-                //         column_span: 1,
-                //         cards: [new SwipeCard(swipeCard).getCard()],
-                //       });
-                //     } catch (e) {
-                //       Helper.logError("An error occurred while creating the domain cards!", e);
-                //     }
-                //   }
-                // }
             }
             catch (e) {
                 _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.logError("An error occurred while creating the domain cards!", e);
@@ -7256,15 +7281,13 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _chips_WeatherChip__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../chips/WeatherChip */ "./src/chips/WeatherChip.ts");
 /* harmony import */ var _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../chips/AggregateChip */ "./src/chips/AggregateChip.ts");
 /* harmony import */ var _cards_PersonCard__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../cards/PersonCard */ "./src/cards/PersonCard.ts");
-/* harmony import */ var _chips_ConditionalChip__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../chips/ConditionalChip */ "./src/chips/ConditionalChip.ts");
-/* harmony import */ var _chips_UnavailableChip__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../chips/UnavailableChip */ "./src/chips/UnavailableChip.ts");
+/* harmony import */ var _chips_UnavailableChip__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../chips/UnavailableChip */ "./src/chips/UnavailableChip.ts");
 var __classPrivateFieldGet = (undefined && undefined.__classPrivateFieldGet) || function (receiver, state, kind, f) {
     if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a getter");
     if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
     return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
 };
 var _HomeView_instances, _HomeView_createPersonCards;
-
 
 
 
@@ -7360,7 +7383,7 @@ class HomeView {
         if (homeChips) {
             chips.push(...homeChips);
         }
-        const unavailableChip = new _chips_UnavailableChip__WEBPACK_IMPORTED_MODULE_9__.UnavailableChip().getChip();
+        const unavailableChip = new _chips_UnavailableChip__WEBPACK_IMPORTED_MODULE_8__.UnavailableChip().getChip();
         if (unavailableChip)
             chips.push(unavailableChip);
         const linusSettings = new _chips_SettingsChip__WEBPACK_IMPORTED_MODULE_1__.SettingsChip({ tap_action: new _popups_SettingsPopup__WEBPACK_IMPORTED_MODULE_2__.SettingsPopup().getPopup() });
@@ -7445,7 +7468,10 @@ class HomeView {
                 });
                 isFirstLoop = false;
             }
-            const temperatureEntity = (0,_utils__WEBPACK_IMPORTED_MODULE_4__.getMAEntity)(floor.floor_id, "sensor", "temperature");
+            const temperature = floor.areas_slug.some(area_slug => {
+                const area = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas[area_slug];
+                return area.domains?.temperature;
+            });
             if (floors.length > 1) {
                 floorSection.cards.push({
                     type: "heading",
@@ -7456,7 +7482,14 @@ class HomeView {
                             type: "custom:mushroom-chips-card",
                             alignment: "end",
                             chips: [
-                                new _chips_ConditionalChip__WEBPACK_IMPORTED_MODULE_8__.ConditionalChip([{ entity: temperatureEntity?.entity_id, state_not: _variables__WEBPACK_IMPORTED_MODULE_3__.UNAVAILABLE }], new _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_6__.AggregateChip({ device_class: "temperature", show_content: true, magic_device_id: floor.floor_id, area_slug: floor.areas_slug }).getChip()).getChip(),
+                                temperature &&
+                                    new _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_6__.AggregateChip({
+                                        device_class: "temperature",
+                                        show_content: true,
+                                        magic_device_id: floor.floor_id,
+                                        area_slug: floor.areas_slug,
+                                        tap_action: (0,_utils__WEBPACK_IMPORTED_MODULE_4__.navigateTo)('temperature')
+                                    }).getChip(),
                             ],
                             card_mod: {
                                 style: `
@@ -7537,7 +7570,7 @@ class HomeView {
         };
     }
 }
-_HomeView_instances = new WeakSet(), _HomeView_createPersonCards = 
+_HomeView_instances = new WeakSet(), _HomeView_createPersonCards =
 /**
  * Create the person cards to include in the view.
  *
@@ -7923,9 +7956,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _cards_PersonCard__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../cards/PersonCard */ "./src/cards/PersonCard.ts");
 /* harmony import */ var _cards_BinarySensorCard__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../cards/BinarySensorCard */ "./src/cards/BinarySensorCard.ts");
 /* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../utils */ "./src/utils.ts");
-/* harmony import */ var _cards_SwipeCard__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../cards/SwipeCard */ "./src/cards/SwipeCard.ts");
-/* harmony import */ var _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../cards/ControllerCard */ "./src/cards/ControllerCard.ts");
-/* harmony import */ var _variables__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../variables */ "./src/variables.ts");
+/* harmony import */ var _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../cards/ControllerCard */ "./src/cards/ControllerCard.ts");
+/* harmony import */ var _variables__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../variables */ "./src/variables.ts");
+/* harmony import */ var _cards_GroupedCard__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../cards/GroupedCard */ "./src/cards/GroupedCard.ts");
 
 
 
@@ -7996,7 +8029,7 @@ class SecurityView {
                 _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.logError("An error occurred while creating the alarm chip!", e);
             }
         }
-        const homeChips = await (0,_utils__WEBPACK_IMPORTED_MODULE_4__.createChipsFromList)(_variables__WEBPACK_IMPORTED_MODULE_7__.SECURITY_EXPOSED_CHIPS, { show_content: true });
+        const homeChips = await (0,_utils__WEBPACK_IMPORTED_MODULE_4__.createChipsFromList)(_variables__WEBPACK_IMPORTED_MODULE_6__.SECURITY_EXPOSED_CHIPS, { show_content: true });
         if (homeChips) {
             chips.push(...homeChips);
         }
@@ -8144,12 +8177,7 @@ class SecurityView {
                     entityCards.push(new cardModule[className](entity, cardOptions).getCard());
                 }
                 if (entityCards.length) {
-                    if (entityCards.length > 2) {
-                        areaCards.push(new _cards_SwipeCard__WEBPACK_IMPORTED_MODULE_5__.SwipeCard(entityCards).getCard());
-                    }
-                    else {
-                        areaCards.push(...entityCards);
-                    }
+                    areaCards.push(new _cards_GroupedCard__WEBPACK_IMPORTED_MODULE_7__.GroupedCard(entityCards).getCard());
                 }
                 // Vertical stack the area cards if it has entities.
                 if (areaCards.length) {
@@ -8162,7 +8190,7 @@ class SecurityView {
                         titleCardOptions.extraControls = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain].extraControls;
                     }
                     // Create and insert a Controller card.
-                    areaCards.unshift(...new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_6__.ControllerCard(target, titleCardOptions, domain).createCard());
+                    areaCards.unshift(...new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_5__.ControllerCard(target, titleCardOptions, domain).createCard());
                     floorCards.push(...areaCards);
                 }
             }
@@ -8287,8 +8315,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var _variables__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../variables */ "./src/variables.ts");
 /* harmony import */ var _Helper__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../Helper */ "./src/Helper.ts");
-/* harmony import */ var _cards_SwipeCard__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../cards/SwipeCard */ "./src/cards/SwipeCard.ts");
-/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../utils */ "./src/utils.ts");
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../utils */ "./src/utils.ts");
+/* harmony import */ var _cards_GroupedCard__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../cards/GroupedCard */ "./src/cards/GroupedCard.ts");
 
 
 
@@ -8344,7 +8372,7 @@ class UnavailableView {
             const floorCards = [];
             for (const area of floor.areas_slug.map(area_slug => _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.areas[area_slug]).values()) {
                 const entities = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.areas[area.slug].entities;
-                const unavailableEntities = entities?.filter(entity_id => _variables__WEBPACK_IMPORTED_MODULE_0__.AREA_CARDS_DOMAINS.includes((0,_utils__WEBPACK_IMPORTED_MODULE_3__.getEntityDomain)(entity_id)) && _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.getEntityState(entity_id)?.state === _variables__WEBPACK_IMPORTED_MODULE_0__.UNAVAILABLE).map(entity_id => _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.entities[entity_id]);
+                const unavailableEntities = entities?.filter(entity_id => _variables__WEBPACK_IMPORTED_MODULE_0__.AREA_CARDS_DOMAINS.includes((0,_utils__WEBPACK_IMPORTED_MODULE_2__.getEntityDomain)(entity_id)) && _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.getEntityState(entity_id)?.state === _variables__WEBPACK_IMPORTED_MODULE_0__.UNAVAILABLE).map(entity_id => _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.entities[entity_id]);
                 const cardModule = await Promise.resolve(/*! import() */).then(__webpack_require__.bind(__webpack_require__, /*! ../cards/MiscellaneousCard */ "./src/cards/MiscellaneousCard.ts"));
                 if (entities.length === 0 || !cardModule)
                     continue;
@@ -8358,15 +8386,14 @@ class UnavailableView {
                     && !(entity.entity_category === "config"))
                     .map(entity => new cardModule.MiscellaneousCard(entity).getCard());
                 if (entityCards.length) {
-                    const areaCards = entityCards.length > 2 ? [new _cards_SwipeCard__WEBPACK_IMPORTED_MODULE_2__.SwipeCard(entityCards).getCard()] : entityCards;
-                    floorCards.push(...areaCards);
+                    floorCards.push(new _cards_GroupedCard__WEBPACK_IMPORTED_MODULE_3__.GroupedCard(entityCards).getCard());
                 }
             }
             if (floorCards.length) {
                 const titleSectionOptions = {
-                    title: (0,_utils__WEBPACK_IMPORTED_MODULE_3__.getFloorName)(floor),
+                    title: (0,_utils__WEBPACK_IMPORTED_MODULE_2__.getFloorName)(floor),
                     titleIcon: floor.icon ?? "mdi:floor-plan",
-                    titleNavigate: (0,_utils__WEBPACK_IMPORTED_MODULE_3__.slugify)(floor.name)
+                    titleNavigate: (0,_utils__WEBPACK_IMPORTED_MODULE_2__.slugify)(floor.name)
                 };
                 viewSections.push({ type: "grid", cards: floorCards });
             }
@@ -8566,6 +8593,12 @@ var map = {
 	"./FanCard.ts": [
 		"./src/cards/FanCard.ts",
 		"main"
+	],
+	"./GroupedCard": [
+		"./src/cards/GroupedCard.ts"
+	],
+	"./GroupedCard.ts": [
+		"./src/cards/GroupedCard.ts"
 	],
 	"./HomeAreaCard": [
 		"./src/cards/HomeAreaCard.ts",
@@ -9006,7 +9039,7 @@ module.exports = webpackAsyncContext;
 /************************************************************************/
 /******/ 	// The module cache
 /******/ 	var __webpack_module_cache__ = {};
-/******/ 	
+/******/
 /******/ 	// The require function
 /******/ 	function __webpack_require__(moduleId) {
 /******/ 		// Check if module is in cache
@@ -9020,14 +9053,14 @@ module.exports = webpackAsyncContext;
 /******/ 			// no module.loaded needed
 /******/ 			exports: {}
 /******/ 		};
-/******/ 	
+/******/
 /******/ 		// Execute the module function
 /******/ 		__webpack_modules__[moduleId](module, module.exports, __webpack_require__);
-/******/ 	
+/******/
 /******/ 		// Return the exports of the module
 /******/ 		return module.exports;
 /******/ 	}
-/******/ 	
+/******/
 /************************************************************************/
 /******/ 	/* webpack/runtime/compat get default export */
 /******/ 	(() => {
@@ -9040,7 +9073,7 @@ module.exports = webpackAsyncContext;
 /******/ 			return getter;
 /******/ 		};
 /******/ 	})();
-/******/ 	
+/******/
 /******/ 	/* webpack/runtime/define property getters */
 /******/ 	(() => {
 /******/ 		// define getter functions for harmony exports
@@ -9052,7 +9085,7 @@ module.exports = webpackAsyncContext;
 /******/ 			}
 /******/ 		};
 /******/ 	})();
-/******/ 	
+/******/
 /******/ 	/* webpack/runtime/ensure chunk */
 /******/ 	(() => {
 /******/ 		// The chunk loading function for additional chunks
@@ -9060,12 +9093,12 @@ module.exports = webpackAsyncContext;
 /******/ 		// in this file, this function is empty here.
 /******/ 		__webpack_require__.e = () => (Promise.resolve());
 /******/ 	})();
-/******/ 	
+/******/
 /******/ 	/* webpack/runtime/hasOwnProperty shorthand */
 /******/ 	(() => {
 /******/ 		__webpack_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
 /******/ 	})();
-/******/ 	
+/******/
 /******/ 	/* webpack/runtime/make namespace object */
 /******/ 	(() => {
 /******/ 		// define __esModule on exports
@@ -9076,14 +9109,14 @@ module.exports = webpackAsyncContext;
 /******/ 			Object.defineProperty(exports, '__esModule', { value: true });
 /******/ 		};
 /******/ 	})();
-/******/ 	
+/******/
 /************************************************************************/
-/******/ 	
+/******/
 /******/ 	// startup
 /******/ 	// Load entry module and return exports
 /******/ 	// This entry module is referenced by other modules so it can't be inlined
 /******/ 	var __webpack_exports__ = __webpack_require__("./src/linus-strategy.ts");
-/******/ 	
+/******/
 /******/ })()
 ;
 //# sourceMappingURL=linus-strategy.js.map

@@ -1,4 +1,4 @@
-import {AbstractCard} from "./AbstractCard";
+import { AbstractCard } from "./AbstractCard";
 import { SwipeCardConfig } from "../types/lovelace-mushroom/cards/swipe-card-config";
 import { SwiperOptions } from "swiper/types/swiper-options";
 import { EntityCardConfig } from "../types/lovelace-mushroom/cards/entity-card-config";
@@ -39,14 +39,14 @@ class SwipeCard {
    * @param {SwiperOptions} [options={}] Options for the card.
    * @throws {Error} If the Helper module isn't initialized.
    */
-  constructor(cards: (AbstractCard | EntityCardConfig)[], options?: SwiperOptions) {
+  constructor(cards: (AbstractCard | EntityCardConfig)[], options?: SwiperOptions) {
 
     this.config.cards = cards;
 
     const multipleSlicesPerView = 2.2
     const slidesPerView = cards.length > 2 ? multipleSlicesPerView : cards.length ?? 1
 
-    this.config.parameters = {...this.config.parameters, slidesPerView, ...options};
+    this.config.parameters = { ...this.config.parameters, slidesPerView, ...options };
   }
 
   /**
@@ -55,10 +55,8 @@ class SwipeCard {
    * @return {SwipeCardConfig} A card object.
    */
   getCard(): SwipeCardConfig {
-    return {
-      ...this.config,
-    };
+    return this.config;
   }
 }
 
-export {SwipeCard};
+export { SwipeCard };

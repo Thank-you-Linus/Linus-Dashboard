@@ -219,7 +219,10 @@ class HomeView {
         isFirstLoop = false;
       }
 
-      const temperatureEntity = getMAEntity(floor.floor_id, "sensor", "temperature");
+      const temperature = floor.areas_slug.some(area_slug => {
+        const area = Helper.areas[area_slug];
+        return area.domains?.temperature;
+      });
 
       if (floors.length > 1) {
         floorSection.cards.push(
@@ -232,10 +235,14 @@ class HomeView {
               type: "custom:mushroom-chips-card",
               alignment: "end",
               chips: [
-                new ConditionalChip(
-                  [{ entity: temperatureEntity?.entity_id!, state_not: UNAVAILABLE }],
-                  new AggregateChip({ device_class: "temperature", show_content: true, magic_device_id: floor.floor_id, area_slug: floor.areas_slug }).getChip()
-                ).getChip(),
+                temperature &&
+                new AggregateChip({
+                  device_class: "temperature",
+                  show_content: true,
+                  magic_device_id: floor.floor_id,
+                  area_slug: floor.areas_slug,
+                  tap_action: navigateTo('temperature')
+                }).getChip(),
               ],
               card_mod: {
                 style: `

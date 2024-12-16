@@ -2,6 +2,7 @@ import { AbstractCard } from "./AbstractCard";
 import { cards } from "../types/strategy/cards";
 import { EntityRegistryEntry } from "../types/homeassistant/data/entity_registry";
 import { ClimateCardConfig } from "../types/lovelace-mushroom/cards/climate-card-config";
+import { Helper } from "../Helper";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**
@@ -20,41 +21,11 @@ class ClimateCard extends AbstractCard {
    * @private
    */
   #defaultConfig: ClimateCardConfig = {
-    type: "thermostat",
+    type: "tile",
     icon: undefined,
     show_current_as_primary: true,
     vertical: false,
     features: [
-      {
-        type: "target-temperature"
-      },
-      {
-        type: "climate-preset-modes",
-        style: "icons",
-        preset_modes: ["home", "eco", "comfort", "away", "boost"]
-      },
-      {
-        type: "climate-hvac-modes",
-        hvac_modes: [
-          "auto",
-          "heat_cool",
-          "heat",
-          "cool",
-          "dry",
-          "fan_only",
-          "off",
-        ]
-      },
-      {
-        type: "climate-fan-modes",
-        style: "icons",
-        fan_modes: [
-          "off",
-          "low",
-          "medium",
-          "high",
-        ]
-      }
     ],
 
     layout_options: {
@@ -72,6 +43,25 @@ class ClimateCard extends AbstractCard {
    */
   constructor(entity: EntityRegistryEntry, options: cards.ClimateCardOptions = {}) {
     super(entity);
+
+    const { preset_modes, hvac_modes, fan_modes } = Helper.getEntityState(entity.entity_id)?.attributes ?? {};
+
+    if (preset_modes) {
+      this.#defaultConfig.features.push({
+        type: "climate-preset-modes",
+        preset_modes: preset_modes
+      });
+    } else if (hvac_modes) {
+      this.#defaultConfig.features.push({
+        type: "climate-hvac-modes",
+        hvac_modes: hvac_modes
+      });
+    } else if (fan_modes) {
+      this.#defaultConfig.features.push({
+        type: "climate-fan-modes",
+        fan_modes: fan_modes
+      });
+    }
 
     this.config = Object.assign(this.config, this.#defaultConfig, options);
   }

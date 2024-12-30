@@ -1,17 +1,19 @@
 {
     "config": {
+        "abort": {
+            "single_instance_allowed": "Only a single configuration of Linus Dashboard is allowed."
+        },
         "step": {
             "user": {
                 "title": "Linus Dashboard Settings",
                 "description": "",
                 "data": {
                     "alarm_entity": "Select alarm entity",
-                    "weather_entity": "Select weather entity"
+                    "weather_entity": "Select weather entity",
+                    "excluded_domains": "Select domains to exclude",
+                    "excluded_device_classes": "Select device classes to exclude"
                 }
             }
-        },
-        "abort": {
-            "single_instance_allowed": "Only a single configuration of Linus Dashboard is allowed."
         }
     },
     "options": {
@@ -21,7 +23,9 @@
                 "description": "",
                 "data": {
                     "alarm_entity": "Select alarm entity",
-                    "weather_entity": "Select weather entity"
+                    "weather_entity": "Select weather entity",
+                    "excluded_domains": "Select domains to exclude",
+                    "excluded_device_classes": "Select device classes to exclude"
                 }
             }
         }

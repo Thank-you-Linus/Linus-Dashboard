@@ -54,6 +54,8 @@ class LinusStrategy extends HTMLTemplateElement {
   private static createDomainSubviews(views: LovelaceViewConfig[]) {
     const exposedViewIds = Helper.getExposedViewIds();
     exposedViewIds.forEach(viewId => {
+      if (Helper.linus_dashboard_config?.excluded_domains.includes(viewId)) return;
+      if (Helper.linus_dashboard_config?.excluded_device_classes.includes(viewId)) return;
       if (![...CUSTOM_VIEWS, ...DOMAINS_VIEWS].includes(viewId)) return;
       if (DOMAINS_VIEWS.includes(viewId) && (Helper.domains[viewId] ?? []).length === 0) return;
 

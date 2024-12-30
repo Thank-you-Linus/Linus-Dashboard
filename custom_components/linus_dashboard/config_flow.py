@@ -3,10 +3,13 @@
 import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components.alarm_control_panel.const import DOMAIN as ALARM_DOMAIN
-from homeassistant.components.weather.const import DOMAIN as WEATHER_DOMAIN
-from homeassistant.core import callback
-from homeassistant.components.sensor.const import SensorDeviceClass
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+from homeassistant.components.sensor.const import SensorDeviceClass
+from homeassistant.components.weather.const import DOMAIN as WEATHER_DOMAIN
+from homeassistant.const import (
+    Platform,
+)
+from homeassistant.core import callback
 from homeassistant.helpers.selector import (
     EntitySelector,
     EntitySelectorConfig,
@@ -16,14 +19,11 @@ from homeassistant.helpers.selector import (
 
 from .const import (
     CONF_ALARM_ENTITY,
-    CONF_WEATHER_ENTITY,
-    CONF_EXCLUDED_DOMAINS,
     CONF_EXCLUDED_DEVICE_CLASSES,
+    CONF_EXCLUDED_DOMAINS,
+    CONF_WEATHER_ENTITY,
     DOMAIN,
     NAME,
-)
-from homeassistant.const import (
-    Platform,
 )
 
 

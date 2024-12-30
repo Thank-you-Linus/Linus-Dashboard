@@ -3,9 +3,10 @@ import { Helper } from "../Helper";
 import { LovelaceGridCardConfig } from "../types/homeassistant/lovelace/cards/types";
 import { LovelaceCardConfig, LovelaceSectionConfig, LovelaceViewConfig } from "../types/homeassistant/data/lovelace";
 import { HassServiceTarget } from "home-assistant-js-websocket";
-import { getEntityDomain, getFloorName, slugify } from '../utils';
+import { getAreaName, getEntityDomain, getFloorName, slugify } from '../utils';
 import { views } from '../types/strategy/views';
 import { GroupedCard } from '../cards/GroupedCard';
+import { ControllerCard } from '../cards/ControllerCard';
 
 /**
  * Abstract View Class.
@@ -60,8 +61,9 @@ class UnavailableView {
       if (floor.areas_slug.length === 0) continue;
 
       const floorCards = [];
+      const floors = Array.from(floor.areas_slug.map(area_slug => Helper.areas[area_slug]).values());
 
-      for (const area of floor.areas_slug.map(area_slug => Helper.areas[area_slug]).values()) {
+      for (const area of floors) {
         const entities = Helper.areas[area.slug].entities;
         const unavailableEntities = entities?.filter(entity_id => AREA_CARDS_DOMAINS.includes(getEntityDomain(entity_id)) && Helper.getEntityState(entity_id)?.state === UNAVAILABLE).map(entity_id => Helper.entities[entity_id]);
         const cardModule = await import(`../cards/MiscellaneousCard`);
@@ -80,7 +82,16 @@ class UnavailableView {
           .map(entity => new cardModule.MiscellaneousCard(entity).getCard());
 
         if (entityCards.length) {
-          floorCards.push(new GroupedCard(entityCards).getCard())
+          const titleCardOptions = {
+            subtitle: getAreaName(area),
+            subtitleIcon: area.area_id === UNDISCLOSED ? "mdi:help-circle" : area.icon ?? "mdi:floor-plan",
+            subtitleNavigate: area.slug,
+            showControls: false
+          } as any;
+
+          const areaControllerCard = new ControllerCard(titleCardOptions, "", area.slug).createCard();
+
+          floorCards.push(...areaControllerCard, new GroupedCard(entityCards).getCard())
         }
       }
 
@@ -88,14 +99,22 @@ class UnavailableView {
         const titleSectionOptions: any = {
           title: getFloorName(floor),
           titleIcon: floor.icon ?? "mdi:floor-plan",
-          titleNavigate: slugify(floor.name)
+          titleNavigate: slugify(floor.name),
+          showControls: false
         };
-        viewSections.push({ type: "grid", cards: floorCards });
-      }
-    }
 
-    if (viewSections.length) {
-      viewSections.unshift({ type: "grid", cards: this.viewControllerCard });
+        const floorControllerCard = new ControllerCard(
+          titleSectionOptions,
+          "",
+          floor.floor_id
+        ).createCard();
+
+        const section = { type: "grid", cards: [] } as LovelaceGridCardConfig;
+
+        section.cards.push(...floorControllerCard);
+        section.cards.push(...floorCards);
+        viewSections.push(section);
+      }
     }
 
     return viewSections;

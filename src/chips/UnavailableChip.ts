@@ -35,7 +35,7 @@ class UnavailableChip extends AbstractChip {
     constructor(options: chips.ChipOptions = {}) {
         super();
 
-        this.#defaultConfig.content = Helper.getCountTemplate("all", "eq", UNAVAILABLE, options?.area_slug);
+        this.#defaultConfig.content = Helper.getCountTemplate("all", "eq", UNAVAILABLE, options?.area_slug, true);
 
         this.#defaultConfig.icon = Helper.getFromDomainState({
             domain: "all",
@@ -43,7 +43,8 @@ class UnavailableChip extends AbstractChip {
             value: UNAVAILABLE,
             ifReturn: this.#defaultConfig.icon,
             elseReturn: "mdi:alert-circle-check-outline",
-            area_slug: options?.area_slug
+            area_slug: options?.area_slug,
+            allowUnavailable: true
         });
 
 
@@ -53,7 +54,8 @@ class UnavailableChip extends AbstractChip {
             value: UNAVAILABLE,
             ifReturn: this.#defaultConfig.icon_color,
             elseReturn: "green",
-            area_slug: options?.area_slug
+            area_slug: options?.area_slug,
+            allowUnavailable: true
         });
 
         this.#defaultConfig.tap_action = navigateTo("unavailable")

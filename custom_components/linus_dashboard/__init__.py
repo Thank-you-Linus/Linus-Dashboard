@@ -18,6 +18,8 @@ from custom_components.linus_dashboard.const import DOMAIN
 from .const import (
     CONF_ALARM_ENTITY,
     CONF_ALARM_ENTITY_ID,
+    CONF_EXCLUDED_DEVICE_CLASSES,
+    CONF_EXCLUDED_DOMAINS,
     CONF_WEATHER_ENTITY,
     CONF_WEATHER_ENTITY_ID,
 )
@@ -124,10 +126,12 @@ async def websocket_get_entities(
     """Handle request for getting entities."""
     config_entries = hass.config_entries.async_entries(DOMAIN)
     config = {
-        CONF_ALARM_ENTITY_ID: config_entries[0].options.get(CONF_ALARM_ENTITY)
-        or config_entries[0].data.get(CONF_ALARM_ENTITY),
-        CONF_WEATHER_ENTITY_ID: config_entries[0].options.get(CONF_WEATHER_ENTITY)
-        or config_entries[0].data.get(CONF_WEATHER_ENTITY),
+        CONF_ALARM_ENTITY_ID: config_entries[0].options.get(CONF_ALARM_ENTITY),
+        CONF_WEATHER_ENTITY_ID: config_entries[0].options.get(CONF_WEATHER_ENTITY),
+        CONF_EXCLUDED_DOMAINS: config_entries[0].options.get(CONF_EXCLUDED_DOMAINS),
+        CONF_EXCLUDED_DEVICE_CLASSES: config_entries[0].options.get(
+            CONF_EXCLUDED_DEVICE_CLASSES
+        ),
     }
 
     connection.send_message(websocket_api.result_message(msg["id"], config))

@@ -120,6 +120,8 @@ class AreaView {
 
 
     for (const domain of exposedDomainIds) {
+      if (Helper.linus_dashboard_config?.excluded_domains.includes(domain)) continue;
+      if (Helper.linus_dashboard_config?.excluded_device_classes.includes(domain)) continue;
       if (domain === "default") continue;
 
       try {

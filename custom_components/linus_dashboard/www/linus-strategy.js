@@ -495,7 +495,7 @@ class Helper {
      * @return {string} The template string.
      * @static
      */
-    static getCountTemplate(domain, operator, value, area_slug) {
+    static getCountTemplate(domain, operator, value, area_slug, allowUnavailable) {
         const states = [];
         if (!this.isInitialized()) {
             console.warn("Helper class should be initialized before calling this method!");
@@ -522,7 +522,7 @@ class Helper {
             }
         }
         const formatedValue = Array.isArray(value) ? JSON.stringify(value).replaceAll('"', "'") : `'${value}'`;
-        return `{% set entities = [${states}] %}{{ entities | selectattr('state','${operator}',${formatedValue}) | list | count }}`;
+        return `{% set entities = [${states}] %}{{ entities ${allowUnavailable ? "" : "| selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable')"}| selectattr('state','${operator}',${formatedValue}) | list | count }}`;
     }
     /**
      * Get a template string to define the number of a given device_class's entities with a certain state.
@@ -551,7 +551,7 @@ class Helper {
                 states.push(...newStates);
         }
         const formattedValue = Array.isArray(value) ? JSON.stringify(value).replace(/"/g, "'") : `'${value}'`;
-        return `{% set entities = [${states}] %}{{ entities | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | selectattr('state','${operator}',${formattedValue}) | list | count }}`;
+        return `{% set entities = [${states}] %}{{ entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | selectattr('state','${operator}',${formattedValue}) | list | count }}`;
     }
     /**
      * Get a template string to define the average state of sensor entities with a given device class.
@@ -586,7 +586,7 @@ class Helper {
             if (newStates)
                 states.push(...newStates);
         }
-        return `{% set entities = [${states}] %}{{ (entities | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | sum / entities | length) | round(1) }} {{ ${states[0]}.attributes.unit_of_measurement }}`;
+        return `{% set entities = [${states}] %}{{ (entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | sum / entities | length) | round(1) }} {% if ${states[0]}.attributes.unit_of_measurement is defined %} {{ ${states[0]}.attributes.unit_of_measurement }}{% endif %}`;
     }
     /**
      * Get device entities from the entity registry, filtered by area and domain.
@@ -708,7 +708,7 @@ class Helper {
     static getValidEntity(entity) {
         return entity.disabled_by === null && entity.hidden_by === null;
     }
-    static getFromDomainState({ domain, operator, value, ifReturn, elseReturn, area_slug }) {
+    static getFromDomainState({ domain, operator, value, ifReturn, elseReturn, area_slug, allowUnavailable }) {
         const states = [];
         if (!this.isInitialized()) {
             console.warn("Helper class should be initialized before calling this method!");
@@ -758,7 +758,7 @@ class Helper {
             ifReturn = ifReturn ?? "blue";
         }
         const formatedValue = Array.isArray(value) ? JSON.stringify(value).replaceAll('"', "'") : `'${value ?? 'on'}'`;
-        return `{% set entities = [${states}] %}{{ '${ifReturn ?? 'white'}' if entities | selectattr('state','${operator ?? 'eq'}', ${formatedValue}) | list | count > 0 else '${elseReturn ?? 'grey'}' }}`;
+        return `{% set entities = [${states}] %}{{ '${ifReturn ?? 'white'}' if entities ${allowUnavailable ? "" : "| selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable')"}| selectattr('state','${operator ?? 'eq'}', ${formatedValue}) | list | count > 0 else '${elseReturn ?? 'grey'}' }}`;
     }
     static getBinarySensorColorFromState(device_class, operator, value, ifReturn, elseReturn, area_slug = "global") {
         const states = [];
@@ -775,7 +775,7 @@ class Helper {
         }
         return `
       {% set entities = [${states}] %}
-      {{ '${ifReturn}' if entities | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | selectattr('state','${operator}','${value}') | list | count else '${elseReturn}' }}`;
+      {{ '${ifReturn}' if entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | selectattr('state','${operator}','${value}') | list | count else '${elseReturn}' }}`;
     }
     static getSensorColorFromState(device_class, area_slug = "global") {
         const states = [];
@@ -793,7 +793,7 @@ class Helper {
         if (device_class === "battery") {
             return `
         {% set entities = [${states}] %}
-        {% set bl = entities | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | sum / entities | length %}
+        {% set bl = entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | sum / entities | length %}
         {% if bl < 20 %}
           red
         {% elif bl < 30 %}
@@ -808,7 +808,7 @@ class Helper {
         if (device_class === "temperature") {
             return `
         {% set entities = [${states}] %}
-        {% set bl = entities | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | sum / entities | length %}
+        {% set bl = entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | sum / entities | length %}
         {% if bl < 20 %}
           blue
         {% elif bl < 30 %}
@@ -823,7 +823,7 @@ class Helper {
         if (device_class === "humidity") {
             return `
         {% set entities = [${states}] %}
-        {% set humidity = entities | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | sum / entities | length %}
+        {% set humidity = entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | sum / entities | length %}
         {% if humidity < 30 %}
           blue
         {% elif humidity >= 30 and humidity <= 60 %}
@@ -851,7 +851,7 @@ class Helper {
         if (device_class === "battery") {
             return `
         {% set entities = [${states}] %}
-        {% set bl = entities | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | sum / entities | length %}
+        {% set bl = entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | sum / entities | length %}
         {% if bl == 'unknown' or bl == 'unavailable' %}
         {% elif bl < 10 %} mdi:battery-outline
         {% elif bl < 20 %} mdi:battery-10
@@ -870,7 +870,7 @@ class Helper {
         if (device_class === "temperature") {
             return `
         {% set entities = [${states}] %}
-        {% set bl = entities | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | sum / entities | length %}
+        {% set bl = entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | sum / entities | length %}
         {% if bl < 20 %}
           mdi:thermometer-low
         {% elif bl < 30 %}
@@ -4163,14 +4163,15 @@ class UnavailableChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_0__.Abstrac
             icon_color: "orange",
             content: "",
         });
-        __classPrivateFieldGet(this, _UnavailableChip_defaultConfig, "f").content = _Helper__WEBPACK_IMPORTED_MODULE_2__.Helper.getCountTemplate("all", "eq", _variables__WEBPACK_IMPORTED_MODULE_3__.UNAVAILABLE, options?.area_slug);
+        __classPrivateFieldGet(this, _UnavailableChip_defaultConfig, "f").content = _Helper__WEBPACK_IMPORTED_MODULE_2__.Helper.getCountTemplate("all", "eq", _variables__WEBPACK_IMPORTED_MODULE_3__.UNAVAILABLE, options?.area_slug, true);
         __classPrivateFieldGet(this, _UnavailableChip_defaultConfig, "f").icon = _Helper__WEBPACK_IMPORTED_MODULE_2__.Helper.getFromDomainState({
             domain: "all",
             operator: "eq",
             value: _variables__WEBPACK_IMPORTED_MODULE_3__.UNAVAILABLE,
             ifReturn: __classPrivateFieldGet(this, _UnavailableChip_defaultConfig, "f").icon,
             elseReturn: "mdi:alert-circle-check-outline",
-            area_slug: options?.area_slug
+            area_slug: options?.area_slug,
+            allowUnavailable: true
         });
         __classPrivateFieldGet(this, _UnavailableChip_defaultConfig, "f").icon_color = _Helper__WEBPACK_IMPORTED_MODULE_2__.Helper.getFromDomainState({
             domain: "all",
@@ -4178,7 +4179,8 @@ class UnavailableChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_0__.Abstrac
             value: _variables__WEBPACK_IMPORTED_MODULE_3__.UNAVAILABLE,
             ifReturn: __classPrivateFieldGet(this, _UnavailableChip_defaultConfig, "f").icon_color,
             elseReturn: "green",
-            area_slug: options?.area_slug
+            area_slug: options?.area_slug,
+            allowUnavailable: true
         });
         __classPrivateFieldGet(this, _UnavailableChip_defaultConfig, "f").tap_action = (0,_utils__WEBPACK_IMPORTED_MODULE_1__.navigateTo)("unavailable");
         this.config = Object.assign(this.config, __classPrivateFieldGet(this, _UnavailableChip_defaultConfig, "f"));
@@ -4824,6 +4826,10 @@ class LinusStrategy extends HTMLTemplateElement {
     static createDomainSubviews(views) {
         const exposedViewIds = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getExposedViewIds();
         exposedViewIds.forEach(viewId => {
+            if (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.linus_dashboard_config?.excluded_domains.includes(viewId))
+                return;
+            if (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.linus_dashboard_config?.excluded_device_classes.includes(viewId))
+                return;
             if (![..._variables__WEBPACK_IMPORTED_MODULE_1__.CUSTOM_VIEWS, ..._variables__WEBPACK_IMPORTED_MODULE_1__.DOMAINS_VIEWS].includes(viewId))
                 return;
             if (_variables__WEBPACK_IMPORTED_MODULE_1__.DOMAINS_VIEWS.includes(viewId) && (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.domains[viewId] ?? []).length === 0)
@@ -5992,6 +5998,10 @@ async function createChipsFromList(chipsList, chipOptions, magic_device_id = "gl
         ? Object.keys(_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.domains)
         : area_slugs.flatMap(area_slug => Object.keys(_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas[area_slug]?.domains ?? {}));
     for (let chipType of chipsList) {
+        if (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.linus_dashboard_config?.excluded_domains.includes(chipType))
+            continue;
+        if (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.linus_dashboard_config?.excluded_device_classes.includes(chipType))
+            continue;
         if (!domains.includes(chipType))
             continue;
         const className = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.sanitizeClassName(chipType + "Chip");
@@ -6599,6 +6609,10 @@ class AreaView {
             });
         }
         for (const domain of exposedDomainIds) {
+            if (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.linus_dashboard_config?.excluded_domains.includes(domain))
+                continue;
+            if (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.linus_dashboard_config?.excluded_device_classes.includes(domain))
+                continue;
             if (domain === "default")
                 continue;
             try {
@@ -8317,6 +8331,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _Helper__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../Helper */ "./src/Helper.ts");
 /* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../utils */ "./src/utils.ts");
 /* harmony import */ var _cards_GroupedCard__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../cards/GroupedCard */ "./src/cards/GroupedCard.ts");
+/* harmony import */ var _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../cards/ControllerCard */ "./src/cards/ControllerCard.ts");
+
 
 
 
@@ -8370,7 +8386,8 @@ class UnavailableView {
             if (floor.areas_slug.length === 0)
                 continue;
             const floorCards = [];
-            for (const area of floor.areas_slug.map(area_slug => _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.areas[area_slug]).values()) {
+            const floors = Array.from(floor.areas_slug.map(area_slug => _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.areas[area_slug]).values());
+            for (const area of floors) {
                 const entities = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.areas[area.slug].entities;
                 const unavailableEntities = entities?.filter(entity_id => _variables__WEBPACK_IMPORTED_MODULE_0__.AREA_CARDS_DOMAINS.includes((0,_utils__WEBPACK_IMPORTED_MODULE_2__.getEntityDomain)(entity_id)) && _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.getEntityState(entity_id)?.state === _variables__WEBPACK_IMPORTED_MODULE_0__.UNAVAILABLE).map(entity_id => _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.entities[entity_id]);
                 const cardModule = await Promise.resolve(/*! import() */).then(__webpack_require__.bind(__webpack_require__, /*! ../cards/MiscellaneousCard */ "./src/cards/MiscellaneousCard.ts"));
@@ -8386,20 +8403,29 @@ class UnavailableView {
                     && !(entity.entity_category === "config"))
                     .map(entity => new cardModule.MiscellaneousCard(entity).getCard());
                 if (entityCards.length) {
-                    floorCards.push(new _cards_GroupedCard__WEBPACK_IMPORTED_MODULE_3__.GroupedCard(entityCards).getCard());
+                    const titleCardOptions = {
+                        subtitle: (0,_utils__WEBPACK_IMPORTED_MODULE_2__.getAreaName)(area),
+                        subtitleIcon: area.area_id === _variables__WEBPACK_IMPORTED_MODULE_0__.UNDISCLOSED ? "mdi:help-circle" : area.icon ?? "mdi:floor-plan",
+                        subtitleNavigate: area.slug,
+                        showControls: false
+                    };
+                    const areaControllerCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_4__.ControllerCard(titleCardOptions, "", area.slug).createCard();
+                    floorCards.push(...areaControllerCard, new _cards_GroupedCard__WEBPACK_IMPORTED_MODULE_3__.GroupedCard(entityCards).getCard());
                 }
             }
             if (floorCards.length) {
                 const titleSectionOptions = {
                     title: (0,_utils__WEBPACK_IMPORTED_MODULE_2__.getFloorName)(floor),
                     titleIcon: floor.icon ?? "mdi:floor-plan",
-                    titleNavigate: (0,_utils__WEBPACK_IMPORTED_MODULE_2__.slugify)(floor.name)
+                    titleNavigate: (0,_utils__WEBPACK_IMPORTED_MODULE_2__.slugify)(floor.name),
+                    showControls: false
                 };
-                viewSections.push({ type: "grid", cards: floorCards });
+                const floorControllerCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_4__.ControllerCard(titleSectionOptions, "", floor.floor_id).createCard();
+                const section = { type: "grid", cards: [] };
+                section.cards.push(...floorControllerCard);
+                section.cards.push(...floorCards);
+                viewSections.push(section);
             }
-        }
-        if (viewSections.length) {
-            viewSections.unshift({ type: "grid", cards: this.viewControllerCard });
         }
         return viewSections;
     }

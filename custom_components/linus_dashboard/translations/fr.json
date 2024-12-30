@@ -1,15 +1,5 @@
 {
     "config": {
-        "step": {
-            "user": {
-                "title": "Paramètres du tableau de bord Linus",
-                "description": "",
-                "data": {
-                    "alarm_entity": "Sélectionnez l'entité d'alarme",
-                    "weather_entity": "Sélectionnez l'entité météo"
-                }
-            }
-        },
         "abort": {
             "single_instance_allowed": "Une seule configuration du tableau de bord Linus est autorisée."
         }
@@ -21,7 +11,9 @@
                 "description": "",
                 "data": {
                     "alarm_entity": "Sélectionnez l'entité d'alarme",
-                    "weather_entity": "Sélectionnez l'entité météo"
+                    "weather_entity": "Sélectionnez l'entité météo",
+                    "excluded_domains": "Sélectionnez les domaines à exclure",
+                    "excluded_device_classes": "Sélectionnez les classes de dispositifs à exclure"
                 }
             }
         }

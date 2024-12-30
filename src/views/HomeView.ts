@@ -1,5 +1,4 @@
 import { Helper } from "../Helper";
-import { AbstractView } from "./AbstractView";
 import { views } from "../types/strategy/views";
 import { LovelaceChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
 import { ChipsCardConfig } from "../types/lovelace-mushroom/cards/chips-card";
@@ -9,12 +8,11 @@ import { ActionConfig, LovelaceSectionConfig, LovelaceViewConfig } from "../type
 import { PersonCardConfig } from "../types/lovelace-mushroom/cards/person-card-config";
 import { SettingsChip } from "../chips/SettingsChip";
 import { SettingsPopup } from "../popups/SettingsPopup";
-import { HOME_EXPOSED_CHIPS, UNAVAILABLE, UNDISCLOSED } from "../variables";
-import { createChipsFromList, getFloorName, getMAEntity, navigateTo, slugify } from "../utils";
+import { HOME_EXPOSED_CHIPS, UNDISCLOSED } from "../variables";
+import { createChipsFromList, getFloorName, navigateTo, slugify } from "../utils";
 import { WeatherChip } from "../chips/WeatherChip";
 import { AggregateChip } from "../chips/AggregateChip";
 import { PersonCard } from "../cards/PersonCard";
-import { ConditionalChip } from "../chips/ConditionalChip";
 import { UnavailableChip } from "../chips/UnavailableChip";
 
 

@@ -233,7 +233,7 @@ class HomeView {
               type: "custom:mushroom-chips-card",
               alignment: "end",
               chips: [
-                temperature &&
+                floor.floor_id !== UNDISCLOSED && temperature &&
                 new AggregateChip({
                   device_class: "temperature",
                   show_content: true,

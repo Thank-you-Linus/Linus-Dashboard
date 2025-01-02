@@ -591,7 +591,11 @@ class Helper {
       if (newStates) states.push(...newStates);
     }
 
-    return `{% set entities = [${states}] %}{{ (entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | sum / entities | length) | round(1) }} {% if ${states[0]}.attributes.unit_of_measurement is defined %} {{ ${states[0]}.attributes.unit_of_measurement }}{% endif %}`;
+    return `
+      {% set entities = [${states}] | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | list %}
+      {% if entities | length > 0 %}
+        {{ (entities  | sum / entities | length) | round(1) }} {% if ${states[0]}.attributes.unit_of_measurement is defined %} {{ ${states[0]}.attributes.unit_of_measurement }}{% endif %}
+      {% endif %}`;
   }
 
   /**
@@ -854,8 +858,8 @@ class Helper {
 
     if (device_class === "battery") {
       return `
-        {% set entities = [${states}] %}
-        {% set bl = entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | sum / entities | length %}
+        {% set entities = [${states}] | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | list %}
+        {% set bl = entities  | sum / entities | length %}
         {% if bl < 20 %}
           red
         {% elif bl < 30 %}
@@ -870,8 +874,8 @@ class Helper {
 
     if (device_class === "temperature") {
       return `
-        {% set entities = [${states}] %}
-        {% set bl = entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | sum / entities | length %}
+        {% set entities = [${states}] | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | list %}
+        {% set bl = entities  | sum / entities | length %}
         {% if bl < 20 %}
           blue
         {% elif bl < 30 %}
@@ -886,8 +890,8 @@ class Helper {
 
     if (device_class === "humidity") {
       return `
-        {% set entities = [${states}] %}
-        {% set humidity = entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | sum / entities | length %}
+        {% set entities = [${states}] | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | list %}
+        {% set humidity = entities  | sum / entities | length %}
         {% if humidity < 30 %}
           blue
         {% elif humidity >= 30 and humidity <= 60 %}
@@ -919,8 +923,8 @@ class Helper {
 
     if (device_class === "battery") {
       return `
-        {% set entities = [${states}] %}
-        {% set bl = entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | sum / entities | length %}
+        {% set entities = [${states}] | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | list %}
+        {% set bl = entities  | sum / entities | length %}
         {% if bl == 'unknown' or bl == 'unavailable' %}
         {% elif bl < 10 %} mdi:battery-outline
         {% elif bl < 20 %} mdi:battery-10
@@ -939,8 +943,8 @@ class Helper {
 
     if (device_class === "temperature") {
       return `
-        {% set entities = [${states}] %}
-        {% set bl = entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | sum / entities | length %}
+        {% set entities = [${states}] | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | list %}
+        {% set bl = entities  | sum / entities | length %}
         {% if bl < 20 %}
           mdi:thermometer-low
         {% elif bl < 30 %}

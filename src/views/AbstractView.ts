@@ -157,7 +157,7 @@ abstract class AbstractView {
           titleNavigate: slugify(floor.name)
         };
         if (this.#domain) {
-          if (!AGGREGATE_DOMAINS.includes(this.#domain) || this.#device_class) {
+          if (floor.floor_id !== UNDISCLOSED && (!AGGREGATE_DOMAINS.includes(this.#domain) || this.#device_class)) {
             titleSectionOptions.showControls = Helper.strategyOptions.domains[this.#domain].showControls;
             titleSectionOptions.extraControls = Helper.strategyOptions.domains[this.#domain].extraControls;
             titleSectionOptions.controlChipOptions = {

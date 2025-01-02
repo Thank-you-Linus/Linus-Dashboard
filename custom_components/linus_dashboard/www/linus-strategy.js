@@ -586,7 +586,11 @@ class Helper {
             if (newStates)
                 states.push(...newStates);
         }
-        return `{% set entities = [${states}] %}{{ (entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | sum / entities | length) | round(1) }} {% if ${states[0]}.attributes.unit_of_measurement is defined %} {{ ${states[0]}.attributes.unit_of_measurement }}{% endif %}`;
+        return `
+      {% set entities = [${states}] | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | list %}
+      {% if entities | length > 0 %}
+        {{ (entities  | sum / entities | length) | round(1) }} {% if ${states[0]}.attributes.unit_of_measurement is defined %} {{ ${states[0]}.attributes.unit_of_measurement }}{% endif %}
+      {% endif %}`;
     }
     /**
      * Get device entities from the entity registry, filtered by area and domain.
@@ -792,8 +796,8 @@ class Helper {
         }
         if (device_class === "battery") {
             return `
-        {% set entities = [${states}] %}
-        {% set bl = entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | sum / entities | length %}
+        {% set entities = [${states}] | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | list %}
+        {% set bl = entities  | sum / entities | length %}
         {% if bl < 20 %}
           red
         {% elif bl < 30 %}
@@ -807,8 +811,8 @@ class Helper {
         }
         if (device_class === "temperature") {
             return `
-        {% set entities = [${states}] %}
-        {% set bl = entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | sum / entities | length %}
+        {% set entities = [${states}] | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | list %}
+        {% set bl = entities  | sum / entities | length %}
         {% if bl < 20 %}
           blue
         {% elif bl < 30 %}
@@ -822,8 +826,8 @@ class Helper {
         }
         if (device_class === "humidity") {
             return `
-        {% set entities = [${states}] %}
-        {% set humidity = entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | sum / entities | length %}
+        {% set entities = [${states}] | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | list %}
+        {% set humidity = entities  | sum / entities | length %}
         {% if humidity < 30 %}
           blue
         {% elif humidity >= 30 and humidity <= 60 %}
@@ -850,8 +854,8 @@ class Helper {
         }
         if (device_class === "battery") {
             return `
-        {% set entities = [${states}] %}
-        {% set bl = entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | sum / entities | length %}
+        {% set entities = [${states}] | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | list %}
+        {% set bl = entities  | sum / entities | length %}
         {% if bl == 'unknown' or bl == 'unavailable' %}
         {% elif bl < 10 %} mdi:battery-outline
         {% elif bl < 20 %} mdi:battery-10
@@ -869,8 +873,8 @@ class Helper {
         }
         if (device_class === "temperature") {
             return `
-        {% set entities = [${states}] %}
-        {% set bl = entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | sum / entities | length %}
+        {% set entities = [${states}] | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | list %}
+        {% set bl = entities  | sum / entities | length %}
         {% if bl < 20 %}
           mdi:thermometer-low
         {% elif bl < 30 %}
@@ -4976,7 +4980,7 @@ class LinusStrategy extends HTMLTemplateElement {
     }
 }
 customElements.define("ll-strategy-linus-strategy", LinusStrategy);
-const version = "v1.0.5";
+const version = "v1.0.6";
 console.info("%c Linus Strategy %c ".concat(version, " "), "color: #F5F5DC; background: #004225; font-weight: 700;", "color: #004225; background: #F5F5DC; font-weight: 700;");
 
 
@@ -6392,7 +6396,7 @@ class AbstractView {
                     titleNavigate: (0,_utils__WEBPACK_IMPORTED_MODULE_3__.slugify)(floor.name)
                 };
                 if (__classPrivateFieldGet(this, _AbstractView_domain, "f")) {
-                    if (!_variables__WEBPACK_IMPORTED_MODULE_0__.AGGREGATE_DOMAINS.includes(__classPrivateFieldGet(this, _AbstractView_domain, "f")) || __classPrivateFieldGet(this, _AbstractView_device_class, "f")) {
+                    if (floor.floor_id !== _variables__WEBPACK_IMPORTED_MODULE_0__.UNDISCLOSED && (!_variables__WEBPACK_IMPORTED_MODULE_0__.AGGREGATE_DOMAINS.includes(__classPrivateFieldGet(this, _AbstractView_domain, "f")) || __classPrivateFieldGet(this, _AbstractView_device_class, "f"))) {
                         titleSectionOptions.showControls = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.strategyOptions.domains[__classPrivateFieldGet(this, _AbstractView_domain, "f")].showControls;
                         titleSectionOptions.extraControls = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.strategyOptions.domains[__classPrivateFieldGet(this, _AbstractView_domain, "f")].extraControls;
                         titleSectionOptions.controlChipOptions = {
@@ -7496,7 +7500,7 @@ class HomeView {
                             type: "custom:mushroom-chips-card",
                             alignment: "end",
                             chips: [
-                                temperature &&
+                                floor.floor_id !== _variables__WEBPACK_IMPORTED_MODULE_3__.UNDISCLOSED && temperature &&
                                     new _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_6__.AggregateChip({
                                         device_class: "temperature",
                                         show_content: true,

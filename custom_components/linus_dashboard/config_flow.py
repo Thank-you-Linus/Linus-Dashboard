@@ -15,6 +15,7 @@ from homeassistant.helpers.selector import (
     EntitySelectorConfig,
     SelectSelector,
     SelectSelectorConfig,
+    EntitySelector,
 )
 
 from .const import (
@@ -22,6 +23,7 @@ from .const import (
     CONF_EXCLUDED_DEVICE_CLASSES,
     CONF_EXCLUDED_DOMAINS,
     CONF_WEATHER_ENTITY,
+    CONF_EXCLUDED_ENTITIES,
     DOMAIN,
     NAME,
 )
@@ -113,6 +115,14 @@ class LinusDashboardEditFlow(config_entries.OptionsFlow):
             ): SelectSelector(
                 SelectSelectorConfig(
                     options=device_class_list,
+                    multiple=True,
+                ),
+            ),
+            vol.Optional(
+                CONF_EXCLUDED_ENTITIES,  # Ajout du nouveau champ
+                default=self.config_entry.options.get(CONF_EXCLUDED_ENTITIES, []),
+            ): EntitySelector(
+                EntitySelectorConfig(
                     multiple=True,
                 ),
             ),

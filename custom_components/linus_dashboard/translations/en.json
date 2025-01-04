@@ -25,7 +25,15 @@
                     "alarm_entity": "Select alarm entity",
                     "weather_entity": "Select weather entity",
                     "excluded_domains": "Select domains to exclude",
-                    "excluded_device_classes": "Select device classes to exclude"
+                    "excluded_device_classes": "Select device classes to exclude",
+                    "excluded_entities": "Select entities to exclude"
+                },
+                "data_description": {
+                    "alarm_entity": "Alarm entity used to display the alarm status.",
+                    "weather_entity": "Weather entity used to display weather conditions.",
+                    "excluded_domains": "Domains that will be excluded from the dashboard.",
+                    "excluded_device_classes": "Device classes that will be excluded from the dashboard.",
+                    "excluded_entities": "Specific entities that will be excluded from the dashboard."
                 }
             }
         }

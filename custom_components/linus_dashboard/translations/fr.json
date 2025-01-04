@@ -8,12 +8,20 @@
         "step": {
             "init": {
                 "title": "Paramètres du tableau de bord Linus",
-                "description": "",
+                "description": "Configurez les paramètres pour le tableau de bord Linus.",
                 "data": {
                     "alarm_entity": "Sélectionnez l'entité d'alarme",
                     "weather_entity": "Sélectionnez l'entité météo",
                     "excluded_domains": "Sélectionnez les domaines à exclure",
-                    "excluded_device_classes": "Sélectionnez les classes de dispositifs à exclure"
+                    "excluded_device_classes": "Sélectionnez les classes de dispositifs à exclure",
+                    "excluded_entities": "Sélectionnez les entités à exclure"
+                },
+                "data_description": {
+                    "alarm_entity": "Entité d'alarme utilisée pour afficher l'état de l'alarme.",
+                    "weather_entity": "Entité météo utilisée pour afficher les conditions météorologiques.",
+                    "excluded_domains": "Domaines qui seront exclus du tableau de bord.",
+                    "excluded_device_classes": "Classes de dispositifs qui seront exclues du tableau de bord.",
+                    "excluded_entities": "Entités spécifiques qui seront exclues du tableau de bord."
                 }
             }
         }

@@ -351,7 +351,7 @@ class Helper {
         const [entities, devices, areas, floors, entity_component_icons, services_icons, linus_dashboard_config] = homeAssistantRegistries;
         __classPrivateFieldSet(this, _a, deepmerge__WEBPACK_IMPORTED_MODULE_1___default()(entity_component_icons.resources, services_icons.resources), "f", _Helper_icons);
         __classPrivateFieldSet(this, _a, linus_dashboard_config, "f", _Helper_linus_dashboard_config);
-        // Dictionnaires pour un accès rapide
+        // Dictionaries for quick access
         const areasById = Object.fromEntries(areas.map(a => [a.area_id, a]));
         const floorsById = Object.fromEntries(floors.map(f => [f.floor_id, f]));
         const devicesByAreaIdMap = Object.fromEntries(devices.map(device => [device.id, device.area_id]));
@@ -360,6 +360,20 @@ class Helper {
         const devicesByAreaId = {};
         __classPrivateFieldSet(this, _a, entities.reduce((acc, entity) => {
             if (!(entity.entity_id in __classPrivateFieldGet(this, _a, "f", _Helper_hassStates)) || entity.hidden_by)
+                return acc;
+            if (_a.linus_dashboard_config?.excluded_entities?.includes(entity.entity_id))
+                return acc;
+            let domain = (0,_utils__WEBPACK_IMPORTED_MODULE_3__.getEntityDomain)(entity.entity_id);
+            if (Object.keys(_variables__WEBPACK_IMPORTED_MODULE_2__.DEVICE_CLASSES).includes(domain)) {
+                const entityState = _a.getEntityState(entity.entity_id);
+                if (entityState?.attributes?.device_class)
+                    domain = entityState.attributes.device_class;
+            }
+            if (!__classPrivateFieldGet(this, _a, "f", _Helper_domains)[domain])
+                __classPrivateFieldGet(this, _a, "f", _Helper_domains)[domain] = [];
+            if (_a.linus_dashboard_config?.excluded_domains?.includes(domain))
+                return acc;
+            if (_a.linus_dashboard_config?.excluded_domains?.includes(domain))
                 return acc;
             const area = entity.area_id ? areasById[entity.area_id] : {};
             const floor = area?.floor_id ? floorsById[area?.floor_id] : {};
@@ -379,19 +393,11 @@ class Helper {
                     entitiesByDeviceId[entity.device_id] = [];
                 entitiesByDeviceId[entity.device_id].push(enrichedEntity);
             }
-            let domain = (0,_utils__WEBPACK_IMPORTED_MODULE_3__.getEntityDomain)(entity.entity_id);
-            if (Object.keys(_variables__WEBPACK_IMPORTED_MODULE_2__.DEVICE_CLASSES).includes(domain)) {
-                const entityState = _a.getEntityState(entity.entity_id);
-                if (entityState?.attributes?.device_class)
-                    domain = entityState.attributes.device_class;
-            }
-            if (!__classPrivateFieldGet(this, _a, "f", _Helper_domains)[domain])
-                __classPrivateFieldGet(this, _a, "f", _Helper_domains)[domain] = [];
             if (entity.platform !== _variables__WEBPACK_IMPORTED_MODULE_2__.MAGIC_AREAS_DOMAIN)
                 __classPrivateFieldGet(this, _a, "f", _Helper_domains)[domain].push(enrichedEntity);
             return acc;
         }, {}), "f", _Helper_entities);
-        // Enrichir les appareils
+        // Enrich devices
         __classPrivateFieldSet(this, _a, devices.reduce((acc, device) => {
             const entitiesInDevice = entitiesByDeviceId[device.id] || [];
             const area = device.area_id ? areasById[device.area_id] : {};
@@ -412,8 +418,7 @@ class Helper {
                 __classPrivateFieldGet(this, _a, "f", _Helper_magicAreasDevices)[(0,_utils__WEBPACK_IMPORTED_MODULE_3__.getMagicAreaSlug)(device)] = {
                     ...device,
                     area_name: device.name,
-                    entities: entitiesInDevice
-                        .reduce((entities, entity) => {
+                    entities: entitiesInDevice.reduce((entities, entity) => {
                         entities[entity.translation_key] = entity;
                         return entities;
                     }, {})
@@ -429,7 +434,7 @@ class Helper {
             };
             areas.push(__classPrivateFieldGet(this, _a, "f", _Helper_strategyOptions).areas.undisclosed);
         }
-        // Enrichir les zones
+        // Enrich areas
         __classPrivateFieldSet(this, _a, areas.reduce((acc, area) => {
             const areaEntities = entitiesByAreaId[area.area_id]?.map(entity => entity.entity_id) || [];
             const slug = area.area_id === _variables__WEBPACK_IMPORTED_MODULE_2__.UNDISCLOSED ? area.area_id : (0,_utils__WEBPACK_IMPORTED_MODULE_3__.slugify)(area.name);
@@ -453,7 +458,7 @@ class Helper {
             };
             floors.push(__classPrivateFieldGet(this, _a, "f", _Helper_strategyOptions).floors.undisclosed);
         }
-        // Enrichir les étages
+        // Enrich floors
         __classPrivateFieldSet(this, _a, floors.reduce((acc, floor) => {
             const areasInFloor = Object.values(__classPrivateFieldGet(this, _a, "f", _Helper_areas)).filter(area => area?.floor_id === floor.floor_id);
             acc[floor.floor_id] = {
@@ -470,7 +475,6 @@ class Helper {
         __classPrivateFieldGet(this, _a, "f", _Helper_strategyOptions).domains = Object.fromEntries(Object.entries(__classPrivateFieldGet(this, _a, "f", _Helper_strategyOptions).domains).sort(([, a], [, b]) => {
             return (a.order ?? Infinity) - (b.order ?? Infinity) || (a.title ?? "undefined").localeCompare(b.title ?? "undefined");
         }));
-        // console.log('this.#areas', info, this.#areas, this.#magicAreasDevices)
         __classPrivateFieldSet(this, _a, true, "f", _Helper_initialized);
     }
     /**
@@ -4830,9 +4834,9 @@ class LinusStrategy extends HTMLTemplateElement {
     static createDomainSubviews(views) {
         const exposedViewIds = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getExposedViewIds();
         exposedViewIds.forEach(viewId => {
-            if (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.linus_dashboard_config?.excluded_domains.includes(viewId))
+            if (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.linus_dashboard_config?.excluded_domains?.includes(viewId))
                 return;
-            if (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.linus_dashboard_config?.excluded_device_classes.includes(viewId))
+            if (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.linus_dashboard_config?.excluded_device_classes?.includes(viewId))
                 return;
             if (![..._variables__WEBPACK_IMPORTED_MODULE_1__.CUSTOM_VIEWS, ..._variables__WEBPACK_IMPORTED_MODULE_1__.DOMAINS_VIEWS].includes(viewId))
                 return;
@@ -6002,9 +6006,9 @@ async function createChipsFromList(chipsList, chipOptions, magic_device_id = "gl
         ? Object.keys(_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.domains)
         : area_slugs.flatMap(area_slug => Object.keys(_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas[area_slug]?.domains ?? {}));
     for (let chipType of chipsList) {
-        if (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.linus_dashboard_config?.excluded_domains.includes(chipType))
+        if (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.linus_dashboard_config?.excluded_domains?.includes(chipType))
             continue;
-        if (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.linus_dashboard_config?.excluded_device_classes.includes(chipType))
+        if (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.linus_dashboard_config?.excluded_device_classes?.includes(chipType))
             continue;
         if (!domains.includes(chipType))
             continue;
@@ -6613,9 +6617,9 @@ class AreaView {
             });
         }
         for (const domain of exposedDomainIds) {
-            if (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.linus_dashboard_config?.excluded_domains.includes(domain))
+            if (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.linus_dashboard_config?.excluded_domains?.includes(domain))
                 continue;
-            if (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.linus_dashboard_config?.excluded_device_classes.includes(domain))
+            if (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.linus_dashboard_config?.excluded_device_classes?.includes(domain))
                 continue;
             if (domain === "default")
                 continue;
@@ -8113,8 +8117,7 @@ class SecurityView {
                 globalSection.cards.push(new _cards_BinarySensorCard__WEBPACK_IMPORTED_MODULE_3__.BinarySensorCard(aggregate_window, { tap_action: (0,_utils__WEBPACK_IMPORTED_MODULE_4__.navigateTo)('security-details') }).getCard());
         }
         const sections = [globalSection];
-        if (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.domains.camera?.length)
-            sections.push(await this.createCamerasSection());
+        // if (Helper.domains.camera?.length) sections.push(await this.createCamerasSection())
         return sections;
     }
     /**

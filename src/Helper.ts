@@ -286,11 +286,10 @@ class Helper {
     this.#strategyOptions = deepmerge(configurationDefaults, info.config?.strategy?.options ?? {});
     this.#debug = this.#strategyOptions.debug;
 
-    let homeAssistantRegistries = []
+    let homeAssistantRegistries = [];
 
     try {
       // Query the registries of Home Assistant.
-
       homeAssistantRegistries = await Promise.all([
         info.hass.callWS({ type: "config/entity_registry/list" }) as Promise<EntityRegistryEntry[]>,
         info.hass.callWS({ type: "config/device_registry/list" }) as Promise<DeviceRegistryEntry[]>,
@@ -300,7 +299,6 @@ class Helper {
         info.hass.callWS({ type: "frontend/get_icons", category: "services" }) as Promise<FrontendEntityComponentIconResources>,
         info.hass.callWS({ type: "linus_dashboard/get_config" }) as Promise<LinusDashboardConfig>,
       ]);
-
     } catch (e) {
       Helper.logError("An error occurred while querying Home assistant's registries!", e);
       throw 'Check the console for details';
@@ -311,7 +309,7 @@ class Helper {
     this.#icons = deepmerge(entity_component_icons.resources, services_icons.resources);
     this.#linus_dashboard_config = linus_dashboard_config;
 
-    // Dictionnaires pour un accès rapide
+    // Dictionaries for quick access
     const areasById = Object.fromEntries(areas.map(a => [a.area_id, a]));
     const floorsById = Object.fromEntries(floors.map(f => [f.floor_id, f]));
     const devicesByAreaIdMap = Object.fromEntries(devices.map(device => [device.id, device.area_id]));
@@ -320,8 +318,20 @@ class Helper {
     const devicesByAreaId: Record<string, StrategyDevice[]> = {};
 
     this.#entities = entities.reduce((acc, entity) => {
-
       if (!(entity.entity_id in this.#hassStates) || entity.hidden_by) return acc;
+      if (Helper.linus_dashboard_config?.excluded_entities?.includes(entity.entity_id)) return acc;
+
+      let domain = getEntityDomain(entity.entity_id);
+
+      if (Object.keys(DEVICE_CLASSES).includes(domain)) {
+        const entityState = Helper.getEntityState(entity.entity_id);
+        if (entityState?.attributes?.device_class) domain = entityState.attributes.device_class;
+      }
+
+      if (!this.#domains[domain]) this.#domains[domain] = [];
+
+      if (Helper.linus_dashboard_config?.excluded_domains?.includes(domain)) return acc;
+      if (Helper.linus_dashboard_config?.excluded_domains?.includes(domain)) return acc;
 
       const area = entity.area_id ? areasById[entity.area_id] : {} as StrategyArea;
       const floor = area?.floor_id ? floorsById[area?.floor_id] : {} as StrategyFloor;
@@ -343,19 +353,12 @@ class Helper {
         entitiesByDeviceId[entity.device_id].push(enrichedEntity);
       }
 
-
-      let domain = getEntityDomain(entity.entity_id)
-      if (Object.keys(DEVICE_CLASSES).includes(domain)) {
-        const entityState = Helper.getEntityState(entity.entity_id);
-        if (entityState?.attributes?.device_class) domain = entityState.attributes.device_class
-      }
-      if (!this.#domains[domain]) this.#domains[domain] = [];
       if (entity.platform !== MAGIC_AREAS_DOMAIN) this.#domains[domain].push(enrichedEntity);
 
       return acc;
     }, {} as Record<string, StrategyEntity>);
 
-    // Enrichir les appareils
+    // Enrich devices
     this.#devices = devices.reduce((acc, device) => {
       const entitiesInDevice = entitiesByDeviceId[device.id] || [];
       const area = device.area_id ? areasById[device.area_id] : {} as StrategyArea;
@@ -379,34 +382,28 @@ class Helper {
         this.#magicAreasDevices[getMagicAreaSlug(device as MagicAreaRegistryEntry)] = {
           ...device,
           area_name: device.name!,
-          entities: entitiesInDevice
-            .reduce((entities: Record<string, StrategyEntity>, entity) => {
-              entities[entity.translation_key!] = entity;
-              return entities;
-            }, {})
-        }
+          entities: entitiesInDevice.reduce((entities: Record<string, StrategyEntity>, entity) => {
+            entities[entity.translation_key!] = entity;
+            return entities;
+          }, {})
+        };
       }
 
       return acc;
     }, {} as Record<string, StrategyDevice>);
 
-
     // Create and add the undisclosed area if not hidden in the strategy options.
     if (!this.#strategyOptions.areas.undisclosed?.hidden) {
-
       this.#strategyOptions.areas.undisclosed = {
         ...configurationDefaults.areas.undisclosed,
         ...this.#strategyOptions.areas.undisclosed,
       };
-
       areas.push(this.#strategyOptions.areas.undisclosed);
     }
 
-    // Enrichir les zones
+    // Enrich areas
     this.#areas = areas.reduce((acc, area) => {
-
       const areaEntities = entitiesByAreaId[area.area_id]?.map(entity => entity.entity_id) || [];
-
       const slug = area.area_id === UNDISCLOSED ? area.area_id : slugify(area.name);
 
       const enrichedArea = {
@@ -423,19 +420,16 @@ class Helper {
       return acc;
     }, {} as Record<string, StrategyArea>);
 
-
     // Create and add the undisclosed floor if not hidden in the strategy options.
     if (!this.#strategyOptions.areas.undisclosed?.hidden) {
-
       this.#strategyOptions.floors.undisclosed = {
         ...configurationDefaults.floors.undisclosed,
         ...this.#strategyOptions.floors.undisclosed,
       };
-
       floors.push(this.#strategyOptions.floors.undisclosed);
     }
 
-    // Enrichir les étages
+    // Enrich floors
     this.#floors = floors.reduce((acc, floor) => {
       const areasInFloor = Object.values(this.#areas).filter(area => area?.floor_id === floor.floor_id);
 
@@ -446,7 +440,6 @@ class Helper {
 
       return acc;
     }, {} as Record<string, StrategyFloor>);
-
 
     // Sort custom and default views of the strategy options by order first and then by title.
     this.#strategyOptions.views = Object.fromEntries(
@@ -461,8 +454,6 @@ class Helper {
         return (a.order ?? Infinity) - (b.order ?? Infinity) || (a.title ?? "undefined").localeCompare(b.title ?? "undefined");
       }),
     );
-
-    // console.log('this.#areas', info, this.#areas, this.#magicAreasDevices)
 
     this.#initialized = true;
   }

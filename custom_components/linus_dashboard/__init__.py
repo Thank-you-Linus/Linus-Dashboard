@@ -20,6 +20,7 @@ from .const import (
     CONF_ALARM_ENTITY_ID,
     CONF_EXCLUDED_DEVICE_CLASSES,
     CONF_EXCLUDED_DOMAINS,
+    CONF_EXCLUDED_ENTITIES,
     CONF_WEATHER_ENTITY,
     CONF_WEATHER_ENTITY_ID,
 )
@@ -128,6 +129,7 @@ async def websocket_get_entities(
     config = {
         CONF_ALARM_ENTITY_ID: config_entries[0].options.get(CONF_ALARM_ENTITY),
         CONF_WEATHER_ENTITY_ID: config_entries[0].options.get(CONF_WEATHER_ENTITY),
+        CONF_EXCLUDED_ENTITIES: config_entries[0].options.get(CONF_EXCLUDED_ENTITIES),
         CONF_EXCLUDED_DOMAINS: config_entries[0].options.get(CONF_EXCLUDED_DOMAINS),
         CONF_EXCLUDED_DEVICE_CLASSES: config_entries[0].options.get(
             CONF_EXCLUDED_DEVICE_CLASSES

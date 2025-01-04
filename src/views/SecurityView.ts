@@ -169,7 +169,7 @@ class SecurityView {
     }
 
     const sections = [globalSection]
-    if (Helper.domains.camera?.length) sections.push(await this.createCamerasSection())
+    // if (Helper.domains.camera?.length) sections.push(await this.createCamerasSection())
 
     return sections;
   }

@@ -130,8 +130,8 @@ export async function createChipsFromList(chipsList: string[], chipOptions?: Par
         : area_slugs.flatMap(area_slug => Object.keys(Helper.areas[area_slug]?.domains ?? {}));
 
     for (let chipType of chipsList) {
-        if (Helper.linus_dashboard_config?.excluded_domains.includes(chipType)) continue;
-        if (Helper.linus_dashboard_config?.excluded_device_classes.includes(chipType)) continue;
+        if (Helper.linus_dashboard_config?.excluded_domains?.includes(chipType)) continue;
+        if (Helper.linus_dashboard_config?.excluded_device_classes?.includes(chipType)) continue;
         if (!domains.includes(chipType)) continue;
 
         const className = Helper.sanitizeClassName(chipType + "Chip");

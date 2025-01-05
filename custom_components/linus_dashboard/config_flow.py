@@ -15,15 +15,14 @@ from homeassistant.helpers.selector import (
     EntitySelectorConfig,
     SelectSelector,
     SelectSelectorConfig,
-    EntitySelector,
 )
 
 from .const import (
     CONF_ALARM_ENTITY,
     CONF_EXCLUDED_DEVICE_CLASSES,
     CONF_EXCLUDED_DOMAINS,
-    CONF_WEATHER_ENTITY,
     CONF_EXCLUDED_ENTITIES,
+    CONF_WEATHER_ENTITY,
     DOMAIN,
     NAME,
 )

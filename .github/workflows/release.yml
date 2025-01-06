@@ -16,7 +16,7 @@ jobs:
     steps:
       # 1. Checkout le code source
       - name: "Checkout the repository"
-        uses: "actions/checkout@v4.2.2"
+        uses: "actions/checkout@v4"
 
       # 2. Configurer Node.js
       - name: "Set up Node.js"

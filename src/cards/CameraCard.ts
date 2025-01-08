@@ -1,7 +1,7 @@
-import {AbstractCard} from "./AbstractCard";
-import {cards} from "../types/strategy/cards";
-import {EntityRegistryEntry} from "../types/homeassistant/data/entity_registry";
-import {PictureEntityCardConfig} from "../types/homeassistant/panels/lovelave/cards/types";
+import { AbstractCard } from "./AbstractCard";
+import { cards } from "../types/strategy/cards";
+import { EntityRegistryEntry } from "../types/homeassistant/data/entity_registry";
+import { PictureEntityCardConfig } from "../types/homeassistant/panels/lovelave/cards/types";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**
@@ -24,7 +24,7 @@ class CameraCard extends AbstractCard {
     type: "picture-entity",
     show_name: false,
     show_state: false,
-    camera_view: "live",
+    // camera_view: "live",
   };
 
   /**
@@ -41,4 +41,4 @@ class CameraCard extends AbstractCard {
   }
 }
 
-export {CameraCard};
+export { CameraCard };

@@ -373,8 +373,6 @@ class Helper {
                 __classPrivateFieldGet(this, _a, "f", _Helper_domains)[domain] = [];
             if (_a.linus_dashboard_config?.excluded_domains?.includes(domain))
                 return acc;
-            if (_a.linus_dashboard_config?.excluded_domains?.includes(domain))
-                return acc;
             const area = entity.area_id ? areasById[entity.area_id] : {};
             const floor = area?.floor_id ? floorsById[area?.floor_id] : {};
             const enrichedEntity = {
@@ -1370,7 +1368,7 @@ class CameraCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractCard
             type: "picture-entity",
             show_name: false,
             show_state: false,
-            camera_view: "live",
+            // camera_view: "live",
         });
         this.config = Object.assign(this.config, __classPrivateFieldGet(this, _CameraCard_defaultConfig, "f"), options);
     }
@@ -8094,11 +8092,7 @@ class SecurityView {
                 heading_style: "subtitle",
             });
             for (const person of persons) {
-                globalSection.cards.push(new _cards_PersonCard__WEBPACK_IMPORTED_MODULE_2__.PersonCard(person, {
-                    layout: "horizontal",
-                    primary_info: "name",
-                    secondary_info: "state"
-                }).getCard());
+                globalSection.cards.push(new _cards_PersonCard__WEBPACK_IMPORTED_MODULE_2__.PersonCard(person).getCard());
             }
         }
         const globalDevice = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices["global"];
@@ -8117,7 +8111,8 @@ class SecurityView {
                 globalSection.cards.push(new _cards_BinarySensorCard__WEBPACK_IMPORTED_MODULE_3__.BinarySensorCard(aggregate_window, { tap_action: (0,_utils__WEBPACK_IMPORTED_MODULE_4__.navigateTo)('security-details') }).getCard());
         }
         const sections = [globalSection];
-        // if (Helper.domains.camera?.length) sections.push(await this.createCamerasSection())
+        if (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.domains.camera?.length)
+            sections.push(await this.createCamerasSection());
         return sections;
     }
     /**
@@ -8144,16 +8139,8 @@ class SecurityView {
                 }
             ]
         };
-        const orderedFloors = Object.values(_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.floors).sort((a, b) => {
-            // Check if 'level' is undefined in either object
-            if (a.level === undefined)
-                return 1; // a should come after b
-            if (b.level === undefined)
-                return -1; // b should come after a
-            // Both 'level' values are defined, compare them
-            return a.level - b.level;
-        });
-        for (const floor of orderedFloors) {
+        const floors = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.orderedFloors;
+        for (const floor of floors) {
             if (floor.areas_slug.length === 0)
                 continue;
             let floorCards = [
@@ -8170,7 +8157,7 @@ class SecurityView {
                 }
             ];
             // Create cards for each area.
-            for (const [i, area] of floor.areas_slug.map(area_slug => _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas[area_slug]).entries()) {
+            for (const area of floor.areas_slug.map(area_slug => _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas[area_slug])) {
                 const entities = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getAreaEntities(area, domain);
                 const className = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.sanitizeClassName(domain + "Card");
                 const cardModule = await __webpack_require__("./src/cards lazy recursive ^\\.\\/.*$")(`./${className}`);
@@ -8211,7 +8198,7 @@ class SecurityView {
                         titleCardOptions.extraControls = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain].extraControls;
                     }
                     // Create and insert a Controller card.
-                    areaCards.unshift(...new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_5__.ControllerCard(target, titleCardOptions, domain).createCard());
+                    areaCards.unshift(...new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_5__.ControllerCard(titleCardOptions, domain).createCard());
                     floorCards.push(...areaCards);
                 }
             }

@@ -331,7 +331,6 @@ class Helper {
       if (!this.#domains[domain]) this.#domains[domain] = [];
 
       if (Helper.linus_dashboard_config?.excluded_domains?.includes(domain)) return acc;
-      if (Helper.linus_dashboard_config?.excluded_domains?.includes(domain)) return acc;
 
       const area = entity.area_id ? areasById[entity.area_id] : {} as StrategyArea;
       const floor = area?.floor_id ? floorsById[area?.floor_id] : {} as StrategyFloor;

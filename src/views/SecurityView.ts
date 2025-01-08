@@ -140,11 +140,7 @@ class SecurityView {
         })
 
       for (const person of persons) {
-        globalSection.cards.push(new PersonCard(person, {
-          layout: "horizontal",
-          primary_info: "name",
-          secondary_info: "state"
-        }).getCard())
+        globalSection.cards.push(new PersonCard(person).getCard());
       }
     }
 
@@ -169,7 +165,7 @@ class SecurityView {
     }
 
     const sections = [globalSection]
-    // if (Helper.domains.camera?.length) sections.push(await this.createCamerasSection())
+    if (Helper.domains.camera?.length) sections.push(await this.createCamerasSection())
 
     return sections;
   }
@@ -198,16 +194,9 @@ class SecurityView {
         }]
     };
 
-    const orderedFloors = Object.values(Helper.floors).sort((a, b) => {
-      // Check if 'level' is undefined in either object
-      if (a.level === undefined) return 1; // a should come after b
-      if (b.level === undefined) return -1; // b should come after a
+    const floors = Helper.orderedFloors;
 
-      // Both 'level' values are defined, compare them
-      return a.level - b.level;
-    });
-
-    for (const floor of orderedFloors) {
+    for (const floor of floors) {
 
       if (floor.areas_slug.length === 0) continue
 
@@ -226,7 +215,7 @@ class SecurityView {
       ]
 
       // Create cards for each area.
-      for (const [i, area] of floor.areas_slug.map(area_slug => Helper.areas[area_slug]).entries()) {
+      for (const area of floor.areas_slug.map(area_slug => Helper.areas[area_slug])) {
         const entities = Helper.getAreaEntities(area, domain);
         const className = Helper.sanitizeClassName(domain + "Card");
 
@@ -279,7 +268,7 @@ class SecurityView {
           }
 
           // Create and insert a Controller card.
-          areaCards.unshift(...new ControllerCard(target, titleCardOptions, domain).createCard())
+          areaCards.unshift(...new ControllerCard(titleCardOptions, domain).createCard())
 
           floorCards.push(...areaCards);
         }

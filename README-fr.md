@@ -99,7 +99,7 @@ Vues organisées de tous vos appareils par pièce pour un contrôle rapide et in
 Naviguez facilement entre les lumières, capteurs, et autres catégories d'appareils.
 
 <div align="center">
-  <img src="https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/images/screenshots/lights-page-example.png" alt="Vue des lumières" width="50%">
+  <img src="https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/images/screenshots/motion-page-example.png" alt="Vue des lumières" width="50%">
 </div>
 
 ### 🔒 **Page Sécurité**

@@ -100,7 +100,7 @@ Organized views of all your devices by room for quick and intuitive control.
 ### 📟 **Device-Focused Views**
 Easily navigate between lights, sensors, and other device categories.
 <div align="center">
-  <img src="https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/images/screenshots/lights-page-example.png" alt="Lights Overview" width="50%">
+  <img src="https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/images/screenshots/motion-page-example.png" alt="Motion Overview" width="50%">
 </div>
 
 ### 🔒 **Security Page**

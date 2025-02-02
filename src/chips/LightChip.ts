@@ -48,6 +48,9 @@ class LightChip extends AbstractChip {
 
     if (magicAreasEntity) {
       this.#defaultConfig.entity = magicAreasEntity.entity_id;
+    } else {
+      const area_slug = Array.isArray(options?.area_slug) ? options?.area_slug : [options?.area_slug]
+      this.#defaultConfig.entity_id = area_slug.flatMap((area) => Helper.areas[area ?? "global"]?.domains?.light ?? []);
     }
 
     this.config = Object.assign(this.config, this.#defaultConfig, options);

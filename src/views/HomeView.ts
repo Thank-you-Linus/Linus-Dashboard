@@ -11,10 +11,9 @@ import { SettingsPopup } from "../popups/SettingsPopup";
 import { HOME_EXPOSED_CHIPS, UNDISCLOSED } from "../variables";
 import { createChipsFromList, getFloorName, navigateTo, slugify } from "../utils";
 import { WeatherChip } from "../chips/WeatherChip";
-import { AggregateChip } from "../chips/AggregateChip";
-import { PersonCard } from "../cards/PersonCard";
 import { UnavailableChip } from "../chips/UnavailableChip";
-
+import { PersonCard } from "../cards/PersonCard";
+import { AggregateChip } from "../chips/AggregateChip";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**
@@ -51,27 +50,22 @@ class HomeView {
   }
 
   /**
-   * Create the cards to include in the view.
+   * Create the chips to include in the view.
    *
    * @return {Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig)[]>} Promise a View Card array.
    * @override
    */
   async createSectionBadges(): Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig)[]> {
-
     if (Helper.strategyOptions.home_view.hidden.includes("chips")) {
       // Chips section is hidden.
-
       return [];
     }
 
     const chips: LovelaceChipConfig[] = [];
     const chipOptions = Helper.strategyOptions.chips;
 
-    let chipModule;
-
     // Weather chip.
     const weatherEntityId = Helper.linus_dashboard_config?.weather_entity_id;
-
     if (weatherEntityId) {
       try {
         const weatherChip = new WeatherChip(weatherEntityId);
@@ -82,13 +76,11 @@ class HomeView {
     }
 
     // Alarm chip.
-    const alarmEntityId = Helper.linus_dashboard_config?.alarm_entity_id
-
+    const alarmEntityId = Helper.linus_dashboard_config?.alarm_entity_id;
     if (alarmEntityId) {
       try {
-        chipModule = await import("../chips/AlarmChip");
+        const chipModule = await import("../chips/AlarmChip");
         const alarmChip = new chipModule.AlarmChip(alarmEntityId);
-
         chips.push(alarmChip.getChip());
       } catch (e) {
         Helper.logError("An error occurred while creating the alarm chip!", e);
@@ -99,28 +91,28 @@ class HomeView {
     const spotifyEntityId = chipOptions?.spotify_entity ?? Helper.domains.media_player?.find(
       (entity) => entity.entity_id.startsWith("media_player.spotify_") && entity.disabled_by === null && entity.hidden_by === null,
     )?.entity_id;
-
     if (spotifyEntityId) {
       try {
-        chipModule = await import("../chips/SpotifyChip");
+        const chipModule = await import("../chips/SpotifyChip");
         const spotifyChip = new chipModule.SpotifyChip(spotifyEntityId);
-
         chips.push(spotifyChip.getChip());
       } catch (e) {
         Helper.logError("An error occurred while creating the spotify chip!", e);
       }
     }
 
+    // Home chips.
     const homeChips = await createChipsFromList(HOME_EXPOSED_CHIPS, { show_content: true });
     if (homeChips) {
       chips.push(...homeChips);
     }
 
+    // Unavailable chip.
     const unavailableChip = new UnavailableChip().getChip();
     if (unavailableChip) chips.push(unavailableChip);
 
-    const linusSettings = new SettingsChip({ tap_action: new SettingsPopup().getPopup() })
-
+    // Settings chip.
+    const linusSettings = new SettingsChip({ tap_action: new SettingsPopup().getPopup() });
     chips.push(linusSettings.getChip());
 
     return chips.map(chip => ({
@@ -137,20 +129,18 @@ class HomeView {
    * @override
    */
   async createSectionCards(): Promise<LovelaceGridCardConfig[]> {
-
     if (Helper.strategyOptions.home_view.hidden.includes("areas")) {
       // Areas section is hidden.
       return [];
     }
 
     const groupedSections: LovelaceGridCardConfig[] = [];
-    const floors = Helper.orderedFloors
+    const floors = Helper.orderedFloors;
     let isFirstLoop = true;
 
     for (const floor of floors) {
-      if (floor.areas_slug.length === 0) continue
+      if (floor.areas_slug.length === 0) continue;
 
-      const options = Helper.strategyOptions;
       let floorSection = {
         type: "grid",
         column_span: 1,
@@ -164,46 +154,37 @@ class HomeView {
           cards: personCards,
         } as StackCardConfig);
 
-
         if (!Helper.strategyOptions.home_view.hidden.includes("greeting")) {
           const tod = Helper.magicAreasDevices.global?.entities.time_of_the_day;
-
           floorSection.cards.push({
             type: "custom:mushroom-template-card",
             primary: `
-          {% set tod = states("${tod?.entity_id}") %}
-          {% if (tod == "evening") %} Bonne soirée, {{user}} !
-          {% elif (tod == "daytime") %} Bonne après-midi, {{user}} !
-          {% elif (tod == "night") %} Bonne nuit, {{user}} !
-          {% else %} Bonjour, {{user}} !
-          {% endif %}`,
+              {% set tod = states("${tod?.entity_id}") %}
+              {% if (tod == "evening") %} Bonne soirée, {{user}} !
+              {% elif (tod == "daytime") %} Bonne après-midi, {{user}} !
+              {% elif (tod == "night") %} Bonne nuit, {{user}} !
+              {% else %} Bonjour, {{user}} !
+              {% endif %}`,
             icon: "mdi:hand-wave",
             icon_color: "orange",
             layout_options: {
               grid_columns: 4,
               grid_rows: 1,
             },
-            tap_action: {
-              action: "none",
-            } as ActionConfig,
-            double_tap_action: {
-              action: "none",
-            } as ActionConfig,
-            hold_action: {
-              action: "none",
-            } as ActionConfig,
+            tap_action: { action: "none" } as ActionConfig,
+            double_tap_action: { action: "none" } as ActionConfig,
+            hold_action: { action: "none" } as ActionConfig,
           } as TemplateCardConfig);
         }
 
-
         // Add quick access cards.
-        if (options.quick_access_cards) {
-          floorSection.cards.push(...options.quick_access_cards);
+        if (Helper.strategyOptions.quick_access_cards) {
+          floorSection.cards.push(...Helper.strategyOptions.quick_access_cards);
         }
 
         // Add custom cards.
-        if (options.extra_cards) {
-          floorSection.cards.push(...options.extra_cards);
+        if (Helper.strategyOptions.extra_cards) {
+          floorSection.cards.push(...Helper.strategyOptions.extra_cards);
         }
       }
 
@@ -213,7 +194,6 @@ class HomeView {
           heading: `${Helper.localize("ui.components.area-picker.area")}s`,
           heading_style: "title",
         });
-
         isFirstLoop = false;
       }
 
@@ -223,47 +203,41 @@ class HomeView {
       });
 
       if (floors.length > 1) {
-        floorSection.cards.push(
-          {
-            type: "heading",
-            heading: getFloorName(floor),
-            heading_style: "subtitle",
-            icon: floor.icon ?? "mdi:floor-plan",
-            badges: [{
-              type: "custom:mushroom-chips-card",
-              alignment: "end",
-              chips: [
-                floor.floor_id !== UNDISCLOSED && temperature &&
-                new AggregateChip({
-                  device_class: "temperature",
-                  show_content: true,
-                  magic_device_id: floor.floor_id,
-                  area_slug: floor.areas_slug,
-                  tap_action: navigateTo('temperature')
-                }).getChip(),
-              ],
-              card_mod: {
-                style: `
+        floorSection.cards.push({
+          type: "heading",
+          heading: getFloorName(floor),
+          heading_style: "subtitle",
+          icon: floor.icon ?? "mdi:floor-plan",
+          badges: [{
+            type: "custom:mushroom-chips-card",
+            alignment: "end",
+            chips: [
+              floor.floor_id !== UNDISCLOSED && temperature &&
+              new AggregateChip({
+                device_class: "temperature",
+                show_content: true,
+                magic_device_id: floor.floor_id,
+                area_slug: floor.areas_slug,
+                tap_action: navigateTo('temperature')
+              }).getChip(),
+            ],
+            card_mod: {
+              style: `
                 ha-card {
                   min-width: 100px;
                 }
               `,
-              }
-            }],
-            tap_action: floor.floor_id !== UNDISCLOSED ? navigateTo(slugify(floor.name)) : undefined,
-          }
-        );
+            }
+          }],
+          tap_action: floor.floor_id !== UNDISCLOSED ? navigateTo(slugify(floor.name)) : undefined,
+        });
       }
 
       for (const area of floor.areas_slug.map(area_slug => Helper.areas[area_slug]).values()) {
-
         type ModuleType = typeof import("../cards/HomeAreaCard");
 
         let module: ModuleType;
-        let moduleName =
-          Helper.strategyOptions.areas[area.slug]?.type ??
-          Helper.strategyOptions.areas["_"]?.type ??
-          "default";
+        let moduleName = Helper.strategyOptions.areas[area.slug]?.type ?? Helper.strategyOptions.areas["_"]?.type ?? "default";
 
         // Load module by type in strategy options.
         try {
@@ -271,7 +245,6 @@ class HomeView {
         } catch (e) {
           // Fallback to the default strategy card.
           module = await import("../cards/HomeAreaCard");
-
           if (Helper.strategyOptions.debug && moduleName !== "default") {
             console.error(e);
           }
@@ -293,7 +266,6 @@ class HomeView {
           });
         }
       }
-
 
       if (floor.floor_id === UNDISCLOSED) {
         floorSection.cards.push({
@@ -328,20 +300,17 @@ class HomeView {
   async #createPersonCards(): Promise<PersonCardConfig[]> {
     if (Helper.strategyOptions.home_view.hidden.includes("persons")) {
       // Person section is hidden.
-
       return [];
     }
 
     const cards: PersonCardConfig[] = [];
     const persons = Helper.domains.person.filter((entity) => {
-      return entity.hidden_by == null
-        && entity.disabled_by == null
+      return entity.hidden_by == null && entity.disabled_by == null;
     });
 
     for (const person of persons) {
       cards.push(new PersonCard(person).getCard());
     }
-
 
     return cards;
   }

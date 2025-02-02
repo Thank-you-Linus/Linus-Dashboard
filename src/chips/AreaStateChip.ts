@@ -25,10 +25,10 @@ class AreaStateChip extends AbstractChip {
     const device = device_id ? Helper.magicAreasDevices[device_id] : undefined
     const { area_state, presence_hold, all_media_players, aggregate_motion, aggregate_presence, aggregate_occupancy } = device?.entities ?? {}
 
-    const motion_entities = aggregate_motion ? [aggregate_motion.entity_id] : area?.domains.motion ?? []
-    const presence_entities = aggregate_presence ? [aggregate_presence.entity_id] : area?.domains.presence ?? []
-    const occupancy_entities = aggregate_occupancy ? [aggregate_occupancy.entity_id] : area?.domains.occupancy ?? []
-    const media_player_entities = all_media_players ? [all_media_players.entity_id] : area?.domains.media_player ?? []
+    const motion_entities = aggregate_motion ? [aggregate_motion.entity_id] : area?.domains?.motion ?? []
+    const presence_entities = aggregate_presence ? [aggregate_presence.entity_id] : area?.domains?.presence ?? []
+    const occupancy_entities = aggregate_occupancy ? [aggregate_occupancy.entity_id] : area?.domains?.occupancy ?? []
+    const media_player_entities = all_media_players ? [all_media_players.entity_id] : area?.domains?.media_player ?? []
 
     const isOn = '| selectattr("state","eq", "on") | list | count > 0'
     const isSomeone = `[${[...motion_entities, ...presence_entities, ...occupancy_entities]?.map(e => `states['${e}']`)}] ${isOn}`

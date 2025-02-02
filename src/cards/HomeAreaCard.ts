@@ -145,8 +145,8 @@ class HomeAreaCard {
 
   getChipsCard(): any {
 
-    const { light_control, aggregate_health, aggregate_window, aggregate_door, aggregate_cover, aggregate_climate } = this.magicDevice?.entities || {};
-    const { motion, occupancy, presence, window, climate, door, cover, health, light } = this.area.domains;
+    const { light_control, aggregate_health, aggregate_window, aggregate_door, aggregate_cover } = this.magicDevice?.entities || {};
+    const { motion, occupancy, presence, window, climate, door, cover, health, light } = this.area.domains ?? {};
 
     return {
       type: "custom:mushroom-chips-card",

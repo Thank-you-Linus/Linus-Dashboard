@@ -507,7 +507,7 @@ class Helper {
             if (slug) {
                 const newStates = domain === "all"
                     ? __classPrivateFieldGet(this, _a, "f", _Helper_areas)[slug]?.entities.map((entity_id) => `states['${entity_id}']`)
-                    : __classPrivateFieldGet(this, _a, "f", _Helper_areas)[slug]?.domains[domain]?.map((entity_id) => `states['${entity_id}']`);
+                    : __classPrivateFieldGet(this, _a, "f", _Helper_areas)[slug]?.domains?.[domain]?.map((entity_id) => `states['${entity_id}']`);
                 if (newStates)
                     states.push(...newStates);
             }
@@ -517,7 +517,7 @@ class Helper {
                         continue;
                     const newStates = domain === "all"
                         ? area.entities.map((entity_id) => `states['${entity_id}']`)
-                        : area.domains[domain]?.map((entity_id) => `states['${entity_id}']`);
+                        : area.domains?.[domain]?.map((entity_id) => `states['${entity_id}']`);
                     if (newStates)
                         states.push(...newStates);
                 }
@@ -547,7 +547,7 @@ class Helper {
         }
         const area_slugs = Array.isArray(area_slug) ? area_slug : [area_slug];
         for (const slug of area_slugs) {
-            const entities = area_slug === "global" ? (0,_utils__WEBPACK_IMPORTED_MODULE_3__.getGlobalEntitiesExceptUndisclosed)(device_class) : __classPrivateFieldGet(this, _a, "f", _Helper_areas)[slug]?.domains[device_class];
+            const entities = area_slug === "global" ? (0,_utils__WEBPACK_IMPORTED_MODULE_3__.getGlobalEntitiesExceptUndisclosed)(device_class) : __classPrivateFieldGet(this, _a, "f", _Helper_areas)[slug]?.domains?.[device_class];
             const newStates = entities?.map((entity_id) => `states['${entity_id}']`);
             if (newStates)
                 states.push(...newStates);
@@ -583,7 +583,7 @@ class Helper {
         const areaSlugs = Array.isArray(area_slug) ? area_slug : [area_slug];
         for (const slug of areaSlugs) {
             const magic_entity = (0,_utils__WEBPACK_IMPORTED_MODULE_3__.getMAEntity)(slug, "sensor", device_class);
-            const entities = magic_entity ? [magic_entity.entity_id] : slug === "global" ? (0,_utils__WEBPACK_IMPORTED_MODULE_3__.getGlobalEntitiesExceptUndisclosed)(device_class) : __classPrivateFieldGet(this, _a, "f", _Helper_areas)[slug]?.domains[device_class];
+            const entities = magic_entity ? [magic_entity.entity_id] : slug === "global" ? (0,_utils__WEBPACK_IMPORTED_MODULE_3__.getGlobalEntitiesExceptUndisclosed)(device_class) : __classPrivateFieldGet(this, _a, "f", _Helper_areas)[slug]?.domains?.[device_class];
             const newStates = entities?.map((entity_id) => `states['${entity_id}']`);
             if (newStates)
                 states.push(...newStates);
@@ -613,7 +613,7 @@ class Helper {
             console.warn("Helper class should be initialized before calling this method!");
         }
         if (domain) {
-            return area.domains[domain]?.map(entity_id => __classPrivateFieldGet(this, _a, "f", _Helper_entities)[entity_id]) ?? [];
+            return area.domains?.[domain]?.map(entity_id => __classPrivateFieldGet(this, _a, "f", _Helper_entities)[entity_id]) ?? [];
         }
         else {
             return area.entities.map(entity_id => __classPrivateFieldGet(this, _a, "f", _Helper_entities)[entity_id]) ?? [];
@@ -634,8 +634,8 @@ class Helper {
             console.warn("Helper class should be initialized before calling this method!");
         }
         // Get states whose entity-id starts with the given string.
-        const stateEntities = __classPrivateFieldGet(this, _a, "f", _Helper_areas)[area.slug].domains[domain]?.map(entity_id => __classPrivateFieldGet(this, _a, "f", _Helper_hassStates)[entity_id]);
-        return stateEntities;
+        const stateEntities = __classPrivateFieldGet(this, _a, "f", _Helper_areas)[area.slug].domains?.[domain]?.map(entity_id => __classPrivateFieldGet(this, _a, "f", _Helper_hassStates)[entity_id]);
+        return stateEntities ?? [];
     }
     /**
      * Sanitize a classname.
@@ -723,7 +723,7 @@ class Helper {
         for (const slug of areaSlugs) {
             if (slug) {
                 const magic_entity = (0,_utils__WEBPACK_IMPORTED_MODULE_3__.getMAEntity)(slug, domain);
-                const entities = magic_entity ? [magic_entity.entity_id] : area_slug === "global" ? (0,_utils__WEBPACK_IMPORTED_MODULE_3__.getGlobalEntitiesExceptUndisclosed)(domain) : __classPrivateFieldGet(this, _a, "f", _Helper_areas)[slug]?.domains[domain];
+                const entities = magic_entity ? [magic_entity.entity_id] : area_slug === "global" ? (0,_utils__WEBPACK_IMPORTED_MODULE_3__.getGlobalEntitiesExceptUndisclosed)(domain) : __classPrivateFieldGet(this, _a, "f", _Helper_areas)[slug]?.domains?.[domain];
                 const newStates = entities?.map((entity_id) => `states['${entity_id}']`);
                 if (newStates)
                     states.push(...newStates);
@@ -735,7 +735,7 @@ class Helper {
                         continue;
                     const newStates = domain === "all"
                         ? __classPrivateFieldGet(this, _a, "f", _Helper_areas)[area.slug]?.entities.map((entity_id) => `states['${entity_id}']`)
-                        : __classPrivateFieldGet(this, _a, "f", _Helper_areas)[area.slug]?.domains[domain]?.map((entity_id) => `states['${entity_id}']`);
+                        : __classPrivateFieldGet(this, _a, "f", _Helper_areas)[area.slug]?.domains?.[domain]?.map((entity_id) => `states['${entity_id}']`);
                     if (newStates)
                         states.push(...newStates);
                 }
@@ -774,7 +774,7 @@ class Helper {
         const areaSlugs = Array.isArray(area_slug) ? area_slug : [area_slug];
         for (const slug of areaSlugs) {
             const magic_entity = (0,_utils__WEBPACK_IMPORTED_MODULE_3__.getMAEntity)(slug, "binary_sensor", device_class);
-            const entities = magic_entity ? [magic_entity.entity_id] : area_slug === "global" ? (0,_utils__WEBPACK_IMPORTED_MODULE_3__.getGlobalEntitiesExceptUndisclosed)(device_class) : __classPrivateFieldGet(this, _a, "f", _Helper_areas)[slug]?.domains[device_class];
+            const entities = magic_entity ? [magic_entity.entity_id] : area_slug === "global" ? (0,_utils__WEBPACK_IMPORTED_MODULE_3__.getGlobalEntitiesExceptUndisclosed)(device_class) : __classPrivateFieldGet(this, _a, "f", _Helper_areas)[slug]?.domains?.[device_class];
             const newStates = entities?.map((entity_id) => `states['${entity_id}']`);
             if (newStates)
                 states.push(...newStates);
@@ -791,7 +791,7 @@ class Helper {
         const areaSlugs = Array.isArray(area_slug) ? area_slug : [area_slug];
         for (const slug of areaSlugs) {
             const magic_entity = (0,_utils__WEBPACK_IMPORTED_MODULE_3__.getMAEntity)(slug, "sensor", device_class);
-            const entities = magic_entity ? [magic_entity.entity_id] : area_slug === "global" ? (0,_utils__WEBPACK_IMPORTED_MODULE_3__.getGlobalEntitiesExceptUndisclosed)(device_class) : __classPrivateFieldGet(this, _a, "f", _Helper_areas)[slug]?.domains[device_class];
+            const entities = magic_entity ? [magic_entity.entity_id] : area_slug === "global" ? (0,_utils__WEBPACK_IMPORTED_MODULE_3__.getGlobalEntitiesExceptUndisclosed)(device_class) : __classPrivateFieldGet(this, _a, "f", _Helper_areas)[slug]?.domains?.[device_class];
             const newStates = entities?.map((entity_id) => `states['${entity_id}']`);
             if (newStates)
                 states.push(...newStates);
@@ -849,7 +849,7 @@ class Helper {
         const areaSlugs = Array.isArray(area_slug) ? area_slug : [area_slug];
         for (const slug of areaSlugs) {
             const magic_entity = (0,_utils__WEBPACK_IMPORTED_MODULE_3__.getMAEntity)(slug, "sensor", device_class);
-            const entities = magic_entity ? [magic_entity.entity_id] : area_slug === "global" ? (0,_utils__WEBPACK_IMPORTED_MODULE_3__.getGlobalEntitiesExceptUndisclosed)(device_class) : __classPrivateFieldGet(this, _a, "f", _Helper_areas)[slug]?.domains[device_class];
+            const entities = magic_entity ? [magic_entity.entity_id] : area_slug === "global" ? (0,_utils__WEBPACK_IMPORTED_MODULE_3__.getGlobalEntitiesExceptUndisclosed)(device_class) : __classPrivateFieldGet(this, _a, "f", _Helper_areas)[slug]?.domains?.[device_class];
             const newStates = entities?.map((entity_id) => `states['${entity_id}']`);
             if (newStates)
                 states.push(...newStates);
@@ -1159,7 +1159,7 @@ class AggregateCard {
                 if (_Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.strategyOptions.areas[area?.slug]?.hidden)
                     continue;
                 if (area.slug !== _variables__WEBPACK_IMPORTED_MODULE_2__.UNDISCLOSED) {
-                    const areaEntities = (0,_utils__WEBPACK_IMPORTED_MODULE_0__.getAggregateEntity)(_Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.magicAreasDevices[area.slug], domains, deviceClasses).map(e => e.entity_id).filter(Boolean);
+                    const areaEntities = (0,_utils__WEBPACK_IMPORTED_MODULE_0__.getAggregateEntity)(_Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.magicAreasDevices[area.slug], domains, deviceClasses).map((e) => e.entity_id).filter(Boolean);
                     for (const areaEntity of areaEntities) {
                         areaCards.push({
                             type: "tile",
@@ -1368,7 +1368,7 @@ class CameraCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractCard
             type: "picture-entity",
             show_name: false,
             show_state: false,
-            // camera_view: "live",
+            camera_view: "live",
         });
         this.config = Object.assign(this.config, __classPrivateFieldGet(this, _CameraCard_defaultConfig, "f"), options);
     }
@@ -1940,8 +1940,8 @@ class HomeAreaCard {
         };
     }
     getChipsCard() {
-        const { light_control, aggregate_health, aggregate_window, aggregate_door, aggregate_cover, aggregate_climate } = this.magicDevice?.entities || {};
-        const { motion, occupancy, presence, window, climate, door, cover, health, light } = this.area.domains;
+        const { light_control, aggregate_health, aggregate_window, aggregate_door, aggregate_cover } = this.magicDevice?.entities || {};
+        const { motion, occupancy, presence, window, climate, door, cover, health, light } = this.area.domains ?? {};
         return {
             type: "custom:mushroom-chips-card",
             alignment: "end",
@@ -3140,10 +3140,10 @@ class AreaStateChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_2__.AbstractC
         const device_id = area?.slug ?? floor?.floor_id;
         const device = device_id ? _Helper__WEBPACK_IMPORTED_MODULE_3__.Helper.magicAreasDevices[device_id] : undefined;
         const { area_state, presence_hold, all_media_players, aggregate_motion, aggregate_presence, aggregate_occupancy } = device?.entities ?? {};
-        const motion_entities = aggregate_motion ? [aggregate_motion.entity_id] : area?.domains.motion ?? [];
-        const presence_entities = aggregate_presence ? [aggregate_presence.entity_id] : area?.domains.presence ?? [];
-        const occupancy_entities = aggregate_occupancy ? [aggregate_occupancy.entity_id] : area?.domains.occupancy ?? [];
-        const media_player_entities = all_media_players ? [all_media_players.entity_id] : area?.domains.media_player ?? [];
+        const motion_entities = aggregate_motion ? [aggregate_motion.entity_id] : area?.domains?.motion ?? [];
+        const presence_entities = aggregate_presence ? [aggregate_presence.entity_id] : area?.domains?.presence ?? [];
+        const occupancy_entities = aggregate_occupancy ? [aggregate_occupancy.entity_id] : area?.domains?.occupancy ?? [];
+        const media_player_entities = all_media_players ? [all_media_players.entity_id] : area?.domains?.media_player ?? [];
         const isOn = '| selectattr("state","eq", "on") | list | count > 0';
         const isSomeone = `[${[...motion_entities, ...presence_entities, ...occupancy_entities]?.map(e => `states['${e}']`)}] ${isOn}`;
         const isMotion = `[${motion_entities?.map(e => `states['${e}']`)}] ${isOn}`;
@@ -3438,12 +3438,14 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var _Helper__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../Helper */ "./src/Helper.ts");
 /* harmony import */ var _AbstractChip__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./AbstractChip */ "./src/chips/AbstractChip.ts");
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../utils */ "./src/utils.ts");
 var __classPrivateFieldGet = (undefined && undefined.__classPrivateFieldGet) || function (receiver, state, kind, f) {
     if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a getter");
     if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
     return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
 };
 var _CoverChip_defaultConfig;
+
 
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
@@ -3481,6 +3483,14 @@ class CoverChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.AbstractChip 
             __classPrivateFieldGet(this, _CoverChip_defaultConfig, "f").content = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getCountTemplate("cover", "eq", "open", options?.area_slug);
         }
         __classPrivateFieldGet(this, _CoverChip_defaultConfig, "f").icon_color = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getFromDomainState({ domain: "cover", area_slug: options?.area_slug });
+        const magicAreasEntity = (0,_utils__WEBPACK_IMPORTED_MODULE_2__.getMAEntity)(options?.magic_device_id ?? "global", "cover", "shutter");
+        if (magicAreasEntity) {
+            __classPrivateFieldGet(this, _CoverChip_defaultConfig, "f").entity = magicAreasEntity.entity_id;
+        }
+        else {
+            const area_slug = Array.isArray(options?.area_slug) ? options?.area_slug : [options?.area_slug];
+            __classPrivateFieldGet(this, _CoverChip_defaultConfig, "f").entity_id = area_slug.flatMap((area) => _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas[area ?? "global"]?.domains?.cover ?? []);
+        }
         this.config = Object.assign(this.config, __classPrivateFieldGet(this, _CoverChip_defaultConfig, "f"), options);
     }
 }
@@ -3617,6 +3627,10 @@ class LightChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.AbstractChip 
         const magicAreasEntity = (0,_utils__WEBPACK_IMPORTED_MODULE_2__.getMAEntity)(options?.magic_device_id ?? "global", "light");
         if (magicAreasEntity) {
             __classPrivateFieldGet(this, _LightChip_defaultConfig, "f").entity = magicAreasEntity.entity_id;
+        }
+        else {
+            const area_slug = Array.isArray(options?.area_slug) ? options?.area_slug : [options?.area_slug];
+            __classPrivateFieldGet(this, _LightChip_defaultConfig, "f").entity_id = area_slug.flatMap((area) => _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas[area ?? "global"]?.domains?.light ?? []);
         }
         this.config = Object.assign(this.config, __classPrivateFieldGet(this, _LightChip_defaultConfig, "f"), options);
     }
@@ -5893,32 +5907,57 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   groupBy: () => (/* binding */ groupBy),
 /* harmony export */   groupEntitiesByDomain: () => (/* binding */ groupEntitiesByDomain),
 /* harmony export */   navigateTo: () => (/* binding */ navigateTo),
+/* harmony export */   processFloorsAndAreas: () => (/* binding */ processFloorsAndAreas),
 /* harmony export */   slugify: () => (/* binding */ slugify)
 /* harmony export */ });
 /* harmony import */ var _Helper__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./Helper */ "./src/Helper.ts");
 /* harmony import */ var _variables__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./variables */ "./src/variables.ts");
+/* harmony import */ var _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./cards/ControllerCard */ "./src/cards/ControllerCard.ts");
+/* harmony import */ var _cards_GroupedCard__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./cards/GroupedCard */ "./src/cards/GroupedCard.ts");
 
 
+
+
+/**
+ * Mémoïse une fonction pour éviter les calculs répétitifs.
+ * @param {Function} fn - La fonction à mémoïser.
+ * @returns {Function} - La fonction mémoïsée.
+ */
+function memoize(fn) {
+    const cache = new Map();
+    return function (...args) {
+        const key = JSON.stringify(args);
+        if (cache.has(key)) {
+            return cache.get(key);
+        }
+        const result = fn(...args);
+        cache.set(key, result);
+        return result;
+    };
+}
 /**
  * Groups the elements of an array based on a provided function
  * @param {T[]} array - The array to group
  * @param {(item: T) => K} fn - The function to determine the group key for each element
- * @returns {Record<K, T[]>} - An object where the keys are the group identifiers and the values are arrays of grouped elements
+ * @returns {Record<K, T[]>} - An object where the keys are the group identifiers et the values sont arrays of grouped elements
  */
-function groupBy(array, fn) {
+const groupBy = memoize(function groupBy(array, fn) {
     return array.reduce((result, item) => {
-        // Determine the group key for the current item
         const key = fn(item);
-        // If the group key does not exist in the result, create an array for it
         if (!result[key]) {
             result[key] = [];
         }
-        // Add the current item to the group
         result[key].push(item);
         return result;
     }, {});
-}
-function slugify(text, separator = "_") {
+});
+/**
+ * Converts a string to a slug format.
+ * @param {string | null} text - The text to slugify.
+ * @param {string} [separator="_"] - The separator to use.
+ * @returns {string} - The slugified text.
+ */
+const slugify = memoize(function slugify(text, separator = "_") {
     if (text === "" || text === null) {
         return "";
     }
@@ -5928,20 +5967,42 @@ function slugify(text, separator = "_") {
         .replace(/\s+/g, separator)
         .replace(/-/g, "_");
     return slug === "" ? "unknown" : slug;
-}
-function getMagicAreaSlug(device) {
+});
+/**
+ * Get the slug for a magic area device.
+ * @param {MagicAreaRegistryEntry} device - The magic area device.
+ * @returns {string} - The slug for the device.
+ */
+const getMagicAreaSlug = memoize(function getMagicAreaSlug(device) {
     return slugify(device.name ?? "".replace('-', '_'));
-}
+});
+/**
+ * Get the state content for an entity.
+ * @param {string} entity_id - The entity ID.
+ * @returns {string} - The state content.
+ */
 function getStateContent(entity_id) {
     return entity_id.startsWith('binary_sensor.') ? 'last-changed' : 'state';
 }
+/**
+ * Create an action config for navigation.
+ * @param {string} path - The navigation path.
+ * @returns {ActionConfig} - The action config.
+ */
 function navigateTo(path) {
     return {
         action: "navigate",
         navigation_path: `${path}`,
     };
 }
-function getAggregateEntity(device, domains, device_classes) {
+/**
+ * Get aggregate entities for a device.
+ * @param {MagicAreaRegistryEntry} device - The magic area device.
+ * @param {string | string[]} domains - The domains to get entities for.
+ * @param {string | string[]} [device_classes] - The device classes to get entities for.
+ * @returns {EntityRegistryEntry[]} - The aggregate entities.
+ */
+const getAggregateEntity = memoize(function getAggregateEntity(device, domains, device_classes) {
     const aggregateKeys = [];
     const domainList = Array.isArray(domains) ? domains : [domains];
     const deviceClassList = Array.isArray(device_classes) ? device_classes : [device_classes];
@@ -5963,25 +6024,39 @@ function getAggregateEntity(device, domains, device_classes) {
         }
     });
     return aggregateKeys.filter(Boolean);
-}
-function getMAEntity(magic_device_id, domain, device_class) {
+});
+/**
+ * Get a magic area entity.
+ * @param {string} magic_device_id - The magic device ID.
+ * @param {string} domain - The domain.
+ * @param {string} [device_class] - The device class.
+ * @returns {EntityRegistryEntry | undefined} - The magic area entity.
+ */
+const getMAEntity = memoize(function getMAEntity(magic_device_id, domain, device_class) {
     const magicAreaDevice = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices[magic_device_id];
-    // TODO remove '' when new release
     if (domain === _variables__WEBPACK_IMPORTED_MODULE_1__.LIGHT_DOMAIN)
         return magicAreaDevice?.entities?.[''] ?? magicAreaDevice?.entities?.['all_lights'];
     if (_variables__WEBPACK_IMPORTED_MODULE_1__.GROUP_DOMAINS.includes(domain))
-        return magicAreaDevice?.entities?.[`${domain}_group`];
+        return magicAreaDevice?.entities?.[`${domain}_group${device_class ? `_${device_class}` : ''}`];
     if (device_class && [..._variables__WEBPACK_IMPORTED_MODULE_1__.DEVICE_CLASSES.binary_sensor, ..._variables__WEBPACK_IMPORTED_MODULE_1__.DEVICE_CLASSES.sensor].includes(device_class))
         return magicAreaDevice?.entities?.[`aggregate_${device_class}`];
     return magicAreaDevice?.entities?.[domain] ?? undefined;
-}
-function getEntityDomain(entityId) {
-    let domain = entityId.split(".")[0];
-    return domain;
-}
-function groupEntitiesByDomain(entity_ids) {
-    return entity_ids
-        .reduce((acc, entity_id) => {
+});
+/**
+ * Get the domain of an entity.
+ * @param {string} entityId - The entity ID.
+ * @returns {string} - The domain.
+ */
+const getEntityDomain = memoize(function getEntityDomain(entityId) {
+    return entityId.split(".")[0];
+});
+/**
+ * Group entities by domain.
+ * @param {string[]} entity_ids - The entity IDs.
+ * @returns {Record<string, string[]>} - The grouped entities.
+ */
+const groupEntitiesByDomain = memoize(function groupEntitiesByDomain(entity_ids) {
+    return entity_ids.reduce((acc, entity_id) => {
         let domain = getEntityDomain(entity_id);
         if (Object.keys(_variables__WEBPACK_IMPORTED_MODULE_1__.DEVICE_CLASSES).includes(domain)) {
             const entityState = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getEntityState(entity_id);
@@ -5995,8 +6070,15 @@ function groupEntitiesByDomain(entity_ids) {
         acc[domain].push(entity_id);
         return acc;
     }, {});
-}
-// Numeric chips.
+});
+/**
+ * Create chips from a list.
+ * @param {string[]} chipsList - The list of chips.
+ * @param {Partial<chips.AggregateChipOptions>} [chipOptions] - The chip options.
+ * @param {string} [magic_device_id="global"] - The magic device ID.
+ * @param {string | string[]} [area_slug] - The area slug.
+ * @returns {Promise<LovelaceChipConfig[]>} - The created chips.
+ */
 async function createChipsFromList(chipsList, chipOptions, magic_device_id = "global", area_slug) {
     const chips = [];
     const area_slugs = area_slug ? Array.isArray(area_slug) ? area_slug : [area_slug] : [];
@@ -6030,29 +6112,63 @@ async function createChipsFromList(chipsList, chipOptions, magic_device_id = "gl
     }
     return chips;
 }
-function getDomainTranslationKey(domain, device_class) {
+/**
+ * Get the translation key for a domain.
+ * @param {string} domain - The domain.
+ * @param {string} [device_class] - The device class.
+ * @returns {string} - The translation key.
+ */
+const getDomainTranslationKey = memoize(function getDomainTranslationKey(domain, device_class) {
     if (domain === 'scene')
         return 'ui.dialogs.quick-bar.commands.navigation.scene';
     if (_variables__WEBPACK_IMPORTED_MODULE_1__.AGGREGATE_DOMAINS.includes(domain) && device_class)
         return `component.${domain}.entity_component.${device_class}.name`;
     return `component.${domain}.entity_component._.name`;
-}
-function getStateTranslationKey(state, domain, device_class) {
+});
+/**
+ * Get the translation key for a state.
+ * @param {string} state - The state.
+ * @param {string} domain - The domain.
+ * @param {string} [device_class] - The device class.
+ * @returns {string} - The translation key.
+ */
+const getStateTranslationKey = memoize(function getStateTranslationKey(state, domain, device_class) {
     if (domain === 'scene')
         return 'ui.dialogs.quick-bar.commands.navigation.scene';
     if (_variables__WEBPACK_IMPORTED_MODULE_1__.AGGREGATE_DOMAINS.includes(domain))
         return `component.${domain}.entity_component.${device_class}.state.${state}`;
     return `component.${domain}.entity_component._.name`;
-}
-function getFloorName(floor) {
-    return floor.floor_id === _variables__WEBPACK_IMPORTED_MODULE_1__.UNDISCLOSED ? _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.entity.button.floor_not_found.name") : floor.name;
-}
-function getAreaName(area) {
+});
+/**
+ * Get the name of a floor.
+ * @param {StrategyFloor} floor - The floor.
+ * @returns {string} - The floor name.
+ */
+const getFloorName = memoize(function getFloorName(floor) {
+    return floor.floor_id === _variables__WEBPACK_IMPORTED_MODULE_1__.UNDISCLOSED ? _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("ui.components.area-picker.unassigned_areas") : floor.name;
+});
+/**
+ * Get the name of an area.
+ * @param {StrategyArea} area - The area.
+ * @returns {string} - The area name.
+ */
+const getAreaName = memoize(function getAreaName(area) {
     return area.area_id === _variables__WEBPACK_IMPORTED_MODULE_1__.UNDISCLOSED ? _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("ui.card.area.area_not_found") : area.name;
-}
-function getGlobalEntitiesExceptUndisclosed(device_class) {
-    return _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.domains[device_class]?.filter(entity => !_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas[_variables__WEBPACK_IMPORTED_MODULE_1__.UNDISCLOSED].domains[device_class]?.includes(entity.entity_id)).map(e => e.entity_id) ?? [];
-}
+});
+/**
+ * Get global entities except undisclosed.
+ * @param {string} device_class - The device class.
+ * @returns {string[]} - The global entities.
+ */
+const getGlobalEntitiesExceptUndisclosed = memoize(function getGlobalEntitiesExceptUndisclosed(device_class) {
+    return _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.domains[device_class]?.filter(entity => !_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas[_variables__WEBPACK_IMPORTED_MODULE_1__.UNDISCLOSED].domains?.[device_class]?.includes(entity.entity_id)).map(e => e.entity_id) ?? [];
+});
+/**
+ * Add light groups to entities.
+ * @param {generic.StrategyArea} area - The area.
+ * @param {generic.StrategyEntity[]} entities - The entities.
+ * @returns {generic.StrategyEntity[]} - The entities with light groups added.
+ */
 function addLightGroupsToEntities(area, entities) {
     const lightGroups = _variables__WEBPACK_IMPORTED_MODULE_1__.LIGHT_GROUPS
         .map(type => getMAEntity(area.slug, type))
@@ -6072,6 +6188,86 @@ function addLightGroupsToEntities(area, entities) {
         }
     }
     return entities;
+}
+/**
+ * Process floors and areas to generate view sections.
+ * @param {string} domain - The domain of the entities.
+ * @param {string} [device_class] - The device class of the entities.
+ * @param {Function} processEntities - Function to process entities and generate cards.
+ * @param {LovelaceCardConfig[]} viewControllerCard - Array of view controller cards.
+ * @returns {Promise<LovelaceGridCardConfig[]>} - Promise resolving to an array of view sections.
+ */
+async function processFloorsAndAreas(domain, device_class, processEntities, viewControllerCard) {
+    const viewSections = [];
+    let isFirstLoop = true;
+    const floors = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.orderedFloors;
+    for (const floor of floors) {
+        if (floor.areas_slug.length === 0 || !_variables__WEBPACK_IMPORTED_MODULE_1__.AREA_CARDS_DOMAINS.includes(domain ?? ""))
+            continue;
+        const floorCards = [];
+        for (const area of floor.areas_slug.map(area_slug => _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas[area_slug])) {
+            let entities = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getAreaEntities(area, device_class ?? domain);
+            const className = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.sanitizeClassName(domain + "Card");
+            const cardModule = await __webpack_require__("./src/cards lazy recursive ^\\.\\/.*$")(`./${className}`);
+            if (entities.length === 0 || !cardModule)
+                continue;
+            if (domain === "light")
+                entities = addLightGroupsToEntities(area, entities);
+            const entityCards = await processEntities(entities, area, domain);
+            if (entityCards.length) {
+                const areaCards = [new _cards_GroupedCard__WEBPACK_IMPORTED_MODULE_3__.GroupedCard(entityCards).getCard()];
+                const titleCardOptions = {
+                    ..._Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain].controllerCardOptions,
+                    subtitle: getAreaName(area),
+                    subtitleIcon: area.area_id === _variables__WEBPACK_IMPORTED_MODULE_1__.UNDISCLOSED ? "mdi:help-circle" : area.icon ?? "mdi:floor-plan",
+                    subtitleNavigate: area.slug
+                };
+                if (domain) {
+                    if (area.slug !== _variables__WEBPACK_IMPORTED_MODULE_1__.UNDISCLOSED && (!_variables__WEBPACK_IMPORTED_MODULE_1__.AGGREGATE_DOMAINS.includes(domain) || device_class)) {
+                        titleCardOptions.showControls = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain].showControls;
+                        titleCardOptions.extraControls = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain].extraControls;
+                        titleCardOptions.controlChipOptions = { device_class, area_slug: area.slug };
+                    }
+                    else {
+                        titleCardOptions.showControls = false;
+                    }
+                }
+                const areaControllerCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_2__.ControllerCard(titleCardOptions, domain, area.slug).createCard();
+                floorCards.push(...areaControllerCard, ...areaCards);
+            }
+        }
+        if (floorCards.length) {
+            const titleSectionOptions = {
+                ..._Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain].controllerCardOptions,
+                title: getFloorName(floor),
+                titleIcon: floor.icon ?? "mdi:floor-plan",
+                titleNavigate: slugify(floor.name)
+            };
+            if (domain) {
+                if (floor.floor_id !== _variables__WEBPACK_IMPORTED_MODULE_1__.UNDISCLOSED && (!_variables__WEBPACK_IMPORTED_MODULE_1__.AGGREGATE_DOMAINS.includes(domain) || device_class)) {
+                    titleSectionOptions.showControls = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain].showControls;
+                    titleSectionOptions.extraControls = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain].extraControls;
+                    titleSectionOptions.controlChipOptions = {
+                        device_class,
+                        area_slug: floor.areas_slug
+                    };
+                }
+                else {
+                    titleSectionOptions.showControls = false;
+                }
+            }
+            const floorControllerCard = floors.length > 1 ? new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_2__.ControllerCard(titleSectionOptions, domain, floor.floor_id).createCard() : [];
+            const section = { type: "grid", cards: [] };
+            if (isFirstLoop) {
+                section.cards.push(...viewControllerCard);
+                isFirstLoop = false;
+            }
+            section.cards.push(...floorControllerCard);
+            section.cards.push(...floorCards);
+            viewSections.push(section);
+        }
+    }
+    return viewSections;
 }
 
 
@@ -6244,11 +6440,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   AbstractView: () => (/* binding */ AbstractView)
 /* harmony export */ });
-/* harmony import */ var _variables__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./../variables */ "./src/variables.ts");
-/* harmony import */ var _Helper__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../Helper */ "./src/Helper.ts");
-/* harmony import */ var _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../cards/ControllerCard */ "./src/cards/ControllerCard.ts");
-/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../utils */ "./src/utils.ts");
-/* harmony import */ var _cards_GroupedCard__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../cards/GroupedCard */ "./src/cards/GroupedCard.ts");
+/* harmony import */ var _Helper__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../Helper */ "./src/Helper.ts");
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utils */ "./src/utils.ts");
 var __classPrivateFieldSet = (undefined && undefined.__classPrivateFieldSet) || function (receiver, state, value, kind, f) {
     if (kind === "m") throw new TypeError("Private method is not writable");
     if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a setter");
@@ -6261,9 +6454,6 @@ var __classPrivateFieldGet = (undefined && undefined.__classPrivateFieldGet) || 
     return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
 };
 var _AbstractView_domain, _AbstractView_device_class;
-
-
-
 
 
 /**
@@ -6315,7 +6505,7 @@ class AbstractView {
          * @readonly
          */
         _AbstractView_device_class.set(this, void 0);
-        if (!_Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.isInitialized()) {
+        if (!_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.isInitialized()) {
             throw new Error("The Helper module must be initialized before using this one.");
         }
         __classPrivateFieldSet(this, _AbstractView_domain, domain, "f");
@@ -6346,89 +6536,23 @@ class AbstractView {
      * @override
      */
     async createSectionCards() {
-        const viewSections = [];
-        const configEntityHidden = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.strategyOptions.domains[__classPrivateFieldGet(this, _AbstractView_domain, "f") ?? "_"].hide_config_entities
-            || _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.strategyOptions.domains["_"].hide_config_entities;
-        let isFirstLoop = true;
-        const floors = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.orderedFloors;
-        for (const floor of floors) {
-            if (floor.areas_slug.length === 0 || !_variables__WEBPACK_IMPORTED_MODULE_0__.AREA_CARDS_DOMAINS.includes(__classPrivateFieldGet(this, _AbstractView_domain, "f") ?? ""))
-                continue;
-            const floorCards = [];
-            for (const area of floor.areas_slug.map(area_slug => _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.areas[area_slug])) {
-                let entities = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.getAreaEntities(area, __classPrivateFieldGet(this, _AbstractView_device_class, "f") ?? __classPrivateFieldGet(this, _AbstractView_domain, "f"));
-                const className = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.sanitizeClassName(__classPrivateFieldGet(this, _AbstractView_domain, "f") + "Card");
-                const cardModule = await __webpack_require__("./src/cards lazy recursive ^\\.\\/.*$")(`./${className}`);
-                if (entities.length === 0 || !cardModule)
-                    continue;
-                if (__classPrivateFieldGet(this, _AbstractView_domain, "f") === "light")
-                    entities = (0,_utils__WEBPACK_IMPORTED_MODULE_3__.addLightGroupsToEntities)(area, entities);
-                const entityCards = entities
-                    .filter(entity => !_Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.strategyOptions.card_options?.[entity.entity_id]?.hidden
-                    && !_Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.strategyOptions.card_options?.[entity.device_id ?? "null"]?.hidden
-                    && !(entity.entity_category === "config" && configEntityHidden))
-                    .map(entity => new cardModule[className](entity).getCard());
-                if (entityCards.length) {
-                    const areaCards = [new _cards_GroupedCard__WEBPACK_IMPORTED_MODULE_4__.GroupedCard(entityCards).getCard()];
-                    const titleCardOptions = {
-                        ..._Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.strategyOptions.domains[__classPrivateFieldGet(this, _AbstractView_domain, "f")].controllerCardOptions,
-                        subtitle: (0,_utils__WEBPACK_IMPORTED_MODULE_3__.getAreaName)(area),
-                        subtitleIcon: area.area_id === _variables__WEBPACK_IMPORTED_MODULE_0__.UNDISCLOSED ? "mdi:help-circle" : area.icon ?? "mdi:floor-plan",
-                        subtitleNavigate: area.slug
-                    };
-                    if (__classPrivateFieldGet(this, _AbstractView_domain, "f")) {
-                        if (area.slug !== _variables__WEBPACK_IMPORTED_MODULE_0__.UNDISCLOSED && (!_variables__WEBPACK_IMPORTED_MODULE_0__.AGGREGATE_DOMAINS.includes(__classPrivateFieldGet(this, _AbstractView_domain, "f")) || __classPrivateFieldGet(this, _AbstractView_device_class, "f"))) {
-                            titleCardOptions.showControls = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.strategyOptions.domains[__classPrivateFieldGet(this, _AbstractView_domain, "f")].showControls;
-                            titleCardOptions.extraControls = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.strategyOptions.domains[__classPrivateFieldGet(this, _AbstractView_domain, "f")].extraControls;
-                            titleCardOptions.controlChipOptions = { device_class: __classPrivateFieldGet(this, _AbstractView_device_class, "f"), area_slug: area.slug };
-                        }
-                        else {
-                            titleCardOptions.showControls = false;
-                        }
-                    }
-                    const areaControllerCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_2__.ControllerCard(titleCardOptions, __classPrivateFieldGet(this, _AbstractView_domain, "f"), area.slug).createCard();
-                    floorCards.push(...areaControllerCard, ...areaCards);
-                }
-            }
-            if (floorCards.length) {
-                const titleSectionOptions = {
-                    ..._Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.strategyOptions.domains[__classPrivateFieldGet(this, _AbstractView_domain, "f")].controllerCardOptions,
-                    title: (0,_utils__WEBPACK_IMPORTED_MODULE_3__.getFloorName)(floor),
-                    titleIcon: floor.icon ?? "mdi:floor-plan",
-                    titleNavigate: (0,_utils__WEBPACK_IMPORTED_MODULE_3__.slugify)(floor.name)
-                };
-                if (__classPrivateFieldGet(this, _AbstractView_domain, "f")) {
-                    if (floor.floor_id !== _variables__WEBPACK_IMPORTED_MODULE_0__.UNDISCLOSED && (!_variables__WEBPACK_IMPORTED_MODULE_0__.AGGREGATE_DOMAINS.includes(__classPrivateFieldGet(this, _AbstractView_domain, "f")) || __classPrivateFieldGet(this, _AbstractView_device_class, "f"))) {
-                        titleSectionOptions.showControls = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.strategyOptions.domains[__classPrivateFieldGet(this, _AbstractView_domain, "f")].showControls;
-                        titleSectionOptions.extraControls = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.strategyOptions.domains[__classPrivateFieldGet(this, _AbstractView_domain, "f")].extraControls;
-                        titleSectionOptions.controlChipOptions = {
-                            device_class: __classPrivateFieldGet(this, _AbstractView_device_class, "f"),
-                            area_slug: floor.areas_slug
-                        };
-                    }
-                    else {
-                        titleSectionOptions.showControls = false;
-                    }
-                }
-                const floorControllerCard = floors.length > 1 ? new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_2__.ControllerCard(titleSectionOptions, __classPrivateFieldGet(this, _AbstractView_domain, "f"), floor.floor_id).createCard() : [];
-                const section = { type: "grid", cards: [] };
-                if (isFirstLoop) {
-                    section.cards.push(...this.viewControllerCard);
-                    isFirstLoop = false;
-                }
-                section.cards.push(...floorControllerCard);
-                section.cards.push(...floorCards);
-                viewSections.push(section);
-            }
-        }
-        return viewSections;
+        return (0,_utils__WEBPACK_IMPORTED_MODULE_1__.processFloorsAndAreas)(__classPrivateFieldGet(this, _AbstractView_domain, "f"), __classPrivateFieldGet(this, _AbstractView_device_class, "f"), async (entities, area, domain) => {
+            const className = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.sanitizeClassName(domain + "Card");
+            const cardModule = await __webpack_require__("./src/cards lazy recursive ^\\.\\/.*$")(`./${className}`);
+            const configEntityHidden = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain]?.hide_config_entities || _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains["_"].hide_config_entities;
+            return entities
+                .filter(entity => !_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.card_options?.[entity.entity_id]?.hidden
+                && !_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.card_options?.[entity.device_id ?? "null"]?.hidden
+                && !(entity.entity_category === "config" && configEntityHidden))
+                .map(entity => new cardModule[className](entity).getCard());
+        }, this.viewControllerCard);
     }
     /**
      * Get a view object.
      *
      * The view includes the cards which are created by method createViewCards().
      *
-     * @returns {Promise<LovelaceViewConfig>} The view object.
+     * @returns {Promise<LovelaceViewConfig | LovelaceSectionConfig>} The view object.
      */
     async getView() {
         return {
@@ -6446,8 +6570,8 @@ class AbstractView {
      */
     targetDomain(domain) {
         return {
-            entity_id: _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.domains[domain]?.filter(entity => !entity.hidden_by
-                && !_Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.strategyOptions.card_options?.[entity.entity_id]?.hidden).map(entity => entity.entity_id),
+            entity_id: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.domains[domain]?.filter(entity => !entity.hidden_by
+                && !_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.card_options?.[entity.entity_id]?.hidden).map(entity => entity.entity_id),
         };
     }
 }
@@ -6499,7 +6623,6 @@ class AggregateView extends _AbstractView__WEBPACK_IMPORTED_MODULE_2__.AbstractV
         // Create a Controller card to switch all entities of the domain.
         this.viewControllerCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_1__.ControllerCard({
             title: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize((0,_utils__WEBPACK_IMPORTED_MODULE_4__.getDomainTranslationKey)(domain, options?.device_class)),
-            // subtitle: Helper.getDeviceClassCountTemplate(options?.device_class, "eq", "on") + ` ${Helper.localize(getStateTranslationKey("on", domain, options?.device_class))}s`,
             showControls: !!options?.device_class,
             controlChipOptions: { device_class: options?.device_class },
         }, domain, "global").createCard();
@@ -6567,7 +6690,7 @@ class AreaView {
         this.config = { ...this.config, ...options };
     }
     /**
-     * Create the cards to include in the view.
+     * Create the chips to include in the view.
      *
      * @return {Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig)[]>} Promise a View Card array.
      * @override
@@ -6586,11 +6709,6 @@ class AreaView {
         const unavailableChip = new _chips_UnavailableChip__WEBPACK_IMPORTED_MODULE_6__.UnavailableChip({ area_slug: this.area.slug }).getChip();
         if (unavailableChip)
             chips.push(unavailableChip);
-        // (device?.entities.all_lights && device?.entities.all_lights.entity_id !== "unavailable" ? {
-        //   type: "custom:mushroom-chips-card",
-        //   alignment: "center",
-        //   chips: new AreaScenesChips(device, area).getChips()
-        // } : undefined)
         return chips.map(chip => ({
             type: "custom:mushroom-chips-card",
             alignment: "center",
@@ -7089,13 +7207,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   FloorView: () => (/* binding */ FloorView)
 /* harmony export */ });
 /* harmony import */ var _Helper__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../Helper */ "./src/Helper.ts");
-/* harmony import */ var _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../cards/ControllerCard */ "./src/cards/ControllerCard.ts");
-/* harmony import */ var _variables__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../variables */ "./src/variables.ts");
-/* harmony import */ var _chips_AreaStateChip__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../chips/AreaStateChip */ "./src/chips/AreaStateChip.ts");
-/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../utils */ "./src/utils.ts");
-/* harmony import */ var _cards_GroupedCard__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../cards/GroupedCard */ "./src/cards/GroupedCard.ts");
-
-
+/* harmony import */ var _variables__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../variables */ "./src/variables.ts");
+/* harmony import */ var _chips_AreaStateChip__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../chips/AreaStateChip */ "./src/chips/AreaStateChip.ts");
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../utils */ "./src/utils.ts");
 
 
 
@@ -7137,7 +7251,7 @@ class FloorView {
         this.config = { ...this.config, ...options };
     }
     /**
-     * Create the cards to include in the view.
+     * Create the chips to include in the view.
      *
      * @return {Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig)[]>} Promise a View Card array.
      * @override
@@ -7150,9 +7264,9 @@ class FloorView {
         const chips = [];
         const device = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices[this.floor.floor_id];
         if (device) {
-            chips.push(new _chips_AreaStateChip__WEBPACK_IMPORTED_MODULE_3__.AreaStateChip({ floor: this.floor, showContent: true }).getChip());
+            chips.push(new _chips_AreaStateChip__WEBPACK_IMPORTED_MODULE_2__.AreaStateChip({ floor: this.floor, showContent: true }).getChip());
         }
-        const areaChips = await (0,_utils__WEBPACK_IMPORTED_MODULE_4__.createChipsFromList)(_variables__WEBPACK_IMPORTED_MODULE_2__.AREA_EXPOSED_CHIPS, { show_content: true }, this.floor.floor_id, this.floor.areas_slug);
+        const areaChips = await (0,_utils__WEBPACK_IMPORTED_MODULE_3__.createChipsFromList)(_variables__WEBPACK_IMPORTED_MODULE_1__.AREA_EXPOSED_CHIPS, { show_content: true }, this.floor.floor_id, this.floor.areas_slug);
         if (areaChips) {
             chips.push(...areaChips);
         }
@@ -7169,98 +7283,16 @@ class FloorView {
      * @override
      */
     async createSectionCards() {
-        const viewSections = [];
-        const exposedDomainIds = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getExposedDomainIds();
-        let isFirstLoop = true;
-        for (const domain of exposedDomainIds) {
-            if (domain === "default")
-                continue;
-            const domainCards = [];
-            try {
-                const cardModule = await __webpack_require__("./src/cards lazy recursive ^\\.\\/.*$")(`./${_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.sanitizeClassName(domain + "Card")}`);
-                const configEntityHidden = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain]?.hide_config_entities || _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains["_"].hide_config_entities;
-                for (const area of this.floor.areas_slug.map(area_slug => _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas[area_slug])) {
-                    if (!area)
-                        continue;
-                    let areaEntities = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getAreaEntities(area, domain);
-                    if (areaEntities.length) {
-                        if (domain === "light")
-                            areaEntities = (0,_utils__WEBPACK_IMPORTED_MODULE_4__.addLightGroupsToEntities)(area, areaEntities);
-                        const entityCards = areaEntities
-                            .filter(entity => {
-                            const cardOptions = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.card_options?.[entity.entity_id];
-                            const deviceOptions = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.card_options?.[entity.device_id ?? "null"];
-                            return !cardOptions?.hidden && !deviceOptions?.hidden && !(entity.entity_category === "config" && configEntityHidden);
-                        })
-                            .map(entity => {
-                            const cardOptions = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.card_options?.[entity.entity_id];
-                            if (domain === "sensor" && _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getEntityState(entity.entity_id)?.attributes.unit_of_measurement) {
-                                return new cardModule[_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.sanitizeClassName(domain + "Card")](entity, {
-                                    type: "custom:mini-graph-card",
-                                    entities: [entity.entity_id],
-                                    ...cardOptions,
-                                }).getCard();
-                            }
-                            return new cardModule[_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.sanitizeClassName(domain + "Card")](entity, cardOptions).getCard();
-                        });
-                        if (entityCards.length) {
-                            const titleCardOptions = {
-                                ..._Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain].controllerCardOptions,
-                                subtitle: area.name,
-                                domain,
-                                subtitleIcon: area.icon,
-                                subtitleNavigate: area.slug,
-                            };
-                            if (domain) {
-                                if (_variables__WEBPACK_IMPORTED_MODULE_2__.AGGREGATE_DOMAINS.includes(domain)) {
-                                    titleCardOptions.showControls = false;
-                                }
-                                else {
-                                    titleCardOptions.showControls = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain].showControls;
-                                    titleCardOptions.extraControls = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain].extraControls;
-                                    titleCardOptions.controlChipOptions = { area_slug: area.slug };
-                                }
-                            }
-                            const titleCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_1__.ControllerCard(titleCardOptions, domain, area.slug).createCard();
-                            let areaCards = [new _cards_GroupedCard__WEBPACK_IMPORTED_MODULE_5__.GroupedCard(entityCards).getCard()];
-                            areaCards.unshift(...titleCard);
-                            domainCards.push(...areaCards);
-                        }
-                    }
-                }
-                if (domainCards.length) {
-                    const titleSectionOptions = {
-                        ..._Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain].controllerCardOptions,
-                        title: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize((0,_utils__WEBPACK_IMPORTED_MODULE_4__.getDomainTranslationKey)(domain)),
-                        titleIcon: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.icons[domain]._?.default ?? "mdi:floor-plan",
-                        titleNavigate: domain,
-                    };
-                    if (domain) {
-                        if (_variables__WEBPACK_IMPORTED_MODULE_2__.AGGREGATE_DOMAINS.includes(domain)) {
-                            titleSectionOptions.showControls = false;
-                        }
-                        else {
-                            titleSectionOptions.showControls = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain].showControls;
-                            titleSectionOptions.extraControls = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain].extraControls;
-                            titleSectionOptions.controlChipOptions = { area_slug: this.floor.areas_slug };
-                        }
-                    }
-                    const domainControllerCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_1__.ControllerCard(titleSectionOptions, domain, this.floor.floor_id).createCard();
-                    const section = { type: "grid", cards: [] };
-                    if (isFirstLoop) {
-                        section.cards.push(...this.viewControllerCard);
-                        isFirstLoop = false;
-                    }
-                    section.cards.push(...domainControllerCard);
-                    section.cards.push(...domainCards);
-                    viewSections.push(section);
-                }
-            }
-            catch (e) {
-                _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.logError("An error occurred while creating the domain cards!", e);
-            }
-        }
-        return viewSections;
+        return (0,_utils__WEBPACK_IMPORTED_MODULE_3__.processFloorsAndAreas)(this.floor.floor_id, undefined, async (entities, area, domain) => {
+            const className = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.sanitizeClassName(domain + "Card");
+            const cardModule = await __webpack_require__("./src/cards lazy recursive ^\\.\\/.*$")(`./${className}`);
+            const configEntityHidden = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain]?.hide_config_entities || _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains["_"].hide_config_entities;
+            return entities
+                .filter(entity => !_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.card_options?.[entity.entity_id]?.hidden
+                && !_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.card_options?.[entity.device_id ?? "null"]?.hidden
+                && !(entity.entity_category === "config" && configEntityHidden))
+                .map(entity => new cardModule[className](entity).getCard());
+        }, this.viewControllerCard);
     }
     /**
      * Get a view object.
@@ -7299,9 +7331,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _variables__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../variables */ "./src/variables.ts");
 /* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../utils */ "./src/utils.ts");
 /* harmony import */ var _chips_WeatherChip__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../chips/WeatherChip */ "./src/chips/WeatherChip.ts");
-/* harmony import */ var _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../chips/AggregateChip */ "./src/chips/AggregateChip.ts");
+/* harmony import */ var _chips_UnavailableChip__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../chips/UnavailableChip */ "./src/chips/UnavailableChip.ts");
 /* harmony import */ var _cards_PersonCard__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../cards/PersonCard */ "./src/cards/PersonCard.ts");
-/* harmony import */ var _chips_UnavailableChip__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../chips/UnavailableChip */ "./src/chips/UnavailableChip.ts");
+/* harmony import */ var _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../chips/AggregateChip */ "./src/chips/AggregateChip.ts");
 var __classPrivateFieldGet = (undefined && undefined.__classPrivateFieldGet) || function (receiver, state, kind, f) {
     if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a getter");
     if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
@@ -7351,7 +7383,7 @@ class HomeView {
         }
     }
     /**
-     * Create the cards to include in the view.
+     * Create the chips to include in the view.
      *
      * @return {Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig)[]>} Promise a View Card array.
      * @override
@@ -7363,7 +7395,6 @@ class HomeView {
         }
         const chips = [];
         const chipOptions = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.chips;
-        let chipModule;
         // Weather chip.
         const weatherEntityId = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.linus_dashboard_config?.weather_entity_id;
         if (weatherEntityId) {
@@ -7379,7 +7410,7 @@ class HomeView {
         const alarmEntityId = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.linus_dashboard_config?.alarm_entity_id;
         if (alarmEntityId) {
             try {
-                chipModule = await Promise.resolve(/*! import() */).then(__webpack_require__.bind(__webpack_require__, /*! ../chips/AlarmChip */ "./src/chips/AlarmChip.ts"));
+                const chipModule = await Promise.resolve(/*! import() */).then(__webpack_require__.bind(__webpack_require__, /*! ../chips/AlarmChip */ "./src/chips/AlarmChip.ts"));
                 const alarmChip = new chipModule.AlarmChip(alarmEntityId);
                 chips.push(alarmChip.getChip());
             }
@@ -7391,7 +7422,7 @@ class HomeView {
         const spotifyEntityId = chipOptions?.spotify_entity ?? _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.domains.media_player?.find((entity) => entity.entity_id.startsWith("media_player.spotify_") && entity.disabled_by === null && entity.hidden_by === null)?.entity_id;
         if (spotifyEntityId) {
             try {
-                chipModule = await Promise.resolve(/*! import() */).then(__webpack_require__.bind(__webpack_require__, /*! ../chips/SpotifyChip */ "./src/chips/SpotifyChip.ts"));
+                const chipModule = await Promise.resolve(/*! import() */).then(__webpack_require__.bind(__webpack_require__, /*! ../chips/SpotifyChip */ "./src/chips/SpotifyChip.ts"));
                 const spotifyChip = new chipModule.SpotifyChip(spotifyEntityId);
                 chips.push(spotifyChip.getChip());
             }
@@ -7399,13 +7430,16 @@ class HomeView {
                 _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.logError("An error occurred while creating the spotify chip!", e);
             }
         }
+        // Home chips.
         const homeChips = await (0,_utils__WEBPACK_IMPORTED_MODULE_4__.createChipsFromList)(_variables__WEBPACK_IMPORTED_MODULE_3__.HOME_EXPOSED_CHIPS, { show_content: true });
         if (homeChips) {
             chips.push(...homeChips);
         }
-        const unavailableChip = new _chips_UnavailableChip__WEBPACK_IMPORTED_MODULE_8__.UnavailableChip().getChip();
+        // Unavailable chip.
+        const unavailableChip = new _chips_UnavailableChip__WEBPACK_IMPORTED_MODULE_6__.UnavailableChip().getChip();
         if (unavailableChip)
             chips.push(unavailableChip);
+        // Settings chip.
         const linusSettings = new _chips_SettingsChip__WEBPACK_IMPORTED_MODULE_1__.SettingsChip({ tap_action: new _popups_SettingsPopup__WEBPACK_IMPORTED_MODULE_2__.SettingsPopup().getPopup() });
         chips.push(linusSettings.getChip());
         return chips.map(chip => ({
@@ -7431,7 +7465,6 @@ class HomeView {
         for (const floor of floors) {
             if (floor.areas_slug.length === 0)
                 continue;
-            const options = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions;
             let floorSection = {
                 type: "grid",
                 column_span: 1,
@@ -7448,36 +7481,30 @@ class HomeView {
                     floorSection.cards.push({
                         type: "custom:mushroom-template-card",
                         primary: `
-          {% set tod = states("${tod?.entity_id}") %}
-          {% if (tod == "evening") %} Bonne soirée, {{user}} !
-          {% elif (tod == "daytime") %} Bonne après-midi, {{user}} !
-          {% elif (tod == "night") %} Bonne nuit, {{user}} !
-          {% else %} Bonjour, {{user}} !
-          {% endif %}`,
+              {% set tod = states("${tod?.entity_id}") %}
+              {% if (tod == "evening") %} Bonne soirée, {{user}} !
+              {% elif (tod == "daytime") %} Bonne après-midi, {{user}} !
+              {% elif (tod == "night") %} Bonne nuit, {{user}} !
+              {% else %} Bonjour, {{user}} !
+              {% endif %}`,
                         icon: "mdi:hand-wave",
                         icon_color: "orange",
                         layout_options: {
                             grid_columns: 4,
                             grid_rows: 1,
                         },
-                        tap_action: {
-                            action: "none",
-                        },
-                        double_tap_action: {
-                            action: "none",
-                        },
-                        hold_action: {
-                            action: "none",
-                        },
+                        tap_action: { action: "none" },
+                        double_tap_action: { action: "none" },
+                        hold_action: { action: "none" },
                     });
                 }
                 // Add quick access cards.
-                if (options.quick_access_cards) {
-                    floorSection.cards.push(...options.quick_access_cards);
+                if (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.quick_access_cards) {
+                    floorSection.cards.push(..._Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.quick_access_cards);
                 }
                 // Add custom cards.
-                if (options.extra_cards) {
-                    floorSection.cards.push(...options.extra_cards);
+                if (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.extra_cards) {
+                    floorSection.cards.push(..._Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.extra_cards);
                 }
             }
             if (isFirstLoop && !_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.home_view.hidden.includes("areasTitle")) {
@@ -7503,7 +7530,7 @@ class HomeView {
                             alignment: "end",
                             chips: [
                                 floor.floor_id !== _variables__WEBPACK_IMPORTED_MODULE_3__.UNDISCLOSED && temperature &&
-                                    new _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_6__.AggregateChip({
+                                    new _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_8__.AggregateChip({
                                         device_class: "temperature",
                                         show_content: true,
                                         magic_device_id: floor.floor_id,
@@ -7524,9 +7551,7 @@ class HomeView {
             }
             for (const area of floor.areas_slug.map(area_slug => _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas[area_slug]).values()) {
                 let module;
-                let moduleName = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.areas[area.slug]?.type ??
-                    _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.areas["_"]?.type ??
-                    "default";
+                let moduleName = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.areas[area.slug]?.type ?? _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.areas["_"]?.type ?? "default";
                 // Load module by type in strategy options.
                 try {
                     module = await __webpack_require__("./src/cards lazy recursive ^\\.\\/.*$")(`./${moduleName}`);
@@ -7603,8 +7628,7 @@ async function _HomeView_createPersonCards() {
     }
     const cards = [];
     const persons = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.domains.person.filter((entity) => {
-        return entity.hidden_by == null
-            && entity.disabled_by == null;
+        return entity.hidden_by == null && entity.disabled_by == null;
     });
     for (const person of persons) {
         cards.push(new _cards_PersonCard__WEBPACK_IMPORTED_MODULE_7__.PersonCard(person).getCard());

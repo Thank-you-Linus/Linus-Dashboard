@@ -24,7 +24,7 @@ class CameraCard extends AbstractCard {
     type: "picture-entity",
     show_name: false,
     show_state: false,
-    // camera_view: "live",
+    camera_view: "live",
   };
 
   /**

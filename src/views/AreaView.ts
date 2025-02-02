@@ -12,11 +12,10 @@ import { ImageAreaCard } from "../cards/ImageAreaCard";
 import { AGGREGATE_DOMAINS, AREA_EXPOSED_CHIPS, UNDISCLOSED } from "../variables";
 import { LovelaceChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
 import { AreaStateChip } from "../chips/AreaStateChip";
-import { addLightGroupsToEntities, createChipsFromList, getDomainTranslationKey } from "../utils";
+import { addLightGroupsToEntities, createChipsFromList, getDomainTranslationKey, processFloorsAndAreas } from "../utils";
 import { ResourceKeys } from "../types/homeassistant/data/frontend";
 import { UnavailableChip } from "../chips/UnavailableChip";
 import { GroupedCard } from "../cards/GroupedCard";
-
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**
@@ -39,14 +38,13 @@ class AreaView {
     subview: true,
   };
 
-
   /**
    * Default configuration of the view.
    *
    * @type {StrategyArea}
    * @private
    */
-  area: StrategyArea
+  area: StrategyArea;
 
   /**
    * Class constructor.
@@ -54,23 +52,19 @@ class AreaView {
    * @param {views.ViewConfig} [options={}] Options for the view.
    */
   constructor(area: StrategyArea, options: views.ViewConfig = {}) {
-
     this.area = area;
-
     this.config = { ...this.config, ...options };
   }
 
   /**
-   * Create the cards to include in the view.
+   * Create the chips to include in the view.
    *
    * @return {Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig)[]>} Promise a View Card array.
    * @override
    */
   async createSectionBadges(): Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig)[]> {
-
     if (Helper.strategyOptions.home_view.hidden.includes("chips")) {
       // Chips section is hidden.
-
       return [];
     }
 
@@ -85,12 +79,6 @@ class AreaView {
 
     const unavailableChip = new UnavailableChip({ area_slug: this.area.slug }).getChip();
     if (unavailableChip) chips.push(unavailableChip);
-
-    // (device?.entities.all_lights && device?.entities.all_lights.entity_id !== "unavailable" ? {
-    //   type: "custom:mushroom-chips-card",
-    //   alignment: "center",
-    //   chips: new AreaScenesChips(device, area).getChips()
-    // } : undefined)
 
     return chips.map(chip => ({
       type: "custom:mushroom-chips-card",
@@ -117,7 +105,6 @@ class AreaView {
         cards: [new ImageAreaCard(this.area.area_id).getCard()],
       });
     }
-
 
     for (const domain of exposedDomainIds) {
       if (Helper.linus_dashboard_config?.excluded_domains?.includes(domain)) continue;
@@ -240,7 +227,6 @@ class AreaView {
 
     return viewSections;
   }
-
 
   /**
    * Get a view object.

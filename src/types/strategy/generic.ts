@@ -174,7 +174,7 @@ export namespace generic {
    */
   export interface StrategyArea extends AreaRegistryEntry {
     slug: string;
-    domains: Record<string, string[]>;
+    domains?: Record<string, string[]>;
     order?: number;
     hidden?: boolean;
     extra_cards?: LovelaceCardConfig[];

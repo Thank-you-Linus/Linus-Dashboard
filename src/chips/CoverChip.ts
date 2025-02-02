@@ -2,6 +2,7 @@ import { Helper } from "../Helper";
 import { chips } from "../types/strategy/chips";
 import { AbstractChip } from "./AbstractChip";
 import { TemplateChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
+import { getMAEntity } from "../utils";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**
@@ -41,6 +42,15 @@ class CoverChip extends AbstractChip {
     }
 
     this.#defaultConfig.icon_color = Helper.getFromDomainState({ domain: "cover", area_slug: options?.area_slug })
+
+    const magicAreasEntity = getMAEntity(options?.magic_device_id ?? "global", "cover", "shutter");
+
+    if (magicAreasEntity) {
+      this.#defaultConfig.entity = magicAreasEntity.entity_id;
+    } else {
+      const area_slug = Array.isArray(options?.area_slug) ? options?.area_slug : [options?.area_slug]
+      this.#defaultConfig.entity_id = area_slug.flatMap((area) => Helper.areas[area ?? "global"]?.domains?.cover ?? []);
+    }
 
     this.config = Object.assign(this.config, this.#defaultConfig, options);
   }

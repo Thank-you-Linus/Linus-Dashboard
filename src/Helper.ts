@@ -493,7 +493,7 @@ class Helper {
       if (slug) {
         const newStates = domain === "all"
           ? this.#areas[slug]?.entities.map((entity_id) => `states['${entity_id}']`)
-          : this.#areas[slug]?.domains[domain]?.map((entity_id) => `states['${entity_id}']`);
+          : this.#areas[slug]?.domains?.[domain]?.map((entity_id) => `states['${entity_id}']`);
         if (newStates) states.push(...newStates);
       } else {
         for (const area of Object.values(this.#areas)) {
@@ -501,7 +501,7 @@ class Helper {
 
           const newStates = domain === "all"
             ? area.entities.map((entity_id) => `states['${entity_id}']`)
-            : area.domains[domain]?.map((entity_id) => `states['${entity_id}']`);
+            : area.domains?.[domain]?.map((entity_id) => `states['${entity_id}']`);
           if (newStates) states.push(...newStates);
         }
       }
@@ -536,7 +536,7 @@ class Helper {
     const area_slugs = Array.isArray(area_slug) ? area_slug : [area_slug];
 
     for (const slug of area_slugs) {
-      const entities = area_slug === "global" ? getGlobalEntitiesExceptUndisclosed(device_class) : this.#areas[slug]?.domains[device_class]
+      const entities = area_slug === "global" ? getGlobalEntitiesExceptUndisclosed(device_class) : this.#areas[slug]?.domains?.[device_class]
       const newStates = entities?.map((entity_id) => `states['${entity_id}']`);
       if (newStates) states.push(...newStates);
     }
@@ -576,8 +576,8 @@ class Helper {
 
     for (const slug of areaSlugs) {
       const magic_entity = getMAEntity(slug!, "sensor", device_class);
-      const entities = magic_entity ? [magic_entity.entity_id] : slug === "global" ? getGlobalEntitiesExceptUndisclosed(device_class) : this.#areas[slug]?.domains[device_class]
-      const newStates = entities?.map((entity_id) => `states['${entity_id}']`);
+      const entities = magic_entity ? [magic_entity.entity_id] : slug === "global" ? getGlobalEntitiesExceptUndisclosed(device_class) : this.#areas[slug]?.domains?.[device_class]
+      const newStates = entities?.map((entity_id: string) => `states['${entity_id}']`);
       if (newStates) states.push(...newStates);
     }
 
@@ -609,7 +609,7 @@ class Helper {
     }
 
     if (domain) {
-      return area.domains[domain]?.map(entity_id => this.#entities[entity_id]) ?? []
+      return area.domains?.[domain]?.map(entity_id => this.#entities[entity_id]) ?? []
     } else {
       return area.entities.map(entity_id => this.#entities[entity_id]) ?? []
     }
@@ -631,9 +631,9 @@ class Helper {
     }
 
     // Get states whose entity-id starts with the given string.
-    const stateEntities = this.#areas[area.slug].domains[domain]?.map(entity_id => this.#hassStates[entity_id]);
+    const stateEntities = this.#areas[area.slug].domains?.[domain]?.map(entity_id => this.#hassStates[entity_id]);
 
-    return stateEntities;
+    return stateEntities ?? [];
   }
 
   /**
@@ -763,7 +763,7 @@ class Helper {
     for (const slug of areaSlugs) {
       if (slug) {
         const magic_entity = getMAEntity(slug!, domain);
-        const entities = magic_entity ? [magic_entity.entity_id] : area_slug === "global" ? getGlobalEntitiesExceptUndisclosed(domain) : this.#areas[slug]?.domains[domain]
+        const entities = magic_entity ? [magic_entity.entity_id] : area_slug === "global" ? getGlobalEntitiesExceptUndisclosed(domain) : this.#areas[slug]?.domains?.[domain]
         const newStates = entities?.map((entity_id) => `states['${entity_id}']`);
         if (newStates) states.push(...newStates);
       } else {
@@ -773,7 +773,7 @@ class Helper {
 
           const newStates = domain === "all"
             ? this.#areas[area.slug]?.entities.map((entity_id) => `states['${entity_id}']`)
-            : this.#areas[area.slug]?.domains[domain]?.map((entity_id) => `states['${entity_id}']`);
+            : this.#areas[area.slug]?.domains?.[domain]?.map((entity_id) => `states['${entity_id}']`);
           if (newStates) states.push(...newStates);
         }
       }
@@ -818,7 +818,7 @@ class Helper {
 
     for (const slug of areaSlugs) {
       const magic_entity = getMAEntity(slug!, "binary_sensor", device_class);
-      const entities = magic_entity ? [magic_entity.entity_id] : area_slug === "global" ? getGlobalEntitiesExceptUndisclosed(device_class) : this.#areas[slug]?.domains[device_class]
+      const entities = magic_entity ? [magic_entity.entity_id] : area_slug === "global" ? getGlobalEntitiesExceptUndisclosed(device_class) : this.#areas[slug]?.domains?.[device_class]
       const newStates = entities?.map((entity_id) => `states['${entity_id}']`);
 
       if (newStates) states.push(...newStates);
@@ -841,7 +841,7 @@ class Helper {
 
     for (const slug of areaSlugs) {
       const magic_entity = getMAEntity(slug!, "sensor", device_class);
-      const entities = magic_entity ? [magic_entity.entity_id] : area_slug === "global" ? getGlobalEntitiesExceptUndisclosed(device_class) : this.#areas[slug]?.domains[device_class]
+      const entities = magic_entity ? [magic_entity.entity_id] : area_slug === "global" ? getGlobalEntitiesExceptUndisclosed(device_class) : this.#areas[slug]?.domains?.[device_class]
       const newStates = entities?.map((entity_id) => `states['${entity_id}']`);
       if (newStates) states.push(...newStates);
     }
@@ -906,7 +906,7 @@ class Helper {
 
     for (const slug of areaSlugs) {
       const magic_entity = getMAEntity(slug!, "sensor", device_class);
-      const entities = magic_entity ? [magic_entity.entity_id] : area_slug === "global" ? getGlobalEntitiesExceptUndisclosed(device_class) : this.#areas[slug]?.domains[device_class]
+      const entities = magic_entity ? [magic_entity.entity_id] : area_slug === "global" ? getGlobalEntitiesExceptUndisclosed(device_class) : this.#areas[slug]?.domains?.[device_class]
       const newStates = entities?.map((entity_id) => `states['${entity_id}']`);
       if (newStates) states.push(...newStates);
     }

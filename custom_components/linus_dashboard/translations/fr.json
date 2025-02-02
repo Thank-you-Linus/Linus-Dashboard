@@ -28,9 +28,6 @@
     },
     "entity": {
         "button": {
-            "floor_not_found": {
-                "name": "Étage non trouvé"
-            },
             "add_new_area": {
                 "name": "Zone non trouvée",
                 "state": {

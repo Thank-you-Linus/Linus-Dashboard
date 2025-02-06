@@ -134,3 +134,39 @@ export const AREA_CONTROL_ICONS = {
   climate: "mdi:thermostat-auto",
   media_player: "mdi:auto-mode",
 };
+
+export const SENSOR_STATE_CLASS_MEASUREMENT: string[] = [
+  "temperature",
+  "humidity",
+  "pressure",
+  "illuminance",
+  "power",
+  "voltage",
+  "current",
+  "signal_strength",
+  "sound_pressure",
+  "air_quality",
+  "gas",
+  "wind_speed",
+  "frequency",
+  "speed"
+];
+
+export const SENSOR_STATE_CLASS_TOTAL: string[] = [
+  "energy",
+  "water",
+  "gas",
+  "monetary",
+  "weight",
+  "volume",
+  "duration",
+  "count"
+];
+
+export const SENSOR_STATE_CLASS_TOTAL_INCREASING: string[] = [
+  "energy",
+  "water",
+  "gas",
+  "monetary",
+  "count"
+];

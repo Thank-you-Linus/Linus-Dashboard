@@ -191,7 +191,7 @@ class HomeAreaCard {
   }
 
   getTemperatureTemplate(aggregate_temperature: EntityRegistryEntry): string {
-    if (!aggregate_temperature) return Helper.getAverageStateTemplate("temperature");
+    if (!aggregate_temperature) return Helper.getSensorStateTemplate("temperature");
     return `
       {% set t = states('${aggregate_temperature?.entity_id}') %}
       {% if t != 'unknown' and t != 'unavailable' %}

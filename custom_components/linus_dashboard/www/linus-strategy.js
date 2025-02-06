@@ -556,18 +556,7 @@ class Helper {
         return `{% set entities = [${states}] %}{{ entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | selectattr('state','${operator}',${formattedValue}) | list | count }}`;
     }
     /**
-     * Get a template string to define the average state of sensor entities with a given device class.
-     *
-     * States are compared against a given value by a given operator.
-     *
-     * @param {string} device_class The device class of the entities.
-     * @param {string} area_id
-     *
-     * @return {string} The template string.
-     * @static
-     */
-    /**
-     * Get a template string to define the average state of sensor entities with a given device class.
+     * Get a template string to define the sum or average state of sensor entities with a given device class.
      *
      * @param {string} device_class The device class of the entities.
      * @param {string | string[]} area_slug The area slug(s) to filter entities by.
@@ -575,7 +564,7 @@ class Helper {
      * @return {string} The template string.
      * @static
      */
-    static getAverageStateTemplate(device_class, area_slug = "global") {
+    static getSensorStateTemplate(device_class, area_slug = "global") {
         const states = [];
         if (!this.isInitialized()) {
             console.warn("Helper class should be initialized before calling this method!");
@@ -588,10 +577,11 @@ class Helper {
             if (newStates)
                 states.push(...newStates);
         }
+        const isSum = _variables__WEBPACK_IMPORTED_MODULE_2__.SENSOR_STATE_CLASS_TOTAL.includes(device_class) || _variables__WEBPACK_IMPORTED_MODULE_2__.SENSOR_STATE_CLASS_TOTAL_INCREASING.includes(device_class);
         return `
-      {% set entities = [${states}] | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | list %}
+      {% set entities = [${states}] | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | list %}
       {% if entities | length > 0 %}
-        {{ (entities  | sum / entities | length) | round(1) }} {% if ${states[0]}.attributes.unit_of_measurement is defined %} {{ ${states[0]}.attributes.unit_of_measurement }}{% endif %}
+        {{ (entities ${isSum ? '| sum' : '| sum / entities | length'}) | round(1) }} {% if ${states[0]}.attributes.unit_of_measurement is defined %} {{ ${states[0]}.attributes.unit_of_measurement }}{% endif %}
       {% endif %}`;
     }
     /**
@@ -884,7 +874,7 @@ class Helper {
         {% elif bl >= 30 %}
           mdi:thermometer-high
         {% else %}
-          disabled
+          mdi:thermometer-alert
         {% endif %}
       `;
         }
@@ -1969,7 +1959,7 @@ class HomeAreaCard {
     }
     getTemperatureTemplate(aggregate_temperature) {
         if (!aggregate_temperature)
-            return _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getAverageStateTemplate("temperature");
+            return _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getSensorStateTemplate("temperature");
         return `
       {% set t = states('${aggregate_temperature?.entity_id}') %}
       {% if t != 'unknown' and t != 'unavailable' %}
@@ -2880,7 +2870,7 @@ class AggregateChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.AbstractC
             icon_color = _Helper__WEBPACK_IMPORTED_MODULE_2__.Helper.getBinarySensorColorFromState(device_class, "eq", "on", "red", "grey", area_slug);
         }
         if (domain === "sensor") {
-            content = show_content ? _Helper__WEBPACK_IMPORTED_MODULE_2__.Helper.getAverageStateTemplate(device_class, area_slug) : "";
+            content = show_content ? _Helper__WEBPACK_IMPORTED_MODULE_2__.Helper.getSensorStateTemplate(device_class, area_slug) : "";
             icon_color = _Helper__WEBPACK_IMPORTED_MODULE_2__.Helper.getSensorColorFromState(device_class, area_slug) ?? "white";
             icon = _Helper__WEBPACK_IMPORTED_MODULE_2__.Helper.getSensorIconFromState(device_class, area_slug) ?? icon;
             if (device_class === "illuminance") {
@@ -6298,6 +6288,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   MAGIC_AREAS_DOMAIN: () => (/* binding */ MAGIC_AREAS_DOMAIN),
 /* harmony export */   MAGIC_AREAS_NAME: () => (/* binding */ MAGIC_AREAS_NAME),
 /* harmony export */   SECURITY_EXPOSED_CHIPS: () => (/* binding */ SECURITY_EXPOSED_CHIPS),
+/* harmony export */   SENSOR_STATE_CLASS_MEASUREMENT: () => (/* binding */ SENSOR_STATE_CLASS_MEASUREMENT),
+/* harmony export */   SENSOR_STATE_CLASS_TOTAL: () => (/* binding */ SENSOR_STATE_CLASS_TOTAL),
+/* harmony export */   SENSOR_STATE_CLASS_TOTAL_INCREASING: () => (/* binding */ SENSOR_STATE_CLASS_TOTAL_INCREASING),
 /* harmony export */   TOD_ORDER: () => (/* binding */ TOD_ORDER),
 /* harmony export */   UNAVAILABLE: () => (/* binding */ UNAVAILABLE),
 /* harmony export */   UNDISCLOSED: () => (/* binding */ UNDISCLOSED),
@@ -6425,6 +6418,39 @@ const AREA_CONTROL_ICONS = {
     climate: "mdi:thermostat-auto",
     media_player: "mdi:auto-mode",
 };
+const SENSOR_STATE_CLASS_MEASUREMENT = [
+    "temperature",
+    "humidity",
+    "pressure",
+    "illuminance",
+    "power",
+    "voltage",
+    "current",
+    "signal_strength",
+    "sound_pressure",
+    "air_quality",
+    "gas",
+    "wind_speed",
+    "frequency",
+    "speed"
+];
+const SENSOR_STATE_CLASS_TOTAL = [
+    "energy",
+    "water",
+    "gas",
+    "monetary",
+    "weight",
+    "volume",
+    "duration",
+    "count"
+];
+const SENSOR_STATE_CLASS_TOTAL_INCREASING = [
+    "energy",
+    "water",
+    "gas",
+    "monetary",
+    "count"
+];
 
 
 /***/ }),

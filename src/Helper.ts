@@ -10,7 +10,7 @@ import StrategyEntity = generic.StrategyEntity;
 import StrategyDevice = generic.StrategyDevice;
 import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
 import { FloorRegistryEntry } from "./types/homeassistant/data/floor_registry";
-import { DEVICE_CLASSES, MAGIC_AREAS_DOMAIN, MAGIC_AREAS_NAME, UNDISCLOSED } from "./variables";
+import { DEVICE_CLASSES, MAGIC_AREAS_DOMAIN, MAGIC_AREAS_NAME, SENSOR_STATE_CLASS_TOTAL, SENSOR_STATE_CLASS_TOTAL_INCREASING, UNDISCLOSED } from "./variables";
 import { getEntityDomain, getGlobalEntitiesExceptUndisclosed, getMAEntity, getMagicAreaSlug, groupEntitiesByDomain, slugify } from "./utils";
 import { EntityRegistryEntry } from "./types/homeassistant/data/entity_registry";
 import { FrontendEntityComponentIconResources, IconResources } from "./types/homeassistant/data/frontend";
@@ -546,18 +546,7 @@ class Helper {
   }
 
   /**
-   * Get a template string to define the average state of sensor entities with a given device class.
-   *
-   * States are compared against a given value by a given operator.
-   *
-   * @param {string} device_class The device class of the entities.
-   * @param {string} area_id
-   *
-   * @return {string} The template string.
-   * @static
-   */
-  /**
-   * Get a template string to define the average state of sensor entities with a given device class.
+   * Get a template string to define the sum or average state of sensor entities with a given device class.
    *
    * @param {string} device_class The device class of the entities.
    * @param {string | string[]} area_slug The area slug(s) to filter entities by.
@@ -565,7 +554,7 @@ class Helper {
    * @return {string} The template string.
    * @static
    */
-  static getAverageStateTemplate(device_class: string, area_slug: string | string[] = "global"): string {
+  static getSensorStateTemplate(device_class: string, area_slug: string | string[] = "global"): string {
     const states: string[] = [];
 
     if (!this.isInitialized()) {
@@ -581,10 +570,12 @@ class Helper {
       if (newStates) states.push(...newStates);
     }
 
+    const isSum = SENSOR_STATE_CLASS_TOTAL.includes(device_class) || SENSOR_STATE_CLASS_TOTAL_INCREASING.includes(device_class);
+
     return `
-      {% set entities = [${states}] | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | list %}
+      {% set entities = [${states}] | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | list %}
       {% if entities | length > 0 %}
-        {{ (entities  | sum / entities | length) | round(1) }} {% if ${states[0]}.attributes.unit_of_measurement is defined %} {{ ${states[0]}.attributes.unit_of_measurement }}{% endif %}
+        {{ (entities ${isSum ? '| sum' : '| sum / entities | length'}) | round(1) }} {% if ${states[0]}.attributes.unit_of_measurement is defined %} {{ ${states[0]}.attributes.unit_of_measurement }}{% endif %}
       {% endif %}`;
   }
 
@@ -942,7 +933,7 @@ class Helper {
         {% elif bl >= 30 %}
           mdi:thermometer-high
         {% else %}
-          disabled
+          mdi:thermometer-alert
         {% endif %}
       `;
     }

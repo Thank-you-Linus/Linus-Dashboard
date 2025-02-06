@@ -33,7 +33,7 @@ class AggregateChip extends AbstractChip {
 
     if (domain === "sensor") {
 
-      content = show_content ? Helper.getAverageStateTemplate(device_class, area_slug) : ""
+      content = show_content ? Helper.getSensorStateTemplate(device_class, area_slug) : ""
       icon_color = Helper.getSensorColorFromState(device_class, area_slug!) ?? "white"
       icon = Helper.getSensorIconFromState(device_class, area_slug!) ?? icon
 

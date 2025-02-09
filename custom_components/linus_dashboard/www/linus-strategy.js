@@ -556,6 +556,21 @@ class Helper {
         return `{% set entities = [${states}] %}{{ entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | selectattr('state','${operator}',${formattedValue}) | list | count }}`;
     }
     /**
+     * Generates a Jinja2 template string to filter and transform a list of sensor entities.
+     *
+     * This function constructs a Jinja2 template string that filters the provided list of entities
+     * based on their state and attributes, specifically targeting entities with a defined device class
+     * that matches the provided `device_class` parameter. The resulting template string can be used
+     * to extract and convert the states of the matching entities to a list of floating-point numbers.
+     *
+     * @param entities - An array of entity IDs to be filtered and transformed.
+     * @param device_class - The device class to filter the entities by.
+     * @returns A Jinja2 template string that filters and transforms the entities.
+     */
+    static getSensorEntities(entities, device_class) {
+        return `[${entities}] | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | selectattr('attributes', 'defined') | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | list`;
+    }
+    /**
      * Get a template string to define the sum or average state of sensor entities with a given device class.
      *
      * @param {string} device_class The device class of the entities.
@@ -579,7 +594,7 @@ class Helper {
         }
         const isSum = _variables__WEBPACK_IMPORTED_MODULE_2__.SENSOR_STATE_CLASS_TOTAL.includes(device_class) || _variables__WEBPACK_IMPORTED_MODULE_2__.SENSOR_STATE_CLASS_TOTAL_INCREASING.includes(device_class);
         return `
-      {% set entities = [${states}] | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | list %}
+      {% set entities = ${_a.getSensorEntities(states, device_class)} %}
       {% if entities | length > 0 %}
         {{ (entities ${isSum ? '| sum' : '| sum / entities | length'}) | round(1) }} {% if ${states[0]}.attributes.unit_of_measurement is defined %} {{ ${states[0]}.attributes.unit_of_measurement }}{% endif %}
       {% endif %}`;
@@ -788,44 +803,53 @@ class Helper {
         }
         if (device_class === "battery") {
             return `
-        {% set entities = [${states}] | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | list %}
-        {% set bl = entities  | sum / entities | length %}
-        {% if bl < 20 %}
-          red
-        {% elif bl < 30 %}
-          orange
-        {% elif bl >= 30 %}
-          green
+        {% set entities = ${_a.getSensorEntities(states, device_class)} %}
+        {% if entities | length > 0 %}
+          {% set bl = entities  | sum / entities | length %}
+          {% if bl < 20 %}
+            red
+          {% elif bl < 30 %}
+            orange
+          {% elif bl >= 30 %}
+            green
+          {% else %}
+            disabled
+          {% endif %}
         {% else %}
-          disabled
         {% endif %}
       `;
         }
         if (device_class === "temperature") {
             return `
-        {% set entities = [${states}] | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | list %}
-        {% set bl = entities  | sum / entities | length %}
-        {% if bl < 20 %}
-          blue
-        {% elif bl < 30 %}
-          orange
-        {% elif bl >= 30 %}
-          red
+        {% set entities = ${_a.getSensorEntities(states, device_class)} %}
+        {% if entities | length > 0 %}
+          {% set bl = entities  | sum / entities | length %}
+          {% if bl < 20 %}
+            blue
+          {% elif bl < 30 %}
+            orange
+          {% elif bl >= 30 %}
+            red
+          {% else %}
+            disabled
+          {% endif %}
         {% else %}
-          disabled
         {% endif %}
       `;
         }
         if (device_class === "humidity") {
             return `
-        {% set entities = [${states}] | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | list %}
-        {% set humidity = entities  | sum / entities | length %}
-        {% if humidity < 30 %}
-          blue
-        {% elif humidity >= 30 and humidity <= 60 %}
-          green
+        {% set entities = ${_a.getSensorEntities(states, device_class)} %}
+        {% if entities | length > 0 %}
+          {% set humidity = entities  | sum / entities | length %}
+          {% if humidity < 30 %}
+            blue
+          {% elif humidity >= 30 and humidity <= 60 %}
+            green
+          {% else %}
+            red
+          {% endif %}
         {% else %}
-          red
         {% endif %}
       `;
         }
@@ -846,33 +870,38 @@ class Helper {
         }
         if (device_class === "battery") {
             return `
-        {% set entities = [${states}] | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | list %}
-        {% set bl = entities  | sum / entities | length %}
-        {% if bl == 'unknown' or bl == 'unavailable' %}
-        {% elif bl < 10 %} mdi:battery-outline
-        {% elif bl < 20 %} mdi:battery-10
-        {% elif bl < 30 %} mdi:battery-20
-        {% elif bl < 40 %} mdi:battery-30
-        {% elif bl < 50 %} mdi:battery-40
-        {% elif bl < 60 %} mdi:battery-50
-        {% elif bl < 70 %} mdi:battery-60
-        {% elif bl < 80 %} mdi:battery-70
-        {% elif bl < 90 %} mdi:battery-80
-        {% elif bl < 100 %} mdi:battery-90
-        {% elif bl == 100 %} mdi:battery
-        {% else %} mdi:battery{% endif %}
+        {% set entities = ${_a.getSensorEntities(states, device_class)} %}
+        {% if entities | length > 0 %}
+          {% set bl = entities  | sum / entities | length %}
+          {% if bl < 10 %} mdi:battery-outline
+          {% elif bl < 20 %} mdi:battery-10
+          {% elif bl < 30 %} mdi:battery-20
+          {% elif bl < 40 %} mdi:battery-30
+          {% elif bl < 50 %} mdi:battery-40
+          {% elif bl < 60 %} mdi:battery-50
+          {% elif bl < 70 %} mdi:battery-60
+          {% elif bl < 80 %} mdi:battery-70
+          {% elif bl < 90 %} mdi:battery-80
+          {% elif bl < 100 %} mdi:battery-90
+          {% elif bl == 100 %} mdi:battery
+          {% else %} mdi:battery{% endif %}
+        {% else %}
+          mdi:battery-alert
+        {% endif %}
       `;
         }
         if (device_class === "temperature") {
             return `
-        {% set entities = [${states}] | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | map(attribute='state') | map('float') | list %}
-        {% set bl = entities  | sum / entities | length %}
-        {% if bl < 20 %}
-          mdi:thermometer-low
-        {% elif bl < 30 %}
-          mdi:thermometer
-        {% elif bl >= 30 %}
-          mdi:thermometer-high
+        {% set entities = ${_a.getSensorEntities(states, device_class)} %}
+        {% if entities | length > 0 %}
+          {% set bl = entities  | sum / entities | length %}
+          {% if bl < 20 %}
+            mdi:thermometer-low
+          {% elif bl < 30 %}
+            mdi:thermometer
+          {% elif bl >= 30 %}
+            mdi:thermometer-high
+          {% endif %}
         {% else %}
           mdi:thermometer-alert
         {% endif %}

@@ -58,7 +58,6 @@ class MediaPlayerView extends AbstractView {
 
     // Create a Controller card to switch all entities of the domain.
     this.viewControllerCard = new ControllerCard(
-      this.targetDomain(MediaPlayerView.#domain),
       {
         ...this.#viewControllerCardConfig,
         ...Helper.strategyOptions.domains.media_player.controllerCardOptions,

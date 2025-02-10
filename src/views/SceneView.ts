@@ -58,7 +58,6 @@ class SceneView extends AbstractView {
 
     // Create a Controller card to scene all entities of the domain.
     this.viewControllerCard = new ControllerCard(
-      this.targetDomain(SceneView.#domain),
       {
         ...this.#viewControllerCardConfig,
         ...Helper.strategyOptions.domains.scene.controllerCardOptions,

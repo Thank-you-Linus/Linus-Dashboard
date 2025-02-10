@@ -60,7 +60,6 @@ class ClimateView extends AbstractView {
 
     // Create a Controller card to switch all entities of the domain.
     this.viewControllerCard = new ControllerCard(
-      this.targetDomain(ClimateView.#domain),
       {
         ...this.#viewControllerCardConfig,
         ...Helper.strategyOptions.domains.climate.controllerCardOptions,

@@ -58,7 +58,6 @@ class FanView extends AbstractView {
 
     // Create a Controller card to switch all entities of the domain.
     this.viewControllerCard = new ControllerCard(
-      this.targetDomain(FanView.#domain),
       {
         ...this.#viewControllerCardConfig,
         ...Helper.strategyOptions.domains.fan.controllerCardOptions,

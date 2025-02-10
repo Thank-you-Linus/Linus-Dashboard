@@ -109,7 +109,7 @@ export const DOMAINS_VIEWS = [...AREA_CARDS_DOMAINS, ...DEVICE_CLASSES.binary_se
 
 export const HOME_EXPOSED_CHIPS = ["weather", "alarm", "spotify", LIGHT_DOMAIN, ...GROUP_DOMAINS, "fan", "switch", "safety", "motion", "occupancy", "door", "window"];
 export const AREA_EXPOSED_CHIPS = [LIGHT_DOMAIN, ...GROUP_DOMAINS, "fan", "switch", "safety", ...DEVICE_CLASSES.binary_sensor, ...DEVICE_CLASSES.sensor];
-export const SECURITY_EXPOSED_CHIPS = ["alarm", "safety", "motion", "occupancy", "door", "window"];
+export const SECURITY_EXPOSED_CHIPS = ["alarm", "safety", "motion", "occupancy", "door", "window", "cover", "lock"];
 
 export const DEVICE_ICONS = {
   presence_hold: 'mdi:car-brake-hold'

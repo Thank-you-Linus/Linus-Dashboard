@@ -119,8 +119,8 @@ class ControllerCard {
             style: `
             ha-card {
               min-width: 100px;
-            }
-          `,
+              }
+              `,
           }
         });
       }

@@ -1614,8 +1614,8 @@ class ControllerCard {
                         style: `
             ha-card {
               min-width: 100px;
-            }
-          `,
+              }
+              `,
                     }
                 });
             }
@@ -6426,7 +6426,7 @@ const CUSTOM_VIEWS = ["home", "security", "security-details"];
 const DOMAINS_VIEWS = [...AREA_CARDS_DOMAINS, ...DEVICE_CLASSES.binary_sensor, ...DEVICE_CLASSES.sensor];
 const HOME_EXPOSED_CHIPS = ["weather", "alarm", "spotify", LIGHT_DOMAIN, ...GROUP_DOMAINS, "fan", "switch", "safety", "motion", "occupancy", "door", "window"];
 const AREA_EXPOSED_CHIPS = [LIGHT_DOMAIN, ...GROUP_DOMAINS, "fan", "switch", "safety", ...DEVICE_CLASSES.binary_sensor, ...DEVICE_CLASSES.sensor];
-const SECURITY_EXPOSED_CHIPS = ["alarm", "safety", "motion", "occupancy", "door", "window"];
+const SECURITY_EXPOSED_CHIPS = ["alarm", "safety", "motion", "occupancy", "door", "window", "cover", "lock"];
 const DEVICE_ICONS = {
     presence_hold: 'mdi:car-brake-hold'
 };
@@ -6981,7 +6981,7 @@ class CameraView extends _AbstractView__WEBPACK_IMPORTED_MODULE_1__.AbstractView
         });
         this.config = Object.assign(this.config, __classPrivateFieldGet(this, _CameraView_defaultConfig, "f"), options);
         // Create a Controller card to switch all entities of the domain.
-        this.viewControllerCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_0__.ControllerCard(this.targetDomain(__classPrivateFieldGet(_a, _a, "f", _CameraView_domain)), {
+        this.viewControllerCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_0__.ControllerCard({
             ...__classPrivateFieldGet(this, _CameraView_viewControllerCardConfig, "f"),
             ..._Helper__WEBPACK_IMPORTED_MODULE_2__.Helper.strategyOptions.domains.camera.controllerCardOptions,
         }, __classPrivateFieldGet(_a, _a, "f", _CameraView_domain)).createCard();
@@ -7064,7 +7064,7 @@ class ClimateView extends _AbstractView__WEBPACK_IMPORTED_MODULE_2__.AbstractVie
         });
         this.config = Object.assign(this.config, __classPrivateFieldGet(this, _ClimateView_defaultConfig, "f"), options);
         // Create a Controller card to switch all entities of the domain.
-        this.viewControllerCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_1__.ControllerCard(this.targetDomain(__classPrivateFieldGet(_a, _a, "f", _ClimateView_domain)), {
+        this.viewControllerCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_1__.ControllerCard({
             ...__classPrivateFieldGet(this, _ClimateView_viewControllerCardConfig, "f"),
             ..._Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains.climate.controllerCardOptions,
         }, __classPrivateFieldGet(_a, _a, "f", _ClimateView_domain)).createCard();
@@ -7147,7 +7147,7 @@ class CoverView extends _AbstractView__WEBPACK_IMPORTED_MODULE_2__.AbstractView 
         });
         this.config = Object.assign(this.config, __classPrivateFieldGet(this, _CoverView_defaultConfig, "f"), options);
         // Create a Controller card to switch all entities of the domain.
-        this.viewControllerCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_1__.ControllerCard(this.targetDomain(__classPrivateFieldGet(_a, _a, "f", _CoverView_domain)), {
+        this.viewControllerCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_1__.ControllerCard({
             ...__classPrivateFieldGet(this, _CoverView_viewControllerCardConfig, "f"),
             ..._Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains.cover.controllerCardOptions,
         }, __classPrivateFieldGet(_a, _a, "f", _CoverView_domain)).createCard();
@@ -7230,7 +7230,7 @@ class FanView extends _AbstractView__WEBPACK_IMPORTED_MODULE_2__.AbstractView {
         });
         this.config = Object.assign(this.config, __classPrivateFieldGet(this, _FanView_defaultConfig, "f"), options);
         // Create a Controller card to switch all entities of the domain.
-        this.viewControllerCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_1__.ControllerCard(this.targetDomain(__classPrivateFieldGet(_a, _a, "f", _FanView_domain)), {
+        this.viewControllerCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_1__.ControllerCard({
             ...__classPrivateFieldGet(this, _FanView_viewControllerCardConfig, "f"),
             ..._Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains.fan.controllerCardOptions,
         }, __classPrivateFieldGet(_a, _a, "f", _FanView_domain)).createCard();
@@ -7840,7 +7840,7 @@ class MediaPlayerView extends _AbstractView__WEBPACK_IMPORTED_MODULE_2__.Abstrac
         });
         this.config = Object.assign(this.config, __classPrivateFieldGet(this, _MediaPlayerView_defaultConfig, "f"), options);
         // Create a Controller card to switch all entities of the domain.
-        this.viewControllerCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_1__.ControllerCard(this.targetDomain(__classPrivateFieldGet(_a, _a, "f", _MediaPlayerView_domain)), {
+        this.viewControllerCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_1__.ControllerCard({
             ...__classPrivateFieldGet(this, _MediaPlayerView_viewControllerCardConfig, "f"),
             ..._Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains.media_player.controllerCardOptions,
         }, __classPrivateFieldGet(_a, _a, "f", _MediaPlayerView_domain)).createCard();
@@ -7923,7 +7923,7 @@ class SceneView extends _AbstractView__WEBPACK_IMPORTED_MODULE_2__.AbstractView 
         });
         this.config = Object.assign(this.config, __classPrivateFieldGet(this, _SceneView_defaultConfig, "f"), options);
         // Create a Controller card to scene all entities of the domain.
-        this.viewControllerCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_1__.ControllerCard(this.targetDomain(__classPrivateFieldGet(_a, _a, "f", _SceneView_domain)), {
+        this.viewControllerCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_1__.ControllerCard({
             ...__classPrivateFieldGet(this, _SceneView_viewControllerCardConfig, "f"),
             ..._Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains.scene.controllerCardOptions,
         }, __classPrivateFieldGet(_a, _a, "f", _SceneView_domain)).createCard();
@@ -8369,7 +8369,7 @@ class SwitchView extends _AbstractView__WEBPACK_IMPORTED_MODULE_2__.AbstractView
         });
         this.config = Object.assign(this.config, __classPrivateFieldGet(this, _SwitchView_defaultConfig, "f"), options);
         // Create a Controller card to switch all entities of the domain.
-        this.viewControllerCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_1__.ControllerCard(this.targetDomain(__classPrivateFieldGet(_a, _a, "f", _SwitchView_domain)), {
+        this.viewControllerCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_1__.ControllerCard({
             ...__classPrivateFieldGet(this, _SwitchView_viewControllerCardConfig, "f"),
             ..._Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains.switch.controllerCardOptions,
         }, __classPrivateFieldGet(_a, _a, "f", _SwitchView_domain)).createCard();
@@ -8596,7 +8596,7 @@ class VacuumView extends _AbstractView__WEBPACK_IMPORTED_MODULE_2__.AbstractView
         });
         this.config = Object.assign(this.config, __classPrivateFieldGet(this, _VacuumView_defaultConfig, "f"), options);
         // Create a Controller card to switch all entities of the domain.
-        this.viewControllerCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_1__.ControllerCard(this.targetDomain(__classPrivateFieldGet(_a, _a, "f", _VacuumView_domain)), {
+        this.viewControllerCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_1__.ControllerCard({
             ...__classPrivateFieldGet(this, _VacuumView_viewControllerCardConfig, "f"),
             ..._Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains.vacuum.controllerCardOptions,
         }, __classPrivateFieldGet(_a, _a, "f", _VacuumView_domain)).createCard();

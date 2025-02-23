@@ -145,6 +145,26 @@ module.exports = deepmerge_1;
 
 /***/ }),
 
+/***/ "./src/types/homeassistant/README.md":
+/*!*******************************************!*\
+  !*** ./src/types/homeassistant/README.md ***!
+  \*******************************************/
+/***/ (() => {
+
+
+
+/***/ }),
+
+/***/ "./src/types/lovelace-mushroom/README.md":
+/*!***********************************************!*\
+  !*** ./src/types/lovelace-mushroom/README.md ***!
+  \***********************************************/
+/***/ (() => {
+
+
+
+/***/ }),
+
 /***/ "./src/Helper.ts":
 /*!***********************!*\
   !*** ./src/Helper.ts ***!
@@ -331,6 +351,7 @@ class Helper {
         __classPrivateFieldSet(this, _a, info.hass.localize, "f", _Helper_hassLocalize);
         __classPrivateFieldSet(this, _a, deepmerge__WEBPACK_IMPORTED_MODULE_1___default()(_configurationDefaults__WEBPACK_IMPORTED_MODULE_0__.configurationDefaults, info.config?.strategy?.options ?? {}), "f", _Helper_strategyOptions);
         __classPrivateFieldSet(this, _a, __classPrivateFieldGet(this, _a, "f", _Helper_strategyOptions).debug, "f", _Helper_debug);
+        console.log('this.#', info.hass);
         let homeAssistantRegistries = [];
         try {
             // Query the registries of Home Assistant.
@@ -489,42 +510,26 @@ class Helper {
      *
      * States are compared against a given value by a given operator.
      *
-     * @param {string} domain The domain of the entities.
-     * @param {string} operator The Comparison operator between state and value.
-     * @param {string} value The value to which the state is compared against.
-     * @param {string} area_id
+     * @param {object} options The options object containing the parameters.
+     * @param {string} options.domain The domain of the entities.
+     * @param {string} options.operator The Comparison operator between state and value.
+     * @param {string | string[]} options.value The value to which the state is compared against.
+     * @param {string | string[]} [options.area_slug] The area slug(s) to filter entities by.
+     * @param {string} [options.device_class] The device class of the entities.
+     * @param {boolean} [options.allowUnavailable] Whether to allow unavailable states.
+     * @param {string} [options.prefix] The prefix to add to the result.
      *
      * @return {string} The template string.
      * @static
      */
-    static getCountTemplate(domain, operator, value, area_slug, allowUnavailable) {
-        const states = [];
+    static getCountTemplate({ domain, operator, value, area_slug, device_class, allowUnavailable, prefix }) {
         if (!this.isInitialized()) {
             console.warn("Helper class should be initialized before calling this method!");
         }
-        const areaSlugs = Array.isArray(area_slug) ? area_slug : [area_slug];
-        for (const slug of areaSlugs) {
-            if (slug) {
-                const newStates = domain === "all"
-                    ? __classPrivateFieldGet(this, _a, "f", _Helper_areas)[slug]?.entities.map((entity_id) => `states['${entity_id}']`)
-                    : __classPrivateFieldGet(this, _a, "f", _Helper_areas)[slug]?.domains?.[domain]?.map((entity_id) => `states['${entity_id}']`);
-                if (newStates)
-                    states.push(...newStates);
-            }
-            else {
-                for (const area of Object.values(__classPrivateFieldGet(this, _a, "f", _Helper_areas))) {
-                    if (area.area_id === _variables__WEBPACK_IMPORTED_MODULE_2__.UNDISCLOSED)
-                        continue;
-                    const newStates = domain === "all"
-                        ? area.entities.map((entity_id) => `states['${entity_id}']`)
-                        : area.domains?.[domain]?.map((entity_id) => `states['${entity_id}']`);
-                    if (newStates)
-                        states.push(...newStates);
-                }
-            }
-        }
-        const formatedValue = Array.isArray(value) ? JSON.stringify(value).replaceAll('"', "'") : `'${value}'`;
-        return `{% set entities = [${states}] %}{{ entities ${allowUnavailable ? "" : "| selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable')"}| selectattr('state','${operator}',${formatedValue}) | list | count }}`;
+        const entitiesId = this.getEntityIds({ domain, device_class, area_slug });
+        const states = this.getStateStrings(entitiesId);
+        const formattedValue = Array.isArray(value) ? JSON.stringify(value).replaceAll('"', "'") : `'${value}'`;
+        return `{% set entities = [${states}] %}{% set count = entities ${allowUnavailable ? "" : "| selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable')"}| selectattr('state','${operator}',${formattedValue}) | list | count %}{% if count > 0 %}{{ '${prefix ?? ""}' ~ count }}{% else %}{% endif %}`;
     }
     /**
      * Get a template string to define the number of a given device_class's entities with a certain state.
@@ -719,7 +724,12 @@ class Helper {
     static getValidEntity(entity) {
         return entity.disabled_by === null && entity.hidden_by === null;
     }
-    static getFromDomainState({ domain, operator, value, ifReturn, elseReturn, area_slug, allowUnavailable }) {
+    /**
+     * Get valid entity.
+     *
+     * @return {StrategyEntity}
+     */
+    static getStates({ domain, device_class, area_slug }) {
         const states = [];
         if (!this.isInitialized()) {
             console.warn("Helper class should be initialized before calling this method!");
@@ -727,8 +737,8 @@ class Helper {
         const areaSlugs = Array.isArray(area_slug) ? area_slug : [area_slug];
         for (const slug of areaSlugs) {
             if (slug) {
-                const magic_entity = (0,_utils__WEBPACK_IMPORTED_MODULE_3__.getMAEntity)(slug, domain);
-                const entities = magic_entity ? [magic_entity.entity_id] : area_slug === "global" ? (0,_utils__WEBPACK_IMPORTED_MODULE_3__.getGlobalEntitiesExceptUndisclosed)(domain) : __classPrivateFieldGet(this, _a, "f", _Helper_areas)[slug]?.domains?.[domain];
+                const magic_entity = device_class ? (0,_utils__WEBPACK_IMPORTED_MODULE_3__.getMAEntity)(slug, domain, device_class) : (0,_utils__WEBPACK_IMPORTED_MODULE_3__.getMAEntity)(slug, domain);
+                const entities = magic_entity ? [magic_entity.entity_id] : area_slug === "global" ? (0,_utils__WEBPACK_IMPORTED_MODULE_3__.getGlobalEntitiesExceptUndisclosed)(device_class ?? domain) : __classPrivateFieldGet(this, _a, "f", _Helper_areas)[slug]?.domains?.[device_class ?? domain];
                 const newStates = entities?.map((entity_id) => `states['${entity_id}']`);
                 if (newStates)
                     states.push(...newStates);
@@ -740,12 +750,57 @@ class Helper {
                         continue;
                     const newStates = domain === "all"
                         ? __classPrivateFieldGet(this, _a, "f", _Helper_areas)[area.slug]?.entities.map((entity_id) => `states['${entity_id}']`)
-                        : __classPrivateFieldGet(this, _a, "f", _Helper_areas)[area.slug]?.domains?.[domain]?.map((entity_id) => `states['${entity_id}']`);
+                        : __classPrivateFieldGet(this, _a, "f", _Helper_areas)[area.slug]?.domains?.[device_class ?? domain]?.map((entity_id) => `states['${entity_id}']`);
                     if (newStates)
                         states.push(...newStates);
                 }
             }
         }
+        return states;
+    }
+    static getEntityIds({ domain, device_class, area_slug = 'global' }) {
+        const entityIds = [];
+        if (!this.isInitialized()) {
+            console.warn("Helper class should be initialized before calling this method!");
+        }
+        const areaSlugs = Array.isArray(area_slug) ? area_slug : [area_slug];
+        for (const slug of areaSlugs) {
+            if (slug) {
+                const magic_entity = device_class ? (0,_utils__WEBPACK_IMPORTED_MODULE_3__.getMAEntity)(slug, domain, device_class) : (0,_utils__WEBPACK_IMPORTED_MODULE_3__.getMAEntity)(slug, domain);
+                const entities = magic_entity ? [magic_entity.entity_id] : area_slug === "global" ? (0,_utils__WEBPACK_IMPORTED_MODULE_3__.getGlobalEntitiesExceptUndisclosed)(device_class ?? domain) : __classPrivateFieldGet(this, _a, "f", _Helper_areas)[slug]?.domains?.[device_class ?? domain];
+                if (entities)
+                    entityIds.push(...entities);
+            }
+            else {
+                for (const area of Object.values(__classPrivateFieldGet(this, _a, "f", _Helper_areas))) {
+                    if (area.area_id === _variables__WEBPACK_IMPORTED_MODULE_2__.UNDISCLOSED)
+                        continue;
+                    const entities = domain === "all"
+                        ? __classPrivateFieldGet(this, _a, "f", _Helper_areas)[area.slug]?.entities
+                        : __classPrivateFieldGet(this, _a, "f", _Helper_areas)[area.slug]?.domains?.[device_class ?? domain];
+                    if (entities)
+                        entityIds.push(...entities);
+                }
+            }
+        }
+        return entityIds;
+    }
+    static getStateStrings(entityIds) {
+        return entityIds.map((entity_id) => `states['${entity_id}']`);
+    }
+    static getLastChangedTemplate({ domain, device_class, area_slug }) {
+        const states = this.getStateStrings(this.getEntityIds({ domain, device_class, area_slug }));
+        return `{% set entities = [${states}] %}{{ relative_time(entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | map(attribute='last_changed') | max) }}`;
+    }
+    static getLastChangedEntityIdTemplate({ domain, device_class, area_slug }) {
+        const states = this.getStateStrings(this.getEntityIds({ domain, device_class, area_slug }));
+        return `{% set entities = [${states}] %}{{ entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | sort(attribute='last_changed', reverse=True) | first }}`;
+    }
+    static getFromDomainState({ domain, operator, value, ifReturn, elseReturn, area_slug, allowUnavailable }) {
+        if (!this.isInitialized()) {
+            console.warn("Helper class should be initialized before calling this method!");
+        }
+        const states = this.getStateStrings(this.getEntityIds({ domain, area_slug }));
         if (domain === "light") {
             ifReturn = ifReturn ?? "amber";
         }
@@ -772,35 +827,19 @@ class Helper {
         return `{% set entities = [${states}] %}{{ '${ifReturn ?? 'white'}' if entities ${allowUnavailable ? "" : "| selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable')"}| selectattr('state','${operator ?? 'eq'}', ${formatedValue}) | list | count > 0 else '${elseReturn ?? 'grey'}' }}`;
     }
     static getBinarySensorColorFromState(device_class, operator, value, ifReturn, elseReturn, area_slug = "global") {
-        const states = [];
         if (!this.isInitialized()) {
             console.warn("Helper class should be initialized before calling this method!");
         }
-        const areaSlugs = Array.isArray(area_slug) ? area_slug : [area_slug];
-        for (const slug of areaSlugs) {
-            const magic_entity = (0,_utils__WEBPACK_IMPORTED_MODULE_3__.getMAEntity)(slug, "binary_sensor", device_class);
-            const entities = magic_entity ? [magic_entity.entity_id] : area_slug === "global" ? (0,_utils__WEBPACK_IMPORTED_MODULE_3__.getGlobalEntitiesExceptUndisclosed)(device_class) : __classPrivateFieldGet(this, _a, "f", _Helper_areas)[slug]?.domains?.[device_class];
-            const newStates = entities?.map((entity_id) => `states['${entity_id}']`);
-            if (newStates)
-                states.push(...newStates);
-        }
+        const states = this.getStateStrings(this.getEntityIds({ domain: "binary_sensor", device_class, area_slug }));
         return `
       {% set entities = [${states}] %}
       {{ '${ifReturn}' if entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | selectattr('state','${operator}','${value}') | list | count else '${elseReturn}' }}`;
     }
     static getSensorColorFromState(device_class, area_slug = "global") {
-        const states = [];
         if (!this.isInitialized()) {
             console.warn("Helper class should be initialized before calling this method!");
         }
-        const areaSlugs = Array.isArray(area_slug) ? area_slug : [area_slug];
-        for (const slug of areaSlugs) {
-            const magic_entity = (0,_utils__WEBPACK_IMPORTED_MODULE_3__.getMAEntity)(slug, "sensor", device_class);
-            const entities = magic_entity ? [magic_entity.entity_id] : area_slug === "global" ? (0,_utils__WEBPACK_IMPORTED_MODULE_3__.getGlobalEntitiesExceptUndisclosed)(device_class) : __classPrivateFieldGet(this, _a, "f", _Helper_areas)[slug]?.domains?.[device_class];
-            const newStates = entities?.map((entity_id) => `states['${entity_id}']`);
-            if (newStates)
-                states.push(...newStates);
-        }
+        const states = this.getStateStrings(this.getEntityIds({ domain: "sensor", device_class, area_slug }));
         if (device_class === "battery") {
             return `
         {% set entities = ${_a.getSensorEntities(states, device_class)} %}
@@ -856,18 +895,10 @@ class Helper {
         return undefined;
     }
     static getSensorIconFromState(device_class, area_slug = "global") {
-        const states = [];
         if (!this.isInitialized()) {
             console.warn("Helper class should be initialized before calling this method!");
         }
-        const areaSlugs = Array.isArray(area_slug) ? area_slug : [area_slug];
-        for (const slug of areaSlugs) {
-            const magic_entity = (0,_utils__WEBPACK_IMPORTED_MODULE_3__.getMAEntity)(slug, "sensor", device_class);
-            const entities = magic_entity ? [magic_entity.entity_id] : area_slug === "global" ? (0,_utils__WEBPACK_IMPORTED_MODULE_3__.getGlobalEntitiesExceptUndisclosed)(device_class) : __classPrivateFieldGet(this, _a, "f", _Helper_areas)[slug]?.domains?.[device_class];
-            const newStates = entities?.map((entity_id) => `states['${entity_id}']`);
-            if (newStates)
-                states.push(...newStates);
-        }
+        const states = this.getStateStrings(this.getEntityIds({ domain: "sensor", device_class, area_slug }));
         if (device_class === "battery") {
             return `
         {% set entities = ${_a.getSensorEntities(states, device_class)} %}
@@ -1066,6 +1097,7 @@ class AbstractCard {
     getCard() {
         return {
             ...this.config,
+            type: this.entity && "entity_id" in this.entity ? "custom:mushroom-entity-card" : "custom:mushroom-template-card",
             entity: this.entity && "entity_id" in this.entity ? this.entity.entity_id : undefined,
         };
     }
@@ -1086,6 +1118,97 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   AggregateCard: () => (/* binding */ AggregateCard)
 /* harmony export */ });
+/* harmony import */ var _AbstractCard__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./AbstractCard */ "./src/cards/AbstractCard.ts");
+/* harmony import */ var _Helper__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../Helper */ "./src/Helper.ts");
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../utils */ "./src/utils.ts");
+
+
+
+// noinspection JSUnusedGlobalSymbols Class is dynamically imported.
+/**
+ * Climate Chip class.
+ *
+ * Used to create a chip to indicate climate level.
+ */
+class AggregateCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractCard {
+    /**
+     * Default configuration of the chip.
+     *
+     * @type {TemplateChipConfig | undefined}
+     *
+     */
+    getDefaultConfig({ domain, device_class, show_content = true, magic_device_id = "global", area_slug, tap_action }) {
+        let icon = device_class ? device_class !== "motion" ? _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.icons[domain][device_class]?.default : _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.icons[domain][device_class]?.state?.on : device_class !== "motion" ? _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.icons[domain]["_"]?.default : _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.icons[domain]["_"]?.state?.on;
+        let icon_color = "";
+        let content = "";
+        const device = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.magicAreasDevices[magic_device_id];
+        const magicEntity = device?.entities[`aggregate_${device_class}`];
+        if (domain === "binary_sensor" && device_class) {
+            icon_color = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.getBinarySensorColorFromState(device_class, "eq", "on", "red", "grey", area_slug);
+            content = show_content ? _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.getCountTemplate({ domain, device_class, operator: "eq", value: "on", area_slug, prefix: "mdi:numeric-" }) : "";
+        }
+        if (domain === "sensor" && device_class) {
+            content = show_content ? _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.getSensorStateTemplate(device_class, area_slug) : "";
+            icon_color = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.getSensorColorFromState(device_class, area_slug) ?? "white";
+            icon = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.getSensorIconFromState(device_class, area_slug) ?? icon;
+            if (device_class === "illuminance") {
+                if (magicEntity) {
+                    icon_color = `{{ 'blue' if 'dark' in state_attr('${device?.entities.area_state?.entity_id}', 'states') else 'amber' }}`;
+                }
+            }
+        }
+        if (domain === "cover") {
+            if (magicEntity) {
+                icon_color = `{{ 'red' if is_state('${magicEntity.entity_id}', 'open') else 'grey' }}`;
+            }
+            else {
+                icon_color = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.getFromDomainState({ domain, area_slug, }) ?? "grey";
+            }
+            show_content ? _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.getCountTemplate({ domain, device_class, operator: "eq", value: "open", area_slug, prefix: "mdi:numeric-" }) : "";
+        }
+        if (device_class === "health") {
+            icon_color = `{{ 'red' if is_state(entity, 'on') else 'green' }}`;
+        }
+        const secondary = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.getLastChangedTemplate({ domain, device_class, area_slug });
+        return {
+            entity: magicEntity?.entity_id,
+            entity_id: _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.getEntityIds({ domain, device_class, area_slug }),
+            primary: _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.localize((0,_utils__WEBPACK_IMPORTED_MODULE_2__.getDomainTranslationKey)(domain, device_class)),
+            secondary,
+            icon_color,
+            icon,
+            badge_icon: content,
+            badge_color: "black",
+            tap_action: tap_action ?? { action: "none" }
+        };
+    }
+    /**
+     * Class Constructor.
+     *
+     * @param {cards.AggregateCard} options The chip options.
+     */
+    constructor(options) {
+        super(options.entity);
+        const defaultConfig = this.getDefaultConfig(options);
+        this.config = Object.assign(this.config, defaultConfig);
+    }
+}
+
+
+
+/***/ }),
+
+/***/ "./src/cards/AggregateSection.ts":
+/*!***************************************!*\
+  !*** ./src/cards/AggregateSection.ts ***!
+  \***************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   AggregateSection: () => (/* binding */ AggregateSection)
+/* harmony export */ });
 /* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../utils */ "./src/utils.ts");
 /* harmony import */ var _Helper__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../Helper */ "./src/Helper.ts");
 /* harmony import */ var _variables__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../variables */ "./src/variables.ts");
@@ -1100,7 +1223,7 @@ var __classPrivateFieldGet = (undefined && undefined.__classPrivateFieldGet) || 
     if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
     return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
 };
-var _AggregateCard_domain, _AggregateCard_defaultConfig;
+var _AggregateSection_domain, _AggregateSection_defaultConfig;
 
 
 
@@ -1111,31 +1234,31 @@ var _AggregateCard_domain, _AggregateCard_defaultConfig;
  *
  * @class
  */
-class AggregateCard {
+class AggregateSection {
     /**
      * Class constructor.
      *
      * @param {string} domain The domain to control the entities of.
-     * @param {AggregateCardConfig} options Aggregate Card options.
+     * @param {AggregateSectionConfig} options Aggregate Card options.
      */
     constructor(domain, options = {}) {
         /**
          * @type {string} The domain to control the entities of.
          * @private
          */
-        _AggregateCard_domain.set(this, void 0);
+        _AggregateSection_domain.set(this, void 0);
         /**
          * Default configuration of the card.
          *
-         * @type {AggregateCardConfig}
+         * @type {AggregateSectionConfig}
          * @private
          */
-        _AggregateCard_defaultConfig.set(this, {
+        _AggregateSection_defaultConfig.set(this, {
             device_name: "Global",
         });
-        __classPrivateFieldSet(this, _AggregateCard_domain, domain, "f");
-        __classPrivateFieldSet(this, _AggregateCard_defaultConfig, {
-            ...__classPrivateFieldGet(this, _AggregateCard_defaultConfig, "f"),
+        __classPrivateFieldSet(this, _AggregateSection_domain, domain, "f");
+        __classPrivateFieldSet(this, _AggregateSection_defaultConfig, {
+            ...__classPrivateFieldGet(this, _AggregateSection_defaultConfig, "f"),
             ...options,
         }, "f");
     }
@@ -1145,8 +1268,8 @@ class AggregateCard {
      * @return {StackCardConfig} A Aggregate card.
      */
     createCard() {
-        const domains = typeof (__classPrivateFieldGet(this, _AggregateCard_domain, "f")) === "string" ? [__classPrivateFieldGet(this, _AggregateCard_domain, "f")] : __classPrivateFieldGet(this, _AggregateCard_domain, "f");
-        const deviceClasses = __classPrivateFieldGet(this, _AggregateCard_defaultConfig, "f").device_class && typeof (__classPrivateFieldGet(this, _AggregateCard_defaultConfig, "f").device_class) === "string" ? [__classPrivateFieldGet(this, _AggregateCard_defaultConfig, "f").device_class] : __classPrivateFieldGet(this, _AggregateCard_defaultConfig, "f").device_class;
+        const domains = typeof (__classPrivateFieldGet(this, _AggregateSection_domain, "f")) === "string" ? [__classPrivateFieldGet(this, _AggregateSection_domain, "f")] : __classPrivateFieldGet(this, _AggregateSection_domain, "f");
+        const deviceClasses = __classPrivateFieldGet(this, _AggregateSection_defaultConfig, "f").device_class && typeof (__classPrivateFieldGet(this, _AggregateSection_defaultConfig, "f").device_class) === "string" ? [__classPrivateFieldGet(this, _AggregateSection_defaultConfig, "f").device_class] : __classPrivateFieldGet(this, _AggregateSection_defaultConfig, "f").device_class;
         const cards = [];
         const globalEntities = (0,_utils__WEBPACK_IMPORTED_MODULE_0__.getAggregateEntity)(_Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.magicAreasDevices["global"], domains, deviceClasses)[0] ?? false;
         if (globalEntities) {
@@ -1155,7 +1278,7 @@ class AggregateCard {
                 entity: globalEntities.entity_id,
                 state_content: (0,_utils__WEBPACK_IMPORTED_MODULE_0__.getStateContent)(globalEntities.entity_id),
                 color: globalEntities.entity_id.startsWith('binary_sensor.') ? 'red' : false,
-                icon_tap_action: __classPrivateFieldGet(this, _AggregateCard_domain, "f") === "light" ? "more-info" : "toggle",
+                icon_tap_action: __classPrivateFieldGet(this, _AggregateSection_domain, "f") === "light" ? "more-info" : "toggle",
             });
         }
         for (const floor of _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.orderedFloors) {
@@ -1210,7 +1333,7 @@ class AggregateCard {
         };
     }
 }
-_AggregateCard_domain = new WeakMap(), _AggregateCard_defaultConfig = new WeakMap();
+_AggregateSection_domain = new WeakMap(), _AggregateSection_defaultConfig = new WeakMap();
 
 
 
@@ -1652,12 +1775,22 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   CoverCard: () => (/* binding */ CoverCard)
 /* harmony export */ });
 /* harmony import */ var _AbstractCard__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./AbstractCard */ "./src/cards/AbstractCard.ts");
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utils */ "./src/utils.ts");
+/* harmony import */ var _AggregateCard__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./AggregateCard */ "./src/cards/AggregateCard.ts");
 var __classPrivateFieldGet = (undefined && undefined.__classPrivateFieldGet) || function (receiver, state, kind, f) {
     if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a getter");
     if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
     return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
 };
+var __classPrivateFieldSet = (undefined && undefined.__classPrivateFieldSet) || function (receiver, state, value, kind, f) {
+    if (kind === "m") throw new TypeError("Private method is not writable");
+    if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a setter");
+    if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot write private member to an object whose class did not declare it");
+    return (kind === "a" ? f.call(receiver, value) : f ? f.value = value : state.set(receiver, value)), value;
+};
 var _CoverCard_defaultConfig;
+
+
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**
@@ -1693,6 +1826,13 @@ class CoverCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractCard 
                 }
             ]
         });
+        const magicAreasEntity = (0,_utils__WEBPACK_IMPORTED_MODULE_1__.getMAEntity)(options?.magic_device_id ?? "global", "cover", "shutter");
+        if (magicAreasEntity) {
+            __classPrivateFieldGet(this, _CoverCard_defaultConfig, "f").entity = magicAreasEntity.entity_id;
+        }
+        else {
+            __classPrivateFieldSet(this, _CoverCard_defaultConfig, new _AggregateCard__WEBPACK_IMPORTED_MODULE_2__.AggregateCard({ domain: "cover", device_class: "shutter" }).config, "f");
+        }
         this.config = Object.assign(this.config, __classPrivateFieldGet(this, _CoverCard_defaultConfig, "f"), options);
     }
 }
@@ -3307,7 +3447,7 @@ class ClimateChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.AbstractChi
             },
         });
         if (options?.show_content) {
-            __classPrivateFieldGet(this, _ClimateChip_defaultConfig, "f").content = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getCountTemplate("climate", "ne", "off", options?.area_slug);
+            __classPrivateFieldGet(this, _ClimateChip_defaultConfig, "f").content = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getCountTemplate({ domain: "climate", operator: "ne", value: "off", area_slug: options?.area_slug });
         }
         __classPrivateFieldGet(this, _ClimateChip_defaultConfig, "f").icon_color = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getFromDomainState({ domain: "climate", area_slug: options?.area_slug });
         const magicAreasEntity = (0,_utils__WEBPACK_IMPORTED_MODULE_2__.getMAEntity)(options.magic_device_id ?? "global", "climate");
@@ -3499,7 +3639,7 @@ class CoverChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.AbstractChip 
             },
         });
         if (options?.show_content) {
-            __classPrivateFieldGet(this, _CoverChip_defaultConfig, "f").content = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getCountTemplate("cover", "eq", "open", options?.area_slug);
+            __classPrivateFieldGet(this, _CoverChip_defaultConfig, "f").content = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getCountTemplate({ domain: "cover", operator: "eq", value: "open", area_slug: options?.area_slug });
         }
         __classPrivateFieldGet(this, _CoverChip_defaultConfig, "f").icon_color = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getFromDomainState({ domain: "cover", area_slug: options?.area_slug });
         const magicAreasEntity = (0,_utils__WEBPACK_IMPORTED_MODULE_2__.getMAEntity)(options?.magic_device_id ?? "global", "cover", "shutter");
@@ -3565,14 +3705,14 @@ class FanChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.AbstractChip {
         _FanChip_defaultConfig.set(this, {
             type: "template",
             icon: "mdi:fan",
-            content: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getCountTemplate("fan", "eq", "on"),
+            content: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getCountTemplate({ domain: "fan", operator: "eq", value: "on" }),
             tap_action: {
                 action: "navigate",
                 navigation_path: "fan",
             },
         });
         if (options?.show_content) {
-            __classPrivateFieldGet(this, _FanChip_defaultConfig, "f").content = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getCountTemplate("fan", "eq", "on", options?.area_slug);
+            __classPrivateFieldGet(this, _FanChip_defaultConfig, "f").content = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getCountTemplate({ domain: "fan", operator: "eq", value: "on", area_slug: options?.area_slug });
         }
         __classPrivateFieldGet(this, _FanChip_defaultConfig, "f").icon_color = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getFromDomainState({ domain: "fan", area_slug: options?.area_slug });
         this.config = Object.assign(this.config, __classPrivateFieldGet(this, _FanChip_defaultConfig, "f"), options);
@@ -3640,7 +3780,7 @@ class LightChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.AbstractChip 
             },
         });
         if (options?.show_content) {
-            __classPrivateFieldGet(this, _LightChip_defaultConfig, "f").content = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getCountTemplate("light", "eq", "on", options?.area_slug);
+            __classPrivateFieldGet(this, _LightChip_defaultConfig, "f").content = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getCountTemplate({ domain: "light", operator: "eq", value: "on", area_slug: options?.area_slug });
         }
         __classPrivateFieldGet(this, _LightChip_defaultConfig, "f").icon_color = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getFromDomainState({ domain: "light", area_slug: options?.area_slug });
         const magicAreasEntity = (0,_utils__WEBPACK_IMPORTED_MODULE_2__.getMAEntity)(options?.magic_device_id ?? "global", "light");
@@ -3715,7 +3855,7 @@ class MediaPlayerChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.Abstrac
             },
         });
         if (options?.show_content) {
-            __classPrivateFieldGet(this, _MediaPlayerChip_defaultConfig, "f").content = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getCountTemplate("media_player", "eq", "playing", options?.area_slug);
+            __classPrivateFieldGet(this, _MediaPlayerChip_defaultConfig, "f").content = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getCountTemplate({ domain: "media_player", operator: "eq", value: "playing", area_slug: options?.area_slug });
         }
         __classPrivateFieldGet(this, _MediaPlayerChip_defaultConfig, "f").icon_color = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getFromDomainState({ domain: "media_player", area_slug: options?.area_slug });
         const magicAreasEntity = (0,_utils__WEBPACK_IMPORTED_MODULE_2__.getMAEntity)(options?.magic_device_id ?? "global", "media_player");
@@ -4075,7 +4215,7 @@ class SwitchChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.AbstractChip
             },
         });
         if (options?.show_content) {
-            __classPrivateFieldGet(this, _SwitchChip_defaultConfig, "f").content = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getCountTemplate("switch", "eq", "on", options?.area_slug);
+            __classPrivateFieldGet(this, _SwitchChip_defaultConfig, "f").content = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getCountTemplate({ domain: "switch", operator: "eq", value: "on", area_slug: options?.area_slug });
         }
         __classPrivateFieldGet(this, _SwitchChip_defaultConfig, "f").icon_color = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getFromDomainState({ domain: "switch", area_slug: options?.area_slug });
         this.config = Object.assign(this.config, __classPrivateFieldGet(this, _SwitchChip_defaultConfig, "f"), options);
@@ -4202,7 +4342,7 @@ class UnavailableChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_0__.Abstrac
             icon_color: "orange",
             content: "",
         });
-        __classPrivateFieldGet(this, _UnavailableChip_defaultConfig, "f").content = _Helper__WEBPACK_IMPORTED_MODULE_2__.Helper.getCountTemplate("all", "eq", _variables__WEBPACK_IMPORTED_MODULE_3__.UNAVAILABLE, options?.area_slug, true);
+        __classPrivateFieldGet(this, _UnavailableChip_defaultConfig, "f").content = _Helper__WEBPACK_IMPORTED_MODULE_2__.Helper.getCountTemplate({ domain: "all", operator: "eq", value: _variables__WEBPACK_IMPORTED_MODULE_3__.UNAVAILABLE, area_slug: options?.area_slug, allowUnavailable: true });
         __classPrivateFieldGet(this, _UnavailableChip_defaultConfig, "f").icon = _Helper__WEBPACK_IMPORTED_MODULE_2__.Helper.getFromDomainState({
             domain: "all",
             operator: "eq",
@@ -5075,6 +5215,227 @@ class AbstractPopup {
 
 /***/ }),
 
+/***/ "./src/popups/AggregateAreaListPopup.ts":
+/*!**********************************************!*\
+  !*** ./src/popups/AggregateAreaListPopup.ts ***!
+  \**********************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   AggregateAreaListPopup: () => (/* binding */ AggregateAreaListPopup)
+/* harmony export */ });
+/* harmony import */ var _Helper__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../Helper */ "./src/Helper.ts");
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utils */ "./src/utils.ts");
+/* harmony import */ var _AbstractPopup__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./AbstractPopup */ "./src/popups/AbstractPopup.ts");
+
+
+
+// noinspection JSUnusedGlobalSymbols Class is dynamically imported.
+/**
+ * Light Chip class.
+ *
+ * Used to create a chip to indicate how many lights are on and to turn all off.
+ */
+class AggregateAreaListPopup extends _AbstractPopup__WEBPACK_IMPORTED_MODULE_2__.AbstractPopup {
+    getDefaultConfig({ domain, device_class, area_slug }) {
+        const device = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices[area_slug ?? "global"];
+        const magicEntity = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getEntityState(device?.entities[`aggregate_${device_class}`]?.entity_id);
+        const groupedCards = [];
+        const is_binary_sensor = ["motion", "window", "door", "health"].includes(device_class);
+        let areaCards = [];
+        for (const [i, entity_id] of magicEntity?.attributes.entity_id?.entries() ?? []) {
+            // Get a card for the area.
+            if (entity_id) {
+                areaCards.push({
+                    type: "tile",
+                    entity: entity_id,
+                    state_content: is_binary_sensor ? 'last-changed' : 'state',
+                    color: is_binary_sensor ? 'red' : false,
+                });
+            }
+            // Horizontally group every two area cards if all cards are created.
+            if (i === magicEntity.attributes.entity_id.length - 1) {
+                for (let i = 0; i < areaCards.length; i += 2) {
+                    groupedCards.push({
+                        type: "horizontal-stack",
+                        cards: areaCards.slice(i, i + 2),
+                    });
+                }
+            }
+        }
+        return {
+            "action": "fire-dom-event",
+            "browser_mod": {
+                "service": "browser_mod.popup",
+                "data": {
+                    "title": _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize((0,_utils__WEBPACK_IMPORTED_MODULE_1__.getDomainTranslationKey)(domain, device_class)),
+                    "content": {
+                        "type": "vertical-stack",
+                        "cards": [
+                            ...(magicEntity ? [
+                                {
+                                    type: "custom:mushroom-entity-card",
+                                    entity: magicEntity.entity_id,
+                                    color: is_binary_sensor ? 'red' : false,
+                                    secondary_info: is_binary_sensor ? 'last-changed' : 'state',
+                                },
+                                {
+                                    "type": "history-graph",
+                                    "hours_to_show": 10,
+                                    "show_names": false,
+                                    "entities": [
+                                        {
+                                            "entity": magicEntity.entity_id,
+                                            "name": " "
+                                        }
+                                    ]
+                                }
+                            ] : []),
+                            ...groupedCards,
+                        ]
+                    }
+                }
+            }
+        };
+    }
+    /**
+     * Class Constructor.
+     *
+     * @param {chips.PopupActionConfig} options The chip options.
+     */
+    constructor(domain, device_class, area_slug) {
+        super();
+        const defaultConfig = this.getDefaultConfig({ domain, device_class, area_slug });
+        this.config = Object.assign(this.config, defaultConfig);
+    }
+}
+
+
+
+/***/ }),
+
+/***/ "./src/popups/AggregateListPopup.ts":
+/*!******************************************!*\
+  !*** ./src/popups/AggregateListPopup.ts ***!
+  \******************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   AggregateListPopup: () => (/* binding */ AggregateListPopup)
+/* harmony export */ });
+/* harmony import */ var _Helper__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../Helper */ "./src/Helper.ts");
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utils */ "./src/utils.ts");
+/* harmony import */ var _AbstractPopup__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./AbstractPopup */ "./src/popups/AbstractPopup.ts");
+
+
+
+// noinspection JSUnusedGlobalSymbols Class is dynamically imported.
+/**
+ * Light Chip class.
+ *
+ * Used to create a chip to indicate how many lights are on and to turn all off.
+ */
+class AggregateListPopup extends _AbstractPopup__WEBPACK_IMPORTED_MODULE_2__.AbstractPopup {
+    getDefaultConfig({ domain, device_class, area_slug }) {
+        const device = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices[area_slug ?? "global"];
+        const magicEntity = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getEntityState(device?.entities[`aggregate_${device_class}`]?.entity_id);
+        const groupedCards = [];
+        const is_binary_sensor = ["motion", "window", "door", "health"].includes(device_class);
+        for (const floor of _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.orderedFloors) {
+            if (floor.areas_slug.length === 0)
+                continue;
+            groupedCards.push({
+                type: "custom:mushroom-title-card",
+                subtitle: floor.name,
+                card_mod: {
+                    style: `
+            ha-card.header {
+              padding-top: 8px;
+            }
+          `,
+                }
+            });
+            let areaCards = [];
+            for (const [i, area] of floor.areas_slug.map(area_slug => _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas[area_slug]).entries()) {
+                const entity = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices[area.slug]?.entities[`aggregate_${device_class}`];
+                // Get a card for the area.
+                // if (entity && !Helper.strategyOptions.areas[area.area_slug]?.hidden) {
+                //   areaCards.push({
+                //     type: "tile",
+                //     entity: entity?.entity_id,
+                //     primary: getAreaName(area),
+                //     state_content: is_binary_sensor ? 'last-changed' : 'state',
+                //     color: is_binary_sensor ? 'red' : false,
+                //   });
+                // }
+                // Horizontally group every two area cards if all cards are created.
+                if (i === floor.areas_slug.length - 1) {
+                    for (let i = 0; i < areaCards.length; i += 2) {
+                        groupedCards.push({
+                            type: "horizontal-stack",
+                            cards: areaCards.slice(i, i + 2),
+                        });
+                    }
+                }
+            }
+            if (areaCards.length === 0)
+                groupedCards.pop();
+        }
+        return {
+            "action": "fire-dom-event",
+            "browser_mod": {
+                "service": "browser_mod.popup",
+                "data": {
+                    "title": _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize((0,_utils__WEBPACK_IMPORTED_MODULE_1__.getDomainTranslationKey)(domain, device_class)),
+                    "content": {
+                        "type": "vertical-stack",
+                        "cards": [
+                            ...(magicEntity ? [
+                                {
+                                    type: "custom:mushroom-entity-card",
+                                    entity: magicEntity.entity_id,
+                                    color: is_binary_sensor ? 'red' : false,
+                                    secondary_info: is_binary_sensor ? 'last-changed' : 'state',
+                                },
+                                {
+                                    "type": "history-graph",
+                                    "hours_to_show": 10,
+                                    "show_names": false,
+                                    "entities": [
+                                        {
+                                            "entity": magicEntity.entity_id,
+                                            "name": " "
+                                        }
+                                    ]
+                                },
+                            ] : []),
+                            ...groupedCards,
+                        ]
+                    }
+                }
+            }
+        };
+    }
+    /**
+     * Class Constructor.
+     *
+     * @param {chips.PopupActionConfig} options The chip options.
+     */
+    constructor(domain, area_slug, device_class) {
+        super();
+        const defaultConfig = this.getDefaultConfig({ domain, device_class, area_slug });
+        this.config = Object.assign(this.config, defaultConfig);
+    }
+}
+
+
+
+/***/ }),
+
 /***/ "./src/popups/AreaInformationsPopup.ts":
 /*!*********************************************!*\
   !*** ./src/popups/AreaInformationsPopup.ts ***!
@@ -5783,6 +6144,997 @@ class SettingsPopup extends _AbstractPopup__WEBPACK_IMPORTED_MODULE_2__.Abstract
 
 /***/ }),
 
+/***/ "./src/popups/TeslaPopup.ts":
+/*!**********************************!*\
+  !*** ./src/popups/TeslaPopup.ts ***!
+  \**********************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   TeslaPopup: () => (/* binding */ TeslaPopup)
+/* harmony export */ });
+/* harmony import */ var _AbstractPopup__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./AbstractPopup */ "./src/popups/AbstractPopup.ts");
+
+// noinspection JSUnusedGlobalSymbols Class is dynamically imported.
+/**
+ * Scene Chip class.
+ *
+ * Used to create a chip to indicate how many lights are on and to turn all off.
+ */
+class TeslaPopup extends _AbstractPopup__WEBPACK_IMPORTED_MODULE_0__.AbstractPopup {
+    getDefaultConfig() {
+        return {
+            action: "fire-dom-event",
+            browser_mod: {
+                service: "browser_mod.popup",
+                data: {
+                    title: "Configurer les scènes",
+                    content: {
+                        type: "vertical-stack",
+                        cards: [
+                            {
+                                type: "conditional",
+                                condition: "and",
+                                conditions: [
+                                    {
+                                        entity: "input_boolean.tesla_charger_menu",
+                                        state: "off"
+                                    },
+                                    {
+                                        entity: "input_boolean.tesla_controls_menu",
+                                        state: "off"
+                                    },
+                                    {
+                                        entity: "input_boolean.tesla_climate_menu",
+                                        state: "off"
+                                    }
+                                ],
+                                card: {
+                                    type: "custom:stack-in-card",
+                                    cards: [
+                                        {
+                                            type: "picture-elements",
+                                            image: "/local/homeassistant-fe-tesla-main/images/models/3/red/baseWide.jpg",
+                                            entity: "button.fennec_force_data_update",
+                                            elements: [
+                                                {
+                                                    type: "state-label",
+                                                    entity: "sensor.fennec_range",
+                                                    style: {
+                                                        top: "7.2%",
+                                                        left: "22%",
+                                                        fontweight: "bold",
+                                                        fontsize: "100%",
+                                                        color: "#8a8a8d",
+                                                        fontfamily: "gotham"
+                                                    }
+                                                },
+                                                {
+                                                    type: "state-icon",
+                                                    show_name: true,
+                                                    title: "Refresh Data",
+                                                    entity: "button.fennec_force_data_update",
+                                                    icon: "mdi:refresh",
+                                                    style: {
+                                                        top: "9.5%",
+                                                        left: "90%",
+                                                        color: "#039be5",
+                                                        width: "40px",
+                                                        height: "50px"
+                                                    },
+                                                    tap_action: {
+                                                        action: "call-service",
+                                                        service: "button.press",
+                                                        service_data: {},
+                                                        target: {
+                                                            entity_id: "button.fennec_force_data_update"
+                                                        }
+                                                    },
+                                                    double_tap_action: "none",
+                                                    hold_action: "none"
+                                                },
+                                                {
+                                                    type: "image",
+                                                    title: "Unlock",
+                                                    style: {
+                                                        top: "30%",
+                                                        left: "90%",
+                                                        width: "40px",
+                                                        height: "40px"
+                                                    },
+                                                    state_image: {
+                                                        locked: "/local/homeassistant-fe-tesla-main/images/buttons/Tesla_Door_Lock.jpg",
+                                                        unlocked: "/local/homeassistant-fe-tesla-main/images/buttons/Tesla_Door_Unlock.jpg"
+                                                    },
+                                                    tap_action: {
+                                                        action: "toggle"
+                                                    },
+                                                    entity: "lock.fennec_doors",
+                                                    double_tap_action: "none",
+                                                    hold_action: "none"
+                                                },
+                                                {
+                                                    type: "image",
+                                                    title: "ClimateIcon",
+                                                    image: "/local/homeassistant-fe-tesla-main/images/buttonsTesla_Climate_Fan_On.jpg",
+                                                    style: {
+                                                        top: "50%",
+                                                        left: "90%",
+                                                        width: "40px",
+                                                        height: "40px"
+                                                    },
+                                                    state_image: {
+                                                        off: "/local/homeassistant-fe-tesla-main/images/buttons/Tesla_Climate_Fan_Off.jpg"
+                                                    },
+                                                    tap_action: {
+                                                        action: "toggle"
+                                                    },
+                                                    entity: "climate.fennec_hvac_climate_system",
+                                                    double_tap_action: "none",
+                                                    hold_action: "none"
+                                                },
+                                                {
+                                                    type: "image",
+                                                    title: "Unlock",
+                                                    image: "/local/homeassistant-fe-tesla-main/images/buttons/Tesla_Charge_Port_Closed.jpg",
+                                                    style: {
+                                                        top: "72%",
+                                                        left: "90%",
+                                                        width: "40px",
+                                                        height: "40px"
+                                                    },
+                                                    tap_action: {
+                                                        action: "toggle"
+                                                    },
+                                                    entity: "input_boolean.tesla_charger_menu",
+                                                    double_tap_action: "none",
+                                                    hold_action: "none"
+                                                },
+                                                {
+                                                    type: "conditional",
+                                                    conditions: [
+                                                        {
+                                                            entity: "cover.fennec_charger_door",
+                                                            state: "open"
+                                                        }
+                                                    ],
+                                                    elements: [
+                                                        {
+                                                            type: "image",
+                                                            title: "Charger_Door_Body",
+                                                            style: {
+                                                                top: "55.2%",
+                                                                left: "50.9%",
+                                                                width: "298px",
+                                                                height: "298px"
+                                                            },
+                                                            image: "/local/homeassistant-fe-tesla-main/images/buttons/Tesla_ChargePort_Opened.jpg"
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    type: "image",
+                                                    title: "Frunk",
+                                                    image: "/local/homeassistant-fe-tesla-main/images/buttons/Tesla_Frunk_Closed.jpg",
+                                                    style: {
+                                                        top: "90%",
+                                                        left: "90%",
+                                                        width: "40px",
+                                                        height: "40px"
+                                                    },
+                                                    state_image: {
+                                                        opened: "/local/homeassistant-fe-tesla-main/images/buttons/Tesla_Frunk_Opened.jpg"
+                                                    },
+                                                    tap_action: {
+                                                        action: "toggle"
+                                                    },
+                                                    entity: "cover.fennec_frunk",
+                                                    double_tap_action: "none",
+                                                    hold_action: "none"
+                                                },
+                                                {
+                                                    type: "conditional",
+                                                    conditions: [
+                                                        {
+                                                            entity: "cover.fennec_frunk",
+                                                            state: "open"
+                                                        }
+                                                    ],
+                                                    elements: [
+                                                        {
+                                                            type: "image",
+                                                            title: "Frunk_Body",
+                                                            style: {
+                                                                top: "55%",
+                                                                left: "50.9%",
+                                                                width: "288px",
+                                                                height: "288px"
+                                                            },
+                                                            image: "/local/homeassistant-fe-tesla-main/images/models/3/red/baseFrunkOpened.jpg"
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    type: "conditional",
+                                                    conditions: [
+                                                        {
+                                                            entity: "cover.fennec_charger_door",
+                                                            state: "open"
+                                                        }
+                                                    ],
+                                                    elements: [
+                                                        {
+                                                            type: "icon",
+                                                            icon: "mdi:ev-plug-tesla",
+                                                            tap_action: "toggle",
+                                                            double_tap_action: "none",
+                                                            hold_action: "none",
+                                                            style: {
+                                                                top: "13%",
+                                                                left: "21%",
+                                                                color: "#039be5"
+                                                            }
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    type: "conditional",
+                                                    conditions: [
+                                                        {
+                                                            entity: "cover.fennec_charger_door",
+                                                            state_not: "open"
+                                                        }
+                                                    ],
+                                                    elements: [
+                                                        {
+                                                            type: "icon",
+                                                            icon: "mdi:ev-plug-tesla",
+                                                            tap_action: "none",
+                                                            double_tap_action: "none",
+                                                            hold_action: "none",
+                                                            style: {
+                                                                top: "13%",
+                                                                left: "21%",
+                                                                color: "black"
+                                                            }
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    type: "conditional",
+                                                    conditions: [
+                                                        {
+                                                            entity: "binary_sensor.fennec_charger",
+                                                            state: "on"
+                                                        }
+                                                    ],
+                                                    elements: [
+                                                        {
+                                                            type: "state-label",
+                                                            entity: "sensor.fennec_charging_rate",
+                                                            tap_action: "none",
+                                                            double_tap_action: "none",
+                                                            hold_action: "none",
+                                                            style: {
+                                                                top: "26%",
+                                                                left: "21%",
+                                                                fontsize: "100%",
+                                                                fontweight: "normal",
+                                                                color: "#039be5"
+                                                            }
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    type: "conditional",
+                                                    conditions: [
+                                                        {
+                                                            entity: "binary_sensor.fennec_charger",
+                                                            state: "on"
+                                                        }
+                                                    ],
+                                                    elements: [
+                                                        {
+                                                            type: "state-label",
+                                                            entity: "binary_sensor.fennec_charger",
+                                                            attribute: "charging_state",
+                                                            tap_action: "none",
+                                                            double_tap_action: "none",
+                                                            hold_action: "none",
+                                                            style: {
+                                                                top: "22%",
+                                                                left: "21%",
+                                                                fontsize: "100%",
+                                                                fontweight: "normal",
+                                                                color: "#039be5"
+                                                            }
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    type: "image",
+                                                    title: "Controls",
+                                                    image: "/local/homeassistant-fe-tesla-main/images/buttons/Tesla_Controls_Button_Stateless.jpg",
+                                                    style: {
+                                                        top: "80%",
+                                                        left: "42%",
+                                                        width: "400px",
+                                                        height: "100px"
+                                                    },
+                                                    tap_action: {
+                                                        action: "toggle"
+                                                    },
+                                                    entity: "input_boolean.tesla_controls_menu",
+                                                    double_tap_action: "none",
+                                                    hold_action: "none"
+                                                },
+                                                {
+                                                    type: "conditional",
+                                                    conditions: [
+                                                        {
+                                                            entity: "climate.fennec_hvac_climate_system",
+                                                            state: "off"
+                                                        }
+                                                    ],
+                                                    elements: [
+                                                        {
+                                                            type: "image",
+                                                            title: "ClimateControls",
+                                                            image: "/local/homeassistant-fe-tesla-main/images/buttons/Tesla_Climate_Button_Off.jpg",
+                                                            style: {
+                                                                fontfamily: "gotham",
+                                                                top: "96%",
+                                                                left: "42%",
+                                                                width: "400px",
+                                                                height: "100px"
+                                                            },
+                                                            tap_action: {
+                                                                action: "toggle"
+                                                            },
+                                                            entity: "input_boolean.tesla_climate_menu",
+                                                            double_tap_action: "none",
+                                                            hold_action: "none"
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    type: "conditional",
+                                                    conditions: [
+                                                        {
+                                                            entity: "climate.fennec_hvac_climate_system",
+                                                            state: "heat_cool"
+                                                        }
+                                                    ],
+                                                    elements: [
+                                                        {
+                                                            type: "image",
+                                                            title: "ClimateControls",
+                                                            image: "/local/homeassistant-fe-tesla-main/images/buttons/Tesla_Climate_Button_On.jpg",
+                                                            style: {
+                                                                fontfamily: "gotham",
+                                                                top: "96%",
+                                                                left: "42%",
+                                                                width: "400px",
+                                                                height: "100px"
+                                                            },
+                                                            tap_action: {
+                                                                action: "toggle"
+                                                            },
+                                                            entity: "input_boolean.tesla_climate_menu",
+                                                            double_tap_action: "none",
+                                                            hold_action: "none"
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    type: "conditional",
+                                                    conditions: [
+                                                        {
+                                                            entity: "climate.fennec_hvac_climate_system",
+                                                            state: "heat_cool"
+                                                        }
+                                                    ],
+                                                    elements: [
+                                                        {
+                                                            type: "state-label",
+                                                            entity: "sensor.fennec_temperature_inside",
+                                                            style: {
+                                                                top: "94.44%",
+                                                                left: "41.3%",
+                                                                fontsize: "97%",
+                                                                color: "#8a8a8d",
+                                                                fontfamily: "gotham"
+                                                            }
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    type: "conditional",
+                                                    conditions: [
+                                                        {
+                                                            entity: "climate.fennec_hvac_climate_system",
+                                                            state: "off"
+                                                        }
+                                                    ],
+                                                    elements: [
+                                                        {
+                                                            type: "state-label",
+                                                            entity: "sensor.fennec_temperature_inside",
+                                                            style: {
+                                                                top: "94.44%",
+                                                                left: "30.3%",
+                                                                fontsize: "97%",
+                                                                color: "#8a8a8d",
+                                                                fontfamily: "gotham"
+                                                            }
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    type: "conditional",
+                                                    conditions: [
+                                                        {
+                                                            entity: "binary_sensor.fennec_ischarging",
+                                                            state: "on"
+                                                        },
+                                                        {
+                                                            entity: "device_tracker.fennec_location_tracker",
+                                                            state: "home"
+                                                        }
+                                                    ],
+                                                    elements: [
+                                                        {
+                                                            type: "icon",
+                                                            icon: "mdi:home-lightning-bolt-outline",
+                                                            tap_action: "none",
+                                                            double_tap_action: "none",
+                                                            hold_action: "none",
+                                                            style: {
+                                                                top: "84.7%",
+                                                                left: "55%",
+                                                                color: "green"
+                                                            }
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    type: "conditional",
+                                                    conditions: [
+                                                        {
+                                                            entity: "binary_sensor.fennec_ischarging",
+                                                            state: "on"
+                                                        },
+                                                        {
+                                                            entity: "device_tracker.fennec_location_tracker",
+                                                            state_not: "home"
+                                                        }
+                                                    ],
+                                                    elements: [
+                                                        {
+                                                            type: "icon",
+                                                            icon: "mdi:ev-station",
+                                                            tap_action: "none",
+                                                            double_tap_action: "none",
+                                                            hold_action: "none",
+                                                            style: {
+                                                                top: "84.7%",
+                                                                left: "55%",
+                                                                color: "green"
+                                                            }
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                type: "conditional",
+                                conditions: [
+                                    {
+                                        entity: "input_boolean.tesla_charger_menu",
+                                        state: "on"
+                                    }
+                                ],
+                                card: {
+                                    type: "custom:stack-in-card",
+                                    cards: [
+                                        {
+                                            type: "horizontal-stack",
+                                            cards: [
+                                                {
+                                                    type: "markdown",
+                                                    content: "Charge limit: <font color=white> {{states('number.fennec_charge_limit')}} % </font>\n<font color=#8a8a8d> {{state_attr('sensor.fennec_energy_added', 'added_range')}} km added during last charging session </font>  ",
+                                                    card_mod: {
+                                                        style: "ha-card {\nfont-family: gotham;\nborder: none;\n}\n"
+                                                    }
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            type: "entities",
+                                            entities: [
+                                                {
+                                                    type: "custom:slider-entity-row",
+                                                    entity: "number.fennec_charge_limit",
+                                                    full_row: true,
+                                                    step: 5,
+                                                    max: 100,
+                                                    min: 0,
+                                                    colorize: true,
+                                                    hide_state: true,
+                                                    card_mod: {
+                                                        style: "ha-card {\n  font-family: gotham;\n  border: none;\n}\n"
+                                                    }
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            type: "horizontal-stack",
+                                            cards: [
+                                                {
+                                                    type: "markdown",
+                                                    content: "\\<",
+                                                    card_mod: {
+                                                        style: "ha-card {\n  font-family: gotham;\n  border: none;\n  text-align: left;\n}\n"
+                                                    }
+                                                },
+                                                {
+                                                    type: "glance",
+                                                    entities: [
+                                                        {
+                                                            entity: "number.fennec_charging_amps"
+                                                        }
+                                                    ],
+                                                    show_icon: false,
+                                                    show_name: false,
+                                                    card_mod: {
+                                                        style: "ha-card {\n  font-family: gotham;\n  border: none;\n  color: white;\n  font-weight: bold;\n}\n"
+                                                    }
+                                                },
+                                                {
+                                                    type: "markdown",
+                                                    content: "\\>",
+                                                    card_mod: {
+                                                        style: "ha-card {\n  font-family: gotham;\n  border: none;\n  text-align: right;\n}\n"
+                                                    }
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            type: "button",
+                                            tap_action: {
+                                                action: "toggle"
+                                            },
+                                            entity: "input_boolean.tesla_charger_menu",
+                                            show_state: false,
+                                            show_icon: true,
+                                            show_name: false,
+                                            icon: "mdi:arrow-down",
+                                            icon_height: "15px",
+                                            card_mod: {
+                                                style: "ha-card {\n  font-family: gotham;\n  font-weight: bold;\n  border: none;\n}\n"
+                                            }
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                type: "conditional",
+                                conditions: [
+                                    {
+                                        entity: "input_boolean.tesla_controls_menu",
+                                        state: "on"
+                                    }
+                                ],
+                                card: {
+                                    type: "custom:stack-in-card",
+                                    cards: [
+                                        {
+                                            type: "horizontal-stack",
+                                            cards: [
+                                                {
+                                                    type: "picture-elements",
+                                                    image: "/local/homeassistant-fe-tesla-main/images/models/3/red/controlsBackground.jpg",
+                                                    entity: "button.fennec_force_data_update",
+                                                    elements: [
+                                                        {
+                                                            type: "state-label",
+                                                            entity: "sensor.fennec_range",
+                                                            style: {
+                                                                top: "7.2%",
+                                                                left: "22%",
+                                                                fontweight: "bold",
+                                                                fontsize: "100%",
+                                                                color: "#8a8a8d",
+                                                                fontfamily: "gotham"
+                                                            },
+                                                            card_mod: {
+                                                                style: "ha-card {\n  font-family: gotham;\n  border: none;\n}\n"
+                                                            }
+                                                        },
+                                                        {
+                                                            type: "image",
+                                                            title: "Flash",
+                                                            entity: "button.fennec_flash_lights",
+                                                            image: "/local/homeassistant-fe-tesla-main/images/buttons/Tesla_Flash_Lights_Button.jpg",
+                                                            style: {
+                                                                top: "20%",
+                                                                left: "70%",
+                                                                width: "40px",
+                                                                height: "40px"
+                                                            },
+                                                            tap_action: {
+                                                                action: "call-service",
+                                                                service: "button.press",
+                                                                service_data: {},
+                                                                target: {
+                                                                    entity_id: "button.fennec_flash_lights"
+                                                                }
+                                                            },
+                                                            double_tap_action: "none",
+                                                            hold_action: "none"
+                                                        },
+                                                        {
+                                                            type: "image",
+                                                            title: "Horn",
+                                                            entity: "button.fennec_horn",
+                                                            image: "/local/homeassistant-fe-tesla-main/images/buttons/Tesla_Horn_Button.jpg",
+                                                            style: {
+                                                                top: "40%",
+                                                                left: "70%",
+                                                                width: "40px",
+                                                                height: "40px"
+                                                            },
+                                                            tap_action: {
+                                                                action: "call-service",
+                                                                service: "button.press",
+                                                                service_data: {},
+                                                                target: {
+                                                                    entity_id: "button.fennec_horn"
+                                                                }
+                                                            },
+                                                            double_tap_action: "none",
+                                                            hold_action: "none"
+                                                        },
+                                                        {
+                                                            type: "image",
+                                                            title: "Remote Start",
+                                                            image: "/local/homeassistant-fe-tesla-main/images/buttons/Tesla_Remote_Start_Button_Off.jpg",
+                                                            style: {
+                                                                top: "60%",
+                                                                left: "70%",
+                                                                width: "40px",
+                                                                height: "40px"
+                                                            },
+                                                            tap_action: {
+                                                                action: "call-service",
+                                                                service: "button.press",
+                                                                service_data: {},
+                                                                target: {
+                                                                    entity_id: "button.fennec_remote_start"
+                                                                }
+                                                            },
+                                                            double_tap_action: "none",
+                                                            hold_action: "none"
+                                                        },
+                                                        {
+                                                            type: "image",
+                                                            title: "Vent",
+                                                            state_image: {
+                                                                opened: "/local/homeassistant-fe-tesla-main/images/buttons/Tesla_Close_Windows_Button.jpg",
+                                                                closed: "/local/homeassistant-fe-tesla-main/images/buttons/Tesla_Vent_Windows_Button.jpg"
+                                                            },
+                                                            style: {
+                                                                top: "80%",
+                                                                left: "70%",
+                                                                width: "40px",
+                                                                height: "40px"
+                                                            },
+                                                            tap_action: {
+                                                                action: "toggle"
+                                                            },
+                                                            entity: "cover.fennec_windows",
+                                                            double_tap_action: "none",
+                                                            hold_action: "none"
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            type: "button",
+                                            tap_action: {
+                                                action: "toggle"
+                                            },
+                                            entity: "input_boolean.tesla_controls_menu",
+                                            show_state: false,
+                                            show_icon: true,
+                                            show_name: false,
+                                            icon: "mdi:arrow-down",
+                                            icon_height: "15px",
+                                            card_mod: {
+                                                style: "ha-card {\n  font-family: gotham;\n  font-weight: bold;\n  border: none;\n}\n"
+                                            }
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                type: "conditional",
+                                conditions: [
+                                    {
+                                        entity: "input_boolean.tesla_climate_menu",
+                                        state: "on"
+                                    }
+                                ],
+                                card: {
+                                    type: "custom:stack-in-card",
+                                    cards: [
+                                        {
+                                            type: "horizontal-stack",
+                                            cards: [
+                                                {
+                                                    type: "picture-elements",
+                                                    image: "/local/homeassistant-fe-tesla-main/images/models/3/red/climateBackground_Fire8HD.jpg",
+                                                    entity: "button.fennec_force_data_update",
+                                                    elements: [
+                                                        {
+                                                            type: "image",
+                                                            title: "Heated_Seat_Left",
+                                                            entity: "select.fennec_heated_seat_left",
+                                                            image: "/local/homeassistant-fe-tesla-main/images/buttons/Tesla_Heated_Seat_Off.jpg",
+                                                            style: {
+                                                                top: "31%",
+                                                                left: "25.9%",
+                                                                width: "25px",
+                                                                height: "25px"
+                                                            },
+                                                            tap_action: {
+                                                                action: "call-service",
+                                                                service: "button.press",
+                                                                service_data: {},
+                                                                target: {
+                                                                    entity_id: "select.fennec_heated_seat_left"
+                                                                }
+                                                            },
+                                                            double_tap_action: "none",
+                                                            hold_action: "none"
+                                                        },
+                                                        {
+                                                            type: "image",
+                                                            title: "Heated_Seat_Right",
+                                                            entity: "select.fennec_heated_seat_right",
+                                                            image: "/local/homeassistant-fe-tesla-main/images/buttons/Tesla_Heated_Seat_Off.jpg",
+                                                            style: {
+                                                                top: "31%",
+                                                                left: "38%",
+                                                                width: "25px",
+                                                                height: "25px"
+                                                            },
+                                                            tap_action: {
+                                                                action: "call-service",
+                                                                service: "button.press",
+                                                                service_data: {},
+                                                                target: {
+                                                                    entity_id: "select.fennec_heated_seat_right"
+                                                                }
+                                                            },
+                                                            double_tap_action: "none",
+                                                            hold_action: "none"
+                                                        },
+                                                        {
+                                                            type: "image",
+                                                            title: "Heated_Seat_Rear_Left",
+                                                            entity: "select.fennec_heated_seat_rear_left",
+                                                            image: "/local/homeassistant-fe-tesla-main/images/buttons/Tesla_Heated_Seat_Off.jpg",
+                                                            style: {
+                                                                top: "50%",
+                                                                left: "25.9%",
+                                                                width: "25px",
+                                                                height: "25px"
+                                                            },
+                                                            tap_action: {
+                                                                action: "call-service",
+                                                                service: "button.press",
+                                                                service_data: {},
+                                                                target: {
+                                                                    entity_id: "select.fennec_heated_seat_rear_left"
+                                                                }
+                                                            },
+                                                            double_tap_action: "none",
+                                                            hold_action: "none"
+                                                        },
+                                                        {
+                                                            type: "image",
+                                                            title: "Heated_Seat_Rear_Center",
+                                                            entity: "select.fennec_heated_seat_rear_center",
+                                                            image: "/local/homeassistant-fe-tesla-main/images/buttons/Tesla_Heated_Seat_Off.jpg",
+                                                            style: {
+                                                                top: "50%",
+                                                                left: "31.5%",
+                                                                width: "25px",
+                                                                height: "25px"
+                                                            },
+                                                            tap_action: {
+                                                                action: "call-service",
+                                                                service: "button.press",
+                                                                service_data: {},
+                                                                target: {
+                                                                    entity_id: "select.fennec_heated_seat_rear_center"
+                                                                }
+                                                            },
+                                                            double_tap_action: "none",
+                                                            hold_action: "none"
+                                                        },
+                                                        {
+                                                            type: "image",
+                                                            title: "Heated_Seat_Rear_Right",
+                                                            entity: "select.fennec_heated_seat_rear_right",
+                                                            image: "/local/homeassistant-fe-tesla-main/images/buttons/Tesla_Heated_Seat_Off.jpg",
+                                                            style: {
+                                                                top: "50%",
+                                                                left: "37.2%",
+                                                                width: "25px",
+                                                                height: "25px"
+                                                            },
+                                                            tap_action: {
+                                                                action: "call-service",
+                                                                service: "button.press",
+                                                                service_data: {},
+                                                                target: {
+                                                                    entity_id: "select.fennec_heated_seat_rear_right"
+                                                                }
+                                                            },
+                                                            double_tap_action: "none",
+                                                            hold_action: "none"
+                                                        },
+                                                        {
+                                                            type: "state-label",
+                                                            prefix: "Interior ",
+                                                            entity: "sensor.fennec_temperature_inside",
+                                                            style: {
+                                                                top: "20%",
+                                                                left: "64%",
+                                                                fontsize: "92%",
+                                                                color: "#8a8a8d",
+                                                                fontfamily: "gotham"
+                                                            }
+                                                        },
+                                                        {
+                                                            type: "state-label",
+                                                            prefix: "- Exterior ",
+                                                            entity: "sensor.fennec_temperature_outside",
+                                                            style: {
+                                                                top: "20%",
+                                                                left: "87%",
+                                                                fontsize: "92%",
+                                                                color: "#8a8a8d",
+                                                                fontfamily: "gotham"
+                                                            }
+                                                        },
+                                                        {
+                                                            type: "image",
+                                                            title: "Climate",
+                                                            entity: "climate.fennec_hvac_climate_system",
+                                                            image: "/local/homeassistant-fe-tesla-main/images/buttons/Tesla_Climate_Button_Power_Off.jpg",
+                                                            style: {
+                                                                top: "40%",
+                                                                left: "58%",
+                                                                width: "50px",
+                                                                height: "50px"
+                                                            },
+                                                            tap_action: {
+                                                                action: "toggle",
+                                                                entity_id: "climate.fennec_hvac_climate_system"
+                                                            },
+                                                            double_tap_action: "none",
+                                                            hold_action: "none"
+                                                        },
+                                                        {
+                                                            type: "state-label",
+                                                            entity: "climate.fennec_hvac_climate_system",
+                                                            attribute: "temperature",
+                                                            style: {
+                                                                top: "42.5%",
+                                                                left: "73.7%",
+                                                                fontsize: "200%",
+                                                                fontfamily: "gotham",
+                                                                color: "white"
+                                                            }
+                                                        },
+                                                        {
+                                                            type: "image",
+                                                            title: "Vent_Windows",
+                                                            entity: "cover.fennec_windows",
+                                                            image: "/local/homeassistant-fe-tesla-main/images/buttons/Tesla_Vent_Windows_Button.jpg",
+                                                            style: {
+                                                                top: "41%",
+                                                                left: "90.5%",
+                                                                width: "60px",
+                                                                height: "60px"
+                                                            },
+                                                            tap_action: {
+                                                                action: "toggle"
+                                                            },
+                                                            double_tap_action: "none",
+                                                            hold_action: "none"
+                                                        },
+                                                        {
+                                                            type: "image",
+                                                            title: "Defrost",
+                                                            entity: "cover.fennec_windows",
+                                                            image: "/local/homeassistant-fe-tesla-main/images/buttons/Tesla_Climate_Button_Defrost_Off_324.jpg",
+                                                            style: {
+                                                                top: "77%",
+                                                                left: "74.5%",
+                                                                width: "210px",
+                                                                height: "150px"
+                                                            },
+                                                            tap_action: {
+                                                                action: "toggle"
+                                                            },
+                                                            double_tap_action: "none",
+                                                            hold_action: "none"
+                                                        },
+                                                        {
+                                                            type: "image",
+                                                            title: "Defrost",
+                                                            image: "/local/homeassistant-fe-tesla-main/images/buttons/Telsa_Back_Button.jpg",
+                                                            style: {
+                                                                top: "8%",
+                                                                left: "7%",
+                                                                width: "50px",
+                                                                height: "50px"
+                                                            },
+                                                            tap_action: {
+                                                                action: "toggle"
+                                                            },
+                                                            entity: "input_boolean.tesla_climate_menu"
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                type: "map",
+                                entities: [
+                                    {
+                                        entity: "device_tracker.fennec_location_tracker"
+                                    }
+                                ],
+                                hours_to_show: 24,
+                                dark_mode: true,
+                                default_zoom: 12
+                            }
+                        ]
+                    }
+                }
+            }
+        };
+    }
+    /**
+     * Class Constructor.
+     *
+     * @param {chips.PopupActionConfig} options The chip options.
+     */
+    constructor() {
+        super();
+        const defaultConfig = this.getDefaultConfig();
+        this.config = Object.assign(this.config, defaultConfig);
+    }
+}
+
+
+
+/***/ }),
+
 /***/ "./src/popups/WeatherPopup.ts":
 /*!************************************!*\
   !*** ./src/popups/WeatherPopup.ts ***!
@@ -5840,6 +7192,447 @@ class WeatherPopup extends _AbstractPopup__WEBPACK_IMPORTED_MODULE_0__.AbstractP
 
 /***/ }),
 
+/***/ "./src/types/homeassistant/data/area_registry.ts":
+/*!*******************************************************!*\
+  !*** ./src/types/homeassistant/data/area_registry.ts ***!
+  \*******************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+
+
+
+/***/ }),
+
+/***/ "./src/types/homeassistant/data/climate.ts":
+/*!*************************************************!*\
+  !*** ./src/types/homeassistant/data/climate.ts ***!
+  \*************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   HVAC_MODES: () => (/* binding */ HVAC_MODES)
+/* harmony export */ });
+const HVAC_MODES = [
+    "auto",
+    "heat_cool",
+    "heat",
+    "cool",
+    "dry",
+    "fan_only",
+    "off",
+];
+HVAC_MODES.reduce((order, mode, index) => {
+    order[mode] = index;
+    return order;
+}, {});
+
+
+/***/ }),
+
+/***/ "./src/types/homeassistant/data/device_registry.ts":
+/*!*********************************************************!*\
+  !*** ./src/types/homeassistant/data/device_registry.ts ***!
+  \*********************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+
+
+
+/***/ }),
+
+/***/ "./src/types/homeassistant/data/entity_registry.ts":
+/*!*********************************************************!*\
+  !*** ./src/types/homeassistant/data/entity_registry.ts ***!
+  \*********************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+
+
+
+/***/ }),
+
+/***/ "./src/types/homeassistant/data/floor_registry.ts":
+/*!********************************************************!*\
+  !*** ./src/types/homeassistant/data/floor_registry.ts ***!
+  \********************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+
+
+
+/***/ }),
+
+/***/ "./src/types/homeassistant/data/frontend.ts":
+/*!**************************************************!*\
+  !*** ./src/types/homeassistant/data/frontend.ts ***!
+  \**************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   ResourceKeys: () => (/* binding */ ResourceKeys)
+/* harmony export */ });
+var ResourceKeys;
+(function (ResourceKeys) {
+    ResourceKeys["todo"] = "todo";
+    ResourceKeys["fan"] = "fan";
+    ResourceKeys["ffmpeg"] = "ffmpeg";
+    ResourceKeys["water_heater"] = "water_heater";
+    ResourceKeys["shopping_list"] = "shopping_list";
+    ResourceKeys["siren"] = "siren";
+    ResourceKeys["media_player"] = "media_player";
+    ResourceKeys["input_boolean"] = "input_boolean";
+    ResourceKeys["input_text"] = "input_text";
+    ResourceKeys["cover"] = "cover";
+    ResourceKeys["input_number"] = "input_number";
+    ResourceKeys["counter"] = "counter";
+    ResourceKeys["scene"] = "scene";
+    ResourceKeys["notify"] = "notify";
+    ResourceKeys["light"] = "light";
+    ResourceKeys["humidifier"] = "humidifier";
+    ResourceKeys["person"] = "person";
+    ResourceKeys["lovelace"] = "lovelace";
+    ResourceKeys["time"] = "time";
+    ResourceKeys["zone"] = "zone";
+    ResourceKeys["update"] = "update";
+    ResourceKeys["timer"] = "timer";
+    ResourceKeys["persistent_notification"] = "persistent_notification";
+    ResourceKeys["button"] = "button";
+    ResourceKeys["group"] = "group";
+    ResourceKeys["date"] = "date";
+    ResourceKeys["recorder"] = "recorder";
+    ResourceKeys["number"] = "number";
+    ResourceKeys["text"] = "text";
+    ResourceKeys["climate"] = "climate";
+    ResourceKeys["demo"] = "demo";
+    ResourceKeys["schedule"] = "schedule";
+    ResourceKeys["script"] = "script";
+    ResourceKeys["alarm_control_panel"] = "alarm_control_panel";
+    ResourceKeys["device_tracker"] = "device_tracker";
+    ResourceKeys["system_log"] = "system_log";
+    ResourceKeys["logbook"] = "logbook";
+    ResourceKeys["conversation"] = "conversation";
+    ResourceKeys["image_processing"] = "image_processing";
+    ResourceKeys["automation"] = "automation";
+    ResourceKeys["input_datetime"] = "input_datetime";
+    ResourceKeys["homeassistant"] = "homeassistant";
+    ResourceKeys["datetime"] = "datetime";
+    ResourceKeys["logger"] = "logger";
+    ResourceKeys["vacuum"] = "vacuum";
+    ResourceKeys["weather"] = "weather";
+    ResourceKeys["switch"] = "switch";
+    ResourceKeys["backup"] = "backup";
+    ResourceKeys["frontend"] = "frontend";
+    ResourceKeys["calendar"] = "calendar";
+    ResourceKeys["cloud"] = "cloud";
+    ResourceKeys["camera"] = "camera";
+    ResourceKeys["input_button"] = "input_button";
+    ResourceKeys["select"] = "select";
+    ResourceKeys["tts"] = "tts";
+    ResourceKeys["input_select"] = "input_select";
+    ResourceKeys["lock"] = "lock";
+    ResourceKeys["tag"] = "tag";
+    ResourceKeys["event"] = "event";
+    ResourceKeys["stt"] = "stt";
+    ResourceKeys["air_quality"] = "air_quality";
+    ResourceKeys["sensor"] = "sensor";
+    ResourceKeys["binary_sensor"] = "binary_sensor";
+    ResourceKeys["wake_word"] = "wake_word";
+})(ResourceKeys || (ResourceKeys = {}));
+
+
+/***/ }),
+
+/***/ "./src/types/homeassistant/data/light.ts":
+/*!***********************************************!*\
+  !*** ./src/types/homeassistant/data/light.ts ***!
+  \***********************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+
+
+
+/***/ }),
+
+/***/ "./src/types/homeassistant/data/linus_dashboard.ts":
+/*!*********************************************************!*\
+  !*** ./src/types/homeassistant/data/linus_dashboard.ts ***!
+  \*********************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+
+
+
+/***/ }),
+
+/***/ "./src/types/homeassistant/data/lovelace.ts":
+/*!**************************************************!*\
+  !*** ./src/types/homeassistant/data/lovelace.ts ***!
+  \**************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+
+
+
+/***/ }),
+
+/***/ "./src/types/homeassistant/lovelace/cards/types.ts":
+/*!*********************************************************!*\
+  !*** ./src/types/homeassistant/lovelace/cards/types.ts ***!
+  \*********************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+
+
+
+/***/ }),
+
+/***/ "./src/types/homeassistant/panels/lovelave/cards/types.ts":
+/*!****************************************************************!*\
+  !*** ./src/types/homeassistant/panels/lovelave/cards/types.ts ***!
+  \****************************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+
+
+
+/***/ }),
+
+/***/ "./src/types/homeassistant/types.ts":
+/*!******************************************!*\
+  !*** ./src/types/homeassistant/types.ts ***!
+  \******************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+
+
+
+/***/ }),
+
+/***/ "./src/types/lovelace-mushroom/cards/chips-card.ts":
+/*!*********************************************************!*\
+  !*** ./src/types/lovelace-mushroom/cards/chips-card.ts ***!
+  \*********************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+
+
+
+/***/ }),
+
+/***/ "./src/types/lovelace-mushroom/cards/climate-card-config.ts":
+/*!******************************************************************!*\
+  !*** ./src/types/lovelace-mushroom/cards/climate-card-config.ts ***!
+  \******************************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+
+
+
+/***/ }),
+
+/***/ "./src/types/lovelace-mushroom/cards/cover-card-config.ts":
+/*!****************************************************************!*\
+  !*** ./src/types/lovelace-mushroom/cards/cover-card-config.ts ***!
+  \****************************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+
+
+
+/***/ }),
+
+/***/ "./src/types/lovelace-mushroom/cards/entity-card-config.ts":
+/*!*****************************************************************!*\
+  !*** ./src/types/lovelace-mushroom/cards/entity-card-config.ts ***!
+  \*****************************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+
+
+
+/***/ }),
+
+/***/ "./src/types/lovelace-mushroom/cards/fan-card-config.ts":
+/*!**************************************************************!*\
+  !*** ./src/types/lovelace-mushroom/cards/fan-card-config.ts ***!
+  \**************************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+
+
+
+/***/ }),
+
+/***/ "./src/types/lovelace-mushroom/cards/light-card-config.ts":
+/*!****************************************************************!*\
+  !*** ./src/types/lovelace-mushroom/cards/light-card-config.ts ***!
+  \****************************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+
+
+
+/***/ }),
+
+/***/ "./src/types/lovelace-mushroom/cards/lock-card-config.ts":
+/*!***************************************************************!*\
+  !*** ./src/types/lovelace-mushroom/cards/lock-card-config.ts ***!
+  \***************************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+
+
+
+/***/ }),
+
+/***/ "./src/types/lovelace-mushroom/cards/media-player-card-config.ts":
+/*!***********************************************************************!*\
+  !*** ./src/types/lovelace-mushroom/cards/media-player-card-config.ts ***!
+  \***********************************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   MEDIA_LAYER_MEDIA_CONTROLS: () => (/* binding */ MEDIA_LAYER_MEDIA_CONTROLS),
+/* harmony export */   MEDIA_PLAYER_VOLUME_CONTROLS: () => (/* binding */ MEDIA_PLAYER_VOLUME_CONTROLS)
+/* harmony export */ });
+const MEDIA_LAYER_MEDIA_CONTROLS = [
+    "on_off",
+    "shuffle",
+    "previous",
+    "play_pause_stop",
+    "next",
+    "repeat",
+];
+const MEDIA_PLAYER_VOLUME_CONTROLS = [
+    "volume_mute",
+    "volume_set",
+    "volume_buttons",
+];
+
+
+/***/ }),
+
+/***/ "./src/types/lovelace-mushroom/cards/number-card-config.ts":
+/*!*****************************************************************!*\
+  !*** ./src/types/lovelace-mushroom/cards/number-card-config.ts ***!
+  \*****************************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   DISPLAY_MODES: () => (/* binding */ DISPLAY_MODES)
+/* harmony export */ });
+const DISPLAY_MODES = ["slider", "buttons"];
+
+
+/***/ }),
+
+/***/ "./src/types/lovelace-mushroom/cards/person-card-config.ts":
+/*!*****************************************************************!*\
+  !*** ./src/types/lovelace-mushroom/cards/person-card-config.ts ***!
+  \*****************************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+
+
+
+/***/ }),
+
+/***/ "./src/types/lovelace-mushroom/cards/scene-card-config.ts":
+/*!****************************************************************!*\
+  !*** ./src/types/lovelace-mushroom/cards/scene-card-config.ts ***!
+  \****************************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+
+
+
+/***/ }),
+
+/***/ "./src/types/lovelace-mushroom/cards/swipe-card-config.ts":
+/*!****************************************************************!*\
+  !*** ./src/types/lovelace-mushroom/cards/swipe-card-config.ts ***!
+  \****************************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+
+
+
+/***/ }),
+
+/***/ "./src/types/lovelace-mushroom/cards/template-card-config.ts":
+/*!*******************************************************************!*\
+  !*** ./src/types/lovelace-mushroom/cards/template-card-config.ts ***!
+  \*******************************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+
+
+
+/***/ }),
+
+/***/ "./src/types/lovelace-mushroom/cards/title-card-config.ts":
+/*!****************************************************************!*\
+  !*** ./src/types/lovelace-mushroom/cards/title-card-config.ts ***!
+  \****************************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+
+
+
+/***/ }),
+
 /***/ "./src/types/lovelace-mushroom/cards/vacuum-card-config.ts":
 /*!*****************************************************************!*\
   !*** ./src/types/lovelace-mushroom/cards/vacuum-card-config.ts ***!
@@ -5859,6 +7652,160 @@ const VACUUM_COMMANDS = [
     "clean_spot",
     "return_home",
 ];
+
+
+/***/ }),
+
+/***/ "./src/types/lovelace-mushroom/shared/config/actions-config.ts":
+/*!*********************************************************************!*\
+  !*** ./src/types/lovelace-mushroom/shared/config/actions-config.ts ***!
+  \*********************************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+
+
+
+/***/ }),
+
+/***/ "./src/types/lovelace-mushroom/shared/config/appearance-config.ts":
+/*!************************************************************************!*\
+  !*** ./src/types/lovelace-mushroom/shared/config/appearance-config.ts ***!
+  \************************************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   appearanceSharedConfigStruct: () => (/* binding */ appearanceSharedConfigStruct)
+/* harmony export */ });
+/* harmony import */ var superstruct__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! superstruct */ "./node_modules/superstruct/dist/index.mjs");
+/* harmony import */ var _utils_layout__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./utils/layout */ "./src/types/lovelace-mushroom/shared/config/utils/layout.ts");
+/* harmony import */ var _utils_info__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./utils/info */ "./src/types/lovelace-mushroom/shared/config/utils/info.ts");
+
+
+
+const appearanceSharedConfigStruct = (0,superstruct__WEBPACK_IMPORTED_MODULE_2__.object)({
+    layout: (0,superstruct__WEBPACK_IMPORTED_MODULE_2__.optional)(_utils_layout__WEBPACK_IMPORTED_MODULE_0__.layoutStruct),
+    fill_container: (0,superstruct__WEBPACK_IMPORTED_MODULE_2__.optional)((0,superstruct__WEBPACK_IMPORTED_MODULE_2__.boolean)()),
+    primary_info: (0,superstruct__WEBPACK_IMPORTED_MODULE_2__.optional)((0,superstruct__WEBPACK_IMPORTED_MODULE_2__.enums)(_utils_info__WEBPACK_IMPORTED_MODULE_1__.INFOS)),
+    secondary_info: (0,superstruct__WEBPACK_IMPORTED_MODULE_2__.optional)((0,superstruct__WEBPACK_IMPORTED_MODULE_2__.enums)(_utils_info__WEBPACK_IMPORTED_MODULE_1__.INFOS)),
+    icon_type: (0,superstruct__WEBPACK_IMPORTED_MODULE_2__.optional)((0,superstruct__WEBPACK_IMPORTED_MODULE_2__.enums)(_utils_info__WEBPACK_IMPORTED_MODULE_1__.ICON_TYPES)),
+});
+
+
+/***/ }),
+
+/***/ "./src/types/lovelace-mushroom/shared/config/entity-config.ts":
+/*!********************************************************************!*\
+  !*** ./src/types/lovelace-mushroom/shared/config/entity-config.ts ***!
+  \********************************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   entitySharedConfigStruct: () => (/* binding */ entitySharedConfigStruct)
+/* harmony export */ });
+/* harmony import */ var superstruct__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! superstruct */ "./node_modules/superstruct/dist/index.mjs");
+
+const entitySharedConfigStruct = (0,superstruct__WEBPACK_IMPORTED_MODULE_0__.object)({
+    entity: (0,superstruct__WEBPACK_IMPORTED_MODULE_0__.optional)((0,superstruct__WEBPACK_IMPORTED_MODULE_0__.string)()),
+    name: (0,superstruct__WEBPACK_IMPORTED_MODULE_0__.optional)((0,superstruct__WEBPACK_IMPORTED_MODULE_0__.string)()),
+    icon: (0,superstruct__WEBPACK_IMPORTED_MODULE_0__.optional)((0,superstruct__WEBPACK_IMPORTED_MODULE_0__.string)()),
+});
+
+
+/***/ }),
+
+/***/ "./src/types/lovelace-mushroom/shared/config/utils/info.ts":
+/*!*****************************************************************!*\
+  !*** ./src/types/lovelace-mushroom/shared/config/utils/info.ts ***!
+  \*****************************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   ICON_TYPES: () => (/* binding */ ICON_TYPES),
+/* harmony export */   INFOS: () => (/* binding */ INFOS)
+/* harmony export */ });
+const INFOS = ["name", "state", "last-changed", "last-updated", "none"];
+const ICON_TYPES = ["icon", "entity-picture", "none"];
+
+
+/***/ }),
+
+/***/ "./src/types/lovelace-mushroom/shared/config/utils/layout.ts":
+/*!*******************************************************************!*\
+  !*** ./src/types/lovelace-mushroom/shared/config/utils/layout.ts ***!
+  \*******************************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   layoutStruct: () => (/* binding */ layoutStruct)
+/* harmony export */ });
+/* harmony import */ var superstruct__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! superstruct */ "./node_modules/superstruct/dist/index.mjs");
+
+const layoutStruct = (0,superstruct__WEBPACK_IMPORTED_MODULE_0__.union)([(0,superstruct__WEBPACK_IMPORTED_MODULE_0__.literal)("horizontal"), (0,superstruct__WEBPACK_IMPORTED_MODULE_0__.literal)("vertical"), (0,superstruct__WEBPACK_IMPORTED_MODULE_0__.literal)("default")]);
+
+
+/***/ }),
+
+/***/ "./src/types/lovelace-mushroom/utils/info.ts":
+/*!***************************************************!*\
+  !*** ./src/types/lovelace-mushroom/utils/info.ts ***!
+  \***************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   INFOS: () => (/* binding */ INFOS)
+/* harmony export */ });
+const INFOS = ["name", "state", "last-changed", "last-updated", "none"];
+
+
+/***/ }),
+
+/***/ "./src/types/lovelace-mushroom/utils/lovelace/chip/types.ts":
+/*!******************************************************************!*\
+  !*** ./src/types/lovelace-mushroom/utils/lovelace/chip/types.ts ***!
+  \******************************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+
+
+
+/***/ }),
+
+/***/ "./src/types/strategy/cards.ts":
+/*!*************************************!*\
+  !*** ./src/types/strategy/cards.ts ***!
+  \*************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+
+
+
+/***/ }),
+
+/***/ "./src/types/strategy/chips.ts":
+/*!*************************************!*\
+  !*** ./src/types/strategy/chips.ts ***!
+  \*************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+
 
 
 /***/ }),
@@ -5902,6 +7849,19 @@ var generic;
 
 /***/ }),
 
+/***/ "./src/types/strategy/views.ts":
+/*!*************************************!*\
+  !*** ./src/types/strategy/views.ts ***!
+  \*************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+
+
+
+/***/ }),
+
 /***/ "./src/utils.ts":
 /*!**********************!*\
   !*** ./src/utils.ts ***!
@@ -5912,6 +7872,7 @@ var generic;
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   addLightGroupsToEntities: () => (/* binding */ addLightGroupsToEntities),
+/* harmony export */   createCardsFromList: () => (/* binding */ createCardsFromList),
 /* harmony export */   createChipsFromList: () => (/* binding */ createChipsFromList),
 /* harmony export */   getAggregateEntity: () => (/* binding */ getAggregateEntity),
 /* harmony export */   getAreaName: () => (/* binding */ getAreaName),
@@ -6091,6 +8052,65 @@ const groupEntitiesByDomain = memoize(function groupEntitiesByDomain(entity_ids)
     }, {});
 });
 /**
+ * Create items (chips or cards) from a list.
+ * @param {string[]} itemList - The list of items.
+ * @param {Partial<chips.AggregateChipOptions> | Partial<generic.StrategyEntity>} [itemOptions] - The item options.
+ * @param {string} [magic_device_id="global"] - The magic device ID.
+ * @param {string | string[]} [area_slug] - The area slug.
+ * @param {boolean} isChip - Flag to determine if creating chips or cards.
+ * @returns {Promise<LovelaceChipConfig[] | LovelaceCardConfig[]>} - The created items.
+ */
+async function createItemsFromList(itemList, itemOptions, magic_device_id = "global", area_slug, isChip = true) {
+    const items = [];
+    const area_slugs = area_slug ? Array.isArray(area_slug) ? area_slug : [area_slug] : [];
+    const domains = magic_device_id === "global"
+        ? Object.keys(_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.domains)
+        : area_slugs.flatMap(area_slug => Object.keys(_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas[area_slug]?.domains ?? {}));
+    for (let itemType of itemList) {
+        if (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.linus_dashboard_config?.excluded_domains?.includes(itemType))
+            continue;
+        if (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.linus_dashboard_config?.excluded_device_classes?.includes(itemType))
+            continue;
+        if (!domains.includes(itemType))
+            continue;
+        const className = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.sanitizeClassName(itemType + (isChip ? "Chip" : "Card"));
+        try {
+            let itemModule;
+            let item;
+            try {
+                itemModule = await __webpack_require__("./src lazy recursive ^\\.\\/.*\\/.*$")(`./${isChip ? "chips" : "cards"}/${className}`);
+                item = new itemModule[className]({ ...itemOptions, area_slug });
+            }
+            catch {
+                let domain = itemType;
+                let device_class;
+                if (_variables__WEBPACK_IMPORTED_MODULE_1__.DEVICE_CLASSES.binary_sensor.includes(itemType)) {
+                    domain = "binary_sensor";
+                    device_class = itemType;
+                }
+                if (_variables__WEBPACK_IMPORTED_MODULE_1__.DEVICE_CLASSES.sensor.includes(itemType)) {
+                    domain = "sensor";
+                    device_class = itemType;
+                }
+                itemModule = await __webpack_require__("./src lazy recursive ^\\.\\/.*\\/Aggregate.*$")(`./${isChip ? "chips" : "cards"}/Aggregate${isChip ? "Chip" : "Card"}`);
+                item = new itemModule[`Aggregate${isChip ? "Chip" : "Card"}`]({
+                    ...itemOptions,
+                    domain,
+                    device_class,
+                    area_slug,
+                    magic_device_id,
+                    tap_action: navigateTo(itemType)
+                });
+            }
+            items.push(item.getChip ? item.getChip() : item.getCard());
+        }
+        catch (e) {
+            _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.logError(`An error occurred while creating the ${itemType} ${isChip ? "chip" : "card"}!`, e);
+        }
+    }
+    return items;
+}
+/**
  * Create chips from a list.
  * @param {string[]} chipsList - The list of chips.
  * @param {Partial<chips.AggregateChipOptions>} [chipOptions] - The chip options.
@@ -6099,37 +8119,18 @@ const groupEntitiesByDomain = memoize(function groupEntitiesByDomain(entity_ids)
  * @returns {Promise<LovelaceChipConfig[]>} - The created chips.
  */
 async function createChipsFromList(chipsList, chipOptions, magic_device_id = "global", area_slug) {
-    const chips = [];
-    const area_slugs = area_slug ? Array.isArray(area_slug) ? area_slug : [area_slug] : [];
-    const domains = magic_device_id === "global"
-        ? Object.keys(_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.domains)
-        : area_slugs.flatMap(area_slug => Object.keys(_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas[area_slug]?.domains ?? {}));
-    for (let chipType of chipsList) {
-        if (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.linus_dashboard_config?.excluded_domains?.includes(chipType))
-            continue;
-        if (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.linus_dashboard_config?.excluded_device_classes?.includes(chipType))
-            continue;
-        if (!domains.includes(chipType))
-            continue;
-        const className = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.sanitizeClassName(chipType + "Chip");
-        try {
-            let chipModule;
-            if ([..._variables__WEBPACK_IMPORTED_MODULE_1__.DEVICE_CLASSES.binary_sensor, ..._variables__WEBPACK_IMPORTED_MODULE_1__.DEVICE_CLASSES.sensor].includes(chipType)) {
-                chipModule = await Promise.resolve(/*! import() */).then(__webpack_require__.bind(__webpack_require__, /*! ./chips/AggregateChip */ "./src/chips/AggregateChip.ts"));
-                const chip = new chipModule.AggregateChip({ ...chipOptions, device_class: chipType, area_slug, magic_device_id, tap_action: navigateTo(chipType) });
-                chips.push(chip.getChip());
-            }
-            else {
-                chipModule = await __webpack_require__("./src/chips lazy recursive ^\\.\\/.*$")("./" + className);
-                const chip = new chipModule[className]({ ...chipOptions, area_slug });
-                chips.push(chip.getChip());
-            }
-        }
-        catch (e) {
-            _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.logError(`An error occurred while creating the ${chipType} chip!`, e);
-        }
-    }
-    return chips;
+    return createItemsFromList(chipsList, chipOptions, magic_device_id, area_slug, true);
+}
+/**
+ * Create cards from a list.
+ * @param {string[]} cardsList - The list of cards.
+ * @param {Partial<generic.StrategyEntity>} [cardOptions] - The card options.
+ * @param {string} [magic_device_id="global"] - The magic device ID.
+ * @param {string | string[]} [area_slug] - The area slug.
+ * @returns {Promise<LovelaceCardConfig[]>} - The created cards.
+ */
+async function createCardsFromList(cardsList, cardOptions, magic_device_id = "global", area_slug) {
+    return createItemsFromList(cardsList, cardOptions, magic_device_id, area_slug, false);
 }
 /**
  * Get the translation key for a domain.
@@ -6179,8 +8180,9 @@ const getAreaName = memoize(function getAreaName(area) {
  * @param {string} device_class - The device class.
  * @returns {string[]} - The global entities.
  */
-const getGlobalEntitiesExceptUndisclosed = memoize(function getGlobalEntitiesExceptUndisclosed(device_class) {
-    return _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.domains[device_class]?.filter(entity => !_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas[_variables__WEBPACK_IMPORTED_MODULE_1__.UNDISCLOSED].domains?.[device_class]?.includes(entity.entity_id)).map(e => e.entity_id) ?? [];
+const getGlobalEntitiesExceptUndisclosed = memoize(function getGlobalEntitiesExceptUndisclosed(domain, device_class) {
+    const entities = device_class ? _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.domains[device_class] : _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.domains[domain];
+    return entities?.filter(entity => !_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas[_variables__WEBPACK_IMPORTED_MODULE_1__.UNDISCLOSED].domains?.[device_class ?? domain]?.includes(entity.entity_id)).map(e => e.entity_id) ?? [];
 });
 /**
  * Add light groups to entities.
@@ -7955,7 +9957,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   SecurityDetailsView: () => (/* binding */ SecurityDetailsView)
 /* harmony export */ });
 /* harmony import */ var _Helper__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../Helper */ "./src/Helper.ts");
-/* harmony import */ var _cards_AggregateCard__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../cards/AggregateCard */ "./src/cards/AggregateCard.ts");
+/* harmony import */ var _cards_AggregateSection__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../cards/AggregateSection */ "./src/cards/AggregateSection.ts");
 
 
 /**
@@ -8011,12 +10013,10 @@ class SecurityDetailsView {
         }
         const { aggregate_motion, aggregate_door, aggregate_window, } = globalDevice?.entities;
         if (aggregate_motion?.entity_id) {
-            viewCards.push(new _cards_AggregateCard__WEBPACK_IMPORTED_MODULE_1__.AggregateCard('binary_sensor', { device_class: 'motion', title: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.binary_sensor.entity_component.motion.name") }).createCard());
-            // viewCards.push(new AggregateCard({ entity_id: aggregate_motion.entity_id }, { title: `${Helper.localize("component.binary_sensor.entity_component.motion.name")}s` }).createCard())
+            viewCards.push(new _cards_AggregateSection__WEBPACK_IMPORTED_MODULE_1__.AggregateSection('binary_sensor', { device_class: 'motion', title: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.binary_sensor.entity_component.motion.name") }).createCard());
         }
         if (aggregate_door?.entity_id || aggregate_window?.entity_id) {
-            viewCards.push(new _cards_AggregateCard__WEBPACK_IMPORTED_MODULE_1__.AggregateCard('binary_sensor', { device_class: ['door', 'window'], title: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.binary_sensor.entity_component.opening.name") }).createCard());
-            // viewCards.push(new AggregateCard({ entity_id: [aggregate_door?.entity_id, aggregate_window?.entity_id] }, { title: `${Helper.localize("component.binary_sensor.entity_component.opening.name")}s` }).createCard())
+            viewCards.push(new _cards_AggregateSection__WEBPACK_IMPORTED_MODULE_1__.AggregateSection('binary_sensor', { device_class: ['door', 'window'], title: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.binary_sensor.entity_component.opening.name") }).createCard());
         }
         return viewCards;
     }
@@ -8153,12 +10153,12 @@ class SecurityView {
         if (alarmEntityId) {
             globalSection.cards.push({
                 type: "heading",
-                heading: "Sécurité",
+                heading: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.binary_sensor.entity_component.safety.name"),
                 heading_style: "title",
             });
             globalSection.cards.push({
                 type: "heading",
-                heading: "Alarme",
+                heading: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.alarm_control_panel.entity_component._.name"),
                 heading_style: "subtitle",
             });
             globalSection.cards.push(new _cards_AlarmCard__WEBPACK_IMPORTED_MODULE_1__.AlarmCard(_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.entities[alarmEntityId]).getCard());
@@ -8167,7 +10167,7 @@ class SecurityView {
         if (persons?.length) {
             globalSection.cards.push({
                 type: "heading",
-                heading: "Personnes",
+                heading: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("ui.dialogs.quick-bar.commands.navigation.person"),
                 heading_style: "subtitle",
             });
             for (const person of persons) {
@@ -8179,7 +10179,7 @@ class SecurityView {
         if (aggregate_motion || aggregate_door || aggregate_window) {
             globalSection.cards.push({
                 type: "heading",
-                heading: "Capteurs",
+                heading: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.sensor.entity_component._.name") + "s",
                 heading_style: "subtitle",
             });
             if (aggregate_motion?.entity_id)
@@ -8188,6 +10188,15 @@ class SecurityView {
                 globalSection.cards.push(new _cards_BinarySensorCard__WEBPACK_IMPORTED_MODULE_3__.BinarySensorCard(aggregate_door, { tap_action: (0,_utils__WEBPACK_IMPORTED_MODULE_4__.navigateTo)('security-details') }).getCard());
             if (aggregate_window?.entity_id)
                 globalSection.cards.push(new _cards_BinarySensorCard__WEBPACK_IMPORTED_MODULE_3__.BinarySensorCard(aggregate_window, { tap_action: (0,_utils__WEBPACK_IMPORTED_MODULE_4__.navigateTo)('security-details') }).getCard());
+        }
+        const securityCards = await (0,_utils__WEBPACK_IMPORTED_MODULE_4__.createCardsFromList)(_variables__WEBPACK_IMPORTED_MODULE_6__.SECURITY_EXPOSED_CHIPS, {}, "global");
+        if (securityCards) {
+            globalSection.cards.push({
+                type: "heading",
+                heading: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.sensor.entity_component._.name") + "s",
+                heading_style: "subtitle",
+            });
+            globalSection.cards.push(...securityCards);
         }
         const sections = [globalSection];
         if (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.domains.camera?.length)
@@ -8639,6 +10648,14 @@ var map = {
 		"./src/cards/AggregateCard.ts",
 		"main"
 	],
+	"./AggregateSection": [
+		"./src/cards/AggregateSection.ts",
+		"main"
+	],
+	"./AggregateSection.ts": [
+		"./src/cards/AggregateSection.ts",
+		"main"
+	],
 	"./AlarmCard": [
 		"./src/cards/AlarmCard.ts",
 		"main"
@@ -8820,160 +10837,6 @@ module.exports = webpackAsyncContext;
 
 /***/ }),
 
-/***/ "./src/chips lazy recursive ^\\.\\/.*$":
-/*!***************************************************!*\
-  !*** ./src/chips/ lazy ^\.\/.*$ namespace object ***!
-  \***************************************************/
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-var map = {
-	"./AbstractChip": [
-		"./src/chips/AbstractChip.ts"
-	],
-	"./AbstractChip.ts": [
-		"./src/chips/AbstractChip.ts"
-	],
-	"./AggregateChip": [
-		"./src/chips/AggregateChip.ts"
-	],
-	"./AggregateChip.ts": [
-		"./src/chips/AggregateChip.ts"
-	],
-	"./AlarmChip": [
-		"./src/chips/AlarmChip.ts",
-		"main"
-	],
-	"./AlarmChip.ts": [
-		"./src/chips/AlarmChip.ts",
-		"main"
-	],
-	"./AreaScenesChips": [
-		"./src/chips/AreaScenesChips.ts",
-		"main"
-	],
-	"./AreaScenesChips.ts": [
-		"./src/chips/AreaScenesChips.ts",
-		"main"
-	],
-	"./AreaStateChip": [
-		"./src/chips/AreaStateChip.ts"
-	],
-	"./AreaStateChip.ts": [
-		"./src/chips/AreaStateChip.ts"
-	],
-	"./ClimateChip": [
-		"./src/chips/ClimateChip.ts"
-	],
-	"./ClimateChip.ts": [
-		"./src/chips/ClimateChip.ts"
-	],
-	"./ConditionalChip": [
-		"./src/chips/ConditionalChip.ts",
-		"main"
-	],
-	"./ConditionalChip.ts": [
-		"./src/chips/ConditionalChip.ts",
-		"main"
-	],
-	"./ControlChip": [
-		"./src/chips/ControlChip.ts"
-	],
-	"./ControlChip.ts": [
-		"./src/chips/ControlChip.ts"
-	],
-	"./CoverChip": [
-		"./src/chips/CoverChip.ts"
-	],
-	"./CoverChip.ts": [
-		"./src/chips/CoverChip.ts"
-	],
-	"./FanChip": [
-		"./src/chips/FanChip.ts"
-	],
-	"./FanChip.ts": [
-		"./src/chips/FanChip.ts"
-	],
-	"./LightChip": [
-		"./src/chips/LightChip.ts"
-	],
-	"./LightChip.ts": [
-		"./src/chips/LightChip.ts"
-	],
-	"./MediaPlayerChip": [
-		"./src/chips/MediaPlayerChip.ts"
-	],
-	"./MediaPlayerChip.ts": [
-		"./src/chips/MediaPlayerChip.ts"
-	],
-	"./SafetyChip": [
-		"./src/chips/SafetyChip.ts",
-		"main"
-	],
-	"./SafetyChip.ts": [
-		"./src/chips/SafetyChip.ts",
-		"main"
-	],
-	"./SettingsChip": [
-		"./src/chips/SettingsChip.ts"
-	],
-	"./SettingsChip.ts": [
-		"./src/chips/SettingsChip.ts"
-	],
-	"./SpotifyChip": [
-		"./src/chips/SpotifyChip.ts",
-		"main"
-	],
-	"./SpotifyChip.ts": [
-		"./src/chips/SpotifyChip.ts",
-		"main"
-	],
-	"./SwitchChip": [
-		"./src/chips/SwitchChip.ts"
-	],
-	"./SwitchChip.ts": [
-		"./src/chips/SwitchChip.ts"
-	],
-	"./ToggleSceneChip": [
-		"./src/chips/ToggleSceneChip.ts"
-	],
-	"./ToggleSceneChip.ts": [
-		"./src/chips/ToggleSceneChip.ts"
-	],
-	"./UnavailableChip": [
-		"./src/chips/UnavailableChip.ts"
-	],
-	"./UnavailableChip.ts": [
-		"./src/chips/UnavailableChip.ts"
-	],
-	"./WeatherChip": [
-		"./src/chips/WeatherChip.ts",
-		"main"
-	],
-	"./WeatherChip.ts": [
-		"./src/chips/WeatherChip.ts",
-		"main"
-	]
-};
-function webpackAsyncContext(req) {
-	if(!__webpack_require__.o(map, req)) {
-		return Promise.resolve().then(() => {
-			var e = new Error("Cannot find module '" + req + "'");
-			e.code = 'MODULE_NOT_FOUND';
-			throw e;
-		});
-	}
-
-	var ids = map[req], id = ids[0];
-	return Promise.all(ids.slice(1).map(__webpack_require__.e)).then(() => {
-		return __webpack_require__(id);
-	});
-}
-webpackAsyncContext.keys = () => (Object.keys(map));
-webpackAsyncContext.id = "./src/chips lazy recursive ^\\.\\/.*$";
-module.exports = webpackAsyncContext;
-
-/***/ }),
-
 /***/ "./src/views lazy recursive ^\\.\\/.*$":
 /*!***************************************************!*\
   !*** ./src/views/ lazy ^\.\/.*$ namespace object ***!
@@ -9132,6 +10995,2199 @@ webpackAsyncContext.keys = () => (Object.keys(map));
 webpackAsyncContext.id = "./src/views lazy recursive ^\\.\\/.*$";
 module.exports = webpackAsyncContext;
 
+/***/ }),
+
+/***/ "./src lazy recursive ^\\.\\/.*\\/.*$":
+/*!*************************************************!*\
+  !*** ./src/ lazy ^\.\/.*\/.*$ namespace object ***!
+  \*************************************************/
+/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
+
+var map = {
+	"./cards/AbstractCard": [
+		"./src/cards/AbstractCard.ts",
+		9,
+		"main"
+	],
+	"./cards/AbstractCard.ts": [
+		"./src/cards/AbstractCard.ts",
+		9,
+		"main"
+	],
+	"./cards/AggregateCard": [
+		"./src/cards/AggregateCard.ts",
+		9,
+		"main"
+	],
+	"./cards/AggregateCard.ts": [
+		"./src/cards/AggregateCard.ts",
+		9,
+		"main"
+	],
+	"./cards/AggregateSection": [
+		"./src/cards/AggregateSection.ts",
+		9,
+		"main"
+	],
+	"./cards/AggregateSection.ts": [
+		"./src/cards/AggregateSection.ts",
+		9,
+		"main"
+	],
+	"./cards/AlarmCard": [
+		"./src/cards/AlarmCard.ts",
+		9,
+		"main"
+	],
+	"./cards/AlarmCard.ts": [
+		"./src/cards/AlarmCard.ts",
+		9,
+		"main"
+	],
+	"./cards/BinarySensorCard": [
+		"./src/cards/BinarySensorCard.ts",
+		9,
+		"main"
+	],
+	"./cards/BinarySensorCard.ts": [
+		"./src/cards/BinarySensorCard.ts",
+		9,
+		"main"
+	],
+	"./cards/CameraCard": [
+		"./src/cards/CameraCard.ts",
+		9,
+		"main"
+	],
+	"./cards/CameraCard.ts": [
+		"./src/cards/CameraCard.ts",
+		9,
+		"main"
+	],
+	"./cards/ClimateCard": [
+		"./src/cards/ClimateCard.ts",
+		9,
+		"main"
+	],
+	"./cards/ClimateCard.ts": [
+		"./src/cards/ClimateCard.ts",
+		9,
+		"main"
+	],
+	"./cards/ControllerCard": [
+		"./src/cards/ControllerCard.ts",
+		9
+	],
+	"./cards/ControllerCard.ts": [
+		"./src/cards/ControllerCard.ts",
+		9
+	],
+	"./cards/CoverCard": [
+		"./src/cards/CoverCard.ts",
+		9,
+		"main"
+	],
+	"./cards/CoverCard.ts": [
+		"./src/cards/CoverCard.ts",
+		9,
+		"main"
+	],
+	"./cards/FanCard": [
+		"./src/cards/FanCard.ts",
+		9,
+		"main"
+	],
+	"./cards/FanCard.ts": [
+		"./src/cards/FanCard.ts",
+		9,
+		"main"
+	],
+	"./cards/GroupedCard": [
+		"./src/cards/GroupedCard.ts",
+		9
+	],
+	"./cards/GroupedCard.ts": [
+		"./src/cards/GroupedCard.ts",
+		9
+	],
+	"./cards/HomeAreaCard": [
+		"./src/cards/HomeAreaCard.ts",
+		9,
+		"main"
+	],
+	"./cards/HomeAreaCard.ts": [
+		"./src/cards/HomeAreaCard.ts",
+		9,
+		"main"
+	],
+	"./cards/ImageAreaCard": [
+		"./src/cards/ImageAreaCard.ts",
+		9
+	],
+	"./cards/ImageAreaCard.ts": [
+		"./src/cards/ImageAreaCard.ts",
+		9
+	],
+	"./cards/LightCard": [
+		"./src/cards/LightCard.ts",
+		9,
+		"main"
+	],
+	"./cards/LightCard.ts": [
+		"./src/cards/LightCard.ts",
+		9,
+		"main"
+	],
+	"./cards/LockCard": [
+		"./src/cards/LockCard.ts",
+		9,
+		"main"
+	],
+	"./cards/LockCard.ts": [
+		"./src/cards/LockCard.ts",
+		9,
+		"main"
+	],
+	"./cards/MediaPlayerCard": [
+		"./src/cards/MediaPlayerCard.ts",
+		9,
+		"main"
+	],
+	"./cards/MediaPlayerCard.ts": [
+		"./src/cards/MediaPlayerCard.ts",
+		9,
+		"main"
+	],
+	"./cards/MiscellaneousCard": [
+		"./src/cards/MiscellaneousCard.ts",
+		9,
+		"main"
+	],
+	"./cards/MiscellaneousCard.ts": [
+		"./src/cards/MiscellaneousCard.ts",
+		9,
+		"main"
+	],
+	"./cards/NumberCard": [
+		"./src/cards/NumberCard.ts",
+		9,
+		"main"
+	],
+	"./cards/NumberCard.ts": [
+		"./src/cards/NumberCard.ts",
+		9,
+		"main"
+	],
+	"./cards/PersonCard": [
+		"./src/cards/PersonCard.ts",
+		9,
+		"main"
+	],
+	"./cards/PersonCard.ts": [
+		"./src/cards/PersonCard.ts",
+		9,
+		"main"
+	],
+	"./cards/SceneCard": [
+		"./src/cards/SceneCard.ts",
+		9,
+		"main"
+	],
+	"./cards/SceneCard.ts": [
+		"./src/cards/SceneCard.ts",
+		9,
+		"main"
+	],
+	"./cards/SensorCard": [
+		"./src/cards/SensorCard.ts",
+		9,
+		"main"
+	],
+	"./cards/SensorCard.ts": [
+		"./src/cards/SensorCard.ts",
+		9,
+		"main"
+	],
+	"./cards/SwipeCard": [
+		"./src/cards/SwipeCard.ts",
+		9
+	],
+	"./cards/SwipeCard.ts": [
+		"./src/cards/SwipeCard.ts",
+		9
+	],
+	"./cards/SwitchCard": [
+		"./src/cards/SwitchCard.ts",
+		9,
+		"main"
+	],
+	"./cards/SwitchCard.ts": [
+		"./src/cards/SwitchCard.ts",
+		9,
+		"main"
+	],
+	"./cards/VacuumCard": [
+		"./src/cards/VacuumCard.ts",
+		9,
+		"main"
+	],
+	"./cards/VacuumCard.ts": [
+		"./src/cards/VacuumCard.ts",
+		9,
+		"main"
+	],
+	"./chips/AbstractChip": [
+		"./src/chips/AbstractChip.ts",
+		9
+	],
+	"./chips/AbstractChip.ts": [
+		"./src/chips/AbstractChip.ts",
+		9
+	],
+	"./chips/AggregateChip": [
+		"./src/chips/AggregateChip.ts",
+		9
+	],
+	"./chips/AggregateChip.ts": [
+		"./src/chips/AggregateChip.ts",
+		9
+	],
+	"./chips/AlarmChip": [
+		"./src/chips/AlarmChip.ts",
+		9,
+		"main"
+	],
+	"./chips/AlarmChip.ts": [
+		"./src/chips/AlarmChip.ts",
+		9,
+		"main"
+	],
+	"./chips/AreaScenesChips": [
+		"./src/chips/AreaScenesChips.ts",
+		9,
+		"main"
+	],
+	"./chips/AreaScenesChips.ts": [
+		"./src/chips/AreaScenesChips.ts",
+		9,
+		"main"
+	],
+	"./chips/AreaStateChip": [
+		"./src/chips/AreaStateChip.ts",
+		9
+	],
+	"./chips/AreaStateChip.ts": [
+		"./src/chips/AreaStateChip.ts",
+		9
+	],
+	"./chips/ClimateChip": [
+		"./src/chips/ClimateChip.ts",
+		9
+	],
+	"./chips/ClimateChip.ts": [
+		"./src/chips/ClimateChip.ts",
+		9
+	],
+	"./chips/ConditionalChip": [
+		"./src/chips/ConditionalChip.ts",
+		9,
+		"main"
+	],
+	"./chips/ConditionalChip.ts": [
+		"./src/chips/ConditionalChip.ts",
+		9,
+		"main"
+	],
+	"./chips/ControlChip": [
+		"./src/chips/ControlChip.ts",
+		9
+	],
+	"./chips/ControlChip.ts": [
+		"./src/chips/ControlChip.ts",
+		9
+	],
+	"./chips/CoverChip": [
+		"./src/chips/CoverChip.ts",
+		9
+	],
+	"./chips/CoverChip.ts": [
+		"./src/chips/CoverChip.ts",
+		9
+	],
+	"./chips/FanChip": [
+		"./src/chips/FanChip.ts",
+		9
+	],
+	"./chips/FanChip.ts": [
+		"./src/chips/FanChip.ts",
+		9
+	],
+	"./chips/LightChip": [
+		"./src/chips/LightChip.ts",
+		9
+	],
+	"./chips/LightChip.ts": [
+		"./src/chips/LightChip.ts",
+		9
+	],
+	"./chips/MediaPlayerChip": [
+		"./src/chips/MediaPlayerChip.ts",
+		9
+	],
+	"./chips/MediaPlayerChip.ts": [
+		"./src/chips/MediaPlayerChip.ts",
+		9
+	],
+	"./chips/SafetyChip": [
+		"./src/chips/SafetyChip.ts",
+		9,
+		"main"
+	],
+	"./chips/SafetyChip.ts": [
+		"./src/chips/SafetyChip.ts",
+		9,
+		"main"
+	],
+	"./chips/SettingsChip": [
+		"./src/chips/SettingsChip.ts",
+		9
+	],
+	"./chips/SettingsChip.ts": [
+		"./src/chips/SettingsChip.ts",
+		9
+	],
+	"./chips/SpotifyChip": [
+		"./src/chips/SpotifyChip.ts",
+		9,
+		"main"
+	],
+	"./chips/SpotifyChip.ts": [
+		"./src/chips/SpotifyChip.ts",
+		9,
+		"main"
+	],
+	"./chips/SwitchChip": [
+		"./src/chips/SwitchChip.ts",
+		9
+	],
+	"./chips/SwitchChip.ts": [
+		"./src/chips/SwitchChip.ts",
+		9
+	],
+	"./chips/ToggleSceneChip": [
+		"./src/chips/ToggleSceneChip.ts",
+		9
+	],
+	"./chips/ToggleSceneChip.ts": [
+		"./src/chips/ToggleSceneChip.ts",
+		9
+	],
+	"./chips/UnavailableChip": [
+		"./src/chips/UnavailableChip.ts",
+		9
+	],
+	"./chips/UnavailableChip.ts": [
+		"./src/chips/UnavailableChip.ts",
+		9
+	],
+	"./chips/WeatherChip": [
+		"./src/chips/WeatherChip.ts",
+		9,
+		"main"
+	],
+	"./chips/WeatherChip.ts": [
+		"./src/chips/WeatherChip.ts",
+		9,
+		"main"
+	],
+	"./popups/AbstractPopup": [
+		"./src/popups/AbstractPopup.ts",
+		9
+	],
+	"./popups/AbstractPopup.ts": [
+		"./src/popups/AbstractPopup.ts",
+		9
+	],
+	"./popups/AggregateAreaListPopup": [
+		"./src/popups/AggregateAreaListPopup.ts",
+		9,
+		"main"
+	],
+	"./popups/AggregateAreaListPopup.ts": [
+		"./src/popups/AggregateAreaListPopup.ts",
+		9,
+		"main"
+	],
+	"./popups/AggregateListPopup": [
+		"./src/popups/AggregateListPopup.ts",
+		9,
+		"main"
+	],
+	"./popups/AggregateListPopup.ts": [
+		"./src/popups/AggregateListPopup.ts",
+		9,
+		"main"
+	],
+	"./popups/AreaInformationsPopup": [
+		"./src/popups/AreaInformationsPopup.ts",
+		9
+	],
+	"./popups/AreaInformationsPopup.ts": [
+		"./src/popups/AreaInformationsPopup.ts",
+		9
+	],
+	"./popups/LightSettingsPopup": [
+		"./src/popups/LightSettingsPopup.ts",
+		9
+	],
+	"./popups/LightSettingsPopup.ts": [
+		"./src/popups/LightSettingsPopup.ts",
+		9
+	],
+	"./popups/SceneSettingsPopup": [
+		"./src/popups/SceneSettingsPopup.ts",
+		9
+	],
+	"./popups/SceneSettingsPopup.ts": [
+		"./src/popups/SceneSettingsPopup.ts",
+		9
+	],
+	"./popups/SettingsPopup": [
+		"./src/popups/SettingsPopup.ts",
+		9,
+		"main"
+	],
+	"./popups/SettingsPopup.ts": [
+		"./src/popups/SettingsPopup.ts",
+		9,
+		"main"
+	],
+	"./popups/TeslaPopup": [
+		"./src/popups/TeslaPopup.ts",
+		9,
+		"main"
+	],
+	"./popups/TeslaPopup.ts": [
+		"./src/popups/TeslaPopup.ts",
+		9,
+		"main"
+	],
+	"./popups/WeatherPopup": [
+		"./src/popups/WeatherPopup.ts",
+		9,
+		"main"
+	],
+	"./popups/WeatherPopup.ts": [
+		"./src/popups/WeatherPopup.ts",
+		9,
+		"main"
+	],
+	"./types/homeassistant/README.md": [
+		"./src/types/homeassistant/README.md",
+		7,
+		"main"
+	],
+	"./types/homeassistant/data/area_registry": [
+		"./src/types/homeassistant/data/area_registry.ts",
+		9,
+		"main"
+	],
+	"./types/homeassistant/data/area_registry.ts": [
+		"./src/types/homeassistant/data/area_registry.ts",
+		9,
+		"main"
+	],
+	"./types/homeassistant/data/climate": [
+		"./src/types/homeassistant/data/climate.ts",
+		9,
+		"main"
+	],
+	"./types/homeassistant/data/climate.ts": [
+		"./src/types/homeassistant/data/climate.ts",
+		9,
+		"main"
+	],
+	"./types/homeassistant/data/device_registry": [
+		"./src/types/homeassistant/data/device_registry.ts",
+		9,
+		"main"
+	],
+	"./types/homeassistant/data/device_registry.ts": [
+		"./src/types/homeassistant/data/device_registry.ts",
+		9,
+		"main"
+	],
+	"./types/homeassistant/data/entity_registry": [
+		"./src/types/homeassistant/data/entity_registry.ts",
+		9,
+		"main"
+	],
+	"./types/homeassistant/data/entity_registry.ts": [
+		"./src/types/homeassistant/data/entity_registry.ts",
+		9,
+		"main"
+	],
+	"./types/homeassistant/data/floor_registry": [
+		"./src/types/homeassistant/data/floor_registry.ts",
+		9,
+		"main"
+	],
+	"./types/homeassistant/data/floor_registry.ts": [
+		"./src/types/homeassistant/data/floor_registry.ts",
+		9,
+		"main"
+	],
+	"./types/homeassistant/data/frontend": [
+		"./src/types/homeassistant/data/frontend.ts",
+		9,
+		"main"
+	],
+	"./types/homeassistant/data/frontend.ts": [
+		"./src/types/homeassistant/data/frontend.ts",
+		9,
+		"main"
+	],
+	"./types/homeassistant/data/light": [
+		"./src/types/homeassistant/data/light.ts",
+		9,
+		"main"
+	],
+	"./types/homeassistant/data/light.ts": [
+		"./src/types/homeassistant/data/light.ts",
+		9,
+		"main"
+	],
+	"./types/homeassistant/data/linus_dashboard": [
+		"./src/types/homeassistant/data/linus_dashboard.ts",
+		9,
+		"main"
+	],
+	"./types/homeassistant/data/linus_dashboard.ts": [
+		"./src/types/homeassistant/data/linus_dashboard.ts",
+		9,
+		"main"
+	],
+	"./types/homeassistant/data/lovelace": [
+		"./src/types/homeassistant/data/lovelace.ts",
+		9,
+		"main"
+	],
+	"./types/homeassistant/data/lovelace.ts": [
+		"./src/types/homeassistant/data/lovelace.ts",
+		9,
+		"main"
+	],
+	"./types/homeassistant/lovelace/cards/types": [
+		"./src/types/homeassistant/lovelace/cards/types.ts",
+		9,
+		"main"
+	],
+	"./types/homeassistant/lovelace/cards/types.ts": [
+		"./src/types/homeassistant/lovelace/cards/types.ts",
+		9,
+		"main"
+	],
+	"./types/homeassistant/panels/lovelave/cards/types": [
+		"./src/types/homeassistant/panels/lovelave/cards/types.ts",
+		9,
+		"main"
+	],
+	"./types/homeassistant/panels/lovelave/cards/types.ts": [
+		"./src/types/homeassistant/panels/lovelave/cards/types.ts",
+		9,
+		"main"
+	],
+	"./types/homeassistant/types": [
+		"./src/types/homeassistant/types.ts",
+		9,
+		"main"
+	],
+	"./types/homeassistant/types.ts": [
+		"./src/types/homeassistant/types.ts",
+		9,
+		"main"
+	],
+	"./types/lovelace-mushroom/README.md": [
+		"./src/types/lovelace-mushroom/README.md",
+		7,
+		"main"
+	],
+	"./types/lovelace-mushroom/cards/chips-card": [
+		"./src/types/lovelace-mushroom/cards/chips-card.ts",
+		9,
+		"main"
+	],
+	"./types/lovelace-mushroom/cards/chips-card.ts": [
+		"./src/types/lovelace-mushroom/cards/chips-card.ts",
+		9,
+		"main"
+	],
+	"./types/lovelace-mushroom/cards/climate-card-config": [
+		"./src/types/lovelace-mushroom/cards/climate-card-config.ts",
+		9,
+		"main"
+	],
+	"./types/lovelace-mushroom/cards/climate-card-config.ts": [
+		"./src/types/lovelace-mushroom/cards/climate-card-config.ts",
+		9,
+		"main"
+	],
+	"./types/lovelace-mushroom/cards/cover-card-config": [
+		"./src/types/lovelace-mushroom/cards/cover-card-config.ts",
+		9,
+		"main"
+	],
+	"./types/lovelace-mushroom/cards/cover-card-config.ts": [
+		"./src/types/lovelace-mushroom/cards/cover-card-config.ts",
+		9,
+		"main"
+	],
+	"./types/lovelace-mushroom/cards/entity-card-config": [
+		"./src/types/lovelace-mushroom/cards/entity-card-config.ts",
+		9,
+		"main"
+	],
+	"./types/lovelace-mushroom/cards/entity-card-config.ts": [
+		"./src/types/lovelace-mushroom/cards/entity-card-config.ts",
+		9,
+		"main"
+	],
+	"./types/lovelace-mushroom/cards/fan-card-config": [
+		"./src/types/lovelace-mushroom/cards/fan-card-config.ts",
+		9,
+		"main"
+	],
+	"./types/lovelace-mushroom/cards/fan-card-config.ts": [
+		"./src/types/lovelace-mushroom/cards/fan-card-config.ts",
+		9,
+		"main"
+	],
+	"./types/lovelace-mushroom/cards/light-card-config": [
+		"./src/types/lovelace-mushroom/cards/light-card-config.ts",
+		9,
+		"main"
+	],
+	"./types/lovelace-mushroom/cards/light-card-config.ts": [
+		"./src/types/lovelace-mushroom/cards/light-card-config.ts",
+		9,
+		"main"
+	],
+	"./types/lovelace-mushroom/cards/lock-card-config": [
+		"./src/types/lovelace-mushroom/cards/lock-card-config.ts",
+		9,
+		"main"
+	],
+	"./types/lovelace-mushroom/cards/lock-card-config.ts": [
+		"./src/types/lovelace-mushroom/cards/lock-card-config.ts",
+		9,
+		"main"
+	],
+	"./types/lovelace-mushroom/cards/media-player-card-config": [
+		"./src/types/lovelace-mushroom/cards/media-player-card-config.ts",
+		9,
+		"main"
+	],
+	"./types/lovelace-mushroom/cards/media-player-card-config.ts": [
+		"./src/types/lovelace-mushroom/cards/media-player-card-config.ts",
+		9,
+		"main"
+	],
+	"./types/lovelace-mushroom/cards/number-card-config": [
+		"./src/types/lovelace-mushroom/cards/number-card-config.ts",
+		9,
+		"main"
+	],
+	"./types/lovelace-mushroom/cards/number-card-config.ts": [
+		"./src/types/lovelace-mushroom/cards/number-card-config.ts",
+		9,
+		"main"
+	],
+	"./types/lovelace-mushroom/cards/person-card-config": [
+		"./src/types/lovelace-mushroom/cards/person-card-config.ts",
+		9,
+		"main"
+	],
+	"./types/lovelace-mushroom/cards/person-card-config.ts": [
+		"./src/types/lovelace-mushroom/cards/person-card-config.ts",
+		9,
+		"main"
+	],
+	"./types/lovelace-mushroom/cards/scene-card-config": [
+		"./src/types/lovelace-mushroom/cards/scene-card-config.ts",
+		9,
+		"main"
+	],
+	"./types/lovelace-mushroom/cards/scene-card-config.ts": [
+		"./src/types/lovelace-mushroom/cards/scene-card-config.ts",
+		9,
+		"main"
+	],
+	"./types/lovelace-mushroom/cards/swipe-card-config": [
+		"./src/types/lovelace-mushroom/cards/swipe-card-config.ts",
+		9,
+		"main"
+	],
+	"./types/lovelace-mushroom/cards/swipe-card-config.ts": [
+		"./src/types/lovelace-mushroom/cards/swipe-card-config.ts",
+		9,
+		"main"
+	],
+	"./types/lovelace-mushroom/cards/template-card-config": [
+		"./src/types/lovelace-mushroom/cards/template-card-config.ts",
+		9,
+		"main"
+	],
+	"./types/lovelace-mushroom/cards/template-card-config.ts": [
+		"./src/types/lovelace-mushroom/cards/template-card-config.ts",
+		9,
+		"main"
+	],
+	"./types/lovelace-mushroom/cards/title-card-config": [
+		"./src/types/lovelace-mushroom/cards/title-card-config.ts",
+		9,
+		"main"
+	],
+	"./types/lovelace-mushroom/cards/title-card-config.ts": [
+		"./src/types/lovelace-mushroom/cards/title-card-config.ts",
+		9,
+		"main"
+	],
+	"./types/lovelace-mushroom/cards/vacuum-card-config": [
+		"./src/types/lovelace-mushroom/cards/vacuum-card-config.ts",
+		9,
+		"main"
+	],
+	"./types/lovelace-mushroom/cards/vacuum-card-config.ts": [
+		"./src/types/lovelace-mushroom/cards/vacuum-card-config.ts",
+		9,
+		"main"
+	],
+	"./types/lovelace-mushroom/shared/config/actions-config": [
+		"./src/types/lovelace-mushroom/shared/config/actions-config.ts",
+		9,
+		"main"
+	],
+	"./types/lovelace-mushroom/shared/config/actions-config.ts": [
+		"./src/types/lovelace-mushroom/shared/config/actions-config.ts",
+		9,
+		"main"
+	],
+	"./types/lovelace-mushroom/shared/config/appearance-config": [
+		"./src/types/lovelace-mushroom/shared/config/appearance-config.ts",
+		9,
+		"main"
+	],
+	"./types/lovelace-mushroom/shared/config/appearance-config.ts": [
+		"./src/types/lovelace-mushroom/shared/config/appearance-config.ts",
+		9,
+		"main"
+	],
+	"./types/lovelace-mushroom/shared/config/entity-config": [
+		"./src/types/lovelace-mushroom/shared/config/entity-config.ts",
+		9,
+		"main"
+	],
+	"./types/lovelace-mushroom/shared/config/entity-config.ts": [
+		"./src/types/lovelace-mushroom/shared/config/entity-config.ts",
+		9,
+		"main"
+	],
+	"./types/lovelace-mushroom/shared/config/utils/info": [
+		"./src/types/lovelace-mushroom/shared/config/utils/info.ts",
+		9,
+		"main"
+	],
+	"./types/lovelace-mushroom/shared/config/utils/info.ts": [
+		"./src/types/lovelace-mushroom/shared/config/utils/info.ts",
+		9,
+		"main"
+	],
+	"./types/lovelace-mushroom/shared/config/utils/layout": [
+		"./src/types/lovelace-mushroom/shared/config/utils/layout.ts",
+		9,
+		"main"
+	],
+	"./types/lovelace-mushroom/shared/config/utils/layout.ts": [
+		"./src/types/lovelace-mushroom/shared/config/utils/layout.ts",
+		9,
+		"main"
+	],
+	"./types/lovelace-mushroom/utils/info": [
+		"./src/types/lovelace-mushroom/utils/info.ts",
+		9,
+		"main"
+	],
+	"./types/lovelace-mushroom/utils/info.ts": [
+		"./src/types/lovelace-mushroom/utils/info.ts",
+		9,
+		"main"
+	],
+	"./types/lovelace-mushroom/utils/lovelace/chip/types": [
+		"./src/types/lovelace-mushroom/utils/lovelace/chip/types.ts",
+		9,
+		"main"
+	],
+	"./types/lovelace-mushroom/utils/lovelace/chip/types.ts": [
+		"./src/types/lovelace-mushroom/utils/lovelace/chip/types.ts",
+		9,
+		"main"
+	],
+	"./types/strategy/cards": [
+		"./src/types/strategy/cards.ts",
+		9,
+		"main"
+	],
+	"./types/strategy/cards.ts": [
+		"./src/types/strategy/cards.ts",
+		9,
+		"main"
+	],
+	"./types/strategy/chips": [
+		"./src/types/strategy/chips.ts",
+		9,
+		"main"
+	],
+	"./types/strategy/chips.ts": [
+		"./src/types/strategy/chips.ts",
+		9,
+		"main"
+	],
+	"./types/strategy/generic": [
+		"./src/types/strategy/generic.ts",
+		9
+	],
+	"./types/strategy/generic.ts": [
+		"./src/types/strategy/generic.ts",
+		9
+	],
+	"./types/strategy/views": [
+		"./src/types/strategy/views.ts",
+		9,
+		"main"
+	],
+	"./types/strategy/views.ts": [
+		"./src/types/strategy/views.ts",
+		9,
+		"main"
+	],
+	"./views/AbstractView": [
+		"./src/views/AbstractView.ts",
+		9,
+		"main"
+	],
+	"./views/AbstractView.ts": [
+		"./src/views/AbstractView.ts",
+		9,
+		"main"
+	],
+	"./views/AggregateView": [
+		"./src/views/AggregateView.ts",
+		9,
+		"main"
+	],
+	"./views/AggregateView.ts": [
+		"./src/views/AggregateView.ts",
+		9,
+		"main"
+	],
+	"./views/AreaView": [
+		"./src/views/AreaView.ts",
+		9
+	],
+	"./views/AreaView.ts": [
+		"./src/views/AreaView.ts",
+		9
+	],
+	"./views/CameraView": [
+		"./src/views/CameraView.ts",
+		9,
+		"main"
+	],
+	"./views/CameraView.ts": [
+		"./src/views/CameraView.ts",
+		9,
+		"main"
+	],
+	"./views/ClimateView": [
+		"./src/views/ClimateView.ts",
+		9,
+		"main"
+	],
+	"./views/ClimateView.ts": [
+		"./src/views/ClimateView.ts",
+		9,
+		"main"
+	],
+	"./views/CoverView": [
+		"./src/views/CoverView.ts",
+		9,
+		"main"
+	],
+	"./views/CoverView.ts": [
+		"./src/views/CoverView.ts",
+		9,
+		"main"
+	],
+	"./views/FanView": [
+		"./src/views/FanView.ts",
+		9,
+		"main"
+	],
+	"./views/FanView.ts": [
+		"./src/views/FanView.ts",
+		9,
+		"main"
+	],
+	"./views/FloorView": [
+		"./src/views/FloorView.ts",
+		9
+	],
+	"./views/FloorView.ts": [
+		"./src/views/FloorView.ts",
+		9
+	],
+	"./views/HomeView": [
+		"./src/views/HomeView.ts",
+		9,
+		"main"
+	],
+	"./views/HomeView.ts": [
+		"./src/views/HomeView.ts",
+		9,
+		"main"
+	],
+	"./views/LightView": [
+		"./src/views/LightView.ts",
+		9,
+		"main"
+	],
+	"./views/LightView.ts": [
+		"./src/views/LightView.ts",
+		9,
+		"main"
+	],
+	"./views/MediaPlayerView": [
+		"./src/views/MediaPlayerView.ts",
+		9,
+		"main"
+	],
+	"./views/MediaPlayerView.ts": [
+		"./src/views/MediaPlayerView.ts",
+		9,
+		"main"
+	],
+	"./views/SceneView": [
+		"./src/views/SceneView.ts",
+		9,
+		"main"
+	],
+	"./views/SceneView.ts": [
+		"./src/views/SceneView.ts",
+		9,
+		"main"
+	],
+	"./views/SecurityDetailsView": [
+		"./src/views/SecurityDetailsView.ts",
+		9,
+		"main"
+	],
+	"./views/SecurityDetailsView.ts": [
+		"./src/views/SecurityDetailsView.ts",
+		9,
+		"main"
+	],
+	"./views/SecurityView": [
+		"./src/views/SecurityView.ts",
+		9,
+		"main"
+	],
+	"./views/SecurityView.ts": [
+		"./src/views/SecurityView.ts",
+		9,
+		"main"
+	],
+	"./views/SwitchView": [
+		"./src/views/SwitchView.ts",
+		9,
+		"main"
+	],
+	"./views/SwitchView.ts": [
+		"./src/views/SwitchView.ts",
+		9,
+		"main"
+	],
+	"./views/UnavailableView": [
+		"./src/views/UnavailableView.ts",
+		9,
+		"main"
+	],
+	"./views/UnavailableView.ts": [
+		"./src/views/UnavailableView.ts",
+		9,
+		"main"
+	],
+	"./views/VacuumView": [
+		"./src/views/VacuumView.ts",
+		9,
+		"main"
+	],
+	"./views/VacuumView.ts": [
+		"./src/views/VacuumView.ts",
+		9,
+		"main"
+	]
+};
+function webpackAsyncContext(req) {
+	if(!__webpack_require__.o(map, req)) {
+		return Promise.resolve().then(() => {
+			var e = new Error("Cannot find module '" + req + "'");
+			e.code = 'MODULE_NOT_FOUND';
+			throw e;
+		});
+	}
+
+	var ids = map[req], id = ids[0];
+	return Promise.all(ids.slice(2).map(__webpack_require__.e)).then(() => {
+		return __webpack_require__.t(id, ids[1] | 16)
+	});
+}
+webpackAsyncContext.keys = () => (Object.keys(map));
+webpackAsyncContext.id = "./src lazy recursive ^\\.\\/.*\\/.*$";
+module.exports = webpackAsyncContext;
+
+/***/ }),
+
+/***/ "./src lazy recursive ^\\.\\/.*\\/Aggregate.*$":
+/*!**********************************************************!*\
+  !*** ./src/ lazy ^\.\/.*\/Aggregate.*$ namespace object ***!
+  \**********************************************************/
+/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
+
+var map = {
+	"./cards/AggregateCard": [
+		"./src/cards/AggregateCard.ts",
+		"main"
+	],
+	"./cards/AggregateCard.ts": [
+		"./src/cards/AggregateCard.ts",
+		"main"
+	],
+	"./cards/AggregateSection": [
+		"./src/cards/AggregateSection.ts",
+		"main"
+	],
+	"./cards/AggregateSection.ts": [
+		"./src/cards/AggregateSection.ts",
+		"main"
+	],
+	"./chips/AggregateChip": [
+		"./src/chips/AggregateChip.ts"
+	],
+	"./chips/AggregateChip.ts": [
+		"./src/chips/AggregateChip.ts"
+	],
+	"./popups/AggregateAreaListPopup": [
+		"./src/popups/AggregateAreaListPopup.ts",
+		"main"
+	],
+	"./popups/AggregateAreaListPopup.ts": [
+		"./src/popups/AggregateAreaListPopup.ts",
+		"main"
+	],
+	"./popups/AggregateListPopup": [
+		"./src/popups/AggregateListPopup.ts",
+		"main"
+	],
+	"./popups/AggregateListPopup.ts": [
+		"./src/popups/AggregateListPopup.ts",
+		"main"
+	],
+	"./views/AggregateView": [
+		"./src/views/AggregateView.ts",
+		"main"
+	],
+	"./views/AggregateView.ts": [
+		"./src/views/AggregateView.ts",
+		"main"
+	]
+};
+function webpackAsyncContext(req) {
+	if(!__webpack_require__.o(map, req)) {
+		return Promise.resolve().then(() => {
+			var e = new Error("Cannot find module '" + req + "'");
+			e.code = 'MODULE_NOT_FOUND';
+			throw e;
+		});
+	}
+
+	var ids = map[req], id = ids[0];
+	return Promise.all(ids.slice(1).map(__webpack_require__.e)).then(() => {
+		return __webpack_require__(id);
+	});
+}
+webpackAsyncContext.keys = () => (Object.keys(map));
+webpackAsyncContext.id = "./src lazy recursive ^\\.\\/.*\\/Aggregate.*$";
+module.exports = webpackAsyncContext;
+
+/***/ }),
+
+/***/ "./node_modules/superstruct/dist/index.mjs":
+/*!*************************************************!*\
+  !*** ./node_modules/superstruct/dist/index.mjs ***!
+  \*************************************************/
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   Struct: () => (/* binding */ Struct),
+/* harmony export */   StructError: () => (/* binding */ StructError),
+/* harmony export */   any: () => (/* binding */ any),
+/* harmony export */   array: () => (/* binding */ array),
+/* harmony export */   assert: () => (/* binding */ assert),
+/* harmony export */   assign: () => (/* binding */ assign),
+/* harmony export */   bigint: () => (/* binding */ bigint),
+/* harmony export */   boolean: () => (/* binding */ boolean),
+/* harmony export */   coerce: () => (/* binding */ coerce),
+/* harmony export */   create: () => (/* binding */ create),
+/* harmony export */   date: () => (/* binding */ date),
+/* harmony export */   defaulted: () => (/* binding */ defaulted),
+/* harmony export */   define: () => (/* binding */ define),
+/* harmony export */   deprecated: () => (/* binding */ deprecated),
+/* harmony export */   dynamic: () => (/* binding */ dynamic),
+/* harmony export */   empty: () => (/* binding */ empty),
+/* harmony export */   enums: () => (/* binding */ enums),
+/* harmony export */   func: () => (/* binding */ func),
+/* harmony export */   instance: () => (/* binding */ instance),
+/* harmony export */   integer: () => (/* binding */ integer),
+/* harmony export */   intersection: () => (/* binding */ intersection),
+/* harmony export */   is: () => (/* binding */ is),
+/* harmony export */   lazy: () => (/* binding */ lazy),
+/* harmony export */   literal: () => (/* binding */ literal),
+/* harmony export */   map: () => (/* binding */ map),
+/* harmony export */   mask: () => (/* binding */ mask),
+/* harmony export */   max: () => (/* binding */ max),
+/* harmony export */   min: () => (/* binding */ min),
+/* harmony export */   never: () => (/* binding */ never),
+/* harmony export */   nonempty: () => (/* binding */ nonempty),
+/* harmony export */   nullable: () => (/* binding */ nullable),
+/* harmony export */   number: () => (/* binding */ number),
+/* harmony export */   object: () => (/* binding */ object),
+/* harmony export */   omit: () => (/* binding */ omit),
+/* harmony export */   optional: () => (/* binding */ optional),
+/* harmony export */   partial: () => (/* binding */ partial),
+/* harmony export */   pattern: () => (/* binding */ pattern),
+/* harmony export */   pick: () => (/* binding */ pick),
+/* harmony export */   record: () => (/* binding */ record),
+/* harmony export */   refine: () => (/* binding */ refine),
+/* harmony export */   regexp: () => (/* binding */ regexp),
+/* harmony export */   set: () => (/* binding */ set),
+/* harmony export */   size: () => (/* binding */ size),
+/* harmony export */   string: () => (/* binding */ string),
+/* harmony export */   struct: () => (/* binding */ struct),
+/* harmony export */   trimmed: () => (/* binding */ trimmed),
+/* harmony export */   tuple: () => (/* binding */ tuple),
+/* harmony export */   type: () => (/* binding */ type),
+/* harmony export */   union: () => (/* binding */ union),
+/* harmony export */   unknown: () => (/* binding */ unknown),
+/* harmony export */   validate: () => (/* binding */ validate)
+/* harmony export */ });
+/**
+ * A `StructFailure` represents a single specific failure in validation.
+ */
+/**
+ * `StructError` objects are thrown (or returned) when validation fails.
+ *
+ * Validation logic is design to exit early for maximum performance. The error
+ * represents the first error encountered during validation. For more detail,
+ * the `error.failures` property is a generator function that can be run to
+ * continue validation and receive all the failures in the data.
+ */
+class StructError extends TypeError {
+    constructor(failure, failures) {
+        let cached;
+        const { message, explanation, ...rest } = failure;
+        const { path } = failure;
+        const msg = path.length === 0 ? message : `At path: ${path.join('.')} -- ${message}`;
+        super(explanation ?? msg);
+        if (explanation != null)
+            this.cause = msg;
+        Object.assign(this, rest);
+        this.name = this.constructor.name;
+        this.failures = () => {
+            return (cached ?? (cached = [failure, ...failures()]));
+        };
+    }
+}
+
+/**
+ * Check if a value is an iterator.
+ */
+function isIterable(x) {
+    return isObject(x) && typeof x[Symbol.iterator] === 'function';
+}
+/**
+ * Check if a value is a plain object.
+ */
+function isObject(x) {
+    return typeof x === 'object' && x != null;
+}
+/**
+ * Check if a value is a plain object.
+ */
+function isPlainObject(x) {
+    if (Object.prototype.toString.call(x) !== '[object Object]') {
+        return false;
+    }
+    const prototype = Object.getPrototypeOf(x);
+    return prototype === null || prototype === Object.prototype;
+}
+/**
+ * Return a value as a printable string.
+ */
+function print(value) {
+    if (typeof value === 'symbol') {
+        return value.toString();
+    }
+    return typeof value === 'string' ? JSON.stringify(value) : `${value}`;
+}
+/**
+ * Shifts (removes and returns) the first value from the `input` iterator.
+ * Like `Array.prototype.shift()` but for an `Iterator`.
+ */
+function shiftIterator(input) {
+    const { done, value } = input.next();
+    return done ? undefined : value;
+}
+/**
+ * Convert a single validation result to a failure.
+ */
+function toFailure(result, context, struct, value) {
+    if (result === true) {
+        return;
+    }
+    else if (result === false) {
+        result = {};
+    }
+    else if (typeof result === 'string') {
+        result = { message: result };
+    }
+    const { path, branch } = context;
+    const { type } = struct;
+    const { refinement, message = `Expected a value of type \`${type}\`${refinement ? ` with refinement \`${refinement}\`` : ''}, but received: \`${print(value)}\``, } = result;
+    return {
+        value,
+        type,
+        refinement,
+        key: path[path.length - 1],
+        path,
+        branch,
+        ...result,
+        message,
+    };
+}
+/**
+ * Convert a validation result to an iterable of failures.
+ */
+function* toFailures(result, context, struct, value) {
+    if (!isIterable(result)) {
+        result = [result];
+    }
+    for (const r of result) {
+        const failure = toFailure(r, context, struct, value);
+        if (failure) {
+            yield failure;
+        }
+    }
+}
+/**
+ * Check a value against a struct, traversing deeply into nested values, and
+ * returning an iterator of failures or success.
+ */
+function* run(value, struct, options = {}) {
+    const { path = [], branch = [value], coerce = false, mask = false } = options;
+    const ctx = { path, branch };
+    if (coerce) {
+        value = struct.coercer(value, ctx);
+        if (mask &&
+            struct.type !== 'type' &&
+            isObject(struct.schema) &&
+            isObject(value) &&
+            !Array.isArray(value)) {
+            for (const key in value) {
+                if (struct.schema[key] === undefined) {
+                    delete value[key];
+                }
+            }
+        }
+    }
+    let status = 'valid';
+    for (const failure of struct.validator(value, ctx)) {
+        failure.explanation = options.message;
+        status = 'not_valid';
+        yield [failure, undefined];
+    }
+    for (let [k, v, s] of struct.entries(value, ctx)) {
+        const ts = run(v, s, {
+            path: k === undefined ? path : [...path, k],
+            branch: k === undefined ? branch : [...branch, v],
+            coerce,
+            mask,
+            message: options.message,
+        });
+        for (const t of ts) {
+            if (t[0]) {
+                status = t[0].refinement != null ? 'not_refined' : 'not_valid';
+                yield [t[0], undefined];
+            }
+            else if (coerce) {
+                v = t[1];
+                if (k === undefined) {
+                    value = v;
+                }
+                else if (value instanceof Map) {
+                    value.set(k, v);
+                }
+                else if (value instanceof Set) {
+                    value.add(v);
+                }
+                else if (isObject(value)) {
+                    if (v !== undefined || k in value)
+                        value[k] = v;
+                }
+            }
+        }
+    }
+    if (status !== 'not_valid') {
+        for (const failure of struct.refiner(value, ctx)) {
+            failure.explanation = options.message;
+            status = 'not_refined';
+            yield [failure, undefined];
+        }
+    }
+    if (status === 'valid') {
+        yield [undefined, value];
+    }
+}
+
+/**
+ * `Struct` objects encapsulate the validation logic for a specific type of
+ * values. Once constructed, you use the `assert`, `is` or `validate` helpers to
+ * validate unknown input data against the struct.
+ */
+class Struct {
+    constructor(props) {
+        const { type, schema, validator, refiner, coercer = (value) => value, entries = function* () { }, } = props;
+        this.type = type;
+        this.schema = schema;
+        this.entries = entries;
+        this.coercer = coercer;
+        if (validator) {
+            this.validator = (value, context) => {
+                const result = validator(value, context);
+                return toFailures(result, context, this, value);
+            };
+        }
+        else {
+            this.validator = () => [];
+        }
+        if (refiner) {
+            this.refiner = (value, context) => {
+                const result = refiner(value, context);
+                return toFailures(result, context, this, value);
+            };
+        }
+        else {
+            this.refiner = () => [];
+        }
+    }
+    /**
+     * Assert that a value passes the struct's validation, throwing if it doesn't.
+     */
+    assert(value, message) {
+        return assert(value, this, message);
+    }
+    /**
+     * Create a value with the struct's coercion logic, then validate it.
+     */
+    create(value, message) {
+        return create(value, this, message);
+    }
+    /**
+     * Check if a value passes the struct's validation.
+     */
+    is(value) {
+        return is(value, this);
+    }
+    /**
+     * Mask a value, coercing and validating it, but returning only the subset of
+     * properties defined by the struct's schema.
+     */
+    mask(value, message) {
+        return mask(value, this, message);
+    }
+    /**
+     * Validate a value with the struct's validation logic, returning a tuple
+     * representing the result.
+     *
+     * You may optionally pass `true` for the `withCoercion` argument to coerce
+     * the value before attempting to validate it. If you do, the result will
+     * contain the coerced result when successful.
+     */
+    validate(value, options = {}) {
+        return validate(value, this, options);
+    }
+}
+/**
+ * Assert that a value passes a struct, throwing if it doesn't.
+ */
+function assert(value, struct, message) {
+    const result = validate(value, struct, { message });
+    if (result[0]) {
+        throw result[0];
+    }
+}
+/**
+ * Create a value with the coercion logic of struct and validate it.
+ */
+function create(value, struct, message) {
+    const result = validate(value, struct, { coerce: true, message });
+    if (result[0]) {
+        throw result[0];
+    }
+    else {
+        return result[1];
+    }
+}
+/**
+ * Mask a value, returning only the subset of properties defined by a struct.
+ */
+function mask(value, struct, message) {
+    const result = validate(value, struct, { coerce: true, mask: true, message });
+    if (result[0]) {
+        throw result[0];
+    }
+    else {
+        return result[1];
+    }
+}
+/**
+ * Check if a value passes a struct.
+ */
+function is(value, struct) {
+    const result = validate(value, struct);
+    return !result[0];
+}
+/**
+ * Validate a value against a struct, returning an error if invalid, or the
+ * value (with potential coercion) if valid.
+ */
+function validate(value, struct, options = {}) {
+    const tuples = run(value, struct, options);
+    const tuple = shiftIterator(tuples);
+    if (tuple[0]) {
+        const error = new StructError(tuple[0], function* () {
+            for (const t of tuples) {
+                if (t[0]) {
+                    yield t[0];
+                }
+            }
+        });
+        return [error, undefined];
+    }
+    else {
+        const v = tuple[1];
+        return [undefined, v];
+    }
+}
+
+function assign(...Structs) {
+    const isType = Structs[0].type === 'type';
+    const schemas = Structs.map((s) => s.schema);
+    const schema = Object.assign({}, ...schemas);
+    return isType ? type(schema) : object(schema);
+}
+/**
+ * Define a new struct type with a custom validation function.
+ */
+function define(name, validator) {
+    return new Struct({ type: name, schema: null, validator });
+}
+/**
+ * Create a new struct based on an existing struct, but the value is allowed to
+ * be `undefined`. `log` will be called if the value is not `undefined`.
+ */
+function deprecated(struct, log) {
+    return new Struct({
+        ...struct,
+        refiner: (value, ctx) => value === undefined || struct.refiner(value, ctx),
+        validator(value, ctx) {
+            if (value === undefined) {
+                return true;
+            }
+            else {
+                log(value, ctx);
+                return struct.validator(value, ctx);
+            }
+        },
+    });
+}
+/**
+ * Create a struct with dynamic validation logic.
+ *
+ * The callback will receive the value currently being validated, and must
+ * return a struct object to validate it with. This can be useful to model
+ * validation logic that changes based on its input.
+ */
+function dynamic(fn) {
+    return new Struct({
+        type: 'dynamic',
+        schema: null,
+        *entries(value, ctx) {
+            const struct = fn(value, ctx);
+            yield* struct.entries(value, ctx);
+        },
+        validator(value, ctx) {
+            const struct = fn(value, ctx);
+            return struct.validator(value, ctx);
+        },
+        coercer(value, ctx) {
+            const struct = fn(value, ctx);
+            return struct.coercer(value, ctx);
+        },
+        refiner(value, ctx) {
+            const struct = fn(value, ctx);
+            return struct.refiner(value, ctx);
+        },
+    });
+}
+/**
+ * Create a struct with lazily evaluated validation logic.
+ *
+ * The first time validation is run with the struct, the callback will be called
+ * and must return a struct object to use. This is useful for cases where you
+ * want to have self-referential structs for nested data structures to avoid a
+ * circular definition problem.
+ */
+function lazy(fn) {
+    let struct;
+    return new Struct({
+        type: 'lazy',
+        schema: null,
+        *entries(value, ctx) {
+            struct ?? (struct = fn());
+            yield* struct.entries(value, ctx);
+        },
+        validator(value, ctx) {
+            struct ?? (struct = fn());
+            return struct.validator(value, ctx);
+        },
+        coercer(value, ctx) {
+            struct ?? (struct = fn());
+            return struct.coercer(value, ctx);
+        },
+        refiner(value, ctx) {
+            struct ?? (struct = fn());
+            return struct.refiner(value, ctx);
+        },
+    });
+}
+/**
+ * Create a new struct based on an existing object struct, but excluding
+ * specific properties.
+ *
+ * Like TypeScript's `Omit` utility.
+ */
+function omit(struct, keys) {
+    const { schema } = struct;
+    const subschema = { ...schema };
+    for (const key of keys) {
+        delete subschema[key];
+    }
+    switch (struct.type) {
+        case 'type':
+            return type(subschema);
+        default:
+            return object(subschema);
+    }
+}
+/**
+ * Create a new struct based on an existing object struct, but with all of its
+ * properties allowed to be `undefined`.
+ *
+ * Like TypeScript's `Partial` utility.
+ */
+function partial(struct) {
+    const schema = struct instanceof Struct ? { ...struct.schema } : { ...struct };
+    for (const key in schema) {
+        schema[key] = optional(schema[key]);
+    }
+    return object(schema);
+}
+/**
+ * Create a new struct based on an existing object struct, but only including
+ * specific properties.
+ *
+ * Like TypeScript's `Pick` utility.
+ */
+function pick(struct, keys) {
+    const { schema } = struct;
+    const subschema = {};
+    for (const key of keys) {
+        subschema[key] = schema[key];
+    }
+    return object(subschema);
+}
+/**
+ * Define a new struct type with a custom validation function.
+ *
+ * @deprecated This function has been renamed to `define`.
+ */
+function struct(name, validator) {
+    console.warn('superstruct@0.11 - The `struct` helper has been renamed to `define`.');
+    return define(name, validator);
+}
+
+/**
+ * Ensure that any value passes validation.
+ */
+function any() {
+    return define('any', () => true);
+}
+function array(Element) {
+    return new Struct({
+        type: 'array',
+        schema: Element,
+        *entries(value) {
+            if (Element && Array.isArray(value)) {
+                for (const [i, v] of value.entries()) {
+                    yield [i, v, Element];
+                }
+            }
+        },
+        coercer(value) {
+            return Array.isArray(value) ? value.slice() : value;
+        },
+        validator(value) {
+            return (Array.isArray(value) ||
+                `Expected an array value, but received: ${print(value)}`);
+        },
+    });
+}
+/**
+ * Ensure that a value is a bigint.
+ */
+function bigint() {
+    return define('bigint', (value) => {
+        return typeof value === 'bigint';
+    });
+}
+/**
+ * Ensure that a value is a boolean.
+ */
+function boolean() {
+    return define('boolean', (value) => {
+        return typeof value === 'boolean';
+    });
+}
+/**
+ * Ensure that a value is a valid `Date`.
+ *
+ * Note: this also ensures that the value is *not* an invalid `Date` object,
+ * which can occur when parsing a date fails but still returns a `Date`.
+ */
+function date() {
+    return define('date', (value) => {
+        return ((value instanceof Date && !isNaN(value.getTime())) ||
+            `Expected a valid \`Date\` object, but received: ${print(value)}`);
+    });
+}
+function enums(values) {
+    const schema = {};
+    const description = values.map((v) => print(v)).join();
+    for (const key of values) {
+        schema[key] = key;
+    }
+    return new Struct({
+        type: 'enums',
+        schema,
+        validator(value) {
+            return (values.includes(value) ||
+                `Expected one of \`${description}\`, but received: ${print(value)}`);
+        },
+    });
+}
+/**
+ * Ensure that a value is a function.
+ */
+function func() {
+    return define('func', (value) => {
+        return (typeof value === 'function' ||
+            `Expected a function, but received: ${print(value)}`);
+    });
+}
+/**
+ * Ensure that a value is an instance of a specific class.
+ */
+function instance(Class) {
+    return define('instance', (value) => {
+        return (value instanceof Class ||
+            `Expected a \`${Class.name}\` instance, but received: ${print(value)}`);
+    });
+}
+/**
+ * Ensure that a value is an integer.
+ */
+function integer() {
+    return define('integer', (value) => {
+        return ((typeof value === 'number' && !isNaN(value) && Number.isInteger(value)) ||
+            `Expected an integer, but received: ${print(value)}`);
+    });
+}
+/**
+ * Ensure that a value matches all of a set of types.
+ */
+function intersection(Structs) {
+    return new Struct({
+        type: 'intersection',
+        schema: null,
+        *entries(value, ctx) {
+            for (const S of Structs) {
+                yield* S.entries(value, ctx);
+            }
+        },
+        *validator(value, ctx) {
+            for (const S of Structs) {
+                yield* S.validator(value, ctx);
+            }
+        },
+        *refiner(value, ctx) {
+            for (const S of Structs) {
+                yield* S.refiner(value, ctx);
+            }
+        },
+    });
+}
+function literal(constant) {
+    const description = print(constant);
+    const t = typeof constant;
+    return new Struct({
+        type: 'literal',
+        schema: t === 'string' || t === 'number' || t === 'boolean' ? constant : null,
+        validator(value) {
+            return (value === constant ||
+                `Expected the literal \`${description}\`, but received: ${print(value)}`);
+        },
+    });
+}
+function map(Key, Value) {
+    return new Struct({
+        type: 'map',
+        schema: null,
+        *entries(value) {
+            if (Key && Value && value instanceof Map) {
+                for (const [k, v] of value.entries()) {
+                    yield [k, k, Key];
+                    yield [k, v, Value];
+                }
+            }
+        },
+        coercer(value) {
+            return value instanceof Map ? new Map(value) : value;
+        },
+        validator(value) {
+            return (value instanceof Map ||
+                `Expected a \`Map\` object, but received: ${print(value)}`);
+        },
+    });
+}
+/**
+ * Ensure that no value ever passes validation.
+ */
+function never() {
+    return define('never', () => false);
+}
+/**
+ * Augment an existing struct to allow `null` values.
+ */
+function nullable(struct) {
+    return new Struct({
+        ...struct,
+        validator: (value, ctx) => value === null || struct.validator(value, ctx),
+        refiner: (value, ctx) => value === null || struct.refiner(value, ctx),
+    });
+}
+/**
+ * Ensure that a value is a number.
+ */
+function number() {
+    return define('number', (value) => {
+        return ((typeof value === 'number' && !isNaN(value)) ||
+            `Expected a number, but received: ${print(value)}`);
+    });
+}
+function object(schema) {
+    const knowns = schema ? Object.keys(schema) : [];
+    const Never = never();
+    return new Struct({
+        type: 'object',
+        schema: schema ? schema : null,
+        *entries(value) {
+            if (schema && isObject(value)) {
+                const unknowns = new Set(Object.keys(value));
+                for (const key of knowns) {
+                    unknowns.delete(key);
+                    yield [key, value[key], schema[key]];
+                }
+                for (const key of unknowns) {
+                    yield [key, value[key], Never];
+                }
+            }
+        },
+        validator(value) {
+            return (isObject(value) || `Expected an object, but received: ${print(value)}`);
+        },
+        coercer(value) {
+            return isObject(value) ? { ...value } : value;
+        },
+    });
+}
+/**
+ * Augment a struct to allow `undefined` values.
+ */
+function optional(struct) {
+    return new Struct({
+        ...struct,
+        validator: (value, ctx) => value === undefined || struct.validator(value, ctx),
+        refiner: (value, ctx) => value === undefined || struct.refiner(value, ctx),
+    });
+}
+/**
+ * Ensure that a value is an object with keys and values of specific types, but
+ * without ensuring any specific shape of properties.
+ *
+ * Like TypeScript's `Record` utility.
+ */
+function record(Key, Value) {
+    return new Struct({
+        type: 'record',
+        schema: null,
+        *entries(value) {
+            if (isObject(value)) {
+                for (const k in value) {
+                    const v = value[k];
+                    yield [k, k, Key];
+                    yield [k, v, Value];
+                }
+            }
+        },
+        validator(value) {
+            return (isObject(value) || `Expected an object, but received: ${print(value)}`);
+        },
+    });
+}
+/**
+ * Ensure that a value is a `RegExp`.
+ *
+ * Note: this does not test the value against the regular expression! For that
+ * you need to use the `pattern()` refinement.
+ */
+function regexp() {
+    return define('regexp', (value) => {
+        return value instanceof RegExp;
+    });
+}
+function set(Element) {
+    return new Struct({
+        type: 'set',
+        schema: null,
+        *entries(value) {
+            if (Element && value instanceof Set) {
+                for (const v of value) {
+                    yield [v, v, Element];
+                }
+            }
+        },
+        coercer(value) {
+            return value instanceof Set ? new Set(value) : value;
+        },
+        validator(value) {
+            return (value instanceof Set ||
+                `Expected a \`Set\` object, but received: ${print(value)}`);
+        },
+    });
+}
+/**
+ * Ensure that a value is a string.
+ */
+function string() {
+    return define('string', (value) => {
+        return (typeof value === 'string' ||
+            `Expected a string, but received: ${print(value)}`);
+    });
+}
+/**
+ * Ensure that a value is a tuple of a specific length, and that each of its
+ * elements is of a specific type.
+ */
+function tuple(Structs) {
+    const Never = never();
+    return new Struct({
+        type: 'tuple',
+        schema: null,
+        *entries(value) {
+            if (Array.isArray(value)) {
+                const length = Math.max(Structs.length, value.length);
+                for (let i = 0; i < length; i++) {
+                    yield [i, value[i], Structs[i] || Never];
+                }
+            }
+        },
+        validator(value) {
+            return (Array.isArray(value) ||
+                `Expected an array, but received: ${print(value)}`);
+        },
+    });
+}
+/**
+ * Ensure that a value has a set of known properties of specific types.
+ *
+ * Note: Unrecognized properties are allowed and untouched. This is similar to
+ * how TypeScript's structural typing works.
+ */
+function type(schema) {
+    const keys = Object.keys(schema);
+    return new Struct({
+        type: 'type',
+        schema,
+        *entries(value) {
+            if (isObject(value)) {
+                for (const k of keys) {
+                    yield [k, value[k], schema[k]];
+                }
+            }
+        },
+        validator(value) {
+            return (isObject(value) || `Expected an object, but received: ${print(value)}`);
+        },
+        coercer(value) {
+            return isObject(value) ? { ...value } : value;
+        },
+    });
+}
+/**
+ * Ensure that a value matches one of a set of types.
+ */
+function union(Structs) {
+    const description = Structs.map((s) => s.type).join(' | ');
+    return new Struct({
+        type: 'union',
+        schema: null,
+        coercer(value) {
+            for (const S of Structs) {
+                const [error, coerced] = S.validate(value, { coerce: true });
+                if (!error) {
+                    return coerced;
+                }
+            }
+            return value;
+        },
+        validator(value, ctx) {
+            const failures = [];
+            for (const S of Structs) {
+                const [...tuples] = run(value, S, ctx);
+                const [first] = tuples;
+                if (!first[0]) {
+                    return [];
+                }
+                else {
+                    for (const [failure] of tuples) {
+                        if (failure) {
+                            failures.push(failure);
+                        }
+                    }
+                }
+            }
+            return [
+                `Expected the value to satisfy a union of \`${description}\`, but received: ${print(value)}`,
+                ...failures,
+            ];
+        },
+    });
+}
+/**
+ * Ensure that any value passes validation, without widening its type to `any`.
+ */
+function unknown() {
+    return define('unknown', () => true);
+}
+
+/**
+ * Augment a `Struct` to add an additional coercion step to its input.
+ *
+ * This allows you to transform input data before validating it, to increase the
+ * likelihood that it passes validation—for example for default values, parsing
+ * different formats, etc.
+ *
+ * Note: You must use `create(value, Struct)` on the value to have the coercion
+ * take effect! Using simply `assert()` or `is()` will not use coercion.
+ */
+function coerce(struct, condition, coercer) {
+    return new Struct({
+        ...struct,
+        coercer: (value, ctx) => {
+            return is(value, condition)
+                ? struct.coercer(coercer(value, ctx), ctx)
+                : struct.coercer(value, ctx);
+        },
+    });
+}
+/**
+ * Augment a struct to replace `undefined` values with a default.
+ *
+ * Note: You must use `create(value, Struct)` on the value to have the coercion
+ * take effect! Using simply `assert()` or `is()` will not use coercion.
+ */
+function defaulted(struct, fallback, options = {}) {
+    return coerce(struct, unknown(), (x) => {
+        const f = typeof fallback === 'function' ? fallback() : fallback;
+        if (x === undefined) {
+            return f;
+        }
+        if (!options.strict && isPlainObject(x) && isPlainObject(f)) {
+            const ret = { ...x };
+            let changed = false;
+            for (const key in f) {
+                if (ret[key] === undefined) {
+                    ret[key] = f[key];
+                    changed = true;
+                }
+            }
+            if (changed) {
+                return ret;
+            }
+        }
+        return x;
+    });
+}
+/**
+ * Augment a struct to trim string inputs.
+ *
+ * Note: You must use `create(value, Struct)` on the value to have the coercion
+ * take effect! Using simply `assert()` or `is()` will not use coercion.
+ */
+function trimmed(struct) {
+    return coerce(struct, string(), (x) => x.trim());
+}
+
+/**
+ * Ensure that a string, array, map, or set is empty.
+ */
+function empty(struct) {
+    return refine(struct, 'empty', (value) => {
+        const size = getSize(value);
+        return (size === 0 ||
+            `Expected an empty ${struct.type} but received one with a size of \`${size}\``);
+    });
+}
+function getSize(value) {
+    if (value instanceof Map || value instanceof Set) {
+        return value.size;
+    }
+    else {
+        return value.length;
+    }
+}
+/**
+ * Ensure that a number or date is below a threshold.
+ */
+function max(struct, threshold, options = {}) {
+    const { exclusive } = options;
+    return refine(struct, 'max', (value) => {
+        return exclusive
+            ? value < threshold
+            : value <= threshold ||
+                `Expected a ${struct.type} less than ${exclusive ? '' : 'or equal to '}${threshold} but received \`${value}\``;
+    });
+}
+/**
+ * Ensure that a number or date is above a threshold.
+ */
+function min(struct, threshold, options = {}) {
+    const { exclusive } = options;
+    return refine(struct, 'min', (value) => {
+        return exclusive
+            ? value > threshold
+            : value >= threshold ||
+                `Expected a ${struct.type} greater than ${exclusive ? '' : 'or equal to '}${threshold} but received \`${value}\``;
+    });
+}
+/**
+ * Ensure that a string, array, map or set is not empty.
+ */
+function nonempty(struct) {
+    return refine(struct, 'nonempty', (value) => {
+        const size = getSize(value);
+        return (size > 0 || `Expected a nonempty ${struct.type} but received an empty one`);
+    });
+}
+/**
+ * Ensure that a string matches a regular expression.
+ */
+function pattern(struct, regexp) {
+    return refine(struct, 'pattern', (value) => {
+        return (regexp.test(value) ||
+            `Expected a ${struct.type} matching \`/${regexp.source}/\` but received "${value}"`);
+    });
+}
+/**
+ * Ensure that a string, array, number, date, map, or set has a size (or length, or time) between `min` and `max`.
+ */
+function size(struct, min, max = min) {
+    const expected = `Expected a ${struct.type}`;
+    const of = min === max ? `of \`${min}\`` : `between \`${min}\` and \`${max}\``;
+    return refine(struct, 'size', (value) => {
+        if (typeof value === 'number' || value instanceof Date) {
+            return ((min <= value && value <= max) ||
+                `${expected} ${of} but received \`${value}\``);
+        }
+        else if (value instanceof Map || value instanceof Set) {
+            const { size } = value;
+            return ((min <= size && size <= max) ||
+                `${expected} with a size ${of} but received one with a size of \`${size}\``);
+        }
+        else {
+            const { length } = value;
+            return ((min <= length && length <= max) ||
+                `${expected} with a length ${of} but received one with a length of \`${length}\``);
+        }
+    });
+}
+/**
+ * Augment a `Struct` to add an additional refinement to the validation.
+ *
+ * The refiner function is guaranteed to receive a value of the struct's type,
+ * because the struct's existing validation will already have passed. This
+ * allows you to layer additional validation on top of existing structs.
+ */
+function refine(struct, name, refiner) {
+    return new Struct({
+        ...struct,
+        *refiner(value, ctx) {
+            yield* struct.refiner(value, ctx);
+            const result = refiner(value, ctx);
+            const failures = toFailures(result, ctx, struct, value);
+            for (const failure of failures) {
+                yield { ...failure, refinement: name };
+            }
+        },
+    });
+}
+
+
+//# sourceMappingURL=index.mjs.map
+
+
 /***/ })
 
 /******/ 	});
@@ -9170,6 +13226,36 @@ module.exports = webpackAsyncContext;
 /******/ 				() => (module);
 /******/ 			__webpack_require__.d(getter, { a: getter });
 /******/ 			return getter;
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/create fake namespace object */
+/******/ 	(() => {
+/******/ 		var getProto = Object.getPrototypeOf ? (obj) => (Object.getPrototypeOf(obj)) : (obj) => (obj.__proto__);
+/******/ 		var leafPrototypes;
+/******/ 		// create a fake namespace object
+/******/ 		// mode & 1: value is a module id, require it
+/******/ 		// mode & 2: merge all properties of value into the ns
+/******/ 		// mode & 4: return value when already ns object
+/******/ 		// mode & 16: return value when it's Promise-like
+/******/ 		// mode & 8|1: behave like require
+/******/ 		__webpack_require__.t = function(value, mode) {
+/******/ 			if(mode & 1) value = this(value);
+/******/ 			if(mode & 8) return value;
+/******/ 			if(typeof value === 'object' && value) {
+/******/ 				if((mode & 4) && value.__esModule) return value;
+/******/ 				if((mode & 16) && typeof value.then === 'function') return value;
+/******/ 			}
+/******/ 			var ns = Object.create(null);
+/******/ 			__webpack_require__.r(ns);
+/******/ 			var def = {};
+/******/ 			leafPrototypes = leafPrototypes || [null, getProto({}), getProto([]), getProto(getProto)];
+/******/ 			for(var current = mode & 2 && value; typeof current == 'object' && !~leafPrototypes.indexOf(current); current = getProto(current)) {
+/******/ 				Object.getOwnPropertyNames(current).forEach((key) => (def[key] = () => (value[key])));
+/******/ 			}
+/******/ 			def['default'] = () => (value);
+/******/ 			__webpack_require__.d(ns, def);
+/******/ 			return ns;
 /******/ 		};
 /******/ 	})();
 /******/ 	

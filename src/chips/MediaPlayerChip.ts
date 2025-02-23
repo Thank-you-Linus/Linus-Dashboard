@@ -38,7 +38,7 @@ class MediaPlayerChip extends AbstractChip {
     super();
 
     if (options?.show_content) {
-      this.#defaultConfig.content = Helper.getCountTemplate("media_player", "eq", "playing", options?.area_slug);
+      this.#defaultConfig.content = Helper.getCountTemplate({ domain: "media_player", operator: "eq", value: "playing", area_slug: options?.area_slug });
     }
 
     this.#defaultConfig.icon_color = Helper.getFromDomainState({ domain: "media_player", area_slug: options?.area_slug })

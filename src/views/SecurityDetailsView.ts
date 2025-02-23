@@ -2,7 +2,7 @@ import { Helper } from "../Helper";
 import { StackCardConfig } from "../types/homeassistant/lovelace/cards/types";
 import { LovelaceCardConfig, LovelaceViewConfig } from "../types/homeassistant/data/lovelace";
 import { TitleCardConfig } from "../types/lovelace-mushroom/cards/title-card-config";
-import { AggregateCard } from "../cards/AggregateCard";
+import { AggregateSection } from "../cards/AggregateSection";
 
 /**
  * Security View Class.
@@ -69,13 +69,11 @@ abstract class SecurityDetailsView {
 
 
     if (aggregate_motion?.entity_id) {
-      viewCards.push(new AggregateCard('binary_sensor', { device_class: 'motion', title: Helper.localize("component.binary_sensor.entity_component.motion.name") }).createCard())
-      // viewCards.push(new AggregateCard({ entity_id: aggregate_motion.entity_id }, { title: `${Helper.localize("component.binary_sensor.entity_component.motion.name")}s` }).createCard())
+      viewCards.push(new AggregateSection('binary_sensor', { device_class: 'motion', title: Helper.localize("component.binary_sensor.entity_component.motion.name") }).createCard())
     }
 
     if (aggregate_door?.entity_id || aggregate_window?.entity_id) {
-      viewCards.push(new AggregateCard('binary_sensor', { device_class: ['door', 'window'], title: Helper.localize("component.binary_sensor.entity_component.opening.name") }).createCard())
-      // viewCards.push(new AggregateCard({ entity_id: [aggregate_door?.entity_id, aggregate_window?.entity_id] }, { title: `${Helper.localize("component.binary_sensor.entity_component.opening.name")}s` }).createCard())
+      viewCards.push(new AggregateSection('binary_sensor', { device_class: ['door', 'window'], title: Helper.localize("component.binary_sensor.entity_component.opening.name") }).createCard())
     }
 
     return viewCards;

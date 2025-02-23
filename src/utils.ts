@@ -174,6 +174,65 @@ export const groupEntitiesByDomain = memoize(function groupEntitiesByDomain(enti
 });
 
 /**
+ * Create items (chips or cards) from a list.
+ * @param {string[]} itemList - The list of items.
+ * @param {Partial<chips.AggregateChipOptions> | Partial<generic.StrategyEntity>} [itemOptions] - The item options.
+ * @param {string} [magic_device_id="global"] - The magic device ID.
+ * @param {string | string[]} [area_slug] - The area slug.
+ * @param {boolean} isChip - Flag to determine if creating chips or cards.
+ * @returns {Promise<LovelaceChipConfig[] | LovelaceCardConfig[]>} - The created items.
+ */
+async function createItemsFromList(
+    itemList: string[],
+    itemOptions?: Partial<chips.AggregateChipOptions> | Partial<generic.StrategyEntity>,
+    magic_device_id: string = "global",
+    area_slug?: string | string[],
+    isChip: boolean = true
+): Promise<LovelaceChipConfig[] | LovelaceCardConfig[]> {
+    const items: (LovelaceChipConfig | LovelaceCardConfig)[] = [];
+    const area_slugs = area_slug ? Array.isArray(area_slug) ? area_slug : [area_slug] : [];
+    const domains = magic_device_id === "global"
+        ? Object.keys(Helper.domains)
+        : area_slugs.flatMap(area_slug => Object.keys(Helper.areas[area_slug]?.domains ?? {}));
+
+    for (let itemType of itemList) {
+        if (Helper.linus_dashboard_config?.excluded_domains?.includes(itemType)) continue;
+        if (Helper.linus_dashboard_config?.excluded_device_classes?.includes(itemType)) continue;
+        if (!domains.includes(itemType)) continue;
+
+        const className = Helper.sanitizeClassName(itemType + (isChip ? "Chip" : "Card"));
+
+        try {
+            let itemModule;
+            let item;
+            try {
+                itemModule = await import(`./${isChip ? "chips" : "cards"}/${className}`);
+                item = new itemModule[className]({ ...itemOptions, area_slug });
+            } catch {
+                let domain = itemType
+                let device_class
+                if (DEVICE_CLASSES.binary_sensor.includes(itemType)) { domain = "binary_sensor"; device_class = itemType }
+                if (DEVICE_CLASSES.sensor.includes(itemType)) { domain = "sensor"; device_class = itemType }
+                itemModule = await import(`./${isChip ? "chips" : "cards"}/Aggregate${isChip ? "Chip" : "Card"}`);
+                item = new itemModule[`Aggregate${isChip ? "Chip" : "Card"}`]({
+                    ...itemOptions,
+                    domain,
+                    device_class,
+                    area_slug,
+                    magic_device_id,
+                    tap_action: navigateTo(itemType)
+                });
+            }
+            items.push(item.getChip ? item.getChip() : item.getCard());
+        } catch (e) {
+            Helper.logError(`An error occurred while creating the ${itemType} ${isChip ? "chip" : "card"}!`, e);
+        }
+    }
+
+    return items;
+}
+
+/**
  * Create chips from a list.
  * @param {string[]} chipsList - The list of chips.
  * @param {Partial<chips.AggregateChipOptions>} [chipOptions] - The chip options.
@@ -181,37 +240,30 @@ export const groupEntitiesByDomain = memoize(function groupEntitiesByDomain(enti
  * @param {string | string[]} [area_slug] - The area slug.
  * @returns {Promise<LovelaceChipConfig[]>} - The created chips.
  */
-export async function createChipsFromList(chipsList: string[], chipOptions?: Partial<chips.AggregateChipOptions>, magic_device_id: string = "global", area_slug?: string | string[]) {
-    const chips: LovelaceChipConfig[] = [];
-    const area_slugs = area_slug ? Array.isArray(area_slug) ? area_slug : [area_slug] : [];
-    const domains = magic_device_id === "global"
-        ? Object.keys(Helper.domains)
-        : area_slugs.flatMap(area_slug => Object.keys(Helper.areas[area_slug]?.domains ?? {}));
+export async function createChipsFromList(
+    chipsList: string[],
+    chipOptions?: Partial<chips.AggregateChipOptions>,
+    magic_device_id: string = "global",
+    area_slug?: string | string[]
+): Promise<LovelaceChipConfig[]> {
+    return createItemsFromList(chipsList, chipOptions, magic_device_id, area_slug, true) as Promise<LovelaceChipConfig[]>;
+}
 
-    for (let chipType of chipsList) {
-        if (Helper.linus_dashboard_config?.excluded_domains?.includes(chipType)) continue;
-        if (Helper.linus_dashboard_config?.excluded_device_classes?.includes(chipType)) continue;
-        if (!domains.includes(chipType)) continue;
-
-        const className = Helper.sanitizeClassName(chipType + "Chip");
-
-        try {
-            let chipModule;
-            if ([...DEVICE_CLASSES.binary_sensor, ...DEVICE_CLASSES.sensor].includes(chipType)) {
-                chipModule = await import("./chips/AggregateChip");
-                const chip = new chipModule.AggregateChip({ ...chipOptions, device_class: chipType, area_slug, magic_device_id, tap_action: navigateTo(chipType) });
-                chips.push(chip.getChip());
-            } else {
-                chipModule = await import("./chips/" + className);
-                const chip = new chipModule[className]({ ...chipOptions, area_slug });
-                chips.push(chip.getChip());
-            }
-        } catch (e) {
-            Helper.logError(`An error occurred while creating the ${chipType} chip!`, e);
-        }
-    }
-
-    return chips;
+/**
+ * Create cards from a list.
+ * @param {string[]} cardsList - The list of cards.
+ * @param {Partial<generic.StrategyEntity>} [cardOptions] - The card options.
+ * @param {string} [magic_device_id="global"] - The magic device ID.
+ * @param {string | string[]} [area_slug] - The area slug.
+ * @returns {Promise<LovelaceCardConfig[]>} - The created cards.
+ */
+export async function createCardsFromList(
+    cardsList: string[],
+    cardOptions?: Partial<generic.StrategyEntity>,
+    magic_device_id: string = "global",
+    area_slug?: string | string[]
+): Promise<LovelaceCardConfig[]> {
+    return createItemsFromList(cardsList, cardOptions, magic_device_id, area_slug, false) as Promise<LovelaceCardConfig[]>;
 }
 
 /**
@@ -262,11 +314,12 @@ export const getAreaName = memoize(function getAreaName(area: StrategyArea): str
  * @param {string} device_class - The device class.
  * @returns {string[]} - The global entities.
  */
-export const getGlobalEntitiesExceptUndisclosed = memoize(function getGlobalEntitiesExceptUndisclosed(device_class: string): string[] {
-    return Helper.domains[device_class]?.filter(entity =>
-        !Helper.areas[UNDISCLOSED].domains?.[device_class]?.includes(entity.entity_id)
+export const getGlobalEntitiesExceptUndisclosed = memoize(function getGlobalEntitiesExceptUndisclosed(domain: string, device_class?: string): string[] {
+    const entities = device_class ? Helper.domains[device_class] : Helper.domains[domain];
+    return entities?.filter(entity =>
+        !Helper.areas[UNDISCLOSED].domains?.[device_class ?? domain]?.includes(entity.entity_id)
     ).map(e => e.entity_id) ?? [];
-}) as (device_class: string) => string[];
+}) as (domain: string, device_class?: string) => string[];
 
 /**
  * Add light groups to entities.

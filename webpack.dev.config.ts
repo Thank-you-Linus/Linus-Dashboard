@@ -24,6 +24,10 @@ const config: webpack.Configuration = {
         use: "ts-loader",
         exclude: /node_modules/,
       },
+      {
+        test: /\.md$/,
+        use: "ignore-loader",
+      },
     ],
   },
   plugins: [

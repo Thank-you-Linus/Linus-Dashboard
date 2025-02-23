@@ -39,7 +39,7 @@ class LightChip extends AbstractChip {
     super();
 
     if (options?.show_content) {
-      this.#defaultConfig.content = Helper.getCountTemplate("light", "eq", "on", options?.area_slug);
+      this.#defaultConfig.content = Helper.getCountTemplate({ domain: "light", operator: "eq", value: "on", area_slug: options?.area_slug });
     }
 
     this.#defaultConfig.icon_color = Helper.getFromDomainState({ domain: "light", area_slug: options?.area_slug })

@@ -4,7 +4,7 @@ import { LovelaceCardConfig, LovelaceSectionConfig, LovelaceViewConfig } from ".
 import { AlarmCard } from "../cards/AlarmCard";
 import { PersonCard } from "../cards/PersonCard";
 import { BinarySensorCard } from "../cards/BinarySensorCard";
-import { createChipsFromList, getAreaName, getFloorName, navigateTo } from "../utils";
+import { createCardsFromList, createChipsFromList, getAreaName, getFloorName, navigateTo } from "../utils";
 import { HassServiceTarget } from "home-assistant-js-websocket";
 import { ControllerCard } from "../cards/ControllerCard";
 import { views } from "../types/strategy/views";
@@ -117,14 +117,14 @@ class SecurityView {
       globalSection.cards.push(
         {
           type: "heading",
-          heading: "Sécurité",
+          heading: Helper.localize("component.binary_sensor.entity_component.safety.name"),
           heading_style: "title",
         }
       )
       globalSection.cards.push(
         {
           type: "heading",
-          heading: "Alarme",
+          heading: Helper.localize("component.alarm_control_panel.entity_component._.name"),
           heading_style: "subtitle",
         })
       globalSection.cards.push(new AlarmCard(Helper.entities[alarmEntityId]).getCard())
@@ -135,7 +135,7 @@ class SecurityView {
       globalSection.cards.push(
         {
           type: "heading",
-          heading: "Personnes",
+          heading: Helper.localize("ui.dialogs.quick-bar.commands.navigation.person"),
           heading_style: "subtitle",
         })
 
@@ -156,13 +156,25 @@ class SecurityView {
       globalSection.cards.push(
         {
           type: "heading",
-          heading: "Capteurs",
+          heading: Helper.localize("component.sensor.entity_component._.name") + "s",
           heading_style: "subtitle",
         })
       if (aggregate_motion?.entity_id) globalSection.cards.push(new BinarySensorCard(aggregate_motion, { tap_action: navigateTo('security-details') }).getCard());
       if (aggregate_door?.entity_id) globalSection.cards.push(new BinarySensorCard(aggregate_door, { tap_action: navigateTo('security-details') }).getCard());
       if (aggregate_window?.entity_id) globalSection.cards.push(new BinarySensorCard(aggregate_window, { tap_action: navigateTo('security-details') }).getCard());
     }
+
+    const securityCards = await createCardsFromList(SECURITY_EXPOSED_CHIPS, {}, "global");
+    if (securityCards) {
+      globalSection.cards.push(
+        {
+          type: "heading",
+          heading: Helper.localize("component.sensor.entity_component._.name") + "s",
+          heading_style: "subtitle",
+        });
+      globalSection.cards.push(...securityCards);
+    }
+
 
     const sections = [globalSection]
     if (Helper.domains.camera?.length) sections.push(await this.createCamerasSection())

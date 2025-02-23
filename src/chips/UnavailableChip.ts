@@ -35,7 +35,7 @@ class UnavailableChip extends AbstractChip {
     constructor(options: chips.ChipOptions = {}) {
         super();
 
-        this.#defaultConfig.content = Helper.getCountTemplate("all", "eq", UNAVAILABLE, options?.area_slug, true);
+        this.#defaultConfig.content = Helper.getCountTemplate({ domain: "all", operator: "eq", value: UNAVAILABLE, area_slug: options?.area_slug, allowUnavailable: true });
 
         this.#defaultConfig.icon = Helper.getFromDomainState({
             domain: "all",

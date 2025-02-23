@@ -46,6 +46,10 @@ export namespace cards {
     offService?: string;
   }
 
+
+  export type AggregateCardOptions = { domain: string, device_class?: string, magic_device_id?: string } & CardOptions;
+  export type CardOptions = { area_slug?: string | string[], magic_device_id?: string, show_content?: boolean } & TemplateCardOptions;
+
   export type HomeAreaCardOptions = { area_slug: string } & Omit<HomeAreaCardConfig, "type">;
   export type ClimateCardOptions = Omit<ClimateCardConfig, "type">;
   export type ControllerCardOptions = Omit<ControllerCardConfig, "type">;

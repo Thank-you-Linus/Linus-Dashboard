@@ -38,7 +38,7 @@ class ClimateChip extends AbstractChip {
     super();
 
     if (options?.show_content) {
-      this.#defaultConfig.content = Helper.getCountTemplate("climate", "ne", "off", options?.area_slug);
+      this.#defaultConfig.content = Helper.getCountTemplate({ domain: "climate", operator: "ne", value: "off", area_slug: options?.area_slug });
     }
 
     this.#defaultConfig.icon_color = Helper.getFromDomainState({ domain: "climate", area_slug: options?.area_slug })

@@ -286,6 +286,8 @@ class Helper {
     this.#strategyOptions = deepmerge(configurationDefaults, info.config?.strategy?.options ?? {});
     this.#debug = this.#strategyOptions.debug;
 
+    console.log('this.#', info.hass)
+
     let homeAssistantRegistries = [];
 
     try {
@@ -472,44 +474,46 @@ class Helper {
    *
    * States are compared against a given value by a given operator.
    *
-   * @param {string} domain The domain of the entities.
-   * @param {string} operator The Comparison operator between state and value.
-   * @param {string} value The value to which the state is compared against.
-   * @param {string} area_id
+   * @param {object} options The options object containing the parameters.
+   * @param {string} options.domain The domain of the entities.
+   * @param {string} options.operator The Comparison operator between state and value.
+   * @param {string | string[]} options.value The value to which the state is compared against.
+   * @param {string | string[]} [options.area_slug] The area slug(s) to filter entities by.
+   * @param {string} [options.device_class] The device class of the entities.
+   * @param {boolean} [options.allowUnavailable] Whether to allow unavailable states.
+   * @param {string} [options.prefix] The prefix to add to the result.
    *
    * @return {string} The template string.
    * @static
    */
-  static getCountTemplate(domain: string, operator: string, value: string | string[], area_slug?: string | string[], allowUnavailable?: boolean): string {
-    const states: string[] = [];
+  static getCountTemplate({
+    domain,
+    operator,
+    value,
+    area_slug,
+    device_class,
+    allowUnavailable,
+    prefix
+  }: {
+    domain: string,
+    operator: string,
+    value: string | string[],
+    area_slug?: string | string[],
+    device_class?: string,
+    allowUnavailable?: boolean,
+    prefix?: string
+  }): string {
 
     if (!this.isInitialized()) {
       console.warn("Helper class should be initialized before calling this method!");
     }
 
-    const areaSlugs = Array.isArray(area_slug) ? area_slug : [area_slug];
+    const entitiesId = this.getEntityIds({ domain, device_class, area_slug });
+    const states = this.getStateStrings(entitiesId);
 
-    for (const slug of areaSlugs) {
-      if (slug) {
-        const newStates = domain === "all"
-          ? this.#areas[slug]?.entities.map((entity_id) => `states['${entity_id}']`)
-          : this.#areas[slug]?.domains?.[domain]?.map((entity_id) => `states['${entity_id}']`);
-        if (newStates) states.push(...newStates);
-      } else {
-        for (const area of Object.values(this.#areas)) {
-          if (area.area_id === UNDISCLOSED) continue;
+    const formattedValue = Array.isArray(value) ? JSON.stringify(value).replaceAll('"', "'") : `'${value}'`;
 
-          const newStates = domain === "all"
-            ? area.entities.map((entity_id) => `states['${entity_id}']`)
-            : area.domains?.[domain]?.map((entity_id) => `states['${entity_id}']`);
-          if (newStates) states.push(...newStates);
-        }
-      }
-    }
-
-    const formatedValue = Array.isArray(value) ? JSON.stringify(value).replaceAll('"', "'") : `'${value}'`;
-
-    return `{% set entities = [${states}] %}{{ entities ${allowUnavailable ? "" : "| selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable')"}| selectattr('state','${operator}',${formatedValue}) | list | count }}`;
+    return `{% set entities = [${states}] %}{% set count = entities ${allowUnavailable ? "" : "| selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable')"}| selectattr('state','${operator}',${formattedValue}) | list | count %}{% if count > 0 %}{{ '${prefix ?? ""}' ~ count }}{% else %}{% endif %}`;
   }
 
   /**
@@ -758,7 +762,12 @@ class Helper {
     return entity.disabled_by === null && entity.hidden_by === null
   }
 
-  static getFromDomainState({ domain, operator, value, ifReturn, elseReturn, area_slug, allowUnavailable }: { domain: string, operator?: string, value?: string | string[], ifReturn?: string, elseReturn?: string, area_slug?: string | string[], allowUnavailable?: boolean }): string {
+  /**
+   * Get valid entity.
+   *
+   * @return {StrategyEntity}
+   */
+  static getStates({ domain, device_class, area_slug }: { domain: string, device_class?: string, area_slug?: string | string[] }): string[] {
     const states: string[] = [];
 
     if (!this.isInitialized()) {
@@ -769,22 +778,80 @@ class Helper {
 
     for (const slug of areaSlugs) {
       if (slug) {
-        const magic_entity = getMAEntity(slug!, domain);
-        const entities = magic_entity ? [magic_entity.entity_id] : area_slug === "global" ? getGlobalEntitiesExceptUndisclosed(domain) : this.#areas[slug]?.domains?.[domain]
+        const magic_entity = device_class ? getMAEntity(slug!, domain, device_class) : getMAEntity(slug!, domain);
+        const entities = magic_entity ? [magic_entity.entity_id] : area_slug === "global" ? getGlobalEntitiesExceptUndisclosed(device_class ?? domain) : this.#areas[slug]?.domains?.[device_class ?? domain];
         const newStates = entities?.map((entity_id) => `states['${entity_id}']`);
         if (newStates) states.push(...newStates);
       } else {
         // Get the ID of the devices which are linked to the given area.
         for (const area of Object.values(this.#areas)) {
-          if (area.area_id === UNDISCLOSED) continue
+          if (area.area_id === UNDISCLOSED) continue;
 
           const newStates = domain === "all"
             ? this.#areas[area.slug]?.entities.map((entity_id) => `states['${entity_id}']`)
-            : this.#areas[area.slug]?.domains?.[domain]?.map((entity_id) => `states['${entity_id}']`);
+            : this.#areas[area.slug]?.domains?.[device_class ?? domain]?.map((entity_id) => `states['${entity_id}']`);
           if (newStates) states.push(...newStates);
         }
       }
     }
+
+    return states
+  }
+  static getEntityIds({ domain, device_class, area_slug = 'global' }: { domain: string, device_class?: string, area_slug?: string | string[] }): string[] {
+    const entityIds: string[] = [];
+
+    if (!this.isInitialized()) {
+      console.warn("Helper class should be initialized before calling this method!");
+    }
+
+    const areaSlugs = Array.isArray(area_slug) ? area_slug : [area_slug];
+
+    for (const slug of areaSlugs) {
+      if (slug) {
+        const magic_entity = device_class ? getMAEntity(slug!, domain, device_class) : getMAEntity(slug!, domain);
+        const entities = magic_entity ? [magic_entity.entity_id] : area_slug === "global" ? getGlobalEntitiesExceptUndisclosed(device_class ?? domain) : this.#areas[slug]?.domains?.[device_class ?? domain];
+        if (entities) entityIds.push(...entities);
+      } else {
+        for (const area of Object.values(this.#areas)) {
+          if (area.area_id === UNDISCLOSED) continue;
+
+          const entities = domain === "all"
+            ? this.#areas[area.slug]?.entities
+            : this.#areas[area.slug]?.domains?.[device_class ?? domain];
+          if (entities) entityIds.push(...entities);
+        }
+      }
+    }
+
+    return entityIds;
+  }
+
+  static getStateStrings(entityIds: string[]): string[] {
+    return entityIds.map((entity_id) => `states['${entity_id}']`);
+  }
+
+  static getLastChangedTemplate({ domain, device_class, area_slug }: { domain: string, device_class?: string, area_slug?: string | string[] }): string {
+
+
+    const states = this.getStateStrings(this.getEntityIds({ domain, device_class, area_slug }));
+
+    return `{% set entities = [${states}] %}{{ relative_time(entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | map(attribute='last_changed') | max) }}`;
+  }
+
+  static getLastChangedEntityIdTemplate({ domain, device_class, area_slug }: { domain: string, device_class?: string, area_slug?: string | string[] }): string {
+
+    const states = this.getStateStrings(this.getEntityIds({ domain, device_class, area_slug }));
+
+    return `{% set entities = [${states}] %}{{ entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | sort(attribute='last_changed', reverse=True) | first }}`;
+  }
+
+  static getFromDomainState({ domain, operator, value, ifReturn, elseReturn, area_slug, allowUnavailable }: { domain: string, operator?: string, value?: string | string[], ifReturn?: string, elseReturn?: string, area_slug?: string | string[], allowUnavailable?: boolean }): string {
+
+    if (!this.isInitialized()) {
+      console.warn("Helper class should be initialized before calling this method!");
+    }
+
+    const states = this.getStateStrings(this.getEntityIds({ domain, area_slug }));
 
     if (domain === "light") {
       ifReturn = ifReturn ?? "amber";
@@ -815,21 +882,12 @@ class Helper {
   }
 
   static getBinarySensorColorFromState(device_class: string, operator: string, value: string, ifReturn: string, elseReturn: string, area_slug: string | string[] = "global"): string {
-    const states: string[] = [];
 
     if (!this.isInitialized()) {
       console.warn("Helper class should be initialized before calling this method!");
     }
 
-    const areaSlugs = Array.isArray(area_slug) ? area_slug : [area_slug];
-
-    for (const slug of areaSlugs) {
-      const magic_entity = getMAEntity(slug!, "binary_sensor", device_class);
-      const entities = magic_entity ? [magic_entity.entity_id] : area_slug === "global" ? getGlobalEntitiesExceptUndisclosed(device_class) : this.#areas[slug]?.domains?.[device_class]
-      const newStates = entities?.map((entity_id) => `states['${entity_id}']`);
-
-      if (newStates) states.push(...newStates);
-    }
+    const states = this.getStateStrings(this.getEntityIds({ domain: "binary_sensor", device_class, area_slug }));
 
     return `
       {% set entities = [${states}] %}
@@ -837,21 +895,12 @@ class Helper {
   }
 
   static getSensorColorFromState(device_class: string, area_slug: string | string[] = "global"): string | undefined {
-    const states: string[] = [];
 
     if (!this.isInitialized()) {
       console.warn("Helper class should be initialized before calling this method!");
     }
 
-    const areaSlugs = Array.isArray(area_slug) ? area_slug : [area_slug];
-
-
-    for (const slug of areaSlugs) {
-      const magic_entity = getMAEntity(slug!, "sensor", device_class);
-      const entities = magic_entity ? [magic_entity.entity_id] : area_slug === "global" ? getGlobalEntitiesExceptUndisclosed(device_class) : this.#areas[slug]?.domains?.[device_class]
-      const newStates = entities?.map((entity_id) => `states['${entity_id}']`);
-      if (newStates) states.push(...newStates);
-    }
+    const states = this.getStateStrings(this.getEntityIds({ domain: "sensor", device_class, area_slug }));
 
     if (device_class === "battery") {
       return `
@@ -912,20 +961,12 @@ class Helper {
   }
 
   static getSensorIconFromState(device_class: string, area_slug: string | string[] = "global"): string | undefined {
-    const states: string[] = [];
 
     if (!this.isInitialized()) {
       console.warn("Helper class should be initialized before calling this method!");
     }
 
-    const areaSlugs = Array.isArray(area_slug) ? area_slug : [area_slug];
-
-    for (const slug of areaSlugs) {
-      const magic_entity = getMAEntity(slug!, "sensor", device_class);
-      const entities = magic_entity ? [magic_entity.entity_id] : area_slug === "global" ? getGlobalEntitiesExceptUndisclosed(device_class) : this.#areas[slug]?.domains?.[device_class]
-      const newStates = entities?.map((entity_id) => `states['${entity_id}']`);
-      if (newStates) states.push(...newStates);
-    }
+    const states = this.getStateStrings(this.getEntityIds({ domain: "sensor", device_class, area_slug }));
 
     if (device_class === "battery") {
       return `

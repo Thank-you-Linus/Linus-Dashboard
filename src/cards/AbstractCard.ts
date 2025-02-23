@@ -17,7 +17,7 @@ abstract class AbstractCard {
    *
    * @type {generic.RegistryEntry}
    */
-  entity: generic.RegistryEntry;
+  entity?: generic.RegistryEntry;
 
   /**
    * Configuration of the card.
@@ -35,7 +35,7 @@ abstract class AbstractCard {
    * @param {generic.RegistryEntry} entity The hass entity to create a card for.
    * @throws {Error} If the Helper module isn't initialized.
    */
-  protected constructor(entity: generic.RegistryEntry) {
+  protected constructor(entity?: generic.RegistryEntry) {
     if (!Helper.isInitialized()) {
       throw new Error("The Helper module must be initialized before using this one.");
     }
@@ -51,6 +51,7 @@ abstract class AbstractCard {
   getCard(): cards.AbstractCardConfig {
     return {
       ...this.config,
+      type: this.entity && "entity_id" in this.entity ? "custom:mushroom-entity-card" : "custom:mushroom-template-card",
       entity: this.entity && "entity_id" in this.entity ? this.entity.entity_id : undefined,
     };
   }

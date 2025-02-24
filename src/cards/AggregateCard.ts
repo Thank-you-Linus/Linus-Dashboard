@@ -76,7 +76,7 @@ class AggregateCard extends AbstractCard {
   /**
    * Class Constructor.
    *
-   * @param {cards.AggregateCard} options The chip options.
+   * @param {cards.AggregateCardOptions} options The chip options.
    */
   constructor(options: cards.AggregateCardOptions) {
     super(options.entity);

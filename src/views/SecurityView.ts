@@ -11,7 +11,7 @@ import { views } from "../types/strategy/views";
 import { ChipsCardConfig } from "../types/lovelace-mushroom/cards/chips-card";
 import { TemplateCardConfig } from "../types/lovelace-mushroom/cards/template-card-config";
 import { LovelaceChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
-import { SECURITY_EXPOSED_CHIPS } from "../variables";
+import { SECURITY_EXPOSED_CHIPS, SECURITY_SENSORS } from "../variables";
 import { GroupedCard } from "../cards/GroupedCard";
 
 /**
@@ -88,7 +88,7 @@ class SecurityView {
       }
     }
 
-    const homeChips = await createChipsFromList(SECURITY_EXPOSED_CHIPS, { show_content: true });
+    const homeChips = await createChipsFromList([...SECURITY_EXPOSED_CHIPS, ...SECURITY_SENSORS], { show_content: true });
     if (homeChips) {
       chips.push(...homeChips);
     }
@@ -144,35 +144,26 @@ class SecurityView {
       }
     }
 
-    const globalDevice = Helper.magicAreasDevices["global"];
-
-    const {
-      aggregate_motion,
-      aggregate_door,
-      aggregate_window,
-    } = globalDevice?.entities ?? {};
-
-    if (aggregate_motion || aggregate_door || aggregate_window) {
+    const securityCards = await createCardsFromList(SECURITY_EXPOSED_CHIPS, {}, "global");
+    if (securityCards) {
       globalSection.cards.push(
         {
           type: "heading",
-          heading: Helper.localize("component.sensor.entity_component._.name") + "s",
+          heading: Helper.localize("ui.components.device-picker.device") + "s",
           heading_style: "subtitle",
-        })
-      if (aggregate_motion?.entity_id) globalSection.cards.push(new BinarySensorCard(aggregate_motion, { tap_action: navigateTo('security-details') }).getCard());
-      if (aggregate_door?.entity_id) globalSection.cards.push(new BinarySensorCard(aggregate_door, { tap_action: navigateTo('security-details') }).getCard());
-      if (aggregate_window?.entity_id) globalSection.cards.push(new BinarySensorCard(aggregate_window, { tap_action: navigateTo('security-details') }).getCard());
+        });
+      globalSection.cards.push(...securityCards);
     }
 
-    const securityCards = await createCardsFromList(SECURITY_EXPOSED_CHIPS, {}, "global");
-    if (securityCards) {
+    const sensorCards = await createCardsFromList(SECURITY_SENSORS, {}, "global");
+    if (sensorCards) {
       globalSection.cards.push(
         {
           type: "heading",
           heading: Helper.localize("component.sensor.entity_component._.name") + "s",
           heading_style: "subtitle",
         });
-      globalSection.cards.push(...securityCards);
+      globalSection.cards.push(...sensorCards);
     }
 
 

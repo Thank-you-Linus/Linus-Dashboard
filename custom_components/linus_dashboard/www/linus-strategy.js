@@ -8079,7 +8079,7 @@ async function createItemsFromList(itemList, itemOptions, magic_device_id = "glo
             let item;
             try {
                 itemModule = await __webpack_require__("./src lazy recursive ^\\.\\/.*\\/.*$")(`./${isChip ? "chips" : "cards"}/${className}`);
-                item = new itemModule[className]({ ...itemOptions, area_slug });
+                item = new itemModule[className]({ ...itemOptions, magic_device_id, area_slug });
             }
             catch {
                 let domain = itemType;

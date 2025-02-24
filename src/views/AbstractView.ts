@@ -6,7 +6,7 @@ import { LovelaceCardConfig, LovelaceSectionConfig, LovelaceViewConfig } from ".
 import { HassServiceTarget } from "home-assistant-js-websocket";
 import { TemplateCardConfig } from '../types/lovelace-mushroom/cards/template-card-config';
 import { ChipsCardConfig } from '../types/lovelace-mushroom/cards/chips-card';
-import { processFloorsAndAreas } from '../utils';
+import { processEntitiesForView } from '../utils';
 import { views } from '../types/strategy/views';
 
 /**
@@ -97,17 +97,7 @@ abstract class AbstractView {
    * @override
    */
   async createSectionCards(): Promise<LovelaceGridCardConfig[]> {
-    return processFloorsAndAreas(this.#domain, this.#device_class, async (entities, area, domain) => {
-      const className = Helper.sanitizeClassName(domain + "Card");
-      const cardModule = await import(`../cards/${className}`);
-      const configEntityHidden = Helper.strategyOptions.domains[domain]?.hide_config_entities || Helper.strategyOptions.domains["_"].hide_config_entities;
-
-      return entities
-        .filter(entity => !Helper.strategyOptions.card_options?.[entity.entity_id]?.hidden
-          && !Helper.strategyOptions.card_options?.[entity.device_id ?? "null"]?.hidden
-          && !(entity.entity_category === "config" && configEntityHidden))
-        .map(entity => new cardModule[className](entity).getCard());
-    }, this.viewControllerCard);
+    return processEntitiesForView(this.#domain, this.#device_class, this.viewControllerCard);
   }
 
   /**

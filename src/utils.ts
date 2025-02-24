@@ -11,6 +11,9 @@ import { chips } from "./types/strategy/chips";
 import { ControllerCard } from "./cards/ControllerCard";
 import { GroupedCard } from "./cards/GroupedCard";
 import { LovelaceGridCardConfig } from "./types/homeassistant/lovelace/cards/types";
+import { ResourceKeys } from "./types/homeassistant/data/frontend";
+import { EntityCardConfig } from "./types/lovelace-mushroom/cards/entity-card-config";
+import { ImageAreaCard } from "./cards/ImageAreaCard";
 
 /**
  * Mémoïse une fonction pour éviter les calculs répétitifs.
@@ -447,4 +450,220 @@ export async function processFloorsAndAreas(
     }
 
     return viewSections;
+}
+
+/**
+ * Process entities for a view based on domain and device class.
+ * @param {string} domain - The domain of the entities.
+ * @param {string} [device_class] - The device class of the entities.
+ * @param {LovelaceCardConfig[]} viewControllerCard - Array of view controller cards.
+ * @returns {Promise<LovelaceGridCardConfig[]>} - Promise resolving to an array of view sections.
+ */
+export async function processEntitiesForView(
+    domain: string,
+    device_class: string | undefined,
+    viewControllerCard: LovelaceCardConfig[]
+): Promise<LovelaceGridCardConfig[]> {
+    return processFloorsAndAreas(domain, device_class, processEntities, viewControllerCard);
+}
+
+/**
+ * Process entities for an area or floor view.
+ * @param {object} params - The parameters object.
+ * @param {StrategyArea} [params.area] - The area to process entities for.
+ * @param {StrategyFloor} [params.floor] - The floor to process entities for.
+ * @returns {Promise<LovelaceGridCardConfig[]>} - Promise resolving to an array of view sections.
+ */
+export async function processEntitiesForAreaOrFloorView({
+    area,
+    floor,
+}: {
+    area?: StrategyArea;
+    floor?: StrategyFloor;
+}): Promise<LovelaceGridCardConfig[]> {
+    const viewSections: LovelaceGridCardConfig[] = [];
+    const exposedDomainIds = Helper.getExposedDomainIds();
+    const isFloorView = !!floor;
+
+    const areas = isFloorView ? floor!.areas_slug.map(slug => Helper.areas[slug]) : [area!];
+
+    const domainCardsMap: Record<string, EntityCardConfig[]> = {};
+    const miscellaneousEntities: string[] = [];
+
+    for (const area of areas) {
+        // Create global section card if area is not undisclosed
+        if (!isFloorView && area.area_id !== UNDISCLOSED && area.picture) {
+            viewSections.push({
+                type: "grid",
+                column_span: 1,
+                cards: [new ImageAreaCard(area.area_id).getCard()],
+            });
+        }
+
+        for (const domain of exposedDomainIds) {
+            if (Helper.linus_dashboard_config?.excluded_domains?.includes(domain)) continue;
+            if (Helper.linus_dashboard_config?.excluded_device_classes?.includes(domain)) continue;
+            if (domain === "default") continue;
+
+            try {
+                const cardModule = await import(`./cards/${Helper.sanitizeClassName(domain + "Card")}`);
+                let entities = Helper.getAreaEntities(area, domain);
+                const configEntityHidden = Helper.strategyOptions.domains[domain]?.hide_config_entities || Helper.strategyOptions.domains["_"].hide_config_entities;
+
+                if (entities.length) {
+                    if (!domainCardsMap[domain]) {
+                        domainCardsMap[domain] = [];
+
+                        if (isFloorView) {
+                            const floorTitleCardOptions = {
+                                ...Helper.strategyOptions.domains[domain].controllerCardOptions,
+                                title: Helper.localize(getDomainTranslationKey(domain)),
+                                domain,
+                                titleIcon: Helper.icons[domain as ResourceKeys]._?.default,
+                                titleNavigate: domain,
+                            };
+
+                            if (domain) {
+                                if (AGGREGATE_DOMAINS.includes(domain)) {
+                                    floorTitleCardOptions.showControls = false;
+                                } else {
+                                    floorTitleCardOptions.showControls = Helper.strategyOptions.domains[domain].showControls;
+                                    floorTitleCardOptions.extraControls = Helper.strategyOptions.domains[domain].extraControls;
+                                    floorTitleCardOptions.controlChipOptions = { area_slug: area.slug };
+                                }
+                            }
+
+                            const floorTitleCard = new ControllerCard(floorTitleCardOptions, domain, area.slug).createCard();
+                            domainCardsMap[domain].push(...floorTitleCard);
+                        }
+                    }
+
+                    const titleCardOptions = {
+                        ...Helper.strategyOptions.domains[domain].controllerCardOptions,
+                        subtitle: isFloorView ? area.name : Helper.localize(getDomainTranslationKey(domain)),
+                        subtitleIcon: isFloorView ? area.icon : Helper.icons[domain as ResourceKeys]._?.default,
+                        domain,
+                        subtitleNavigate: domain,
+                    };
+
+                    if (domain) {
+                        if (AGGREGATE_DOMAINS.includes(domain)) {
+                            titleCardOptions.showControls = false;
+                        } else {
+                            titleCardOptions.showControls = Helper.strategyOptions.domains[domain].showControls;
+                            titleCardOptions.extraControls = Helper.strategyOptions.domains[domain].extraControls;
+                            titleCardOptions.controlChipOptions = { area_slug: area.slug };
+                        }
+                    }
+
+                    const titleCard = new ControllerCard(titleCardOptions, domain, area.slug).createCard();
+
+                    if (domain === "light") entities = addLightGroupsToEntities(area, entities);
+
+                    const entityCards = entities
+                        .filter(entity => {
+                            const cardOptions = Helper.strategyOptions.card_options?.[entity.entity_id];
+                            const deviceOptions = Helper.strategyOptions.card_options?.[entity.device_id ?? "null"];
+                            return !cardOptions?.hidden && !deviceOptions?.hidden && !(entity.entity_category === "config" && configEntityHidden);
+                        })
+                        .map(entity => {
+                            const cardOptions = Helper.strategyOptions.card_options?.[entity.entity_id];
+                            if (domain === "sensor" && Helper.getEntityState(entity.entity_id)?.attributes.unit_of_measurement) {
+                                return new cardModule[Helper.sanitizeClassName(domain + "Card")](entity, {
+                                    type: "custom:mini-graph-card",
+                                    entities: [entity.entity_id],
+                                    ...cardOptions,
+                                }).getCard();
+                            }
+                            return new cardModule[Helper.sanitizeClassName(domain + "Card")](entity, cardOptions).getCard();
+                        });
+
+                    if (entityCards.length) {
+                        domainCardsMap[domain].push(...titleCard);
+                        domainCardsMap[domain].push(new GroupedCard(entityCards).getCard());
+                    }
+                }
+            } catch (e) {
+                Helper.logError("An error occurred while creating the domain cards!", e);
+            }
+        }
+
+        const areaDevices = area.devices.filter(device_id => Helper.devices[device_id].area_id === area.area_id);
+        const areaEntities = area.entities.filter(entity_id => {
+            const entity = Helper.entities[entity_id];
+            const entityLinked = areaDevices.includes(entity.device_id ?? "null") || entity.area_id === area.area_id;
+            const entityUnhidden = entity.hidden_by === null && entity.disabled_by === null;
+            const domainExposed = exposedDomainIds.includes(entity.entity_id.split(".", 1)[0]);
+
+            return entityUnhidden && !domainExposed && entityLinked;
+        });
+
+        miscellaneousEntities.push(...areaEntities);
+    }
+
+    for (const domain in domainCardsMap) {
+        viewSections.push({
+            type: "grid",
+            column_span: 1,
+            cards: domainCardsMap[domain],
+        });
+    }
+
+    // Handle default domain if not hidden
+    if (!Helper.strategyOptions.domains.default.hidden && miscellaneousEntities.length) {
+        try {
+            const cardModule = await import("./cards/MiscellaneousCard");
+
+            const miscellaneousEntityCards = miscellaneousEntities
+                .filter(entity_id => {
+                    const entity = Helper.entities[entity_id];
+                    const cardOptions = Helper.strategyOptions.card_options?.[entity.entity_id];
+                    const deviceOptions = Helper.strategyOptions.card_options?.[entity.device_id ?? "null"];
+                    return !cardOptions?.hidden && !deviceOptions?.hidden && !(entity.entity_category === "config" && Helper.strategyOptions.domains["_"].hide_config_entities);
+                })
+                .map(entity_id => new cardModule.MiscellaneousCard(Helper.entities[entity_id], Helper.strategyOptions.card_options?.[entity_id]).getCard());
+
+            const miscellaneousCards = new GroupedCard(miscellaneousEntityCards).getCard();
+
+            const titleCard = {
+                type: "heading",
+                heading: Helper.localize("ui.panel.lovelace.editor.card.generic.other_cards"),
+                heading_style: "subtitle",
+                badges: [],
+                layout_options: {
+                    grid_columns: "full",
+                    grid_rows: 1,
+                },
+            };
+
+            viewSections.push({
+                type: "grid",
+                column_span: 1,
+                cards: [titleCard, miscellaneousCards],
+            });
+        } catch (e) {
+            Helper.logError("An error occurred while creating the domain cards!", e);
+        }
+    }
+
+    return viewSections;
+}
+
+/**
+ * Process entities for a view.
+ * @param {any[]} entities - The entities to process.
+ * @param {any} area - The area of the entities.
+ * @param {string} domain - The domain of the entities.
+ * @returns {Promise<any[]>} - Promise resolving to an array of cards.
+ */
+async function processEntities(entities: any[], area: any, domain: string): Promise<any[]> {
+    const className = Helper.sanitizeClassName(domain + "Card");
+    const cardModule = await import(`./cards/${className}`);
+    const configEntityHidden = Helper.strategyOptions.domains[domain]?.hide_config_entities || Helper.strategyOptions.domains["_"].hide_config_entities;
+
+    return entities
+        .filter(entity => !Helper.strategyOptions.card_options?.[entity.entity_id]?.hidden
+            && !Helper.strategyOptions.card_options?.[entity.device_id ?? "null"]?.hidden
+            && !(entity.entity_category === "config" && configEntityHidden))
+        .map(entity => new cardModule[className](entity).getCard());
 }

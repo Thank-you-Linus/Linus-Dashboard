@@ -1185,7 +1185,7 @@ class AggregateCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractC
     /**
      * Class Constructor.
      *
-     * @param {cards.AggregateCard} options The chip options.
+     * @param {cards.AggregateCardOptions} options The chip options.
      */
     constructor(options) {
         super(options.entity);
@@ -1831,7 +1831,7 @@ class CoverCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractCard 
             __classPrivateFieldGet(this, _CoverCard_defaultConfig, "f").entity = magicAreasEntity.entity_id;
         }
         else {
-            __classPrivateFieldSet(this, _CoverCard_defaultConfig, new _AggregateCard__WEBPACK_IMPORTED_MODULE_2__.AggregateCard({ domain: "cover", device_class: "shutter" }).config, "f");
+            __classPrivateFieldSet(this, _CoverCard_defaultConfig, new _AggregateCard__WEBPACK_IMPORTED_MODULE_2__.AggregateCard({ domain: "cover", device_class: "shutter", tap_action: (0,_utils__WEBPACK_IMPORTED_MODULE_1__.navigateTo)("cover") }).config, "f");
         }
         this.config = Object.assign(this.config, __classPrivateFieldGet(this, _CoverCard_defaultConfig, "f"), options);
     }
@@ -7887,6 +7887,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   groupBy: () => (/* binding */ groupBy),
 /* harmony export */   groupEntitiesByDomain: () => (/* binding */ groupEntitiesByDomain),
 /* harmony export */   navigateTo: () => (/* binding */ navigateTo),
+/* harmony export */   processEntitiesForAreaOrFloorView: () => (/* binding */ processEntitiesForAreaOrFloorView),
+/* harmony export */   processEntitiesForView: () => (/* binding */ processEntitiesForView),
 /* harmony export */   processFloorsAndAreas: () => (/* binding */ processFloorsAndAreas),
 /* harmony export */   slugify: () => (/* binding */ slugify)
 /* harmony export */ });
@@ -7894,6 +7896,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _variables__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./variables */ "./src/variables.ts");
 /* harmony import */ var _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./cards/ControllerCard */ "./src/cards/ControllerCard.ts");
 /* harmony import */ var _cards_GroupedCard__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./cards/GroupedCard */ "./src/cards/GroupedCard.ts");
+/* harmony import */ var _cards_ImageAreaCard__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./cards/ImageAreaCard */ "./src/cards/ImageAreaCard.ts");
+
 
 
 
@@ -8290,6 +8294,191 @@ async function processFloorsAndAreas(domain, device_class, processEntities, view
     }
     return viewSections;
 }
+/**
+ * Process entities for a view based on domain and device class.
+ * @param {string} domain - The domain of the entities.
+ * @param {string} [device_class] - The device class of the entities.
+ * @param {LovelaceCardConfig[]} viewControllerCard - Array of view controller cards.
+ * @returns {Promise<LovelaceGridCardConfig[]>} - Promise resolving to an array of view sections.
+ */
+async function processEntitiesForView(domain, device_class, viewControllerCard) {
+    return processFloorsAndAreas(domain, device_class, processEntities, viewControllerCard);
+}
+/**
+ * Process entities for an area or floor view.
+ * @param {object} params - The parameters object.
+ * @param {StrategyArea} [params.area] - The area to process entities for.
+ * @param {StrategyFloor} [params.floor] - The floor to process entities for.
+ * @returns {Promise<LovelaceGridCardConfig[]>} - Promise resolving to an array of view sections.
+ */
+async function processEntitiesForAreaOrFloorView({ area, floor, }) {
+    const viewSections = [];
+    const exposedDomainIds = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getExposedDomainIds();
+    const isFloorView = !!floor;
+    const areas = isFloorView ? floor.areas_slug.map(slug => _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas[slug]) : [area];
+    const domainCardsMap = {};
+    const miscellaneousEntities = [];
+    for (const area of areas) {
+        // Create global section card if area is not undisclosed
+        if (!isFloorView && area.area_id !== _variables__WEBPACK_IMPORTED_MODULE_1__.UNDISCLOSED && area.picture) {
+            viewSections.push({
+                type: "grid",
+                column_span: 1,
+                cards: [new _cards_ImageAreaCard__WEBPACK_IMPORTED_MODULE_4__.ImageAreaCard(area.area_id).getCard()],
+            });
+        }
+        for (const domain of exposedDomainIds) {
+            if (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.linus_dashboard_config?.excluded_domains?.includes(domain))
+                continue;
+            if (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.linus_dashboard_config?.excluded_device_classes?.includes(domain))
+                continue;
+            if (domain === "default")
+                continue;
+            try {
+                const cardModule = await __webpack_require__("./src/cards lazy recursive ^\\.\\/.*$")(`./${_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.sanitizeClassName(domain + "Card")}`);
+                let entities = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getAreaEntities(area, domain);
+                const configEntityHidden = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain]?.hide_config_entities || _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains["_"].hide_config_entities;
+                if (entities.length) {
+                    if (!domainCardsMap[domain]) {
+                        domainCardsMap[domain] = [];
+                        if (isFloorView) {
+                            const floorTitleCardOptions = {
+                                ..._Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain].controllerCardOptions,
+                                title: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize(getDomainTranslationKey(domain)),
+                                domain,
+                                titleIcon: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.icons[domain]._?.default,
+                                titleNavigate: domain,
+                            };
+                            if (domain) {
+                                if (_variables__WEBPACK_IMPORTED_MODULE_1__.AGGREGATE_DOMAINS.includes(domain)) {
+                                    floorTitleCardOptions.showControls = false;
+                                }
+                                else {
+                                    floorTitleCardOptions.showControls = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain].showControls;
+                                    floorTitleCardOptions.extraControls = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain].extraControls;
+                                    floorTitleCardOptions.controlChipOptions = { area_slug: area.slug };
+                                }
+                            }
+                            const floorTitleCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_2__.ControllerCard(floorTitleCardOptions, domain, area.slug).createCard();
+                            domainCardsMap[domain].push(...floorTitleCard);
+                        }
+                    }
+                    const titleCardOptions = {
+                        ..._Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain].controllerCardOptions,
+                        subtitle: isFloorView ? area.name : _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize(getDomainTranslationKey(domain)),
+                        subtitleIcon: isFloorView ? area.icon : _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.icons[domain]._?.default,
+                        domain,
+                        subtitleNavigate: domain,
+                    };
+                    if (domain) {
+                        if (_variables__WEBPACK_IMPORTED_MODULE_1__.AGGREGATE_DOMAINS.includes(domain)) {
+                            titleCardOptions.showControls = false;
+                        }
+                        else {
+                            titleCardOptions.showControls = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain].showControls;
+                            titleCardOptions.extraControls = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain].extraControls;
+                            titleCardOptions.controlChipOptions = { area_slug: area.slug };
+                        }
+                    }
+                    const titleCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_2__.ControllerCard(titleCardOptions, domain, area.slug).createCard();
+                    if (domain === "light")
+                        entities = addLightGroupsToEntities(area, entities);
+                    const entityCards = entities
+                        .filter(entity => {
+                        const cardOptions = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.card_options?.[entity.entity_id];
+                        const deviceOptions = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.card_options?.[entity.device_id ?? "null"];
+                        return !cardOptions?.hidden && !deviceOptions?.hidden && !(entity.entity_category === "config" && configEntityHidden);
+                    })
+                        .map(entity => {
+                        const cardOptions = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.card_options?.[entity.entity_id];
+                        if (domain === "sensor" && _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getEntityState(entity.entity_id)?.attributes.unit_of_measurement) {
+                            return new cardModule[_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.sanitizeClassName(domain + "Card")](entity, {
+                                type: "custom:mini-graph-card",
+                                entities: [entity.entity_id],
+                                ...cardOptions,
+                            }).getCard();
+                        }
+                        return new cardModule[_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.sanitizeClassName(domain + "Card")](entity, cardOptions).getCard();
+                    });
+                    if (entityCards.length) {
+                        domainCardsMap[domain].push(...titleCard);
+                        domainCardsMap[domain].push(new _cards_GroupedCard__WEBPACK_IMPORTED_MODULE_3__.GroupedCard(entityCards).getCard());
+                    }
+                }
+            }
+            catch (e) {
+                _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.logError("An error occurred while creating the domain cards!", e);
+            }
+        }
+        const areaDevices = area.devices.filter(device_id => _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.devices[device_id].area_id === area.area_id);
+        const areaEntities = area.entities.filter(entity_id => {
+            const entity = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.entities[entity_id];
+            const entityLinked = areaDevices.includes(entity.device_id ?? "null") || entity.area_id === area.area_id;
+            const entityUnhidden = entity.hidden_by === null && entity.disabled_by === null;
+            const domainExposed = exposedDomainIds.includes(entity.entity_id.split(".", 1)[0]);
+            return entityUnhidden && !domainExposed && entityLinked;
+        });
+        miscellaneousEntities.push(...areaEntities);
+    }
+    for (const domain in domainCardsMap) {
+        viewSections.push({
+            type: "grid",
+            column_span: 1,
+            cards: domainCardsMap[domain],
+        });
+    }
+    // Handle default domain if not hidden
+    if (!_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains.default.hidden && miscellaneousEntities.length) {
+        try {
+            const cardModule = await Promise.resolve(/*! import() */).then(__webpack_require__.bind(__webpack_require__, /*! ./cards/MiscellaneousCard */ "./src/cards/MiscellaneousCard.ts"));
+            const miscellaneousEntityCards = miscellaneousEntities
+                .filter(entity_id => {
+                const entity = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.entities[entity_id];
+                const cardOptions = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.card_options?.[entity.entity_id];
+                const deviceOptions = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.card_options?.[entity.device_id ?? "null"];
+                return !cardOptions?.hidden && !deviceOptions?.hidden && !(entity.entity_category === "config" && _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains["_"].hide_config_entities);
+            })
+                .map(entity_id => new cardModule.MiscellaneousCard(_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.entities[entity_id], _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.card_options?.[entity_id]).getCard());
+            const miscellaneousCards = new _cards_GroupedCard__WEBPACK_IMPORTED_MODULE_3__.GroupedCard(miscellaneousEntityCards).getCard();
+            const titleCard = {
+                type: "heading",
+                heading: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("ui.panel.lovelace.editor.card.generic.other_cards"),
+                heading_style: "subtitle",
+                badges: [],
+                layout_options: {
+                    grid_columns: "full",
+                    grid_rows: 1,
+                },
+            };
+            viewSections.push({
+                type: "grid",
+                column_span: 1,
+                cards: [titleCard, miscellaneousCards],
+            });
+        }
+        catch (e) {
+            _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.logError("An error occurred while creating the domain cards!", e);
+        }
+    }
+    return viewSections;
+}
+/**
+ * Process entities for a view.
+ * @param {any[]} entities - The entities to process.
+ * @param {any} area - The area of the entities.
+ * @param {string} domain - The domain of the entities.
+ * @returns {Promise<any[]>} - Promise resolving to an array of cards.
+ */
+async function processEntities(entities, area, domain) {
+    const className = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.sanitizeClassName(domain + "Card");
+    const cardModule = await __webpack_require__("./src/cards lazy recursive ^\\.\\/.*$")(`./${className}`);
+    const configEntityHidden = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain]?.hide_config_entities || _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains["_"].hide_config_entities;
+    return entities
+        .filter(entity => !_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.card_options?.[entity.entity_id]?.hidden
+        && !_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.card_options?.[entity.device_id ?? "null"]?.hidden
+        && !(entity.entity_category === "config" && configEntityHidden))
+        .map(entity => new cardModule[className](entity).getCard());
+}
 
 
 /***/ }),
@@ -8319,6 +8508,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   MAGIC_AREAS_DOMAIN: () => (/* binding */ MAGIC_AREAS_DOMAIN),
 /* harmony export */   MAGIC_AREAS_NAME: () => (/* binding */ MAGIC_AREAS_NAME),
 /* harmony export */   SECURITY_EXPOSED_CHIPS: () => (/* binding */ SECURITY_EXPOSED_CHIPS),
+/* harmony export */   SECURITY_SENSORS: () => (/* binding */ SECURITY_SENSORS),
 /* harmony export */   SENSOR_STATE_CLASS_MEASUREMENT: () => (/* binding */ SENSOR_STATE_CLASS_MEASUREMENT),
 /* harmony export */   SENSOR_STATE_CLASS_TOTAL: () => (/* binding */ SENSOR_STATE_CLASS_TOTAL),
 /* harmony export */   SENSOR_STATE_CLASS_TOTAL_INCREASING: () => (/* binding */ SENSOR_STATE_CLASS_TOTAL_INCREASING),
@@ -8428,7 +8618,8 @@ const CUSTOM_VIEWS = ["home", "security", "security-details"];
 const DOMAINS_VIEWS = [...AREA_CARDS_DOMAINS, ...DEVICE_CLASSES.binary_sensor, ...DEVICE_CLASSES.sensor];
 const HOME_EXPOSED_CHIPS = ["weather", "alarm", "spotify", LIGHT_DOMAIN, ...GROUP_DOMAINS, "fan", "switch", "safety", "motion", "occupancy", "door", "window"];
 const AREA_EXPOSED_CHIPS = [LIGHT_DOMAIN, ...GROUP_DOMAINS, "fan", "switch", "safety", ...DEVICE_CLASSES.binary_sensor, ...DEVICE_CLASSES.sensor];
-const SECURITY_EXPOSED_CHIPS = ["alarm", "safety", "motion", "occupancy", "door", "window", "cover", "lock"];
+const SECURITY_EXPOSED_CHIPS = ["alarm", "safety", "cover", "lock"];
+const SECURITY_SENSORS = ["motion", "occupancy", "door", "window"];
 const DEVICE_ICONS = {
     presence_hold: 'mdi:car-brake-hold'
 };
@@ -8593,16 +8784,7 @@ class AbstractView {
      * @override
      */
     async createSectionCards() {
-        return (0,_utils__WEBPACK_IMPORTED_MODULE_1__.processFloorsAndAreas)(__classPrivateFieldGet(this, _AbstractView_domain, "f"), __classPrivateFieldGet(this, _AbstractView_device_class, "f"), async (entities, area, domain) => {
-            const className = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.sanitizeClassName(domain + "Card");
-            const cardModule = await __webpack_require__("./src/cards lazy recursive ^\\.\\/.*$")(`./${className}`);
-            const configEntityHidden = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain]?.hide_config_entities || _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains["_"].hide_config_entities;
-            return entities
-                .filter(entity => !_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.card_options?.[entity.entity_id]?.hidden
-                && !_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.card_options?.[entity.device_id ?? "null"]?.hidden
-                && !(entity.entity_category === "config" && configEntityHidden))
-                .map(entity => new cardModule[className](entity).getCard());
-        }, this.viewControllerCard);
+        return (0,_utils__WEBPACK_IMPORTED_MODULE_1__.processEntitiesForView)(__classPrivateFieldGet(this, _AbstractView_domain, "f"), __classPrivateFieldGet(this, _AbstractView_device_class, "f"), this.viewControllerCard);
     }
     /**
      * Get a view object.
@@ -8702,16 +8884,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   AreaView: () => (/* binding */ AreaView)
 /* harmony export */ });
 /* harmony import */ var _Helper__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../Helper */ "./src/Helper.ts");
-/* harmony import */ var _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../cards/ControllerCard */ "./src/cards/ControllerCard.ts");
-/* harmony import */ var _cards_ImageAreaCard__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../cards/ImageAreaCard */ "./src/cards/ImageAreaCard.ts");
-/* harmony import */ var _variables__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../variables */ "./src/variables.ts");
-/* harmony import */ var _chips_AreaStateChip__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../chips/AreaStateChip */ "./src/chips/AreaStateChip.ts");
-/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../utils */ "./src/utils.ts");
-/* harmony import */ var _chips_UnavailableChip__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../chips/UnavailableChip */ "./src/chips/UnavailableChip.ts");
-/* harmony import */ var _cards_GroupedCard__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../cards/GroupedCard */ "./src/cards/GroupedCard.ts");
-
-
-
+/* harmony import */ var _variables__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../variables */ "./src/variables.ts");
+/* harmony import */ var _chips_AreaStateChip__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../chips/AreaStateChip */ "./src/chips/AreaStateChip.ts");
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../utils */ "./src/utils.ts");
+/* harmony import */ var _chips_UnavailableChip__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../chips/UnavailableChip */ "./src/chips/UnavailableChip.ts");
 
 
 
@@ -8758,12 +8934,12 @@ class AreaView {
             return [];
         }
         const chips = [];
-        chips.push(new _chips_AreaStateChip__WEBPACK_IMPORTED_MODULE_4__.AreaStateChip({ area: this.area, showContent: true }).getChip());
-        const areaChips = await (0,_utils__WEBPACK_IMPORTED_MODULE_5__.createChipsFromList)(_variables__WEBPACK_IMPORTED_MODULE_3__.AREA_EXPOSED_CHIPS, { show_content: true }, this.area.slug, this.area.slug);
+        chips.push(new _chips_AreaStateChip__WEBPACK_IMPORTED_MODULE_2__.AreaStateChip({ area: this.area, showContent: true }).getChip());
+        const areaChips = await (0,_utils__WEBPACK_IMPORTED_MODULE_3__.createChipsFromList)(_variables__WEBPACK_IMPORTED_MODULE_1__.AREA_EXPOSED_CHIPS, { show_content: true }, this.area.slug, this.area.slug);
         if (areaChips) {
             chips.push(...areaChips);
         }
-        const unavailableChip = new _chips_UnavailableChip__WEBPACK_IMPORTED_MODULE_6__.UnavailableChip({ area_slug: this.area.slug }).getChip();
+        const unavailableChip = new _chips_UnavailableChip__WEBPACK_IMPORTED_MODULE_4__.UnavailableChip({ area_slug: this.area.slug }).getChip();
         if (unavailableChip)
             chips.push(unavailableChip);
         return chips.map(chip => ({
@@ -8779,126 +8955,7 @@ class AreaView {
      * @override
      */
     async createSectionCards() {
-        const viewSections = [];
-        const exposedDomainIds = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getExposedDomainIds();
-        // Create global section card if area is not undisclosed
-        if (this.area.area_id !== _variables__WEBPACK_IMPORTED_MODULE_3__.UNDISCLOSED && this.area.picture) {
-            viewSections.push({
-                type: "grid",
-                column_span: 1,
-                cards: [new _cards_ImageAreaCard__WEBPACK_IMPORTED_MODULE_2__.ImageAreaCard(this.area.area_id).getCard()],
-            });
-        }
-        for (const domain of exposedDomainIds) {
-            if (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.linus_dashboard_config?.excluded_domains?.includes(domain))
-                continue;
-            if (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.linus_dashboard_config?.excluded_device_classes?.includes(domain))
-                continue;
-            if (domain === "default")
-                continue;
-            try {
-                const cardModule = await __webpack_require__("./src/cards lazy recursive ^\\.\\/.*$")(`./${_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.sanitizeClassName(domain + "Card")}`);
-                let entities = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getAreaEntities(this.area, domain);
-                const configEntityHidden = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain]?.hide_config_entities || _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains["_"].hide_config_entities;
-                const domainCards = [];
-                if (entities.length) {
-                    const titleCardOptions = {
-                        ..._Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain].controllerCardOptions,
-                        subtitle: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize((0,_utils__WEBPACK_IMPORTED_MODULE_5__.getDomainTranslationKey)(domain)),
-                        domain,
-                        subtitleIcon: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.icons[domain]._?.default,
-                        subtitleNavigate: domain,
-                    };
-                    if (domain) {
-                        if (_variables__WEBPACK_IMPORTED_MODULE_3__.AGGREGATE_DOMAINS.includes(domain)) {
-                            titleCardOptions.showControls = false;
-                        }
-                        else {
-                            titleCardOptions.showControls = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain].showControls;
-                            titleCardOptions.extraControls = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain].extraControls;
-                            titleCardOptions.controlChipOptions = { area_slug: this.area.slug };
-                        }
-                    }
-                    const titleCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_1__.ControllerCard(titleCardOptions, domain, this.area.slug).createCard();
-                    if (domain === "light")
-                        entities = (0,_utils__WEBPACK_IMPORTED_MODULE_5__.addLightGroupsToEntities)(this.area, entities);
-                    const entityCards = entities
-                        .filter(entity => {
-                        const cardOptions = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.card_options?.[entity.entity_id];
-                        const deviceOptions = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.card_options?.[entity.device_id ?? "null"];
-                        return !cardOptions?.hidden && !deviceOptions?.hidden && !(entity.entity_category === "config" && configEntityHidden);
-                    })
-                        .map(entity => {
-                        const cardOptions = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.card_options?.[entity.entity_id];
-                        if (domain === "sensor" && _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getEntityState(entity.entity_id)?.attributes.unit_of_measurement) {
-                            return new cardModule[_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.sanitizeClassName(domain + "Card")](entity, {
-                                type: "custom:mini-graph-card",
-                                entities: [entity.entity_id],
-                                ...cardOptions,
-                            }).getCard();
-                        }
-                        return new cardModule[_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.sanitizeClassName(domain + "Card")](entity, cardOptions).getCard();
-                    });
-                    if (entityCards.length) {
-                        domainCards.push(new _cards_GroupedCard__WEBPACK_IMPORTED_MODULE_7__.GroupedCard(entityCards).getCard());
-                        domainCards.unshift(...titleCard);
-                    }
-                    viewSections.push({
-                        type: "grid",
-                        column_span: 1,
-                        cards: domainCards,
-                    });
-                }
-            }
-            catch (e) {
-                _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.logError("An error occurred while creating the domain cards!", e);
-            }
-        }
-        // Handle default domain if not hidden
-        if (!_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains.default.hidden) {
-            const areaDevices = this.area.devices.filter(device_id => _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.devices[device_id].area_id === this.area.area_id);
-            const miscellaneousEntities = this.area.entities.filter(entity_id => {
-                const entity = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.entities[entity_id];
-                const entityLinked = areaDevices.includes(entity.device_id ?? "null") || entity.area_id === this.area.area_id;
-                const entityUnhidden = entity.hidden_by === null && entity.disabled_by === null;
-                const domainExposed = exposedDomainIds.includes(entity.entity_id.split(".", 1)[0]);
-                return entityUnhidden && !domainExposed && entityLinked;
-            });
-            if (miscellaneousEntities.length) {
-                try {
-                    const cardModule = await Promise.resolve(/*! import() */).then(__webpack_require__.bind(__webpack_require__, /*! ../cards/MiscellaneousCard */ "./src/cards/MiscellaneousCard.ts"));
-                    const miscellaneousEntityCards = miscellaneousEntities
-                        .filter(entity_id => {
-                        const entity = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.entities[entity_id];
-                        const cardOptions = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.card_options?.[entity.entity_id];
-                        const deviceOptions = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.card_options?.[entity.device_id ?? "null"];
-                        return !cardOptions?.hidden && !deviceOptions?.hidden && !(entity.entity_category === "config" && _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains["_"].hide_config_entities);
-                    })
-                        .map(entity_id => new cardModule.MiscellaneousCard(_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.entities[entity_id], _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.card_options?.[entity_id]).getCard());
-                    const miscellaneousCards = new _cards_GroupedCard__WEBPACK_IMPORTED_MODULE_7__.GroupedCard(miscellaneousEntityCards).getCard();
-                    const titleCard = {
-                        type: "heading",
-                        heading: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("ui.panel.lovelace.editor.card.generic.other_cards"),
-                        // icon: this.#defaultConfig.titleIcon,
-                        heading_style: "subtitle",
-                        badges: [],
-                        layout_options: {
-                            grid_columns: "full",
-                            grid_rows: 1
-                        },
-                    };
-                    viewSections.push({
-                        type: "grid",
-                        column_span: 1,
-                        cards: [titleCard, miscellaneousCards],
-                    });
-                }
-                catch (e) {
-                    _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.logError("An error occurred while creating the domain cards!", e);
-                }
-            }
-        }
-        return viewSections;
+        return (0,_utils__WEBPACK_IMPORTED_MODULE_3__.processEntitiesForAreaOrFloorView)({ area: this.area });
     }
     /**
      * Get a view object.
@@ -9297,13 +9354,6 @@ class FloorView {
             type: "sections",
             subview: true,
         };
-        /**
-         * View controller card.
-         *
-         * @type {LovelaceGridCardConfig[]}
-         * @private
-         */
-        this.viewControllerCard = [];
         this.floor = floor;
         this.config = { ...this.config, ...options };
     }
@@ -9340,16 +9390,7 @@ class FloorView {
      * @override
      */
     async createSectionCards() {
-        return (0,_utils__WEBPACK_IMPORTED_MODULE_3__.processFloorsAndAreas)(this.floor.floor_id, undefined, async (entities, area, domain) => {
-            const className = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.sanitizeClassName(domain + "Card");
-            const cardModule = await __webpack_require__("./src/cards lazy recursive ^\\.\\/.*$")(`./${className}`);
-            const configEntityHidden = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain]?.hide_config_entities || _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains["_"].hide_config_entities;
-            return entities
-                .filter(entity => !_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.card_options?.[entity.entity_id]?.hidden
-                && !_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.card_options?.[entity.device_id ?? "null"]?.hidden
-                && !(entity.entity_category === "config" && configEntityHidden))
-                .map(entity => new cardModule[className](entity).getCard());
-        }, this.viewControllerCard);
+        return (0,_utils__WEBPACK_IMPORTED_MODULE_3__.processEntitiesForAreaOrFloorView)({ floor: this.floor });
     }
     /**
      * Get a view object.
@@ -10053,12 +10094,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _Helper__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../Helper */ "./src/Helper.ts");
 /* harmony import */ var _cards_AlarmCard__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../cards/AlarmCard */ "./src/cards/AlarmCard.ts");
 /* harmony import */ var _cards_PersonCard__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../cards/PersonCard */ "./src/cards/PersonCard.ts");
-/* harmony import */ var _cards_BinarySensorCard__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../cards/BinarySensorCard */ "./src/cards/BinarySensorCard.ts");
-/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../utils */ "./src/utils.ts");
-/* harmony import */ var _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../cards/ControllerCard */ "./src/cards/ControllerCard.ts");
-/* harmony import */ var _variables__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../variables */ "./src/variables.ts");
-/* harmony import */ var _cards_GroupedCard__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../cards/GroupedCard */ "./src/cards/GroupedCard.ts");
-
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../utils */ "./src/utils.ts");
+/* harmony import */ var _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../cards/ControllerCard */ "./src/cards/ControllerCard.ts");
+/* harmony import */ var _variables__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../variables */ "./src/variables.ts");
+/* harmony import */ var _cards_GroupedCard__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../cards/GroupedCard */ "./src/cards/GroupedCard.ts");
 
 
 
@@ -10128,7 +10167,7 @@ class SecurityView {
                 _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.logError("An error occurred while creating the alarm chip!", e);
             }
         }
-        const homeChips = await (0,_utils__WEBPACK_IMPORTED_MODULE_4__.createChipsFromList)(_variables__WEBPACK_IMPORTED_MODULE_6__.SECURITY_EXPOSED_CHIPS, { show_content: true });
+        const homeChips = await (0,_utils__WEBPACK_IMPORTED_MODULE_3__.createChipsFromList)([..._variables__WEBPACK_IMPORTED_MODULE_5__.SECURITY_EXPOSED_CHIPS, ..._variables__WEBPACK_IMPORTED_MODULE_5__.SECURITY_SENSORS], { show_content: true });
         if (homeChips) {
             chips.push(...homeChips);
         }
@@ -10174,29 +10213,23 @@ class SecurityView {
                 globalSection.cards.push(new _cards_PersonCard__WEBPACK_IMPORTED_MODULE_2__.PersonCard(person).getCard());
             }
         }
-        const globalDevice = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices["global"];
-        const { aggregate_motion, aggregate_door, aggregate_window, } = globalDevice?.entities ?? {};
-        if (aggregate_motion || aggregate_door || aggregate_window) {
-            globalSection.cards.push({
-                type: "heading",
-                heading: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.sensor.entity_component._.name") + "s",
-                heading_style: "subtitle",
-            });
-            if (aggregate_motion?.entity_id)
-                globalSection.cards.push(new _cards_BinarySensorCard__WEBPACK_IMPORTED_MODULE_3__.BinarySensorCard(aggregate_motion, { tap_action: (0,_utils__WEBPACK_IMPORTED_MODULE_4__.navigateTo)('security-details') }).getCard());
-            if (aggregate_door?.entity_id)
-                globalSection.cards.push(new _cards_BinarySensorCard__WEBPACK_IMPORTED_MODULE_3__.BinarySensorCard(aggregate_door, { tap_action: (0,_utils__WEBPACK_IMPORTED_MODULE_4__.navigateTo)('security-details') }).getCard());
-            if (aggregate_window?.entity_id)
-                globalSection.cards.push(new _cards_BinarySensorCard__WEBPACK_IMPORTED_MODULE_3__.BinarySensorCard(aggregate_window, { tap_action: (0,_utils__WEBPACK_IMPORTED_MODULE_4__.navigateTo)('security-details') }).getCard());
-        }
-        const securityCards = await (0,_utils__WEBPACK_IMPORTED_MODULE_4__.createCardsFromList)(_variables__WEBPACK_IMPORTED_MODULE_6__.SECURITY_EXPOSED_CHIPS, {}, "global");
+        const securityCards = await (0,_utils__WEBPACK_IMPORTED_MODULE_3__.createCardsFromList)(_variables__WEBPACK_IMPORTED_MODULE_5__.SECURITY_EXPOSED_CHIPS, {}, "global");
         if (securityCards) {
             globalSection.cards.push({
                 type: "heading",
-                heading: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.sensor.entity_component._.name") + "s",
+                heading: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("ui.components.device-picker.device") + "s",
                 heading_style: "subtitle",
             });
             globalSection.cards.push(...securityCards);
+        }
+        const sensorCards = await (0,_utils__WEBPACK_IMPORTED_MODULE_3__.createCardsFromList)(_variables__WEBPACK_IMPORTED_MODULE_5__.SECURITY_SENSORS, {}, "global");
+        if (sensorCards) {
+            globalSection.cards.push({
+                type: "heading",
+                heading: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.sensor.entity_component._.name") + "s",
+                heading_style: "subtitle",
+            });
+            globalSection.cards.push(...sensorCards);
         }
         const sections = [globalSection];
         if (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.domains.camera?.length)
@@ -10234,7 +10267,7 @@ class SecurityView {
             let floorCards = [
                 {
                     type: "heading",
-                    heading: (0,_utils__WEBPACK_IMPORTED_MODULE_4__.getFloorName)(floor),
+                    heading: (0,_utils__WEBPACK_IMPORTED_MODULE_3__.getFloorName)(floor),
                     heading_style: "title",
                     badges: [],
                     layout_options: {
@@ -10273,12 +10306,12 @@ class SecurityView {
                     entityCards.push(new cardModule[className](entity, cardOptions).getCard());
                 }
                 if (entityCards.length) {
-                    areaCards.push(new _cards_GroupedCard__WEBPACK_IMPORTED_MODULE_7__.GroupedCard(entityCards).getCard());
+                    areaCards.push(new _cards_GroupedCard__WEBPACK_IMPORTED_MODULE_6__.GroupedCard(entityCards).getCard());
                 }
                 // Vertical stack the area cards if it has entities.
                 if (areaCards.length) {
                     const titleCardOptions = {};
-                    titleCardOptions.subtitle = (0,_utils__WEBPACK_IMPORTED_MODULE_4__.getAreaName)(area);
+                    titleCardOptions.subtitle = (0,_utils__WEBPACK_IMPORTED_MODULE_3__.getAreaName)(area);
                     titleCardOptions.subtitleIcon = area.icon ?? "mdi:floor-plan";
                     titleCardOptions.navigate = area.slug;
                     if (domain) {
@@ -10286,7 +10319,7 @@ class SecurityView {
                         titleCardOptions.extraControls = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain].extraControls;
                     }
                     // Create and insert a Controller card.
-                    areaCards.unshift(...new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_5__.ControllerCard(titleCardOptions, domain).createCard());
+                    areaCards.unshift(...new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_4__.ControllerCard(titleCardOptions, domain).createCard());
                     floorCards.push(...areaCards);
                 }
             }

@@ -2,9 +2,7 @@ import { AbstractCard } from "./AbstractCard";
 import { cards } from "../types/strategy/cards";
 import { EntityRegistryEntry } from "../types/homeassistant/data/entity_registry";
 import { CoverCardConfig } from "../types/lovelace-mushroom/cards/cover-card-config";
-import { getDomainTranslationKey, getMAEntity } from "../utils";
-import { Helper } from "../Helper";
-import { TemplateCardConfig } from "../types/lovelace-mushroom/cards/template-card-config";
+import { getMAEntity, navigateTo } from "../utils";
 import { AggregateCard } from "./AggregateCard";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
@@ -48,7 +46,7 @@ class CoverCard extends AbstractCard {
     if (magicAreasEntity) {
       this.#defaultConfig.entity = magicAreasEntity.entity_id;
     } else {
-      this.#defaultConfig = new AggregateCard({ domain: "cover", device_class: "shutter" }).config;
+      this.#defaultConfig = new AggregateCard({ domain: "cover", device_class: "shutter", tap_action: navigateTo("cover") }).config;
     }
 
     this.config = Object.assign(this.config, this.#defaultConfig, options);

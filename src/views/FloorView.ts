@@ -9,7 +9,8 @@ import StrategyFloor = generic.StrategyFloor;
 import { AREA_EXPOSED_CHIPS } from "../variables";
 import { LovelaceChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
 import { AreaStateChip } from "../chips/AreaStateChip";
-import { createChipsFromList, processFloorsAndAreas } from "../utils";
+import { createChipsFromList, processEntitiesForAreaOrFloorView } from "../utils";
+import { EntityCardConfig } from "../types/lovelace-mushroom/cards/entity-card-config";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**
@@ -39,14 +40,6 @@ class FloorView {
    * @private
    */
   floor: StrategyFloor;
-
-  /**
-   * View controller card.
-   *
-   * @type {LovelaceGridCardConfig[]}
-   * @private
-   */
-  viewControllerCard: LovelaceGridCardConfig[] = [];
 
   /**
    * Class constructor.
@@ -96,17 +89,7 @@ class FloorView {
    * @override
    */
   async createSectionCards(): Promise<LovelaceGridCardConfig[]> {
-    return processFloorsAndAreas(this.floor.floor_id, undefined, async (entities, area, domain) => {
-      const className = Helper.sanitizeClassName(domain + "Card");
-      const cardModule = await import(`../cards/${className}`);
-      const configEntityHidden = Helper.strategyOptions.domains[domain]?.hide_config_entities || Helper.strategyOptions.domains["_"].hide_config_entities;
-
-      return entities
-        .filter(entity => !Helper.strategyOptions.card_options?.[entity.entity_id]?.hidden
-          && !Helper.strategyOptions.card_options?.[entity.device_id ?? "null"]?.hidden
-          && !(entity.entity_category === "config" && configEntityHidden))
-        .map(entity => new cardModule[className](entity).getCard());
-    }, this.viewControllerCard);
+    return processEntitiesForAreaOrFloorView({ floor: this.floor });
   }
 
   /**

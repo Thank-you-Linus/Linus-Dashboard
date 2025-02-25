@@ -1097,7 +1097,7 @@ class AbstractCard {
     getCard() {
         return {
             ...this.config,
-            type: this.entity && "entity_id" in this.entity ? "custom:mushroom-entity-card" : "custom:mushroom-template-card",
+            type: this.entity && "entity_id" in this.entity ? this.config.type : "custom:mushroom-template-card",
             entity: this.entity && "entity_id" in this.entity ? this.entity.entity_id : undefined,
         };
     }

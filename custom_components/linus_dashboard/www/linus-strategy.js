@@ -351,7 +351,7 @@ class Helper {
         __classPrivateFieldSet(this, _a, info.hass.localize, "f", _Helper_hassLocalize);
         __classPrivateFieldSet(this, _a, deepmerge__WEBPACK_IMPORTED_MODULE_1___default()(_configurationDefaults__WEBPACK_IMPORTED_MODULE_0__.configurationDefaults, info.config?.strategy?.options ?? {}), "f", _Helper_strategyOptions);
         __classPrivateFieldSet(this, _a, __classPrivateFieldGet(this, _a, "f", _Helper_strategyOptions).debug, "f", _Helper_debug);
-        console.log('this.#', info.hass);
+        // console.log('this.#', info.hass)
         let homeAssistantRegistries = [];
         try {
             // Query the registries of Home Assistant.

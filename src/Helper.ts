@@ -286,7 +286,7 @@ class Helper {
     this.#strategyOptions = deepmerge(configurationDefaults, info.config?.strategy?.options ?? {});
     this.#debug = this.#strategyOptions.debug;
 
-    console.log('this.#', info.hass)
+    // console.log('this.#', info.hass)
 
     let homeAssistantRegistries = [];
 

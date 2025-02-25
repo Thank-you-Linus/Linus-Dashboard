@@ -5155,7 +5155,7 @@ class LinusStrategy extends HTMLTemplateElement {
     }
 }
 customElements.define("ll-strategy-linus-strategy", LinusStrategy);
-const version = "v1.0.9-alpha.2";
+const version = "v1.0.9";
 console.info("%c Linus Strategy %c ".concat(version, " "), "color: #F5F5DC; background: #004225; font-weight: 700;", "color: #004225; background: #F5F5DC; font-weight: 700;");
 
 
@@ -9365,7 +9365,6 @@ class FloorView {
      */
     async createSectionBadges() {
         if (_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.home_view.hidden.includes("chips")) {
-            // Chips section is hidden.
             return [];
         }
         const chips = [];

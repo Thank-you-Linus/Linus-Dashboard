@@ -59,7 +59,6 @@ class FloorView {
    */
   async createSectionBadges(): Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig)[]> {
     if (Helper.strategyOptions.home_view.hidden.includes("chips")) {
-      // Chips section is hidden.
       return [];
     }
 

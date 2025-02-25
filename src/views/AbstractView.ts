@@ -77,7 +77,7 @@ abstract class AbstractView {
    * @override
    */
   async createViewCards(): Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig)[]> {
-    return []
+    return [];
   }
 
   /**
@@ -87,7 +87,7 @@ abstract class AbstractView {
    * @override
    */
   async createSectionBadges(): Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig)[]> {
-    return []
+    return [];
   }
 
   /**

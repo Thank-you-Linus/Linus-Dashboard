@@ -1120,7 +1120,7 @@ class AggregateCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractC
      */
     getDefaultConfig({ domain, device_class, show_content = true, magic_device_id = "global", area_slug, tap_action }) {
         let icon = device_class ? device_class !== "motion" ? _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.icons[domain][device_class]?.default : _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.icons[domain][device_class]?.state?.on : device_class !== "motion" ? _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.icons[domain]["_"]?.default : _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.icons[domain]["_"]?.state?.on;
-        let icon_color = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.getFromDomainState({ domain, area_slug, }) ?? "grey";
+        let icon_color = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.getFromDomainState({ domain, area_slug }) ?? "grey";
         let content = "";
         const device = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.magicAreasDevices[magic_device_id];
         const magicEntity = (0,_utils__WEBPACK_IMPORTED_MODULE_2__.getMAEntity)(magic_device_id, domain, device_class);
@@ -1152,6 +1152,7 @@ class AggregateCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractC
         }
         const secondary = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.getLastChangedTemplate({ domain, device_class, area_slug });
         return {
+            type: "custom:mushroom-template-card",
             entity: magicEntity?.entity_id,
             entity_id: _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.getEntityIds({ domain, device_class, area_slug }),
             primary: _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.localize((0,_utils__WEBPACK_IMPORTED_MODULE_2__.getDomainTranslationKey)(domain, device_class)),

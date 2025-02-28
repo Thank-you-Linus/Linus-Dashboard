@@ -20,7 +20,7 @@ class AggregateCard extends AbstractCard {
   getDefaultConfig({ domain, device_class, show_content = true, magic_device_id = "global", area_slug, tap_action }: cards.AggregateCardOptions) {
 
     let icon = device_class ? device_class !== "motion" ? Helper.icons[domain as ResourceKeys][device_class]?.default : Helper.icons[domain as ResourceKeys][device_class]?.state?.on : device_class !== "motion" ? Helper.icons[domain as ResourceKeys]["_"]?.default : Helper.icons[domain as ResourceKeys]["_"]?.state?.on
-    let icon_color = Helper.getFromDomainState({ domain, area_slug, }) ?? "grey"
+    let icon_color = Helper.getFromDomainState({ domain, area_slug }) ?? "grey"
     let content = ""
 
     const device = Helper.magicAreasDevices[magic_device_id]
@@ -63,6 +63,7 @@ class AggregateCard extends AbstractCard {
 
 
     return {
+      type: "custom:mushroom-template-card",
       entity: magicEntity?.entity_id,
       entity_id: Helper.getEntityIds({ domain, device_class, area_slug }),
       primary: Helper.localize(getDomainTranslationKey(domain, device_class)),

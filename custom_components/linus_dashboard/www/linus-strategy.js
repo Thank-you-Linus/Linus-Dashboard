@@ -8875,7 +8875,7 @@ class AggregateView extends _AbstractView__WEBPACK_IMPORTED_MODULE_2__.AbstractV
         // Create a Controller card to switch all entities of the domain.
         this.viewControllerCard = new _cards_ControllerCard__WEBPACK_IMPORTED_MODULE_1__.ControllerCard({
             title: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize((0,_utils__WEBPACK_IMPORTED_MODULE_4__.getDomainTranslationKey)(domain, options?.device_class)),
-            showControls: !!options?.device_class,
+            showControls: domain !== "sensor",
             controlChipOptions: { device_class: options?.device_class },
         }, domain, "global").createCard();
     }

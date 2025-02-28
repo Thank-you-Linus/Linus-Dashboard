@@ -3,7 +3,6 @@ import { LovelaceGridCardConfig, StackCardConfig } from "../types/homeassistant/
 import { LovelaceCardConfig, LovelaceSectionConfig, LovelaceViewConfig } from "../types/homeassistant/data/lovelace";
 import { AlarmCard } from "../cards/AlarmCard";
 import { PersonCard } from "../cards/PersonCard";
-import { BinarySensorCard } from "../cards/BinarySensorCard";
 import { createCardsFromList, createChipsFromList, getAreaName, getFloorName, navigateTo } from "../utils";
 import { HassServiceTarget } from "home-assistant-js-websocket";
 import { ControllerCard } from "../cards/ControllerCard";
@@ -11,7 +10,7 @@ import { views } from "../types/strategy/views";
 import { ChipsCardConfig } from "../types/lovelace-mushroom/cards/chips-card";
 import { TemplateCardConfig } from "../types/lovelace-mushroom/cards/template-card-config";
 import { LovelaceChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
-import { SECURITY_EXPOSED_CHIPS, SECURITY_SENSORS } from "../variables";
+import { SECURITY_EXPOSED_CHIPS, SECURITY_EXPOSED_DOMAINS, SECURITY_EXPOSED_SENSORS } from "../variables";
 import { GroupedCard } from "../cards/GroupedCard";
 
 /**
@@ -88,7 +87,7 @@ class SecurityView {
       }
     }
 
-    const homeChips = await createChipsFromList([...SECURITY_EXPOSED_CHIPS, ...SECURITY_SENSORS], { show_content: true });
+    const homeChips = await createChipsFromList(SECURITY_EXPOSED_CHIPS, { show_content: true });
     if (homeChips) {
       chips.push(...homeChips);
     }
@@ -144,7 +143,7 @@ class SecurityView {
       }
     }
 
-    const securityCards = await createCardsFromList(SECURITY_EXPOSED_CHIPS, {}, "global");
+    const securityCards = await createCardsFromList(SECURITY_EXPOSED_DOMAINS, {}, "global", "global");
     if (securityCards) {
       globalSection.cards.push(
         {
@@ -155,7 +154,7 @@ class SecurityView {
       globalSection.cards.push(...securityCards);
     }
 
-    const sensorCards = await createCardsFromList(SECURITY_SENSORS, {}, "global");
+    const sensorCards = await createCardsFromList(SECURITY_EXPOSED_SENSORS, {}, "global");
     if (sensorCards) {
       globalSection.cards.push(
         {

@@ -3,6 +3,7 @@ import { chips } from "../types/strategy/chips";
 import { AbstractChip } from "./AbstractChip";
 import { TemplateChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
 import { getMAEntity } from "../utils";
+import { EntityRegistryEntry } from "../types/homeassistant/data/entity_registry";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**
@@ -21,7 +22,7 @@ class CoverChip extends AbstractChip {
    */
   readonly #defaultConfig: TemplateChipConfig = {
     type: "template",
-    icon: "mdi:window-open",
+    icon: "mdi:window-shutter",
     content: "",
     tap_action: {
       action: "navigate",
@@ -34,7 +35,7 @@ class CoverChip extends AbstractChip {
    *
    * @param {chips.ChipOptions} options The chip options.
    */
-  constructor(options: chips.ChipOptions = {}) {
+  constructor(entity?: EntityRegistryEntry, options: chips.ChipOptions = {}) {
     super();
 
     if (options?.show_content) {

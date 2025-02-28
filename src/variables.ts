@@ -12,6 +12,18 @@ export const GROUP_DOMAINS = ["climate", "media_player", "cover"];
 export const AGGREGATE_DOMAINS = ["binary_sensor", "sensor"];
 
 export const DEVICE_CLASSES = {
+  cover: [
+    "awning",
+    "blind",
+    "curtain",
+    "damper",
+    "door",
+    "garage",
+    "gate",
+    "shade",
+    "shutter",
+    "window",
+  ],
   sensor: [
     "temperature",
     "humidity",
@@ -101,16 +113,17 @@ export const DEVICE_CLASSES = {
   ],
 };
 
-export const AREA_CARDS_DOMAINS = [LIGHT_DOMAIN, "switch", "climate", "fan", "camera", "cover", "vacuum", "media_player", "lock", "scene", "plant", "binary_sensor", "sensor"];
+export const AREA_CARDS_DOMAINS = [LIGHT_DOMAIN, "switch", "climate", "fan", "vacuum", "media_player", "camera", "cover", "lock", "scene", "plant", "binary_sensor", "sensor"];
 
 export const CUSTOM_VIEWS = ["home", "security", "security-details"];
 
 export const DOMAINS_VIEWS = [...AREA_CARDS_DOMAINS, ...DEVICE_CLASSES.binary_sensor, ...DEVICE_CLASSES.sensor];
 
-export const HOME_EXPOSED_CHIPS = ["weather", "alarm", "spotify", LIGHT_DOMAIN, ...GROUP_DOMAINS, "fan", "switch", "safety", "motion", "occupancy", "door", "window"];
-export const AREA_EXPOSED_CHIPS = [LIGHT_DOMAIN, ...GROUP_DOMAINS, "fan", "switch", "safety", ...DEVICE_CLASSES.binary_sensor, ...DEVICE_CLASSES.sensor];
-export const SECURITY_EXPOSED_CHIPS = ["alarm", "safety", "cover", "lock"];
-export const SECURITY_SENSORS = ["motion", "occupancy", "door", "window"];
+export const HOME_EXPOSED_CHIPS = ["weather", "alarm", "spotify", LIGHT_DOMAIN, "climate", "fan", "media_player", "switch", "safety", "cover", "binary_sensor:motion", "binary_sensor:occupancy", "binary_sensor:door", "binary_sensor:window"];
+export const AREA_EXPOSED_CHIPS = [LIGHT_DOMAIN, ...GROUP_DOMAINS, "fan", "switch", "safety", ...DEVICE_CLASSES.binary_sensor.map(d => `binary_sensor${d}`), ...DEVICE_CLASSES.sensor.map(d => `sensor${d}`)];
+export const SECURITY_EXPOSED_DOMAINS = ["light", "alarm", "safety", ...DEVICE_CLASSES.cover.map(d => `cover:${d}`), "lock"];
+export const SECURITY_EXPOSED_SENSORS = ["binary_sensor:motion", "binary_sensor:occupancy", "binary_sensor:door", "binary_sensor:window"];
+export const SECURITY_EXPOSED_CHIPS = ["light", "alarm", "safety", "cover", "lock", ...SECURITY_EXPOSED_SENSORS];
 
 export const DEVICE_ICONS = {
   presence_hold: 'mdi:car-brake-hold'

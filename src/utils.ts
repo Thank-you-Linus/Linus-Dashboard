@@ -162,16 +162,18 @@ export const getEntityDomain = memoize(function getEntityDomain(entityId: string
 export const groupEntitiesByDomain = memoize(function groupEntitiesByDomain(entity_ids: string[]): Record<string, string[]> {
     return entity_ids.reduce((acc: Record<string, string[]>, entity_id) => {
         let domain = getEntityDomain(entity_id);
+        let device_class
         if (Object.keys(DEVICE_CLASSES).includes(domain)) {
             const entityState = Helper.getEntityState(entity_id);
             if (entityState?.attributes?.device_class) {
-                domain = entityState.attributes.device_class;
+                device_class = entityState.attributes.device_class;
             }
         }
-        if (!acc[domain]) {
-            acc[domain] = [];
+        const domainTag = `${domain}${device_class ? ":" + device_class : ""}`;
+        if (!acc[domainTag]) {
+            acc[domainTag] = [];
         }
-        acc[domain].push(entity_id);
+        acc[domainTag].push(entity_id);
         return acc;
     }, {});
 });
@@ -199,9 +201,21 @@ async function createItemsFromList(
         : area_slugs.flatMap(area_slug => Object.keys(Helper.areas[area_slug]?.domains ?? {}));
 
     for (let itemType of itemList) {
-        if (Helper.linus_dashboard_config?.excluded_domains?.includes(itemType)) continue;
-        if (Helper.linus_dashboard_config?.excluded_device_classes?.includes(itemType)) continue;
+
+        let domain = itemType
+        let device_class
+
+        if (itemType.includes(":")) {
+            [domain, device_class] = itemType.split(":");
+        }
+
+        if (Helper.linus_dashboard_config?.excluded_domains?.includes(domain)) continue;
+        if (device_class && Helper.linus_dashboard_config?.excluded_device_classes?.includes(device_class)) continue;
         if (!domains.includes(itemType)) continue;
+
+        if (getGlobalEntitiesExceptUndisclosed(domain, device_class).length === 0) continue;
+
+        const magicAreasEntity = getMAEntity(magic_device_id, domain, device_class);
 
         const className = Helper.sanitizeClassName(itemType + (isChip ? "Chip" : "Card"));
 
@@ -210,20 +224,17 @@ async function createItemsFromList(
             let item;
             try {
                 itemModule = await import(`./${isChip ? "chips" : "cards"}/${className}`);
-                item = new itemModule[className]({ ...itemOptions, magic_device_id, area_slug });
+                item = new itemModule[className](magicAreasEntity, { ...itemOptions, device_class, magic_device_id, area_slug });
             } catch {
-                let domain = itemType
-                let device_class
-                if (DEVICE_CLASSES.binary_sensor.includes(itemType)) { domain = "binary_sensor"; device_class = itemType }
-                if (DEVICE_CLASSES.sensor.includes(itemType)) { domain = "sensor"; device_class = itemType }
                 itemModule = await import(`./${isChip ? "chips" : "cards"}/Aggregate${isChip ? "Chip" : "Card"}`);
                 item = new itemModule[`Aggregate${isChip ? "Chip" : "Card"}`]({
                     ...itemOptions,
+                    entity: magicAreasEntity,
                     domain,
                     device_class,
                     area_slug,
                     magic_device_id,
-                    tap_action: navigateTo(itemType)
+                    tap_action: navigateTo(domain === "binary_sensor" || domain === "sensor" ? device_class ?? domain : domain)
                 });
             }
             items.push(item.getChip ? item.getChip() : item.getCard());
@@ -318,9 +329,14 @@ export const getAreaName = memoize(function getAreaName(area: StrategyArea): str
  * @returns {string[]} - The global entities.
  */
 export const getGlobalEntitiesExceptUndisclosed = memoize(function getGlobalEntitiesExceptUndisclosed(domain: string, device_class?: string): string[] {
-    const entities = device_class ? Helper.domains[device_class] : Helper.domains[domain];
+    const dc = domain === "binary_sensor" || domain === "sensor" || domain === "cover" ? device_class : undefined;
+    const domainTag = `${domain}${dc ? ":" + dc : ""}`;
+    const entities = (domain === "cover" && !device_class
+        ? DEVICE_CLASSES.cover.flatMap(d => Helper.domains[`cover:${d}`] ?? [])
+        : Helper.domains[domainTag] ?? []);
+
     return entities?.filter(entity =>
-        !Helper.areas[UNDISCLOSED].domains?.[device_class ?? domain]?.includes(entity.entity_id)
+        !Helper.areas[UNDISCLOSED].domains?.[domainTag]?.includes(entity.entity_id)
     ).map(e => e.entity_id) ?? [];
 }) as (domain: string, device_class?: string) => string[];
 
@@ -377,7 +393,7 @@ export async function processFloorsAndAreas(
         const floorCards = [];
 
         for (const area of floor.areas_slug.map(area_slug => Helper.areas[area_slug])) {
-            let entities = Helper.getAreaEntities(area, device_class ?? domain);
+            let entities = Helper.getAreaEntities(area, domain, device_class);
             const className = Helper.sanitizeClassName(domain + "Card");
             const cardModule = await import(`./cards/${className}`);
 

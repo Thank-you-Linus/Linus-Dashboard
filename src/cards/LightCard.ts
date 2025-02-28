@@ -1,10 +1,9 @@
-import {AbstractCard} from "./AbstractCard";
-import {cards} from "../types/strategy/cards";
-import {EntityRegistryEntry} from "../types/homeassistant/data/entity_registry";
-import {LightCardConfig} from "../types/lovelace-mushroom/cards/light-card-config";
-import {generic} from "../types/strategy/generic";
-import isCallServiceActionConfig = generic.isCallServiceActionConfig;
-import isCallServiceActionTarget = generic.isCallServiceActionTarget;
+import { AbstractCard } from "./AbstractCard";
+import { cards } from "../types/strategy/cards";
+import { EntityRegistryEntry } from "../types/homeassistant/data/entity_registry";
+import { LightCardConfig } from "../types/lovelace-mushroom/cards/light-card-config";
+import { AggregateCard } from "./AggregateCard";
+import { navigateTo } from "../utils";
 
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
@@ -36,11 +35,13 @@ class LightCard extends AbstractCard {
    * @param {cards.LightCardOptions} [options={}] Options for the card.
    * @throws {Error} If the Helper module isn't initialized.
    */
-  constructor(entity: EntityRegistryEntry, options: cards.LightCardOptions = {}) {
+  constructor(entity?: EntityRegistryEntry, options: cards.LightCardOptions = {}) {
     super(entity);
+
+    if (!entity) this.#defaultConfig = new AggregateCard({ domain: "light", tap_action: navigateTo("light") }).config;
 
     this.config = Object.assign(this.config, this.#defaultConfig, options);
   }
 }
 
-export {LightCard};
+export { LightCard };

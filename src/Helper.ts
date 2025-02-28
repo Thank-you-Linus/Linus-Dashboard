@@ -324,13 +324,16 @@ class Helper {
       if (Helper.linus_dashboard_config?.excluded_entities?.includes(entity.entity_id)) return acc;
 
       let domain = getEntityDomain(entity.entity_id);
+      let device_class
 
       if (Object.keys(DEVICE_CLASSES).includes(domain)) {
         const entityState = Helper.getEntityState(entity.entity_id);
-        if (entityState?.attributes?.device_class) domain = entityState.attributes.device_class;
+        if (entityState?.attributes?.device_class) device_class = entityState.attributes.device_class;
       }
 
-      if (!this.#domains[domain]) this.#domains[domain] = [];
+      const domainTag = `${domain}${device_class ? ":" + device_class : ""}`;
+
+      if (!this.#domains[domainTag]) this.#domains[domainTag] = [];
 
       if (Helper.linus_dashboard_config?.excluded_domains?.includes(domain)) return acc;
 
@@ -354,7 +357,7 @@ class Helper {
         entitiesByDeviceId[entity.device_id].push(enrichedEntity);
       }
 
-      if (entity.platform !== MAGIC_AREAS_DOMAIN) this.#domains[domain].push(enrichedEntity);
+      if (entity.platform !== MAGIC_AREAS_DOMAIN) this.#domains[domainTag].push(enrichedEntity);
 
       return acc;
     }, {} as Record<string, StrategyEntity>);
@@ -517,39 +520,6 @@ class Helper {
   }
 
   /**
-   * Get a template string to define the number of a given device_class's entities with a certain state.
-   *
-   * States are compared against a given value by a given operator.
-   *
-   * @param {string} domain The domain of the entities.
-   * @param {string} device_class The device class of the entities.
-   * @param {string} operator The Comparison operator between state and value.
-   * @param {string} value The value to which the state is compared against.
-   * @param {string} area_id
-   *
-   * @return {string} The template string.
-   * @static
-   */
-  static getDeviceClassCountTemplate(device_class: string, operator: string, value: string, area_slug: string | string[] = "global"): string {
-    const states: string[] = [];
-
-    if (!this.isInitialized()) {
-      console.warn("Helper class should be initialized before calling this method!");
-    }
-
-    const area_slugs = Array.isArray(area_slug) ? area_slug : [area_slug];
-
-    for (const slug of area_slugs) {
-      const entities = area_slug === "global" ? getGlobalEntitiesExceptUndisclosed(device_class) : this.#areas[slug]?.domains?.[device_class]
-      const newStates = entities?.map((entity_id) => `states['${entity_id}']`);
-      if (newStates) states.push(...newStates);
-    }
-
-    const formattedValue = Array.isArray(value) ? JSON.stringify(value).replace(/"/g, "'") : `'${value}'`;
-    return `{% set entities = [${states}] %}{{ entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | selectattr('state','${operator}',${formattedValue}) | list | count }}`;
-  }
-
-  /**
    * Generates a Jinja2 template string to filter and transform a list of sensor entities.
    *
    * This function constructs a Jinja2 template string that filters the provided list of entities
@@ -613,14 +583,21 @@ class Helper {
    * @return {StrategyEntity[]} Array of device entities.
    * @static
    */
-  static getAreaEntities(area: StrategyArea, domain?: string): StrategyEntity[] {
+  static getAreaEntities(area: StrategyArea, domain?: string, device_class?: string): StrategyEntity[] {
 
     if (!this.isInitialized()) {
       console.warn("Helper class should be initialized before calling this method!");
     }
 
-    if (domain) {
-      return area.domains?.[domain]?.map(entity_id => this.#entities[entity_id]) ?? []
+    const dc = domain === "binary_sensor" || domain === "sensor" ? device_class : undefined;
+    const domainTag = `${domain}${dc ? ":" + dc : ""}`;
+
+    if (domainTag) {
+      if (domain === "cover") {
+        return DEVICE_CLASSES.cover.flatMap(d => area.domains?.[`cover:${d}`]?.map(entity_id => this.#entities[entity_id]) ?? []);
+      } else {
+        return area.domains?.[domainTag]?.map(entity_id => this.#entities[entity_id]) ?? [];
+      }
     } else {
       return area.entities.map(entity_id => this.#entities[entity_id]) ?? []
     }
@@ -805,19 +782,19 @@ class Helper {
     }
 
     const areaSlugs = Array.isArray(area_slug) ? area_slug : [area_slug];
+    const domainTag = `${domain}${device_class ? ":" + device_class : ""}`;
 
     for (const slug of areaSlugs) {
       if (slug) {
         const magic_entity = device_class ? getMAEntity(slug!, domain, device_class) : getMAEntity(slug!, domain);
-        const entities = magic_entity ? [magic_entity.entity_id] : area_slug === "global" ? getGlobalEntitiesExceptUndisclosed(device_class ?? domain) : this.#areas[slug]?.domains?.[device_class ?? domain];
+        const entities = magic_entity ? [magic_entity.entity_id] : area_slug === "global" ? getGlobalEntitiesExceptUndisclosed(domain, device_class) : this.#areas[slug]?.domains?.[domainTag];
         if (entities) entityIds.push(...entities);
       } else {
         for (const area of Object.values(this.#areas)) {
           if (area.area_id === UNDISCLOSED) continue;
-
           const entities = domain === "all"
             ? this.#areas[area.slug]?.entities
-            : this.#areas[area.slug]?.domains?.[device_class ?? domain];
+            : this.#areas[area.slug]?.domains?.[domainTag];
           if (entities) entityIds.push(...entities);
         }
       }
@@ -844,14 +821,13 @@ class Helper {
 
     return `{% set entities = [${states}] %}{{ entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | sort(attribute='last_changed', reverse=True) | first }}`;
   }
-
-  static getFromDomainState({ domain, operator, value, ifReturn, elseReturn, area_slug, allowUnavailable }: { domain: string, operator?: string, value?: string | string[], ifReturn?: string, elseReturn?: string, area_slug?: string | string[], allowUnavailable?: boolean }): string {
+  static getFromDomainState({ domain, device_class, operator, value, ifReturn, elseReturn, area_slug, allowUnavailable }: { domain: string, device_class?: string, operator?: string, value?: string | string[], ifReturn?: string, elseReturn?: string, area_slug?: string | string[], allowUnavailable?: boolean }): string {
 
     if (!this.isInitialized()) {
       console.warn("Helper class should be initialized before calling this method!");
     }
 
-    const states = this.getStateStrings(this.getEntityIds({ domain, area_slug }));
+    const states = this.getStateStrings(this.getEntityIds({ domain, device_class, area_slug }));
 
     if (domain === "light") {
       ifReturn = ifReturn ?? "amber";

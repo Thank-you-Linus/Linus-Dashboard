@@ -14,6 +14,7 @@ import { LightChip } from "../chips/LightChip";
 import { ConditionalChip } from "../chips/ConditionalChip";
 import { UNAVAILABLE, UNDISCLOSED } from "../variables";
 import { EntityCardConfig } from "../types/lovelace-mushroom/cards/entity-card-config";
+import { FanChip } from "../chips/FanChip";
 
 // Utility function to generate badge icon and color
 const getBadgeIcon = (entityId: string) => `
@@ -145,7 +146,10 @@ class HomeAreaCard {
   getChipsCard(): any {
 
     const { light_control, aggregate_health, aggregate_window, aggregate_door, aggregate_cover } = this.magicDevice?.entities || {};
-    const { motion, occupancy, presence, window, climate, door, cover, health, light } = this.area.domains ?? {};
+    const { motion, occupancy, presence, window, climate, fan, door, cover, health, light } = this.area.domains ?? {};
+    const magicLight = getMAEntity(this.magicDevice?.id, "light") as EntityRegistryEntry;
+    const magicClimate = getMAEntity(this.magicDevice?.id, "climate") as EntityRegistryEntry;
+    const magicFan = getMAEntity(this.magicDevice?.id, "fan") as EntityRegistryEntry;
 
     return {
       type: "custom:mushroom-chips-card",
@@ -168,8 +172,9 @@ class HomeAreaCard {
           aggregate_cover ? [{ entity: aggregate_cover?.entity_id, state: "on" }] : cover.map(entity => ({ entity, state: "on" })),
           new AggregateChip({ magic_device_id: this.area.slug, area_slug: this.area.slug, device_class: "cover", show_content: false }).getChip()
         ).getChip(),
-        climate && new ClimateChip({ magic_device_id: this.area.slug, area_slug: this.area.slug }).getChip(),
-        light && new LightChip({ area_slug: this.area.slug, magic_device_id: this.area.slug, tap_action: { action: "toggle" } }).getChip(),
+        climate && new ClimateChip(magicClimate, { magic_device_id: this.area.slug, area_slug: this.area.slug }).getChip(),
+        fan && new FanChip(magicFan, { magic_device_id: this.area.slug, area_slug: this.area.slug }).getChip(),
+        light && new LightChip(magicLight, { area_slug: this.area.slug, magic_device_id: this.area.slug, tap_action: { action: "toggle" } }).getChip(),
         new ConditionalChip(
           [{ entity: this.magicDevice?.entities?.all_lights?.entity_id, state_not: UNAVAILABLE }],
           new ControlChip("light", light_control?.entity_id).getChip()

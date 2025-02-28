@@ -3,7 +3,7 @@ import { generic } from "./types/strategy/generic";
 import { LovelaceConfig, LovelaceViewConfig } from "./types/homeassistant/data/lovelace";
 import { AGGREGATE_DOMAINS, CUSTOM_VIEWS, DEVICE_CLASSES, DOMAINS_VIEWS, VIEWS_ICONS } from "./variables";
 import { AreaView } from "./views/AreaView";
-import { getAreaName, getDomainTranslationKey, getFloorName } from "./utils";
+import { getAreaName, getDomainTranslationKey, getFloorName, getGlobalEntitiesExceptUndisclosed } from "./utils";
 import { FloorView } from "./views/FloorView";
 import { ResourceKeys } from "./types/homeassistant/data/frontend";
 
@@ -57,10 +57,9 @@ class LinusStrategy extends HTMLTemplateElement {
       if (Helper.linus_dashboard_config?.excluded_domains?.includes(viewId)) return;
       if (Helper.linus_dashboard_config?.excluded_device_classes?.includes(viewId)) return;
       if (![...CUSTOM_VIEWS, ...DOMAINS_VIEWS].includes(viewId)) return;
-      if (DOMAINS_VIEWS.includes(viewId) && (Helper.domains[viewId] ?? []).length === 0) return;
 
       let domain = viewId;
-      let device_class = "_";
+      let device_class;
 
       if (DEVICE_CLASSES.binary_sensor.includes(viewId)) {
         domain = "binary_sensor";
@@ -69,10 +68,12 @@ class LinusStrategy extends HTMLTemplateElement {
         domain = "sensor";
         device_class = viewId;
       }
+      const entities = getGlobalEntitiesExceptUndisclosed(domain, device_class);
+      if (DOMAINS_VIEWS.includes(viewId) && entities.length === 0) return;
 
       views.push({
-        title: Helper.localize(getDomainTranslationKey(domain, device_class)),
-        icon: (VIEWS_ICONS as Record<string, string>)[viewId] ?? Helper.icons[device_class === "battery" ? "binary_sensor" : domain as ResourceKeys]?.[device_class]?.default,
+        title: Helper.localize(getDomainTranslationKey(domain, device_class ?? "_")),
+        icon: (VIEWS_ICONS as Record<string, string>)[viewId] ?? Helper.icons[device_class === "battery" ? "binary_sensor" : domain as ResourceKeys]?.[device_class ?? "_"]?.default,
         path: viewId,
         subview: !Object.keys(VIEWS_ICONS).includes(viewId),
         strategy: {

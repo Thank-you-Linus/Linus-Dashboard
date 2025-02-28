@@ -1,7 +1,7 @@
 import { cards } from "../types/strategy/cards";
 import { AbstractCard } from "./AbstractCard";
 import { Helper } from "../Helper";
-import { getDomainTranslationKey } from "../utils";
+import { getDomainTranslationKey, getMAEntity } from "../utils";
 import { ResourceKeys } from "../types/homeassistant/data/frontend";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
@@ -20,11 +20,11 @@ class AggregateCard extends AbstractCard {
   getDefaultConfig({ domain, device_class, show_content = true, magic_device_id = "global", area_slug, tap_action }: cards.AggregateCardOptions) {
 
     let icon = device_class ? device_class !== "motion" ? Helper.icons[domain as ResourceKeys][device_class]?.default : Helper.icons[domain as ResourceKeys][device_class]?.state?.on : device_class !== "motion" ? Helper.icons[domain as ResourceKeys]["_"]?.default : Helper.icons[domain as ResourceKeys]["_"]?.state?.on
-    let icon_color = ""
+    let icon_color = Helper.getFromDomainState({ domain, area_slug, }) ?? "grey"
     let content = ""
 
     const device = Helper.magicAreasDevices[magic_device_id]
-    const magicEntity = device?.entities[`aggregate_${device_class}`]
+    const magicEntity = getMAEntity(magic_device_id, domain, device_class);
 
     if (domain === "binary_sensor" && device_class) {
       icon_color = Helper.getBinarySensorColorFromState(device_class, "eq", "on", "red", "grey", area_slug)
@@ -47,10 +47,12 @@ class AggregateCard extends AbstractCard {
     if (domain === "cover") {
       if (magicEntity) {
         icon_color = `{{ 'red' if is_state('${magicEntity.entity_id}', 'open') else 'grey' }}`
-      } else {
-        icon_color = Helper.getFromDomainState({ domain, area_slug, }) ?? "grey"
       }
-      show_content ? Helper.getCountTemplate({ domain, device_class, operator: "eq", value: "open", area_slug, prefix: "mdi:numeric-" }) : ""
+      content = show_content ? Helper.getCountTemplate({ domain, device_class, operator: "eq", value: "open", area_slug, prefix: "mdi:numeric-" }) : ""
+    }
+
+    if (domain === "light") {
+      content = show_content ? Helper.getCountTemplate({ domain, device_class, operator: "eq", value: "on", area_slug, prefix: "mdi:numeric-" }) : ""
     }
 
     if (device_class === "health") {

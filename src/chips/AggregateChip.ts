@@ -27,7 +27,7 @@ class AggregateChip extends AbstractChip {
     const magicEntity = device?.entities[`aggregate_${device_class}`]
 
     if (domain === "binary_sensor") {
-      content = show_content ? Helper.getDeviceClassCountTemplate(device_class, "eq", "on", area_slug) : ""
+      content = show_content ? Helper.getCountTemplate({ domain, device_class, operator: "eq", value: "on", area_slug }) : ""
       icon_color = Helper.getBinarySensorColorFromState(device_class, "eq", "on", "red", "grey", area_slug)
     }
 
@@ -48,7 +48,7 @@ class AggregateChip extends AbstractChip {
 
       if (magicEntity) {
         icon_color = `{{ 'red' if is_state('${magicEntity.entity_id}', 'open') else 'grey' }}`
-        content = show_content ? Helper.getDeviceClassCountTemplate(device_class, "eq", "open", area_slug) : ""
+        content = show_content ? Helper.getCountTemplate({ domain: "cover", operator: "eq", value: "open", area_slug }) : ""
       }
     }
 

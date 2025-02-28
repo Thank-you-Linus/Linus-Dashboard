@@ -41,13 +41,7 @@ class CoverCard extends AbstractCard {
   constructor(entity?: EntityRegistryEntry, options: cards.CoverCardOptions = {}) {
     super(entity);
 
-    const magicAreasEntity = getMAEntity(options?.magic_device_id ?? "global", "cover", "shutter");
-
-    if (magicAreasEntity) {
-      this.#defaultConfig.entity = magicAreasEntity.entity_id;
-    } else {
-      this.#defaultConfig = new AggregateCard({ domain: "cover", device_class: "shutter", tap_action: navigateTo("cover") }).config;
-    }
+    if (!entity) this.#defaultConfig = new AggregateCard({ domain: "cover", device_class: options.device_class, tap_action: navigateTo("cover") }).config;
 
     this.config = Object.assign(this.config, this.#defaultConfig, options);
   }

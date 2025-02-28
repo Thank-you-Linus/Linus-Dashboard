@@ -2,6 +2,7 @@ import { Helper } from "../Helper";
 import { AbstractChip } from "./AbstractChip";
 import { chips } from "../types/strategy/chips";
 import { TemplateChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
+import { EntityRegistryEntry } from "../types/homeassistant/data/entity_registry";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**
@@ -22,7 +23,7 @@ class SafetyChip extends AbstractChip {
     type: "template",
     icon: Helper.icons.binary_sensor.safety?.default,
     icon_color: "grey",
-    content: Helper.getDeviceClassCountTemplate("safety", "ne", "off"),
+    content: Helper.getCountTemplate({ domain: "safety", operator: "ne", value: "off" }),
     tap_action: {
       action: "none",
     },
@@ -37,7 +38,7 @@ class SafetyChip extends AbstractChip {
    *
    * @param {chips.TemplateChipOptions} options The chip options.
    */
-  constructor(options: chips.TemplateChipOptions = {}) {
+  constructor(entity?: EntityRegistryEntry, options: chips.TemplateChipOptions = {}) {
     super();
 
     this.config = Object.assign(this.config, this.#defaultConfig, options);

@@ -8629,7 +8629,7 @@ const AREA_CARDS_DOMAINS = [LIGHT_DOMAIN, "switch", "climate", "fan", "vacuum", 
 const CUSTOM_VIEWS = ["home", "security", "security-details"];
 const DOMAINS_VIEWS = [...AREA_CARDS_DOMAINS, ...DEVICE_CLASSES.binary_sensor, ...DEVICE_CLASSES.sensor];
 const HOME_EXPOSED_CHIPS = ["weather", "alarm", "spotify", LIGHT_DOMAIN, "climate", "fan", "media_player", "switch", "safety", "cover", "binary_sensor:motion", "binary_sensor:occupancy", "binary_sensor:door", "binary_sensor:window"];
-const AREA_EXPOSED_CHIPS = [LIGHT_DOMAIN, ...GROUP_DOMAINS, "fan", "switch", "safety", ...DEVICE_CLASSES.binary_sensor.map(d => `binary_sensor${d}`), ...DEVICE_CLASSES.sensor.map(d => `sensor${d}`)];
+const AREA_EXPOSED_CHIPS = [LIGHT_DOMAIN, ...GROUP_DOMAINS, "fan", "switch", "safety", ...DEVICE_CLASSES.binary_sensor.map(d => `binary_sensor:${d}`), ...DEVICE_CLASSES.sensor.map(d => `sensor:${d}`)];
 const SECURITY_EXPOSED_DOMAINS = ["light", "alarm", "safety", ...DEVICE_CLASSES.cover.map(d => `cover:${d}`), "lock"];
 const SECURITY_EXPOSED_SENSORS = ["binary_sensor:motion", "binary_sensor:occupancy", "binary_sensor:door", "binary_sensor:window"];
 const SECURITY_EXPOSED_CHIPS = ["light", "alarm", "safety", "cover", "lock", ...SECURITY_EXPOSED_SENSORS];
@@ -9625,10 +9625,7 @@ class HomeView {
                 });
                 isFirstLoop = false;
             }
-            const temperature = floor.areas_slug.some(area_slug => {
-                const area = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas[area_slug];
-                return area.domains?.temperature;
-            });
+            const temperatureEntities = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getEntityIds({ domain: "sensor", device_class: "temperature", area_slug: floor.areas_slug });
             if (floors.length > 1) {
                 floorSection.cards.push({
                     type: "heading",
@@ -9639,7 +9636,7 @@ class HomeView {
                             type: "custom:mushroom-chips-card",
                             alignment: "end",
                             chips: [
-                                floor.floor_id !== _variables__WEBPACK_IMPORTED_MODULE_3__.UNDISCLOSED && temperature &&
+                                floor.floor_id !== _variables__WEBPACK_IMPORTED_MODULE_3__.UNDISCLOSED && temperatureEntities.length > 0 &&
                                     new _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_8__.AggregateChip({
                                         device_class: "temperature",
                                         show_content: true,

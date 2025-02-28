@@ -197,10 +197,7 @@ class HomeView {
         isFirstLoop = false;
       }
 
-      const temperature = floor.areas_slug.some(area_slug => {
-        const area = Helper.areas[area_slug];
-        return area.domains?.temperature;
-      });
+      const temperatureEntities = Helper.getEntityIds({ domain: "sensor", device_class: "temperature", area_slug: floor.areas_slug });
 
       if (floors.length > 1) {
         floorSection.cards.push({
@@ -212,7 +209,7 @@ class HomeView {
             type: "custom:mushroom-chips-card",
             alignment: "end",
             chips: [
-              floor.floor_id !== UNDISCLOSED && temperature &&
+              floor.floor_id !== UNDISCLOSED && temperatureEntities.length > 0 &&
               new AggregateChip({
                 device_class: "temperature",
                 show_content: true,

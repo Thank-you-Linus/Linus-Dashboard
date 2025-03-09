@@ -33,9 +33,9 @@ class CoverChip extends AbstractChip {
   /**
    * Class Constructor.
    *
-   * @param {chips.ChipOptions} options The chip options.
+   * @param {chips.DeviceClassChipOptions} options The chip options.
    */
-  constructor(entity?: EntityRegistryEntry, options: chips.ChipOptions = {}) {
+  constructor(entity?: EntityRegistryEntry, options: chips.DeviceClassChipOptions = {}) {
     super();
 
     if (options?.show_content) {
@@ -44,7 +44,7 @@ class CoverChip extends AbstractChip {
 
     this.#defaultConfig.icon_color = Helper.getFromDomainState({ domain: "cover", area_slug: options?.area_slug })
 
-    const magicAreasEntity = getMAEntity(options?.magic_device_id ?? "global", "cover", "shutter");
+    const magicAreasEntity = getMAEntity(options?.magic_device_id ?? "global", "cover", options?.device_class);
 
     if (magicAreasEntity) {
       this.#defaultConfig.entity = magicAreasEntity.entity_id;

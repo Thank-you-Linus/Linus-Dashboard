@@ -1707,10 +1707,9 @@ class ControllerCard {
                 const chipOptions = {
                     show_content: true,
                     magic_device_id: __classPrivateFieldGet(this, _ControllerCard_magic_device_id, "f"),
-                    tap_action: { action: "more-info" },
                     ...__classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").controlChipOptions,
                 };
-                const chip = typeof chipModule === 'function' && new chipModule(chipOptions).getChip();
+                const chip = typeof chipModule === 'function' && new chipModule(magic_device, chipOptions).getChip();
                 badges.push({
                     type: "custom:mushroom-chips-card",
                     chips: [chip],
@@ -3612,7 +3611,7 @@ class CoverChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.AbstractChip 
     /**
      * Class Constructor.
      *
-     * @param {chips.ChipOptions} options The chip options.
+     * @param {chips.DeviceClassChipOptions} options The chip options.
      */
     constructor(entity, options = {}) {
         super();
@@ -3637,7 +3636,7 @@ class CoverChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.AbstractChip 
             __classPrivateFieldGet(this, _CoverChip_defaultConfig, "f").content = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getCountTemplate({ domain: "cover", operator: "eq", value: "open", area_slug: options?.area_slug });
         }
         __classPrivateFieldGet(this, _CoverChip_defaultConfig, "f").icon_color = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getFromDomainState({ domain: "cover", area_slug: options?.area_slug });
-        const magicAreasEntity = (0,_utils__WEBPACK_IMPORTED_MODULE_2__.getMAEntity)(options?.magic_device_id ?? "global", "cover", "shutter");
+        const magicAreasEntity = (0,_utils__WEBPACK_IMPORTED_MODULE_2__.getMAEntity)(options?.magic_device_id ?? "global", "cover", options?.device_class);
         if (magicAreasEntity) {
             __classPrivateFieldGet(this, _CoverChip_defaultConfig, "f").entity = magicAreasEntity.entity_id;
         }
@@ -8082,7 +8081,7 @@ async function createItemsFromList(itemList, itemOptions, magic_device_id = "glo
         if (getGlobalEntitiesExceptUndisclosed(domain, device_class).length === 0)
             continue;
         const magicAreasEntity = getMAEntity(magic_device_id, domain, device_class);
-        const className = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.sanitizeClassName(itemType + (isChip ? "Chip" : "Card"));
+        const className = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.sanitizeClassName(domain + (isChip ? "Chip" : "Card"));
         try {
             let itemModule;
             let item;
@@ -8629,11 +8628,11 @@ const DEVICE_CLASSES = {
 const AREA_CARDS_DOMAINS = [LIGHT_DOMAIN, "switch", "climate", "fan", "vacuum", "media_player", "camera", "cover", "lock", "scene", "plant", "binary_sensor", "sensor"];
 const CUSTOM_VIEWS = ["home", "security", "security-details"];
 const DOMAINS_VIEWS = [...AREA_CARDS_DOMAINS, ...DEVICE_CLASSES.binary_sensor, ...DEVICE_CLASSES.sensor];
-const HOME_EXPOSED_CHIPS = ["weather", "alarm", "spotify", LIGHT_DOMAIN, "climate", "fan", "media_player", "switch", "safety", "cover", "binary_sensor:motion", "binary_sensor:occupancy", "binary_sensor:door", "binary_sensor:window"];
-const AREA_EXPOSED_CHIPS = [LIGHT_DOMAIN, ...GROUP_DOMAINS, "fan", "switch", "safety", ...DEVICE_CLASSES.binary_sensor.map(d => `binary_sensor:${d}`), ...DEVICE_CLASSES.sensor.map(d => `sensor:${d}`)];
+const HOME_EXPOSED_CHIPS = ["weather", "alarm", "spotify", LIGHT_DOMAIN, "climate", "fan", "media_player", "switch", "safety", ...DEVICE_CLASSES.cover.map(d => `cover:${d}`), "binary_sensor:motion", "binary_sensor:occupancy", "binary_sensor:door", "binary_sensor:window"];
+const AREA_EXPOSED_CHIPS = [LIGHT_DOMAIN, ...GROUP_DOMAINS, ...DEVICE_CLASSES.cover.map(d => `cover:${d}`), "fan", "switch", "safety", ...DEVICE_CLASSES.binary_sensor.map(d => `binary_sensor:${d}`), ...DEVICE_CLASSES.sensor.map(d => `sensor:${d}`)];
 const SECURITY_EXPOSED_DOMAINS = ["light", "alarm", "safety", ...DEVICE_CLASSES.cover.map(d => `cover:${d}`), "lock"];
 const SECURITY_EXPOSED_SENSORS = ["binary_sensor:motion", "binary_sensor:occupancy", "binary_sensor:door", "binary_sensor:window"];
-const SECURITY_EXPOSED_CHIPS = ["light", "alarm", "safety", "cover", "lock", ...SECURITY_EXPOSED_SENSORS];
+const SECURITY_EXPOSED_CHIPS = ["light", "alarm", "safety", ...DEVICE_CLASSES.cover.map(d => `cover:${d}`), "lock", ...SECURITY_EXPOSED_SENSORS];
 const DEVICE_ICONS = {
     presence_hold: 'mdi:car-brake-hold'
 };

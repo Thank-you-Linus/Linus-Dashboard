@@ -1,7 +1,7 @@
 import { cards } from "../types/strategy/cards";
 import { LovelaceBadgeConfig, LovelaceCardConfig } from "../types/homeassistant/data/lovelace";
 import { Helper } from "../Helper";
-import { getMAEntity, navigateTo } from "../utils";
+import { navigateTo } from "../utils";
 
 /**
  * Controller Card class.
@@ -106,10 +106,9 @@ class ControllerCard {
         const chipOptions = {
           show_content: true,
           magic_device_id: this.#magic_device_id,
-          tap_action: { action: "more-info" },
           ...this.#defaultConfig.controlChipOptions,
         };
-        const chip = typeof chipModule === 'function' && new chipModule(chipOptions).getChip();
+        const chip = typeof chipModule === 'function' && new chipModule(magic_device, chipOptions).getChip();
 
         badges.push({
           type: "custom:mushroom-chips-card",

@@ -38,7 +38,7 @@ class CoverCard extends AbstractCard {
    * @param {cards.CoverCardOptions} [options={}] Options for the card.
    * @throws {Error} If the Helper module isn't initialized.
    */
-  constructor(entity?: EntityRegistryEntry, options: cards.CoverCardOptions = {}) {
+  constructor(options: cards.CoverCardOptions, entity?: EntityRegistryEntry) {
     super(entity);
 
     if (!entity) this.#defaultConfig = new AggregateCard({ domain: "cover", device_class: options.device_class, tap_action: navigateTo("cover") }).config;

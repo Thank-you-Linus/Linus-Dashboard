@@ -34,7 +34,7 @@ class CameraCard extends AbstractCard {
    * @param {cards.PictureEntityCardOptions} [options={}] Options for the card.
    * @throws {Error} If the Helper module isn't initialized.
    */
-  constructor(entity: EntityRegistryEntry, options: cards.PictureEntityCardOptions = {}) {
+  constructor(options: cards.PictureEntityCardOptions, entity: EntityRegistryEntry) {
     super(entity);
 
     this.config = Object.assign(this.config, this.#defaultConfig, options);

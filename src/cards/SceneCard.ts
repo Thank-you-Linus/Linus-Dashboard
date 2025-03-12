@@ -1,6 +1,6 @@
-import {AbstractCard} from "./AbstractCard";
-import {cards} from "../types/strategy/cards";
-import {EntityRegistryEntry} from "../types/homeassistant/data/entity_registry";
+import { AbstractCard } from "./AbstractCard";
+import { cards } from "../types/strategy/cards";
+import { EntityRegistryEntry } from "../types/homeassistant/data/entity_registry";
 import { SceneCardConfig } from "../types/lovelace-mushroom/cards/scene-card-config";
 
 /**
@@ -32,11 +32,11 @@ class SceneCard extends AbstractCard {
    * @param {cards.SceneCardOptions} [options={}] Options for the card.
    * @throws {Error} If the Helper module isn't initialized.
    */
-  constructor(entity: EntityRegistryEntry, options: cards.SceneCardOptions = {}) {
+  constructor(options: cards.SceneCardOptions, entity: EntityRegistryEntry) {
     super(entity);
 
     this.config = Object.assign(this.config, this.#defaultConfig, options);
   }
 }
 
-export {SceneCard};
+export { SceneCard };

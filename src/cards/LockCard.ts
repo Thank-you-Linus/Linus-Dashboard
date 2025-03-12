@@ -1,7 +1,7 @@
-import {AbstractCard} from "./AbstractCard";
-import {cards} from "../types/strategy/cards";
-import {EntityRegistryEntry} from "../types/homeassistant/data/entity_registry";
-import {LockCardConfig} from "../types/lovelace-mushroom/cards/lock-card-config";
+import { AbstractCard } from "./AbstractCard";
+import { cards } from "../types/strategy/cards";
+import { EntityRegistryEntry } from "../types/homeassistant/data/entity_registry";
+import { LockCardConfig } from "../types/lovelace-mushroom/cards/lock-card-config";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**
@@ -31,11 +31,11 @@ class LockCard extends AbstractCard {
    * @param {cards.LockCardOptions} [options={}] Options for the card.
    * @throws {Error} If the Helper module isn't initialized.
    */
-  constructor(entity: EntityRegistryEntry, options: cards.LockCardOptions = {}) {
+  constructor(options: cards.LockCardOptions, entity: EntityRegistryEntry) {
     super(entity);
 
     this.config = Object.assign(this.config, this.#defaultConfig, options);
   }
 }
 
-export {LockCard};
+export { LockCard };

@@ -30,7 +30,7 @@ class PersonCard extends AbstractCard {
    * @param {cards.PersonCardOptions} [options={}] Options for the card.
    * @throws {Error} If the Helper module isn't initialized.
    */
-  constructor(entity: EntityRegistryEntry, options: cards.PersonCardOptions = {}) {
+  constructor(options: cards.PersonCardOptions, entity: EntityRegistryEntry) {
     super(entity);
 
     this.config = Object.assign(this.config, this.#defaultConfig, options);

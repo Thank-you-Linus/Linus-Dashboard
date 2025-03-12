@@ -108,7 +108,7 @@ class ControllerCard {
           magic_device_id: this.#magic_device_id,
           ...this.#defaultConfig.controlChipOptions,
         };
-        const chip = typeof chipModule === 'function' && new chipModule(magic_device, chipOptions).getChip();
+        const chip = typeof chipModule === 'function' && new chipModule(chipOptions, magic_device).getChip();
 
         badges.push({
           type: "custom:mushroom-chips-card",

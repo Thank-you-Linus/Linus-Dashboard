@@ -1420,8 +1420,8 @@ class BinarySensorCard extends _SensorCard__WEBPACK_IMPORTED_MODULE_0__.SensorCa
      * @param {cards.EntityCardOptions} [options={}] Options for the card.
      * @throws {Error} If the Helper module isn't initialized.
      */
-    constructor(entity, options = {}) {
-        super(entity);
+    constructor(options, entity) {
+        super(options, entity);
         /**
          * Default configuration of the card.
          *
@@ -1479,7 +1479,7 @@ class CameraCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractCard
      * @param {cards.PictureEntityCardOptions} [options={}] Options for the card.
      * @throws {Error} If the Helper module isn't initialized.
      */
-    constructor(entity, options = {}) {
+    constructor(options, entity) {
         super(entity);
         /**
          * Default configuration of the card.
@@ -1541,7 +1541,7 @@ class ClimateCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractCar
      * @param {cards.ClimateCardOptions} [options={}] Options for the card.
      * @throws {Error} If the Helper module isn't initialized.
      */
-    constructor(entity, options = {}) {
+    constructor(options, entity) {
         super(entity);
         /**
          * Default configuration of the card.
@@ -1709,7 +1709,7 @@ class ControllerCard {
                     magic_device_id: __classPrivateFieldGet(this, _ControllerCard_magic_device_id, "f"),
                     ...__classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").controlChipOptions,
                 };
-                const chip = typeof chipModule === 'function' && new chipModule(magic_device, chipOptions).getChip();
+                const chip = typeof chipModule === 'function' && new chipModule(chipOptions, magic_device).getChip();
                 badges.push({
                     type: "custom:mushroom-chips-card",
                     chips: [chip],
@@ -1790,7 +1790,7 @@ class CoverCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractCard 
      * @param {cards.CoverCardOptions} [options={}] Options for the card.
      * @throws {Error} If the Helper module isn't initialized.
      */
-    constructor(entity, options = {}) {
+    constructor(options, entity) {
         super(entity);
         /**
          * Default configuration of the card.
@@ -1854,7 +1854,7 @@ class FanCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractCard {
      * @param {cards.FanCardOptions} [options={}] Options for the card.
      * @throws {Error} If the Helper module isn't initialized.
      */
-    constructor(entity, options = {}) {
+    constructor(options, entity) {
         super(entity);
         /**
          * Default configuration of the card.
@@ -2091,9 +2091,9 @@ class HomeAreaCard {
                 window?.length && new _chips_ConditionalChip__WEBPACK_IMPORTED_MODULE_7__.ConditionalChip(aggregate_window ? [{ entity: aggregate_window?.entity_id, state: "on" }] : window.map(entity => ({ entity, state: "on" })), new _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_2__.AggregateChip({ magic_device_id: this.area.slug, area_slug: this.area.slug, device_class: "window", show_content: false }).getChip()).getChip(),
                 door && new _chips_ConditionalChip__WEBPACK_IMPORTED_MODULE_7__.ConditionalChip(aggregate_door ? [{ entity: aggregate_door?.entity_id, state: "on" }] : door.map(entity => ({ entity, state: "on" })), new _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_2__.AggregateChip({ magic_device_id: this.area.slug, area_slug: this.area.slug, device_class: "door", show_content: false }).getChip()).getChip(),
                 cover && new _chips_ConditionalChip__WEBPACK_IMPORTED_MODULE_7__.ConditionalChip(aggregate_cover ? [{ entity: aggregate_cover?.entity_id, state: "on" }] : cover.map(entity => ({ entity, state: "on" })), new _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_2__.AggregateChip({ magic_device_id: this.area.slug, area_slug: this.area.slug, device_class: "cover", show_content: false }).getChip()).getChip(),
-                climate && new _chips_ClimateChip__WEBPACK_IMPORTED_MODULE_5__.ClimateChip(magicClimate, { magic_device_id: this.area.slug, area_slug: this.area.slug }).getChip(),
-                fan && new _chips_FanChip__WEBPACK_IMPORTED_MODULE_9__.FanChip(magicFan, { magic_device_id: this.area.slug, area_slug: this.area.slug }).getChip(),
-                light && new _chips_LightChip__WEBPACK_IMPORTED_MODULE_6__.LightChip(magicLight, { area_slug: this.area.slug, magic_device_id: this.area.slug, tap_action: { action: "toggle" } }).getChip(),
+                climate && new _chips_ClimateChip__WEBPACK_IMPORTED_MODULE_5__.ClimateChip({ magic_device_id: this.area.slug, area_slug: this.area.slug }, magicClimate).getChip(),
+                fan && new _chips_FanChip__WEBPACK_IMPORTED_MODULE_9__.FanChip({ magic_device_id: this.area.slug, area_slug: this.area.slug }, magicFan).getChip(),
+                light && new _chips_LightChip__WEBPACK_IMPORTED_MODULE_6__.LightChip({ area_slug: this.area.slug, magic_device_id: this.area.slug, tap_action: { action: "toggle" } }, magicLight).getChip(),
                 new _chips_ConditionalChip__WEBPACK_IMPORTED_MODULE_7__.ConditionalChip([{ entity: this.magicDevice?.entities?.all_lights?.entity_id, state_not: _variables__WEBPACK_IMPORTED_MODULE_8__.UNAVAILABLE }], new _chips_ControlChip__WEBPACK_IMPORTED_MODULE_1__.ControlChip("light", light_control?.entity_id).getChip()).getChip()
             ].filter(Boolean),
             card_mod: { style: this.getChipsCardModStyle() }
@@ -2297,7 +2297,7 @@ class LightCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractCard 
      * @param {cards.LightCardOptions} [options={}] Options for the card.
      * @throws {Error} If the Helper module isn't initialized.
      */
-    constructor(entity, options = {}) {
+    constructor(options, entity) {
         super(entity);
         /**
          * Default configuration of the card.
@@ -2357,7 +2357,7 @@ class LockCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractCard {
      * @param {cards.LockCardOptions} [options={}] Options for the card.
      * @throws {Error} If the Helper module isn't initialized.
      */
-    constructor(entity, options = {}) {
+    constructor(options, entity) {
         super(entity);
         /**
          * Default configuration of the card.
@@ -2414,7 +2414,7 @@ class MediaPlayerCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.Abstrac
      * @param {cards.MediaPlayerCardOptions} [options={}] Options for the card.
      * @throws {Error} If the Helper module isn't initialized.
      */
-    constructor(entity, options = {}) {
+    constructor(options, entity) {
         super(entity);
         /**
          * Default configuration of the card.
@@ -2480,7 +2480,7 @@ class MiscellaneousCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.Abstr
      * @param {cards.EntityCardOptions} [options={}] Options for the card.
      * @throws {Error} If the Helper module isn't initialized.
      */
-    constructor(entity, options = {}) {
+    constructor(options = {}, entity) {
         super(entity);
         /**
          * Default configuration of the card.
@@ -2538,7 +2538,7 @@ class NumberCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractCard
      * @param {cards.NumberCardOptions} [options={}] Options for the card.
      * @throws {Error} If the Helper module isn't initialized.
      */
-    constructor(entity, options = {}) {
+    constructor(options, entity) {
         super(entity);
         /**
          * Default configuration of the card.
@@ -2594,7 +2594,7 @@ class PersonCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractCard
      * @param {cards.PersonCardOptions} [options={}] Options for the card.
      * @throws {Error} If the Helper module isn't initialized.
      */
-    constructor(entity, options = {}) {
+    constructor(options, entity) {
         super(entity);
         /**
          * Default configuration of the card.
@@ -2650,7 +2650,7 @@ class SceneCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractCard 
      * @param {cards.SceneCardOptions} [options={}] Options for the card.
      * @throws {Error} If the Helper module isn't initialized.
      */
-    constructor(entity, options = {}) {
+    constructor(options, entity) {
         super(entity);
         /**
          * Default configuration of the card.
@@ -2708,7 +2708,7 @@ class SensorCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractCard
      * @param {cards.EntityCardOptions} [options={}] Options for the card.
      * @throws {Error} If the Helper module isn't initialized.
      */
-    constructor(entity, options = {}) {
+    constructor(options, entity) {
         super(entity);
         /**
          * Default configuration of the card.
@@ -2831,7 +2831,7 @@ class SwitchCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractCard
      * @param {cards.EntityCardOptions} [options={}] Options for the card.
      * @throws {Error} If the Helper module isn't initialized.
      */
-    constructor(entity, options = {}) {
+    constructor(options, entity) {
         super(entity);
         /**
          * Default configuration of the card.
@@ -2894,7 +2894,7 @@ class VacuumCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractCard
      * @param {cards.VacuumCardOptions} [options={}] Options for the card.
      * @throws {Error} If the Helper module isn't initialized.
      */
-    constructor(entity, options = {}) {
+    constructor(options, entity) {
         super(entity);
         /**
          * Default configuration of the card.
@@ -3064,8 +3064,9 @@ class AggregateChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.AbstractC
      *
      * @param {chips.AggregateChipOptions} options The chip options.
      */
-    constructor(options) {
+    constructor(options, entity) {
         super();
+        console.log('AggregateChip options', options);
         const defaultConfig = this.getDefaultConfig(options);
         this.config = Object.assign(this.config, defaultConfig);
     }
@@ -3421,7 +3422,7 @@ class ClimateChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.AbstractChi
      *
      * @param {chips.ChipOptions} options The chip options.
      */
-    constructor(entity, options = {}) {
+    constructor(options, entity) {
         super();
         /**
          * Default configuration of the chip.
@@ -3613,7 +3614,7 @@ class CoverChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.AbstractChip 
      *
      * @param {chips.DeviceClassChipOptions} options The chip options.
      */
-    constructor(entity, options = {}) {
+    constructor(options, entity) {
         super();
         /**
          * Default configuration of the chip.
@@ -3686,7 +3687,7 @@ class FanChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.AbstractChip {
      *
      * @param {chips.ChipOptions} options The chip options.
      */
-    constructor(entity, options = {}) {
+    constructor(options, entity) {
         super();
         /**
          * Default configuration of the chip.
@@ -3753,7 +3754,7 @@ class LightChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.AbstractChip 
      *
      * @param {chips.ChipOptions} options The chip options.
      */
-    constructor(entity, options = {}) {
+    constructor(options, entity) {
         super();
         /**
          * Default configuration of the chip.
@@ -3827,7 +3828,7 @@ class MediaPlayerChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.Abstrac
      *
      * @param {chips.ChipOptions} options The chip options.
      */
-    constructor(entity, options = {}) {
+    constructor(options, entity) {
         super();
         /**
          * Default configuration of the chip.
@@ -3897,7 +3898,7 @@ class SafetyChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.AbstractChip
      *
      * @param {chips.TemplateChipOptions} options The chip options.
      */
-    constructor(entity, options = {}) {
+    constructor(options, entity) {
         super();
         /**
          * Default configuration of the chip.
@@ -4188,7 +4189,7 @@ class SwitchChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.AbstractChip
      *
      * @param {chips.ChipOptions} options The chip options.
      */
-    constructor(entity, options = {}) {
+    constructor(options, entity) {
         super();
         /**
          * Default configuration of the chip.
@@ -8087,7 +8088,7 @@ async function createItemsFromList(itemList, itemOptions, magic_device_id = "glo
             let item;
             try {
                 itemModule = await __webpack_require__("./src lazy recursive ^\\.\\/.*\\/.*$")(`./${isChip ? "chips" : "cards"}/${className}`);
-                item = new itemModule[className](magicAreasEntity, { ...itemOptions, device_class, magic_device_id, area_slug });
+                item = new itemModule[className]({ ...itemOptions, device_class, magic_device_id, area_slug }, magicAreasEntity);
             }
             catch {
                 itemModule = await __webpack_require__("./src lazy recursive ^\\.\\/.*\\/Aggregate.*$")(`./${isChip ? "chips" : "cards"}/Aggregate${isChip ? "Chip" : "Card"}`);
@@ -8099,7 +8100,7 @@ async function createItemsFromList(itemList, itemOptions, magic_device_id = "glo
                     area_slug,
                     magic_device_id,
                     tap_action: navigateTo(domain === "binary_sensor" || domain === "sensor" ? device_class ?? domain : domain)
-                });
+                }, magicAreasEntity);
             }
             items.push(item.getChip ? item.getChip() : item.getCard());
         }
@@ -8391,13 +8392,13 @@ async function processEntitiesForAreaOrFloorView({ area, floor, }) {
                         .map(entity => {
                         const cardOptions = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.card_options?.[entity.entity_id];
                         if (domain === "sensor" && _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getEntityState(entity.entity_id)?.attributes.unit_of_measurement) {
-                            return new cardModule[_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.sanitizeClassName(domain + "Card")](entity, {
+                            return new cardModule[_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.sanitizeClassName(domain + "Card")]({
                                 type: "custom:mini-graph-card",
                                 entities: [entity.entity_id],
                                 ...cardOptions,
-                            }).getCard();
+                            }, entity).getCard();
                         }
-                        return new cardModule[_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.sanitizeClassName(domain + "Card")](entity, cardOptions).getCard();
+                        return new cardModule[_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.sanitizeClassName(domain + "Card")](cardOptions, entity).getCard();
                     });
                     if (entityCards.length) {
                         domainCardsMap[domain].push(...titleCard);
@@ -8437,7 +8438,7 @@ async function processEntitiesForAreaOrFloorView({ area, floor, }) {
                 const deviceOptions = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.card_options?.[entity.device_id ?? "null"];
                 return !cardOptions?.hidden && !deviceOptions?.hidden && !(entity.entity_category === "config" && _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains["_"].hide_config_entities);
             })
-                .map(entity_id => new cardModule.MiscellaneousCard(_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.entities[entity_id], _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.card_options?.[entity_id]).getCard());
+                .map(entity_id => new cardModule.MiscellaneousCard(_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.card_options?.[entity_id], _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.entities[entity_id]).getCard());
             const miscellaneousCards = new _cards_GroupedCard__WEBPACK_IMPORTED_MODULE_3__.GroupedCard(miscellaneousEntityCards).getCard();
             const titleCard = {
                 type: "heading",
@@ -8476,7 +8477,7 @@ async function processEntities(entities, area, domain) {
         .filter(entity => !_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.card_options?.[entity.entity_id]?.hidden
         && !_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.card_options?.[entity.device_id ?? "null"]?.hidden
         && !(entity.entity_category === "config" && configEntityHidden))
-        .map(entity => new cardModule[className](entity).getCard());
+        .map(entity => new cardModule[className]({}, entity).getCard());
 }
 
 
@@ -9738,7 +9739,7 @@ async function _HomeView_createPersonCards() {
         return entity.hidden_by == null && entity.disabled_by == null;
     });
     for (const person of persons) {
-        cards.push(new _cards_PersonCard__WEBPACK_IMPORTED_MODULE_7__.PersonCard(person).getCard());
+        cards.push(new _cards_PersonCard__WEBPACK_IMPORTED_MODULE_7__.PersonCard({}, person).getCard());
     }
     return cards;
 };
@@ -10219,7 +10220,7 @@ class SecurityView {
                 heading_style: "subtitle",
             });
             for (const person of persons) {
-                globalSection.cards.push(new _cards_PersonCard__WEBPACK_IMPORTED_MODULE_2__.PersonCard(person).getCard());
+                globalSection.cards.push(new _cards_PersonCard__WEBPACK_IMPORTED_MODULE_2__.PersonCard({}, person).getCard());
             }
         }
         const securityCards = await (0,_utils__WEBPACK_IMPORTED_MODULE_3__.createCardsFromList)(_variables__WEBPACK_IMPORTED_MODULE_5__.SECURITY_EXPOSED_DOMAINS, {}, "global", "global");
@@ -10312,7 +10313,7 @@ class SecurityView {
                     if (entity.entity_category === "config" && configEntityHidden) {
                         continue;
                     }
-                    entityCards.push(new cardModule[className](entity, cardOptions).getCard());
+                    entityCards.push(new cardModule[className](cardOptions, entity).getCard());
                 }
                 if (entityCards.length) {
                     areaCards.push(new _cards_GroupedCard__WEBPACK_IMPORTED_MODULE_6__.GroupedCard(entityCards).getCard());
@@ -10525,7 +10526,7 @@ class UnavailableView {
                     .filter(entity => !_Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.strategyOptions.card_options?.[entity.entity_id]?.hidden
                     && !_Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.strategyOptions.card_options?.[entity.device_id ?? "null"]?.hidden
                     && !(entity.entity_category === "config"))
-                    .map(entity => new cardModule.MiscellaneousCard(entity).getCard());
+                    .map(entity => new cardModule.MiscellaneousCard({}, entity).getCard());
                 if (entityCards.length) {
                     const titleCardOptions = {
                         subtitle: (0,_utils__WEBPACK_IMPORTED_MODULE_2__.getAreaName)(area),

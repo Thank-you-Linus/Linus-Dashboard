@@ -2,6 +2,7 @@ import { chips } from "../types/strategy/chips";
 import { DEVICE_CLASSES } from "../variables";
 import { AbstractChip } from "./AbstractChip";
 import { Helper } from "../Helper";
+import { EntityRegistryEntry } from "../types/homeassistant/data/entity_registry";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**
@@ -70,8 +71,10 @@ class AggregateChip extends AbstractChip {
    *
    * @param {chips.AggregateChipOptions} options The chip options.
    */
-  constructor(options: chips.AggregateChipOptions) {
+  constructor(options: chips.AggregateChipOptions, entity?: EntityRegistryEntry) {
     super();
+
+    console.log('AggregateChip options', options);
 
     const defaultConfig = this.getDefaultConfig(options)
 

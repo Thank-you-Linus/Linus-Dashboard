@@ -35,7 +35,7 @@ class MediaPlayerChip extends AbstractChip {
    *
    * @param {chips.ChipOptions} options The chip options.
    */
-  constructor(entity?: EntityRegistryEntry, options: chips.ChipOptions = {}) {
+  constructor(options: chips.ChipOptions, entity?: EntityRegistryEntry) {
     super();
 
     if (options?.show_content) {

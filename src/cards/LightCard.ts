@@ -35,7 +35,7 @@ class LightCard extends AbstractCard {
    * @param {cards.LightCardOptions} [options={}] Options for the card.
    * @throws {Error} If the Helper module isn't initialized.
    */
-  constructor(entity?: EntityRegistryEntry, options: cards.LightCardOptions = {}) {
+  constructor(options: cards.LightCardOptions, entity?: EntityRegistryEntry) {
     super(entity);
 
     if (!entity) this.#defaultConfig = new AggregateCard({ domain: "light", tap_action: navigateTo("light") }).config;

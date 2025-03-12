@@ -306,7 +306,7 @@ class HomeView {
     });
 
     for (const person of persons) {
-      cards.push(new PersonCard(person).getCard());
+      cards.push(new PersonCard({}, person).getCard());
     }
 
     return cards;

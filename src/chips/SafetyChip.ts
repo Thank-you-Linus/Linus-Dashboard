@@ -38,7 +38,7 @@ class SafetyChip extends AbstractChip {
    *
    * @param {chips.TemplateChipOptions} options The chip options.
    */
-  constructor(entity?: EntityRegistryEntry, options: chips.TemplateChipOptions = {}) {
+  constructor(options: chips.TemplateChipOptions, entity?: EntityRegistryEntry) {
     super();
 
     this.config = Object.assign(this.config, this.#defaultConfig, options);

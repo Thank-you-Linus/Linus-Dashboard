@@ -79,7 +79,7 @@ class UnavailableView {
           .filter(entity => !Helper.strategyOptions.card_options?.[entity.entity_id]?.hidden
             && !Helper.strategyOptions.card_options?.[entity.device_id ?? "null"]?.hidden
             && !(entity.entity_category === "config"))
-          .map(entity => new cardModule.MiscellaneousCard(entity).getCard());
+          .map(entity => new cardModule.MiscellaneousCard({}, entity).getCard());
 
         if (entityCards.length) {
           const titleCardOptions = {

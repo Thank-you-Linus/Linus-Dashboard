@@ -35,7 +35,7 @@ class CoverChip extends AbstractChip {
    *
    * @param {chips.DeviceClassChipOptions} options The chip options.
    */
-  constructor(entity?: EntityRegistryEntry, options: chips.DeviceClassChipOptions = {}) {
+  constructor(options: chips.DeviceClassChipOptions, entity?: EntityRegistryEntry) {
     super();
 
     if (options?.show_content) {

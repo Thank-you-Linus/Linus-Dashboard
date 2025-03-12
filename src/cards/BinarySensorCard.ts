@@ -33,8 +33,8 @@ class BinarySensorCard extends SensorCard {
    * @param {cards.EntityCardOptions} [options={}] Options for the card.
    * @throws {Error} If the Helper module isn't initialized.
    */
-  constructor(entity: EntityRegistryEntry, options: cards.EntityCardOptions = {}) {
-    super(entity);
+  constructor(options: cards.EntityCardOptions, entity: EntityRegistryEntry) {
+    super(options, entity);
 
     this.config = Object.assign(this.config, this.#defaultConfig, options);
   }

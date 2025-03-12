@@ -172,9 +172,9 @@ class HomeAreaCard {
           aggregate_cover ? [{ entity: aggregate_cover?.entity_id, state: "on" }] : cover.map(entity => ({ entity, state: "on" })),
           new AggregateChip({ magic_device_id: this.area.slug, area_slug: this.area.slug, device_class: "cover", show_content: false }).getChip()
         ).getChip(),
-        climate && new ClimateChip(magicClimate, { magic_device_id: this.area.slug, area_slug: this.area.slug }).getChip(),
-        fan && new FanChip(magicFan, { magic_device_id: this.area.slug, area_slug: this.area.slug }).getChip(),
-        light && new LightChip(magicLight, { area_slug: this.area.slug, magic_device_id: this.area.slug, tap_action: { action: "toggle" } }).getChip(),
+        climate && new ClimateChip({ magic_device_id: this.area.slug, area_slug: this.area.slug }, magicClimate,).getChip(),
+        fan && new FanChip({ magic_device_id: this.area.slug, area_slug: this.area.slug }, magicFan).getChip(),
+        light && new LightChip({ area_slug: this.area.slug, magic_device_id: this.area.slug, tap_action: { action: "toggle" } }, magicLight).getChip(),
         new ConditionalChip(
           [{ entity: this.magicDevice?.entities?.all_lights?.entity_id, state_not: UNAVAILABLE }],
           new ControlChip("light", light_control?.entity_id).getChip()

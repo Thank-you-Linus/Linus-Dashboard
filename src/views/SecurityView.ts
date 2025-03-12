@@ -139,7 +139,7 @@ class SecurityView {
         })
 
       for (const person of persons) {
-        globalSection.cards.push(new PersonCard(person).getCard());
+        globalSection.cards.push(new PersonCard({}, person).getCard());
       }
     }
 
@@ -251,7 +251,7 @@ class SecurityView {
           if (entity.entity_category === "config" && configEntityHidden) {
             continue;
           }
-          entityCards.push(new cardModule[className](entity, cardOptions).getCard());
+          entityCards.push(new cardModule[className](cardOptions, entity).getCard());
         }
 
         if (entityCards.length) {

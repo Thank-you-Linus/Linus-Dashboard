@@ -41,7 +41,7 @@ class ClimateCard extends AbstractCard {
    * @param {cards.ClimateCardOptions} [options={}] Options for the card.
    * @throws {Error} If the Helper module isn't initialized.
    */
-  constructor(entity: EntityRegistryEntry, options: cards.ClimateCardOptions = {}) {
+  constructor(options: cards.ClimateCardOptions, entity: EntityRegistryEntry) {
     super(entity);
 
     const { preset_modes, hvac_modes, fan_modes } = Helper.getEntityState(entity.entity_id)?.attributes ?? {};

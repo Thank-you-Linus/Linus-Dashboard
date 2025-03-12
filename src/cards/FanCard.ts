@@ -1,7 +1,7 @@
-import {AbstractCard} from "./AbstractCard";
-import {cards} from "../types/strategy/cards";
-import {EntityRegistryEntry} from "../types/homeassistant/data/entity_registry";
-import {FanCardConfig} from "../types/lovelace-mushroom/cards/fan-card-config";
+import { AbstractCard } from "./AbstractCard";
+import { cards } from "../types/strategy/cards";
+import { EntityRegistryEntry } from "../types/homeassistant/data/entity_registry";
+import { FanCardConfig } from "../types/lovelace-mushroom/cards/fan-card-config";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**
@@ -22,7 +22,7 @@ class FanCard extends AbstractCard {
   #defaultConfig: FanCardConfig = {
     type: "tile",
     icon: undefined,
-    features:[
+    features: [
       {
         type: "fan-speed"
       }
@@ -36,11 +36,11 @@ class FanCard extends AbstractCard {
    * @param {cards.FanCardOptions} [options={}] Options for the card.
    * @throws {Error} If the Helper module isn't initialized.
    */
-  constructor(entity: EntityRegistryEntry, options: cards.FanCardOptions = {}) {
+  constructor(options: cards.FanCardOptions, entity: EntityRegistryEntry) {
     super(entity);
 
     this.config = Object.assign(this.config, this.#defaultConfig, options);
   }
 }
 
-export {FanCard};
+export { FanCard };

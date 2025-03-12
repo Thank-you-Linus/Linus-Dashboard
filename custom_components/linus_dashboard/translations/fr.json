@@ -14,14 +14,16 @@
                     "weather_entity": "Sélectionnez l'entité météo",
                     "excluded_domains": "Sélectionnez les domaines à exclure",
                     "excluded_device_classes": "Sélectionnez les classes de dispositifs à exclure",
-                    "excluded_entities": "Sélectionnez les entités à exclure"
+                    "excluded_entities": "Sélectionnez les entités à exclure",
+                    "hide_greeting": "Masquer le message de salutation"
                 },
                 "data_description": {
                     "alarm_entity": "Entité d'alarme utilisée pour afficher l'état de l'alarme.",
                     "weather_entity": "Entité météo utilisée pour afficher les conditions météorologiques.",
                     "excluded_domains": "Domaines qui seront exclus du tableau de bord.",
                     "excluded_device_classes": "Classes de dispositifs qui seront exclues du tableau de bord.",
-                    "excluded_entities": "Entités spécifiques qui seront exclues du tableau de bord."
+                    "excluded_entities": "Entités spécifiques qui seront exclues du tableau de bord.",
+                    "hide_greeting": "Cochez cette case pour masquer le message de salutation sur le tableau de bord."
                 }
             }
         }
@@ -34,16 +36,20 @@
                     "on": "Ajouter une nouvelle zone",
                     "off": "Cliquez ici pour aller à la page des zones"
                 }
-            },
+            }
+        },
+        "text": {
             "settings_chip": {
-                "name": "Paramètres Linus",
-                "state": {
-                    "on": "Recharger les zones magiques",
-                    "off": "Redémarrer HA"
-                }
+                "title": "Paramètres Linus",
+                "reload": "Recharger les zones magiques",
+                "restart": "Redémarrer HA"
             },
-            "area_state_popup": {
-                "name": "Capteurs utilisés pour la détection de présence :"
+            "area_state_popup": "Capteurs utilisés pour la détection de présence :",
+            "greeting": {
+                "morning": "Bonjour, ",
+                "afternoon": "Bonne après-midi, ",
+                "evening": "Bonne soirée, ",
+                "night": "Bonne nuit, "
             }
         }
     }

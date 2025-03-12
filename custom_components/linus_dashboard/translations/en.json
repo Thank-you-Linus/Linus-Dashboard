@@ -26,14 +26,16 @@
                     "weather_entity": "Select weather entity",
                     "excluded_domains": "Select domains to exclude",
                     "excluded_device_classes": "Select device classes to exclude",
-                    "excluded_entities": "Select entities to exclude"
+                    "excluded_entities": "Select entities to exclude",
+                    "hide_greeting": "Hide greeting message"
                 },
                 "data_description": {
                     "alarm_entity": "Alarm entity used to display the alarm status.",
                     "weather_entity": "Weather entity used to display weather conditions.",
                     "excluded_domains": "Domains that will be excluded from the dashboard.",
                     "excluded_device_classes": "Device classes that will be excluded from the dashboard.",
-                    "excluded_entities": "Specific entities that will be excluded from the dashboard."
+                    "excluded_entities": "Specific entities that will be excluded from the dashboard.",
+                    "hide_greeting": "Check this box to hide the greeting message on the dashboard."
                 }
             }
         }
@@ -46,16 +48,20 @@
                     "on": "Add a new area",
                     "off": "Click here to go to the areas page"
                 }
-            },
+            }
+        },
+        "text": {
             "settings_chip": {
                 "name": "Linus Settings",
-                "state": {
-                    "on": "Reload Magic Areas",
-                    "off": "Restart HA"
-                }
+                "reload": "Reload Magic Areas",
+                "restart": "Restart HA"
             },
-            "area_state_popup": {
-                "name": "Sensors used for presence detection:"
+            "area_state_popup": "Sensors used for presence detection:",
+            "greeting": {
+                "morning": "Good morning, ",
+                "afternoon": "Good afternoon, ",
+                "evening": "Good evening, ",
+                "night": "Good night, "
             }
         }
     }

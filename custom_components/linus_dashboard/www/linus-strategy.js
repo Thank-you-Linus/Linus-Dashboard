@@ -5595,7 +5595,7 @@ class AreaInformations extends _AbstractPopup__WEBPACK_IMPORTED_MODULE_2__.Abstr
                             ] : []),
                             {
                                 type: "custom:mushroom-template-card",
-                                primary: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.entity.button.area_state_popup.name"),
+                                primary: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.entity.text.area_state_popup"),
                                 card_mod: {
                                     style: `ha-card {padding: 4px 12px!important;}`
                                 }
@@ -6082,7 +6082,7 @@ class SettingsPopup extends _AbstractPopup__WEBPACK_IMPORTED_MODULE_2__.Abstract
             browser_mod: {
                 service: "browser_mod.popup",
                 data: {
-                    title: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.entity.button.settings_chip.name"),
+                    title: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.entity.text.settings_chip.title"),
                     content: {
                         type: "vertical-stack",
                         cards: [
@@ -6091,7 +6091,7 @@ class SettingsPopup extends _AbstractPopup__WEBPACK_IMPORTED_MODULE_2__.Abstract
                                 cards: [
                                     linusDeviceIds.length > 0 && {
                                         type: "custom:mushroom-template-card",
-                                        primary: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.entity.button.settings_chip.state.on"),
+                                        primary: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.entity.text.settings_chip.reload"),
                                         icon: "mdi:refresh",
                                         icon_color: "blue",
                                         tap_action: {
@@ -6102,7 +6102,7 @@ class SettingsPopup extends _AbstractPopup__WEBPACK_IMPORTED_MODULE_2__.Abstract
                                     },
                                     {
                                         type: "custom:mushroom-template-card",
-                                        primary: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.entity.button.settings_chip.state.off"),
+                                        primary: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.entity.text.settings_chip.restart"),
                                         icon: "mdi:restart",
                                         icon_color: "red",
                                         tap_action: {
@@ -9586,16 +9586,16 @@ class HomeView {
                     type: "horizontal-stack",
                     cards: personCards,
                 });
-                if (!_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.home_view.hidden.includes("greeting")) {
+                if (!_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.linus_dashboard_config?.hide_greeting) {
                     const tod = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices.global?.entities.time_of_the_day;
                     floorSection.cards.push({
                         type: "custom:mushroom-template-card",
                         primary: `
               {% set tod = states("${tod?.entity_id}") %}
-              {% if (tod == "evening") %} Bonne soirée, {{user}} !
-              {% elif (tod == "daytime") %} Bonne après-midi, {{user}} !
-              {% elif (tod == "night") %} Bonne nuit, {{user}} !
-              {% else %} Bonjour, {{user}} !
+              {% if (tod == "evening") %} ${_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.entity.text.greeting.evening")} {{user}} !
+              {% elif (tod == "daytime") %} ${_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.entity.text.greeting.daytime")} {{user}} !
+              {% elif (tod == "night") %} ${_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.entity.text.greeting.night")} {{user}} !
+              {% else %} ${_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.entity.text.greeting.morning")} {{user}} !
               {% endif %}`,
                         icon: "mdi:hand-wave",
                         icon_color: "orange",

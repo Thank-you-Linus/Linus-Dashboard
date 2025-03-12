@@ -74,8 +74,6 @@ class AggregateChip extends AbstractChip {
   constructor(options: chips.AggregateChipOptions, entity?: EntityRegistryEntry) {
     super();
 
-    console.log('AggregateChip options', options);
-
     const defaultConfig = this.getDefaultConfig(options)
 
     this.config = Object.assign(this.config, defaultConfig);

@@ -3066,7 +3066,6 @@ class AggregateChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.AbstractC
      */
     constructor(options, entity) {
         super();
-        console.log('AggregateChip options', options);
         const defaultConfig = this.getDefaultConfig(options);
         this.config = Object.assign(this.config, defaultConfig);
     }

@@ -22,6 +22,7 @@ from .const import (
     CONF_EXCLUDED_DEVICE_CLASSES,
     CONF_EXCLUDED_DOMAINS,
     CONF_EXCLUDED_ENTITIES,
+    CONF_HIDE_GREETING,
     CONF_WEATHER_ENTITY,
     DOMAIN,
     NAME,
@@ -125,6 +126,10 @@ class LinusDashboardEditFlow(config_entries.OptionsFlow):
                     multiple=True,
                 ),
             ),
+            vol.Optional(
+                CONF_HIDE_GREETING,
+                default=self.config_entry.options.get(CONF_HIDE_GREETING, False),
+            ): bool,
         }
 
         return self.async_show_form(

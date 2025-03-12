@@ -20,7 +20,7 @@ class SettingsPopup extends AbstractPopup {
       browser_mod: {
         service: "browser_mod.popup",
         data: {
-          title: Helper.localize("component.linus_dashboard.entity.button.settings_chip.name"),
+          title: Helper.localize("component.linus_dashboard.entity.text.settings_chip.title"),
           content: {
             type: "vertical-stack",
             cards: [
@@ -29,7 +29,7 @@ class SettingsPopup extends AbstractPopup {
                 cards: [
                   linusDeviceIds.length > 0 && {
                     type: "custom:mushroom-template-card",
-                    primary: Helper.localize("component.linus_dashboard.entity.button.settings_chip.state.on"),
+                    primary: Helper.localize("component.linus_dashboard.entity.text.settings_chip.reload"),
                     icon: "mdi:refresh",
                     icon_color: "blue",
                     tap_action: {
@@ -40,7 +40,7 @@ class SettingsPopup extends AbstractPopup {
                   },
                   {
                     type: "custom:mushroom-template-card",
-                    primary: Helper.localize("component.linus_dashboard.entity.button.settings_chip.state.off"),
+                    primary: Helper.localize("component.linus_dashboard.entity.text.settings_chip.restart"),
                     icon: "mdi:restart",
                     icon_color: "red",
                     tap_action: {

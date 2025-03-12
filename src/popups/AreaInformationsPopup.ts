@@ -156,7 +156,7 @@ class AreaInformations extends AbstractPopup {
                             ] : []),
                             {
                                 type: "custom:mushroom-template-card",
-                                primary: Helper.localize("component.linus_dashboard.entity.button.area_state_popup.name"),
+                                primary: Helper.localize("component.linus_dashboard.entity.text.area_state_popup"),
                                 card_mod: {
                                     style: `ha-card {padding: 4px 12px!important;}`
                                 }

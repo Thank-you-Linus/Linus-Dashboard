@@ -154,16 +154,16 @@ class HomeView {
           cards: personCards,
         } as StackCardConfig);
 
-        if (!Helper.strategyOptions.home_view.hidden.includes("greeting")) {
+        if (!Helper.linus_dashboard_config?.hide_greeting) {
           const tod = Helper.magicAreasDevices.global?.entities.time_of_the_day;
           floorSection.cards.push({
             type: "custom:mushroom-template-card",
             primary: `
               {% set tod = states("${tod?.entity_id}") %}
-              {% if (tod == "evening") %} Bonne soirée, {{user}} !
-              {% elif (tod == "daytime") %} Bonne après-midi, {{user}} !
-              {% elif (tod == "night") %} Bonne nuit, {{user}} !
-              {% else %} Bonjour, {{user}} !
+              {% if (tod == "evening") %} ${Helper.localize("component.linus_dashboard.entity.text.greeting.evening")} {{user}} !
+              {% elif (tod == "daytime") %} ${Helper.localize("component.linus_dashboard.entity.text.greeting.daytime")} {{user}} !
+              {% elif (tod == "night") %} ${Helper.localize("component.linus_dashboard.entity.text.greeting.night")} {{user}} !
+              {% else %} ${Helper.localize("component.linus_dashboard.entity.text.greeting.morning")} {{user}} !
               {% endif %}`,
             icon: "mdi:hand-wave",
             icon_color: "orange",

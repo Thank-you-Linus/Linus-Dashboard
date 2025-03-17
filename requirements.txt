@@ -1,5 +1,5 @@
 colorlog==6.9.0
 homeassistant==2025.1.4
 pip>=21.3.1
-ruff==0.9.6
+ruff==0.11.0
 aiohttp==3.11.11

@@ -37,11 +37,22 @@ class FanChip extends AbstractChip {
   constructor(options: chips.ChipOptions, entity?: EntityRegistryEntry) {
     super();
 
-    if (options?.show_content) {
-      this.#defaultConfig.content = Helper.getCountTemplate({ domain: "fan", operator: "eq", value: "on", area_slug: options?.area_slug });
+    const entities = Helper.getEntityIds({
+      domain: "fan",
+      area_slug: options?.area_slug,
+    });
+
+    if (!entities.length) {
+      console.debug("No entities found for fan chip");
+      return;
     }
 
-    this.#defaultConfig.icon_color = Helper.getFromDomainState({ domain: "fan", area_slug: options?.area_slug })
+    if (options?.show_content) {
+      this.#defaultConfig.content = Helper.getContent("fan", undefined, entities);
+    }
+
+    this.#defaultConfig.icon = Helper.getIcon("fan", undefined, entities);
+    this.#defaultConfig.icon_color = Helper.getIconColor("fan", undefined, entities);
 
 
     this.config = Object.assign(this.config, this.#defaultConfig, options);

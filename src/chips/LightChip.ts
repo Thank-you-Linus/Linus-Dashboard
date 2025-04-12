@@ -22,7 +22,6 @@ class LightChip extends AbstractChip {
    */
   readonly #defaultConfig: TemplateChipConfig = {
     type: "template",
-    icon: "mdi:lightbulb-group",
     icon_color: "amber",
     content: "",
     tap_action: {
@@ -39,11 +38,23 @@ class LightChip extends AbstractChip {
   constructor(options: chips.ChipOptions, entity?: EntityRegistryEntry) {
     super();
 
-    if (options?.show_content) {
-      this.#defaultConfig.content = Helper.getCountTemplate({ domain: "light", operator: "eq", value: "on", area_slug: options?.area_slug });
+
+    const entities = Helper.getEntityIds({
+      domain: "light",
+      area_slug: options?.area_slug,
+    });
+
+    if (!entities.length) {
+      console.debug("No entities found for light chip");
+      return;
     }
 
-    this.#defaultConfig.icon_color = Helper.getFromDomainState({ domain: "light", area_slug: options?.area_slug })
+    if (options?.show_content) {
+      this.#defaultConfig.content = Helper.getContent("light", undefined, entities);
+    }
+
+    this.#defaultConfig.icon = Helper.getIcon("light", undefined, entities);
+    this.#defaultConfig.icon_color = Helper.getIconColor("light", undefined, entities);
 
     const magicAreasEntity = getMAEntity(options?.magic_device_id ?? "global", "light");
 

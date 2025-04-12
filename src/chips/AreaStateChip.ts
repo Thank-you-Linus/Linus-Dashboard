@@ -20,28 +20,28 @@ class AreaStateChip extends AbstractChip {
    */
   getDefaultConfig({ area, floor, showContent = false }: { area?: generic.StrategyArea, floor?: generic.StrategyFloor, showContent?: boolean }): TemplateChipConfig {
 
-    const device_id = area?.slug ?? floor?.floor_id
+    const device_id = area?.slug ?? floor?.floor_id;
 
-    const device = device_id ? Helper.magicAreasDevices[device_id] : undefined
-    const { area_state, presence_hold, all_media_players, aggregate_motion, aggregate_presence, aggregate_occupancy } = device?.entities ?? {}
+    const device = device_id ? Helper.magicAreasDevices[device_id] : undefined;
+    const { area_state, presence_hold, all_media_players, aggregate_motion, aggregate_presence, aggregate_occupancy } = device?.entities ?? {};
 
-    const motion_entities = aggregate_motion ? [aggregate_motion.entity_id] : area?.domains?.motion ?? []
-    const presence_entities = aggregate_presence ? [aggregate_presence.entity_id] : area?.domains?.presence ?? []
-    const occupancy_entities = aggregate_occupancy ? [aggregate_occupancy.entity_id] : area?.domains?.occupancy ?? []
-    const media_player_entities = all_media_players ? [all_media_players.entity_id] : area?.domains?.media_player ?? []
+    const motion_entities = aggregate_motion ? [aggregate_motion.entity_id] : area?.domains?.motion ?? [];
+    const presence_entities = aggregate_presence ? [aggregate_presence.entity_id] : area?.domains?.presence ?? [];
+    const occupancy_entities = aggregate_occupancy ? [aggregate_occupancy.entity_id] : area?.domains?.occupancy ?? [];
+    const media_player_entities = all_media_players ? [all_media_players.entity_id] : area?.domains?.media_player ?? [];
 
-    const isOn = '| selectattr("state","eq", "on") | list | count > 0'
-    const isSomeone = `[${[...motion_entities, ...presence_entities, ...occupancy_entities]?.map(e => `states['${e}']`)}] ${isOn}`
-    const isMotion = `[${motion_entities?.map(e => `states['${e}']`)}] ${isOn}`
-    const isPresence = `[${presence_entities?.map(e => `states['${e}']`)}] ${isOn}`
-    const isOccupancy = `[${occupancy_entities?.map(e => `states['${e}']`)}] ${isOn}`
-    const isMediaPlaying = `[${media_player_entities?.map(e => `states['${e}']`)}] | selectattr("state","eq", "playing") | list | count > 0`
+    const isOn = '| selectattr("state","eq", "on") | list | count > 0';
+    const isSomeone = `[${[...motion_entities, ...presence_entities, ...occupancy_entities]?.map(e => `states['${e}']`)}] ${isOn}`;
+    const isMotion = `[${motion_entities?.map(e => `states['${e}']`)}] ${isOn}`;
+    const isPresence = `[${presence_entities?.map(e => `states['${e}']`)}] ${isOn}`;
+    const isOccupancy = `[${occupancy_entities?.map(e => `states['${e}']`)}] ${isOn}`;
+    const isMediaPlaying = `[${media_player_entities?.map(e => `states['${e}']`)}] | selectattr("state","eq", "playing") | list | count > 0`;
 
     return {
       type: "template",
       entity: area_state?.entity_id,
       icon_color: `
-          {% set presence_hold = states('${presence_hold?.entity_id}')%}
+          {% set presence_hold = states('${presence_hold?.entity_id}') %}
           {% set motion = ${isSomeone} %}
           {% set media_player = ${isMediaPlaying} %}
           {% set bl = state_attr('${area_state?.entity_id}', 'states') or [] %}
@@ -50,19 +50,19 @@ class AreaStateChip extends AbstractChip {
           {% elif media_player %}
               blue
           {% elif presence_hold == 'on' %}
-              red
-          {% elif 'sleep' in bl %}
-              blue
-          {% elif 'extended' in bl %}
               orange
+          {% elif 'sleep' in bl %}
+              purple
+          {% elif 'extended' in bl %}
+              yellow
           {% elif 'occupied' in bl %}
-              grey
+              amber
           {% else %}
-              transparent
+              grey
           {% endif %}
         `,
       icon: `
-          {% set presence_hold = states('${presence_hold?.entity_id}')%}
+          {% set presence_hold = states('${presence_hold?.entity_id}') %}
           {% set motion = ${isMotion} %}
           {% set presence = ${isPresence} %}
           {% set occupancy = ${isOccupancy} %}
@@ -88,21 +88,21 @@ class AreaStateChip extends AbstractChip {
             ${AREA_STATE_ICONS.clear}
           {% endif %}`,
       content: showContent ? `
-          {% set presence_hold = states('${presence_hold?.entity_id}')%}
-          {% set bl = state_attr('${area_state?.entity_id}', 'states')%}
+          {% set presence_hold = states('${presence_hold?.entity_id}') %}
+          {% set bl = state_attr('${area_state?.entity_id}', 'states') %}
           {% if presence_hold == 'on' %}
-            presence_hold
+            {{ '${Helper.localize("component.linus_dashboard.entity.text.area_states.presence_hold")}' }}
           {% elif 'sleep' in bl %}
-            sleep
+            {{ '${Helper.localize("component.linus_dashboard.entity.text.area_states.sleep")}' }}
           {% elif 'extended' in bl %}
-            extended
+            {{ '${Helper.localize("component.linus_dashboard.entity.text.area_states.extended")}' }}
           {% elif 'occupied' in bl %}
-            occupied
+            {{ '${Helper.localize("component.linus_dashboard.entity.text.area_states.occupied")}' }}
           {% else %}
-            clear
+            {{ '${Helper.localize("component.linus_dashboard.entity.text.area_states.clear")}' }}
           {% endif %}` : "",
       tap_action: device ? new AreaInformations(device, true).getPopup() : { action: "none" },
-    }
+    };
   }
 
   /**
@@ -113,10 +113,9 @@ class AreaStateChip extends AbstractChip {
   constructor(options: { area?: generic.StrategyArea, floor?: generic.StrategyFloor, showContent?: boolean }) {
     super();
 
-    const defaultConfig = this.getDefaultConfig(options)
+    const defaultConfig = this.getDefaultConfig(options);
 
     this.config = Object.assign(this.config, defaultConfig);
-
   }
 }
 

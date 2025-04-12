@@ -22,7 +22,6 @@ class CoverChip extends AbstractChip {
    */
   readonly #defaultConfig: TemplateChipConfig = {
     type: "template",
-    icon: "mdi:window-shutter",
     content: "",
     tap_action: {
       action: "navigate",
@@ -38,19 +37,28 @@ class CoverChip extends AbstractChip {
   constructor(options: chips.DeviceClassChipOptions, entity?: EntityRegistryEntry) {
     super();
 
-    if (options?.show_content) {
-      this.#defaultConfig.content = Helper.getCountTemplate({ domain: "cover", operator: "eq", value: "open", area_slug: options?.area_slug });
+    const entities = Helper.getEntityIds({
+      domain: "cover",
+      area_slug: options?.area_slug,
+      device_class: options?.device_class,
+    });
+
+    if (!entities.length) {
+      console.debug("No entities found for cover chip");
+      return;
     }
 
-    this.#defaultConfig.icon_color = Helper.getFromDomainState({ domain: "cover", area_slug: options?.area_slug })
+    if (options?.show_content) {
+      this.#defaultConfig.content = Helper.getContent("cover", options.device_class, entities);
+    }
+
+    this.#defaultConfig.icon = Helper.getIcon("cover", options.device_class, entities);
+    this.#defaultConfig.icon_color = Helper.getIconColor("cover", options.device_class, entities);
 
     const magicAreasEntity = getMAEntity(options?.magic_device_id ?? "global", "cover", options?.device_class);
 
     if (magicAreasEntity) {
       this.#defaultConfig.entity = magicAreasEntity.entity_id;
-    } else {
-      const area_slug = Array.isArray(options?.area_slug) ? options?.area_slug : [options?.area_slug]
-      this.#defaultConfig.entity_id = area_slug.flatMap((area) => Helper.areas[area ?? "global"]?.domains?.cover ?? []);
     }
 
     this.config = Object.assign(this.config, this.#defaultConfig, options);

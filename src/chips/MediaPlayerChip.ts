@@ -38,20 +38,31 @@ class MediaPlayerChip extends AbstractChip {
   constructor(options: chips.ChipOptions, entity?: EntityRegistryEntry) {
     super();
 
-    if (options?.show_content) {
-      this.#defaultConfig.content = Helper.getCountTemplate({ domain: "media_player", operator: "eq", value: "playing", area_slug: options?.area_slug });
+    const entities = Helper.getEntityIds({
+      domain: "media_player",
+      area_slug: options?.area_slug,
+    });
+
+    if (!entities.length) {
+      console.debug("No entities found for media_player chip");
+      return;
     }
 
-    this.#defaultConfig.icon_color = Helper.getFromDomainState({ domain: "media_player", area_slug: options?.area_slug })
-    this.#defaultConfig.icon = Helper.icons.media_player._.default,
+    if (options?.show_content) {
+      this.#defaultConfig.content = Helper.getContent("media_player", undefined, entities);
+    }
 
-      // const magicAreasEntity = getMAEntity(options?.magic_device_id ?? "global", "media_player");
 
-      // if (magicAreasEntity) {
-      //   this.#defaultConfig.entity = magicAreasEntity.entity_id;
-      // }
+    this.#defaultConfig.icon = Helper.getIcon("media_player", undefined, entities);
+    this.#defaultConfig.icon_color = Helper.getIconColor("media_player", undefined, entities);
 
-      this.config = Object.assign(this.config, this.#defaultConfig, options);
+    // const magicAreasEntity = getMAEntity(options?.magic_device_id ?? "global", "media_player");
+
+    // if (magicAreasEntity) {
+    //   this.#defaultConfig.entity = magicAreasEntity.entity_id;
+    // }
+
+    this.config = Object.assign(this.config, this.#defaultConfig, options);
   }
 }
 

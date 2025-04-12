@@ -2,6 +2,7 @@ import { cards } from "../types/strategy/cards";
 import { LovelaceBadgeConfig, LovelaceCardConfig } from "../types/homeassistant/data/lovelace";
 import { Helper } from "../Helper";
 import { navigateTo } from "../utils";
+import { DEVICE_CLASSES } from "../variables";
 
 /**
  * Controller Card class.
@@ -108,16 +109,20 @@ class ControllerCard {
           magic_device_id: this.#magic_device_id,
           ...this.#defaultConfig.controlChipOptions,
         };
-        const chip = typeof chipModule === 'function' && new chipModule(chipOptions, magic_device).getChip();
+        const chips = chipModule && typeof chipModule === 'function'
+          ? (DEVICE_CLASSES[this.#domain as keyof typeof DEVICE_CLASSES] ?? [undefined]).map((device_class) =>
+            new chipModule({ ...chipOptions, device_class }, magic_device).getChip()
+          ).filter((chip: any) => chip.icon !== undefined)
+          : [];
 
         badges.push({
           type: "custom:mushroom-chips-card",
-          chips: [chip],
+          chips,
           alignment: "end",
-          card_mod: this.#domain === "sensor" && {
+          card_mod: {
             style: `
             ha-card {
-              min-width: 100px;
+              min-width: ${this.#domain === "sensor" ? 100 : 58 * chips.length}px;
               }
               `,
           }

@@ -22,7 +22,6 @@ class ClimateChip extends AbstractChip {
    */
   readonly #defaultConfig: TemplateChipConfig = {
     type: "template",
-    icon: "mdi:thermostat",
     content: "",
     tap_action: {
       action: "navigate",
@@ -38,11 +37,23 @@ class ClimateChip extends AbstractChip {
   constructor(options: chips.ChipOptions, entity?: EntityRegistryEntry) {
     super();
 
-    if (options?.show_content) {
-      this.#defaultConfig.content = Helper.getCountTemplate({ domain: "climate", operator: "ne", value: "off", area_slug: options?.area_slug });
+    const entities = Helper.getEntityIds({
+      domain: "climate",
+      area_slug: options?.area_slug,
+    });
+
+    if (!entities.length) {
+      console.debug("No entities found for climate chip");
+      return;
     }
 
-    this.#defaultConfig.icon_color = Helper.getFromDomainState({ domain: "climate", area_slug: options?.area_slug })
+    if (options?.show_content) {
+      this.#defaultConfig.content = Helper.getContent("climate", undefined, entities);
+    }
+
+
+    this.#defaultConfig.icon = Helper.getIcon("climate", undefined, entities);
+    this.#defaultConfig.icon_color = Helper.getIconColor("climate", undefined, entities);
 
     const magicAreasEntity = getMAEntity(options.magic_device_id ?? "global", "climate");
 

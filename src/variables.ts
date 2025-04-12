@@ -123,7 +123,7 @@ export const HOME_EXPOSED_CHIPS = ["weather", "alarm", "spotify", LIGHT_DOMAIN, 
 export const AREA_EXPOSED_CHIPS = [LIGHT_DOMAIN, ...GROUP_DOMAINS, ...DEVICE_CLASSES.cover.map(d => `cover:${d}`), "fan", "switch", "safety", ...DEVICE_CLASSES.binary_sensor.map(d => `binary_sensor:${d}`), ...DEVICE_CLASSES.sensor.map(d => `sensor:${d}`)];
 export const SECURITY_EXPOSED_DOMAINS = ["light", "alarm", "safety", ...DEVICE_CLASSES.cover.map(d => `cover:${d}`), "lock"];
 export const SECURITY_EXPOSED_SENSORS = ["binary_sensor:motion", "binary_sensor:occupancy", "binary_sensor:door", "binary_sensor:window"];
-export const SECURITY_EXPOSED_CHIPS = ["light", "alarm", "safety", ...DEVICE_CLASSES.cover.map(d => `cover:${d}`), "lock", ...SECURITY_EXPOSED_SENSORS];
+export const SECURITY_EXPOSED_CHIPS = ["light", "alarm", "safety", "lock", ...DEVICE_CLASSES.cover.map(d => `cover:${d}`), ...SECURITY_EXPOSED_SENSORS];
 
 export const DEVICE_ICONS = {
   presence_hold: 'mdi:car-brake-hold'
@@ -184,3 +184,173 @@ export const SENSOR_STATE_CLASS_TOTAL_INCREASING: string[] = [
   "monetary",
   "count"
 ];
+
+
+export const colorMapping: Record<string, Record<string, string | Record<number, string> | Record<string, string | Record<string, string>>>> = {
+  light: { '_': { state: { on: "amber" } } },
+  climate: { '_': { state: { heat: "orange", cool: "blue" } } },
+  cover: Object.fromEntries(
+    ['_', ...DEVICE_CLASSES.cover].map(deviceClass => [
+      deviceClass,
+      { state: { open: "purple", opening: "purple", closing: "purple" } }
+    ])
+  ),
+  fan: { '_': { state: { on: "cyan" } } },
+  media_player: { '_': { state: { playing: "blue", paused: "amber", stopped: "gray" } } },
+  switch: { '_': { state: { on: "green" } } },
+  binary_sensor: {
+    motion: { state: { on: "red" } },
+    door: { state: { on: "orange" } },
+    window: { state: { on: "red" } },
+    smoke: { state: { on: "red" } },
+    gas: { state: { on: "red" } },
+    moisture: { state: { on: "lightblue" } },
+    tamper: { state: { on: "red" } },
+    battery_charging: { state: { on: "green" } },
+    carbon_monoxide: { state: { on: "red" } },
+    cold: { state: { on: "blue" } },
+    connectivity: { state: { on: "green" } },
+    garage_door: { state: { on: "orange" } },
+    heat: { state: { on: "red" } },
+    lock: { state: { on: "amber" } },
+    occupancy: { state: { on: "green" } },
+    opening: { state: { on: "orange" } },
+    plug: { state: { on: "green" } },
+    presence: { state: { on: "blue" } },
+    problem: { state: { on: "red" } },
+    running: { state: { on: "blue" } },
+    safety: { state: { on: "red" } },
+    sound: { state: { on: "blue" } },
+    update: { state: { on: "purple" } },
+    vibration: { state: { on: "purple" } },
+  },
+  sensor: {
+    battery: {
+      state: {
+        75: "green",
+        50: "amber",
+        25: "orange",
+        10: "red"
+      }
+    },
+    temperature: {
+      state: {
+        0: "blue",
+        20: "green",
+        30: "amber",
+        40: "red"
+      }
+    },
+    humidity: {
+      state: {
+        0: "red",
+        30: "amber",
+        60: "green",
+        100: "blue"
+      }
+    },
+    illuminance: {
+      state: {
+        0: "gray",
+        100: "amber",
+        1000: "orange",
+        10000: "white"
+      }
+    },
+    pressure: {
+      state: {
+        900: "blue",
+        1013: "green",
+        1100: "red"
+      }
+    },
+    power: {
+      state: {
+        0: "gray",
+        100: "amber",
+        500: "orange",
+        1000: "red"
+      }
+    },
+    voltage: {
+      state: {
+        0: "gray",
+        110: "green",
+        220: "orange",
+        240: "red"
+      }
+    },
+    current: {
+      state: {
+        0: "gray",
+        10: "amber",
+        20: "orange",
+        30: "red"
+      }
+    },
+    signal_strength: {
+      state: {
+        0: "red",
+        50: "orange",
+        75: "amber",
+        100: "green"
+      }
+    },
+    sound_pressure: {
+      state: {
+        0: "blue",
+        50: "green",
+        70: "amber",
+        90: "red"
+      }
+    },
+    air_quality: {
+      state: {
+        0: "green",
+        50: "amber",
+        100: "orange",
+        150: "red"
+      }
+    },
+    gas: {
+      state: {
+        0: "green",
+        50: "amber",
+        100: "orange",
+        200: "red"
+      }
+    },
+    wind_speed: {
+      state: {
+        0: "blue",
+        10: "green",
+        20: "amber",
+        30: "red"
+      }
+    },
+    frequency: {
+      state: {
+        0: "gray",
+        50: "green",
+        60: "amber",
+        70: "red"
+      }
+    },
+    speed: {
+      state: {
+        0: "blue",
+        30: "green",
+        60: "amber",
+        100: "red"
+      }
+    },
+    energy: {
+      state: {
+        0: "gray",
+        100: "amber",
+        500: "orange",
+        1000: "red"
+      }
+    },
+  },
+};

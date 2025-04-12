@@ -10,7 +10,7 @@ import StrategyEntity = generic.StrategyEntity;
 import StrategyDevice = generic.StrategyDevice;
 import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
 import { FloorRegistryEntry } from "./types/homeassistant/data/floor_registry";
-import { DEVICE_CLASSES, MAGIC_AREAS_DOMAIN, MAGIC_AREAS_NAME, SENSOR_STATE_CLASS_TOTAL, SENSOR_STATE_CLASS_TOTAL_INCREASING, UNDISCLOSED } from "./variables";
+import { DEVICE_CLASSES, MAGIC_AREAS_DOMAIN, MAGIC_AREAS_NAME, SENSOR_STATE_CLASS_TOTAL, SENSOR_STATE_CLASS_TOTAL_INCREASING, UNDISCLOSED, colorMapping } from "./variables";
 import { getEntityDomain, getGlobalEntitiesExceptUndisclosed, getMAEntity, getMagicAreaSlug, groupEntitiesByDomain, slugify } from "./utils";
 import { EntityRegistryEntry } from "./types/homeassistant/data/entity_registry";
 import { FrontendEntityComponentIconResources, IconResources } from "./types/homeassistant/data/frontend";
@@ -475,14 +475,12 @@ class Helper {
   /**
    * Get a template string to define the number of a given domain's entities with a certain state.
    *
-   * States are compared against a given value by a given operator.
-   *
    * @param {object} options The options object containing the parameters.
    * @param {string} options.domain The domain of the entities.
    * @param {string} options.operator The Comparison operator between state and value.
    * @param {string | string[]} options.value The value to which the state is compared against.
    * @param {string | string[]} [options.area_slug] The area slug(s) to filter entities by.
-   * @param {string} [options.device_class] The device class of the entities.
+   * @param {string | string[]} [options.device_class] The device class of the entities.
    * @param {boolean} [options.allowUnavailable] Whether to allow unavailable states.
    * @param {string} [options.prefix] The prefix to add to the result.
    *
@@ -498,13 +496,13 @@ class Helper {
     allowUnavailable,
     prefix
   }: {
-    domain: string,
-    operator: string,
-    value: string | string[],
-    area_slug?: string | string[],
-    device_class?: string,
-    allowUnavailable?: boolean,
-    prefix?: string
+    domain: string;
+    operator: string;
+    value: string | string[];
+    area_slug?: string | string[];
+    device_class?: string;
+    allowUnavailable?: boolean;
+    prefix?: string;
   }): string {
 
     if (!this.isInitialized()) {
@@ -774,7 +772,27 @@ class Helper {
 
     return states
   }
-  static getEntityIds({ domain, device_class, area_slug = 'global' }: { domain: string, device_class?: string, area_slug?: string | string[] }): string[] {
+
+  /**
+   * Get the entity IDs from the entity registry, filtered by domain, device class, and area slug.
+   *
+   * @param {object} options The options object containing the parameters.
+   * @param {string} options.domain The domain of the entities.
+   * @param {string} [options.device_class] The device class of the entities.
+   * @param {string | string[]} [options.area_slug] The area slug(s) to filter entities by.
+   *
+   * @return {string[]} An array of entity IDs.
+   * @static
+   */
+  static getEntityIds({
+    domain,
+    device_class,
+    area_slug = "global"
+  }: {
+    domain: string;
+    device_class?: string;
+    area_slug?: string | string[];
+  }): string[] {
     const entityIds: string[] = [];
 
     if (!this.isInitialized()) {
@@ -782,20 +800,44 @@ class Helper {
     }
 
     const areaSlugs = Array.isArray(area_slug) ? area_slug : [area_slug];
-    const domainTag = `${domain}${device_class ? ":" + device_class : ""}`;
 
     for (const slug of areaSlugs) {
       if (slug) {
-        const magic_entity = device_class ? getMAEntity(slug!, domain, device_class) : getMAEntity(slug!, domain);
-        const entities = magic_entity ? [magic_entity.entity_id] : area_slug === "global" ? getGlobalEntitiesExceptUndisclosed(domain, device_class) : this.#areas[slug]?.domains?.[domainTag];
-        if (entities) entityIds.push(...entities);
+        if (device_class) {
+          const magic_entity = getMAEntity(slug!, domain, device_class);
+          const entities = magic_entity ? [magic_entity.entity_id] : area_slug === "global" ? getGlobalEntitiesExceptUndisclosed(domain, device_class) : this.#areas[slug]?.domains?.[`${domain}:${device_class}`];
+          if (entities) entityIds.push(...entities);
+        } else {
+          // If device_class is undefined, get all device_classes for the domain
+          const domainTags = Object.keys(this.#domains).filter(tag => tag.startsWith(`${domain}:`));
+          if (domainTags.length > 0) {
+            for (const domainTag of domainTags) {
+              const magic_entity = getMAEntity(slug!, domain, domainTag.split(":")[1]);
+              const entities = magic_entity ? [magic_entity.entity_id] : area_slug === "global" ? getGlobalEntitiesExceptUndisclosed(domain, domainTag.split(":")[1]) : this.#areas[slug]?.domains?.[domainTag];
+              if (entities) entityIds.push(...entities);
+            }
+          } else {
+            // If no device class exists for this domain, get all entities of the domain
+            const entities = area_slug === "global" ? getGlobalEntitiesExceptUndisclosed(domain) : this.#areas[slug]?.domains?.[domain];
+            if (entities) entityIds.push(...entities);
+          }
+        }
       } else {
         for (const area of Object.values(this.#areas)) {
           if (area.area_id === UNDISCLOSED) continue;
-          const entities = domain === "all"
-            ? this.#areas[area.slug]?.entities
-            : this.#areas[area.slug]?.domains?.[domainTag];
-          if (entities) entityIds.push(...entities);
+          if (device_class) {
+            const entities = domain === "all"
+              ? this.#areas[area.slug]?.entities
+              : this.#areas[area.slug]?.domains?.[`${domain}:${device_class}`];
+            if (entities) entityIds.push(...entities);
+          } else {
+            // If device_class is undefined, get all device_classes for the domain
+            const domainTags = Object.keys(this.#domains).filter(tag => tag.startsWith(`${domain}:`));
+            for (const domainTag of domainTags) {
+              const entities = this.#areas[area.slug]?.domains?.[domainTag];
+              if (entities) entityIds.push(...entities);
+            }
+          }
         }
       }
     }
@@ -821,7 +863,7 @@ class Helper {
 
     return `{% set entities = [${states}] %}{{ entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | sort(attribute='last_changed', reverse=True) | first }}`;
   }
-  static getFromDomainState({ domain, device_class, operator, value, ifReturn, elseReturn, area_slug, allowUnavailable }: { domain: string, device_class?: string, operator?: string, value?: string | string[], ifReturn?: string, elseReturn?: string, area_slug?: string | string[], allowUnavailable?: boolean }): string {
+  static getFromDomainState({ domain, device_class, operator = 'eq', value, ifReturn, elseReturn, area_slug, allowUnavailable }: { domain: string, device_class?: string, operator?: string, value?: string | string[], ifReturn?: string, elseReturn?: string, area_slug?: string | string[], allowUnavailable?: boolean }): string {
 
     if (!this.isInitialized()) {
       console.warn("Helper class should be initialized before calling this method!");
@@ -829,163 +871,202 @@ class Helper {
 
     const states = this.getStateStrings(this.getEntityIds({ domain, device_class, area_slug }));
 
-    if (domain === "light") {
-      ifReturn = ifReturn ?? "amber";
-    }
-    if (domain === "climate") {
-      operator = operator ?? "ne";
-      value = value ?? "off";
-      ifReturn = ifReturn ?? "orange";
-    }
-    if (domain === "cover") {
-      value = value ?? "open";
-      ifReturn = ifReturn ?? "cyan";
-    }
-    if (domain === "fan") {
-      ifReturn = ifReturn ?? "green";
-    }
-    if (domain === "media_player") {
-      value = value ?? "playing";
-      ifReturn = ifReturn ?? "dark-blue";
-    }
-    if (domain === "switch") {
-      ifReturn = ifReturn ?? "blue";
+    const domainColors = colorMapping[domain] || {};
+    let defaultColor: string = "grey";
+
+    if (device_class && domainColors[device_class] && typeof domainColors[device_class] === "object") {
+      const thresholds = domainColors[device_class] as Record<number, string>;
+      const thresholdKeys = Object.keys(thresholds).map(Number).sort((a, b) => b - a);
+      const matchingThreshold = thresholdKeys.find(threshold => Number(value) >= threshold);
+      defaultColor = matchingThreshold !== undefined ? thresholds[matchingThreshold] : "grey";
+    } else {
+      const colorValue = domainColors[device_class as string];
+      defaultColor = typeof colorValue === "string" ? colorValue : (typeof domainColors.default === "string" ? domainColors.default : "grey");
     }
 
-    const formatedValue = Array.isArray(value) ? JSON.stringify(value).replaceAll('"', "'") : `'${value ?? 'on'}'`;
+    ifReturn = ifReturn ?? defaultColor;
 
-    return `{% set entities = [${states}] %}{{ '${ifReturn ?? 'white'}' if entities ${allowUnavailable ? "" : "| selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable')"}| selectattr('state','${operator ?? 'eq'}', ${formatedValue}) | list | count > 0 else '${elseReturn ?? 'grey'}' }}`;
+    const formattedValue = Array.isArray(value) ? JSON.stringify(value).replaceAll('"', "'") : `'${value ?? 'on'}'`;
+
+    return `{% set entities = [${states}] %}{{ '${ifReturn}' if entities ${allowUnavailable ? "" : "| selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable')"}| selectattr('state','${operator}', ${formattedValue}) | list | count > 0 else '${elseReturn ?? 'grey'}' }}`;
   }
 
-  static getBinarySensorColorFromState(device_class: string, operator: string, value: string, ifReturn: string, elseReturn: string, area_slug: string | string[] = "global"): string {
-
-    if (!this.isInitialized()) {
-      console.warn("Helper class should be initialized before calling this method!");
+  /**
+   * Get an icon based on domain, device_class, and optionally state.
+   *
+   * @param {string} domain - The domain of the entity (e.g., "sensor", "binary_sensor").
+   * @param {string | undefined} device_class - The device class of the entity (e.g., "temperature", "motion").
+   * @param {string | undefined} state - The state of the entity (e.g., "on", "off").
+   * @returns {string} - The icon string (e.g., "mdi:thermometer").
+   */
+  static getIcon(domain: string, device_class = '_', entity_ids?: string[]): string {
+    const domainIcons = Helper.icons[domain as keyof IconResources];
+    if (!domainIcons) {
+      return "mdi:help-circle"; // Default icon if domain is not found
     }
 
-    const states = this.getStateStrings(this.getEntityIds({ domain: "binary_sensor", device_class, area_slug }));
+    const states = entity_ids?.length ? Helper.getStateStrings(entity_ids) : [];
+
+    if (domain === "sensor" && device_class === "battery") {
+      // Handle battery level icons
+      if (states.length) {
+        return `{% set entities = [${states}] %}{% set valid_states = entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | map(attribute='state') | map('float') | list %}{% set battery_level = valid_states | max if valid_states | length > 0 else 0 %}{% if battery_level >= 95 %}mdi:battery{% elif battery_level >= 85 %}mdi:battery-90{% elif battery_level >= 75 %}mdi:battery-80{% elif battery_level >= 65 %}mdi:battery-70{% elif battery_level >= 55 %}mdi:battery-60{% elif battery_level >= 45 %}mdi:battery-50{% elif battery_level >= 35 %}mdi:battery-40{% elif battery_level >= 25 %}mdi:battery-30{% elif battery_level >= 15 %}mdi:battery-20{% elif battery_level >= 5 %}mdi:battery-10{% else %}mdi:battery-outline{% endif %}`;
+      }
+      return "mdi:battery-outline"; // Default battery icon if no states are available
+    }
+
+    if (device_class && domainIcons[device_class as keyof IconResources[keyof IconResources]]) {
+      const deviceClassIcons = domainIcons[device_class as keyof IconResources[keyof IconResources]];
+
+      if (deviceClassIcons?.state) {
+        let stateIconTemplate = states.length
+          ? `{% set entities = [${states}] %}{% set state = entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | map(attribute='state') | list %}`
+          : '{% set state = [] %}';
+        for (const [stateKey, icon] of Object.entries(deviceClassIcons.state)) {
+          stateIconTemplate += `{% if state | select('eq', '${stateKey}') | list | count > 0 %}${icon}{% else %}`;
+        }
+        stateIconTemplate += `${deviceClassIcons.default || "mdi:help-circle"}` + "{% endif %}".repeat(Object.keys(deviceClassIcons.state).length);
+        return stateIconTemplate;
+      }
+      return deviceClassIcons?.default || "mdi:help-circle";
+    }
+
+    if (domainIcons.state && states.length) {
+      let stateIconTemplate = `{% set entities = [${states}] %}{% set state = entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | map(attribute='state') | list %}`
+
+      for (const [stateKey, icon] of Object.entries(domainIcons.state)) {
+        stateIconTemplate += `{% if state | select('eq', '${stateKey}') | list | count > 0 %}${icon}{% else %}`;
+      }
+      stateIconTemplate += `${domainIcons.default || "mdi:help-circle"}` + "{% endif %}".repeat(Object.keys(domainIcons.state).length);
+
+      return stateIconTemplate;
+    }
+
+    return typeof domainIcons.default === "string" ? domainIcons.default : "mdi:help-circle"; // Default icon for domain
+  }
+
+  /**
+   * Get the color of an icon based on domain, device_class, and optionally state.
+   *
+   * @param {string} domain - The domain of the entity (e.g., "sensor", "binary_sensor").
+   * @param {string | undefined} device_class - The device class of the entity (e.g., "temperature", "motion").
+   * @param {string[]} entity_ids - The list of entity IDs to evaluate.
+   * @returns {string} - The color string (e.g., "red", "blue").
+   */
+  static getIconColor(domain: string, device_class: string = '_', entity_ids: string[] = []): string {
+    const states = entity_ids.length ? Helper.getStateStrings(entity_ids) : [];
+    const domainColors = colorMapping[domain] || colorMapping.default;
+    let defaultColor = "grey";
+
+    if (device_class && domainColors?.[device_class] && typeof domainColors[device_class] === "object") {
+      const deviceClassColors = domainColors[device_class] as Record<string | number, string | Record<string, string>>;
+      if (domain === "sensor" && typeof deviceClassColors === "object") {
+        // Handle threshold-based color mapping for sensors
+        const thresholds = deviceClassColors.state as Record<number, string>;
+        const thresholdKeys = Object.keys(thresholds).map(Number).sort((a, b) => a - b); // Sort ascending for minimum value
+        const aggregation = SENSOR_STATE_CLASS_TOTAL.includes(device_class) || SENSOR_STATE_CLASS_TOTAL_INCREASING.includes(device_class) ? 'sum' : 'sum / valid_states | length';
+        defaultColor = states.length
+          ? `{% set entities = [${states}] %}{% set valid_states = entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | map(attribute='state') | map('float') | list %}{% set aggregated_state = valid_states | ${aggregation} if valid_states | length > 0 else 0 %}`
+          : `{% set aggregated_state = 0 %}`;
+        for (const threshold of thresholdKeys) {
+          defaultColor += `{% if aggregated_state <= ${threshold} %}${thresholds[threshold]}{% else %}`;
+        }
+        defaultColor += "grey" + "{% endif %}".repeat(thresholdKeys.length);
+      } else if (deviceClassColors.state) {
+        // Handle state-based color mapping for non-sensors
+        let stateColorTemplate = states.length
+          ? `{% set entities = [${states}] %}{% set state = entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | map(attribute='state') | list %}`
+          : '';
+        for (const [stateKey, color] of Object.entries(deviceClassColors.state)) {
+          stateColorTemplate += `{% if state | select('eq', '${stateKey}') | list | count > 0 %}${color}{% else %}`;
+        }
+        stateColorTemplate += "grey" + "{% endif %}".repeat(Object.keys(deviceClassColors.state).length);
+        return stateColorTemplate;
+      }
+    } else {
+      // Handle state-based color mapping even without device_class
+      if (domainColors?.state) {
+        let stateColorTemplate = states.length
+          ? `{% set entities = [${states}] %}{% set state = entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | map(attribute='state') | list %}`
+          : '';
+        for (const [stateKey, color] of Object.entries(domainColors.state)) {
+          stateColorTemplate += `{% if state | select('eq', '${stateKey}') | list | count > 0 %}${color}{% else %}`;
+        }
+        stateColorTemplate += "grey" + "{% endif %}".repeat(Object.keys(domainColors.state).length);
+        return stateColorTemplate;
+      }
+
+      if (domainColors?.default && typeof domainColors.default === "string") {
+        defaultColor = domainColors.default;
+      }
+    }
+
+    return states.length
+      ? `{% set entities = [${states}] %}{% set valid_states = entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | map(attribute='state') | list %}{% if valid_states | count > 0 %}${defaultColor}{% else %}grey{% endif %}`
+      : defaultColor;
+  }
+
+  /**
+   * Get the content for an entity based on domain, device_class, and optionally state.
+   *
+   * @param {string} domain - The domain of the entity (e.g., "sensor", "binary_sensor").
+   * @param {string | undefined} device_class - The device class of the entity (e.g., "temperature", "motion").
+   * @param {string} entity_id - The entity ID.
+   * @returns {string} - The content string.
+   */
+  static getContent(domain: string, device_class?: string, entity_ids: string[] = []): string {
+    const stateStrings = Helper.getStateStrings(entity_ids);
+
+    const templates: Record<string, { filter: string, default: string }> = {
+      sensor: {
+        filter: `valid_states = entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | map(attribute='state') | map('float') | list`,
+        default: `{{ valid_states | sum / valid_states | length | round(1) }}{% if entities[0].attributes.unit_of_measurement is defined %} {{ entities[0].attributes.unit_of_measurement }}{% endif %}`
+      },
+      binary_sensor: {
+        filter: `active_states = entities | selectattr('state', 'eq', 'on') | list`,
+        default: `{{ active_states | length }}`
+      },
+      light: {
+        filter: `active_lights = entities | selectattr('state', 'eq', 'on') | list`,
+        default: `{{ active_lights | length }}`
+      },
+      cover: {
+        filter: `open_covers = entities | selectattr('state', 'eq', 'open') | list`,
+        default: `{{ open_covers | length }}`
+      },
+      climate: {
+        filter: `active_climates = entities | selectattr('state', 'in', ['heat', 'cool', 'auto']) | list`,
+        default: `{{ active_climates | length }}`
+      },
+      switch: {
+        filter: `active_switches = entities | selectattr('state', 'eq', 'on') | list`,
+        default: `{{ active_switches | length }}`
+      },
+      media_player: {
+        filter: `active_players = entities | selectattr('state', 'in', ['playing', 'on']) | list`,
+        default: `{{ active_players | length }}`
+      },
+      default: {
+        filter: `interesting_states = entities | selectattr('state', 'in', ['on', 'open', 'playing', 'heat', 'cool', 'auto']) | list`,
+        default: `{{ interesting_states | length }}`
+      }
+    };
+
+    const filteredEntities = device_class
+      ? stateStrings.filter(state => `states['${state}'].attributes.device_class == '${device_class}'`)
+      : stateStrings;
+
+    const template = templates[domain] || templates.default;
 
     return `
-      {% set entities = [${states}] %}
-      {{ '${ifReturn}' if entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | selectattr('attributes.device_class', 'defined') | selectattr('attributes.device_class', 'eq', '${device_class}') | selectattr('state','${operator}','${value}') | list | count else '${elseReturn}' }}`;
-  }
+      {% set entities = [${filteredEntities}] %}
+      {% set ${template.filter} %}
+      {% if ${template.filter.split('=')[0].trim()} | length > 0 %}
+      ${template.default}
+      {% else %}
 
-  static getSensorColorFromState(device_class: string, area_slug: string | string[] = "global"): string | undefined {
-
-    if (!this.isInitialized()) {
-      console.warn("Helper class should be initialized before calling this method!");
-    }
-
-    const states = this.getStateStrings(this.getEntityIds({ domain: "sensor", device_class, area_slug }));
-
-    if (device_class === "battery") {
-      return `
-        {% set entities = ${Helper.getSensorEntities(states, device_class)} %}
-        {% if entities | length > 0 %}
-          {% set bl = entities  | sum / entities | length %}
-          {% if bl < 20 %}
-            red
-          {% elif bl < 30 %}
-            orange
-          {% elif bl >= 30 %}
-            green
-          {% else %}
-            disabled
-          {% endif %}
-        {% else %}
-        {% endif %}
-      `;
-    }
-
-    if (device_class === "temperature") {
-      return `
-        {% set entities = ${Helper.getSensorEntities(states, device_class)} %}
-        {% if entities | length > 0 %}
-          {% set bl = entities  | sum / entities | length %}
-          {% if bl < 20 %}
-            blue
-          {% elif bl < 30 %}
-            orange
-          {% elif bl >= 30 %}
-            red
-          {% else %}
-            disabled
-          {% endif %}
-        {% else %}
-        {% endif %}
-      `;
-    }
-
-    if (device_class === "humidity") {
-      return `
-        {% set entities = ${Helper.getSensorEntities(states, device_class)} %}
-        {% if entities | length > 0 %}
-          {% set humidity = entities  | sum / entities | length %}
-          {% if humidity < 30 %}
-            blue
-          {% elif humidity >= 30 and humidity <= 60 %}
-            green
-          {% else %}
-            red
-          {% endif %}
-        {% else %}
-        {% endif %}
-      `;
-    }
-
-    return undefined;
-  }
-
-  static getSensorIconFromState(device_class: string, area_slug: string | string[] = "global"): string | undefined {
-
-    if (!this.isInitialized()) {
-      console.warn("Helper class should be initialized before calling this method!");
-    }
-
-    const states = this.getStateStrings(this.getEntityIds({ domain: "sensor", device_class, area_slug }));
-
-    if (device_class === "battery") {
-      return `
-        {% set entities = ${Helper.getSensorEntities(states, device_class)} %}
-        {% if entities | length > 0 %}
-          {% set bl = entities  | sum / entities | length %}
-          {% if bl < 10 %} mdi:battery-outline
-          {% elif bl < 20 %} mdi:battery-10
-          {% elif bl < 30 %} mdi:battery-20
-          {% elif bl < 40 %} mdi:battery-30
-          {% elif bl < 50 %} mdi:battery-40
-          {% elif bl < 60 %} mdi:battery-50
-          {% elif bl < 70 %} mdi:battery-60
-          {% elif bl < 80 %} mdi:battery-70
-          {% elif bl < 90 %} mdi:battery-80
-          {% elif bl < 100 %} mdi:battery-90
-          {% elif bl == 100 %} mdi:battery
-          {% else %} mdi:battery{% endif %}
-        {% else %}
-          mdi:battery-alert
-        {% endif %}
-      `;
-    }
-
-    if (device_class === "temperature") {
-      return `
-        {% set entities = ${Helper.getSensorEntities(states, device_class)} %}
-        {% if entities | length > 0 %}
-          {% set bl = entities  | sum / entities | length %}
-          {% if bl < 20 %}
-            mdi:thermometer-low
-          {% elif bl < 30 %}
-            mdi:thermometer
-          {% elif bl >= 30 %}
-            mdi:thermometer-high
-          {% endif %}
-        {% else %}
-          mdi:thermometer-alert
-        {% endif %}
-      `;
-    }
-
-    return undefined;
+      {% endif %}
+    `;
   }
 }
 

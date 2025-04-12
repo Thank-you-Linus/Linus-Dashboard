@@ -211,6 +211,7 @@ class HomeView {
             chips: [
               floor.floor_id !== UNDISCLOSED && temperatureEntities.length > 0 &&
               new AggregateChip({
+                domain: "sensor",
                 device_class: "temperature",
                 show_content: true,
                 magic_device_id: floor.floor_id,

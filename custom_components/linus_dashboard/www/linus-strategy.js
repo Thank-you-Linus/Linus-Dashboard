@@ -858,6 +858,13 @@ class Helper {
             }
             return "mdi:battery-outline"; // Default battery icon if no states are available
         }
+        if (domain === "sensor" && device_class === "temperature") {
+            // Handle temperature icons
+            if (states.length) {
+                return `{% set entities = [${states}] %}{% set valid_states = entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | map(attribute='state') | map('float') | list %}{% set temperature = valid_states | max if valid_states | length > 0 else 0 %}{% if temperature >= 30 %}mdi:thermometer-high{% elif temperature >= 20 %}mdi:thermometer{% elif temperature >= 10 %}mdi:thermometer-low{% else %}mdi:snowflake{% endif %}`;
+            }
+            return "mdi:thermometer"; // Default temperature icon if no states are available
+        }
         if (device_class && domainIcons[device_class]) {
             const deviceClassIcons = domainIcons[device_class];
             if (deviceClassIcons?.state) {
@@ -1762,9 +1769,12 @@ class ControllerCard {
                     show_content: true,
                     magic_device_id: __classPrivateFieldGet(this, _ControllerCard_magic_device_id, "f"),
                     ...__classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").controlChipOptions,
+                    domain: __classPrivateFieldGet(this, _ControllerCard_domain, "f"),
                 };
                 const chips = chipModule && typeof chipModule === 'function'
-                    ? (_variables__WEBPACK_IMPORTED_MODULE_2__.DEVICE_CLASSES[__classPrivateFieldGet(this, _ControllerCard_domain, "f")] ?? [undefined]).map((device_class) => new chipModule({ ...chipOptions, device_class }, magic_device).getChip()).filter((chip) => chip.icon !== undefined)
+                    ? (chipOptions.device_class
+                        ? [chipOptions.device_class]
+                        : _variables__WEBPACK_IMPORTED_MODULE_2__.DEVICE_CLASSES[__classPrivateFieldGet(this, _ControllerCard_domain, "f")] ?? [undefined]).map((device_class) => new chipModule({ ...chipOptions, device_class }, magic_device).getChip()).filter((chip) => chip?.icon !== undefined)
                     : [];
                 badges.push({
                     type: "custom:mushroom-chips-card",

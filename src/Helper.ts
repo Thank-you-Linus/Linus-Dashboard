@@ -915,6 +915,14 @@ class Helper {
       return "mdi:battery-outline"; // Default battery icon if no states are available
     }
 
+    if (domain === "sensor" && device_class === "temperature") {
+      // Handle temperature icons
+      if (states.length) {
+        return `{% set entities = [${states}] %}{% set valid_states = entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | map(attribute='state') | map('float') | list %}{% set temperature = valid_states | max if valid_states | length > 0 else 0 %}{% if temperature >= 30 %}mdi:thermometer-high{% elif temperature >= 20 %}mdi:thermometer{% elif temperature >= 10 %}mdi:thermometer-low{% else %}mdi:snowflake{% endif %}`;
+      }
+      return "mdi:thermometer"; // Default temperature icon if no states are available
+    }
+
     if (device_class && domainIcons[device_class as keyof IconResources[keyof IconResources]]) {
       const deviceClassIcons = domainIcons[device_class as keyof IconResources[keyof IconResources]];
 

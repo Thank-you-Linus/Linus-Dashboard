@@ -65,7 +65,12 @@ class AreaView {
 
     const chips: LovelaceChipConfig[] = [];
 
-    chips.push(new AreaStateChip({ area: this.area, showContent: true }).getChip());
+    const motion = Helper.getAreaEntities([this.area], "binary_sensor", "motion")
+    const occupancy = Helper.getAreaEntities([this.area], "binary_sensor", "occupancy")
+    const presence = Helper.getAreaEntities([this.area], "binary_sensor", "presence")
+    if (motion.length > 0 || occupancy.length > 0 || presence.length > 0) {
+      chips.push(new AreaStateChip({ area: this.area, motion, presence, occupancy, showContent: true }).getChip());
+    }
 
     const areaChips = await createChipsFromList(AREA_EXPOSED_CHIPS, { show_content: true }, this.area.slug, this.area.slug);
     if (areaChips) {

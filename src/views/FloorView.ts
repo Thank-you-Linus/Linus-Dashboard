@@ -63,10 +63,14 @@ class FloorView {
     }
 
     const chips: LovelaceChipConfig[] = [];
-    const device = Helper.magicAreasDevices[this.floor.floor_id];
 
-    if (device) {
-      chips.push(new AreaStateChip({ floor: this.floor, showContent: true }).getChip());
+    const areas = this.floor.areas_slug.map(area_slug => Helper.areas[area_slug]);
+
+    const motion = Helper.getAreaEntities(areas, "binary_sensor", "motion")
+    const occupancy = Helper.getAreaEntities(areas, "binary_sensor", "occupancy")
+    const presence = Helper.getAreaEntities(areas, "binary_sensor", "presence")
+    if (motion.length > 0 || occupancy.length > 0 || presence.length > 0) {
+      chips.push(new AreaStateChip({ floor: this.floor, motion, occupancy, presence, showContent: true }).getChip());
     }
 
     const areaChips = await createChipsFromList(AREA_EXPOSED_CHIPS, { show_content: true }, this.floor.floor_id, this.floor.areas_slug);

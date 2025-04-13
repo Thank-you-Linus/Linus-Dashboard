@@ -18,17 +18,19 @@ class AreaStateChip extends AbstractChip {
    * @type {ConditionalChipConfig}
    *
    */
-  getDefaultConfig({ area, floor, showContent = false }: { area?: generic.StrategyArea, floor?: generic.StrategyFloor, showContent?: boolean }): TemplateChipConfig {
+  getDefaultConfig({ area, floor, motion, occupancy, presence, showContent = false }: { area?: generic.StrategyArea, floor?: generic.StrategyFloor, motion?: generic.StrategyEntity[], presence?: generic.StrategyEntity[], occupancy?: generic.StrategyEntity[], showContent?: boolean }): TemplateChipConfig {
 
     const device_id = area?.slug ?? floor?.floor_id;
 
     const device = device_id ? Helper.magicAreasDevices[device_id] : undefined;
     const { area_state, presence_hold, all_media_players, aggregate_motion, aggregate_presence, aggregate_occupancy } = device?.entities ?? {};
 
-    const motion_entities = aggregate_motion ? [aggregate_motion.entity_id] : area?.domains?.motion ?? [];
-    const presence_entities = aggregate_presence ? [aggregate_presence.entity_id] : area?.domains?.presence ?? [];
-    const occupancy_entities = aggregate_occupancy ? [aggregate_occupancy.entity_id] : area?.domains?.occupancy ?? [];
+    const motion_entities = aggregate_motion ? [aggregate_motion.entity_id] : motion?.map(e => e.entity_id) ?? [];
+    const presence_entities = aggregate_presence ? [aggregate_presence.entity_id] : presence?.map(e => e.entity_id) ?? [];
+    const occupancy_entities = aggregate_occupancy ? [aggregate_occupancy.entity_id] : occupancy?.map(e => e.entity_id) ?? [];
     const media_player_entities = all_media_players ? [all_media_players.entity_id] : area?.domains?.media_player ?? [];
+
+    const all_entities = [...motion_entities, ...presence_entities, ...occupancy_entities, ...media_player_entities];
 
     const isOn = '| selectattr("state","eq", "on") | list | count > 0';
     const isSomeone = `[${[...motion_entities, ...presence_entities, ...occupancy_entities]?.map(e => `states['${e}']`)}] ${isOn}`;
@@ -101,7 +103,7 @@ class AreaStateChip extends AbstractChip {
           {% else %}
             {{ '${Helper.localize("component.linus_dashboard.entity.text.area_states.clear")}' }}
           {% endif %}` : "",
-      tap_action: device ? new AreaInformations(device, true).getPopup() : { action: "none" },
+      tap_action: all_entities.length > 0 ? new AreaInformations(true, all_entities, device).getPopup() : { action: "none" },
     };
   }
 
@@ -110,7 +112,7 @@ class AreaStateChip extends AbstractChip {
    *
    * @param {chips.TemplateChipOptions} options The chip options.
    */
-  constructor(options: { area?: generic.StrategyArea, floor?: generic.StrategyFloor, showContent?: boolean }) {
+  constructor(options: { area?: generic.StrategyArea, floor?: generic.StrategyFloor, motion?: generic.StrategyEntity[], presence?: generic.StrategyEntity[], occupancy?: generic.StrategyEntity[], showContent?: boolean }) {
     super();
 
     const defaultConfig = this.getDefaultConfig(options);

@@ -13,13 +13,17 @@ import { AbstractPopup } from "./AbstractPopup";
  */
 class AreaInformations extends AbstractPopup {
 
-    getDefaultConfig(device: MagicAreaRegistryEntry, minimalist: boolean): PopupActionConfig {
+    getDefaultConfig(minimalist: boolean, all_entities: string[], device?: MagicAreaRegistryEntry): PopupActionConfig {
+
+
 
         const { area_state } = device?.entities ?? {}
 
-        const { friendly_name, adjoining_areas, features, states, presence_sensors, on_states } = Helper.getEntityState(area_state?.entity_id)?.attributes ?? {}
+        const { adjoining_areas, features, presence_sensors, on_states } = Helper.getEntityState(area_state?.entity_id)?.attributes ?? {}
 
-        presence_sensors?.sort((a: string, b: string) => {
+        const presenceEntities = presence_sensors ?? all_entities;
+
+        presenceEntities?.sort((a: string, b: string) => {
             const aState = Helper.getEntityState(a);
             const bState = Helper.getEntityState(b);
             const lastChangeA = new Date(aState?.last_changed).getTime();
@@ -38,11 +42,11 @@ class AreaInformations extends AbstractPopup {
             browser_mod: {
                 service: "browser_mod.popup",
                 data: {
-                    title: friendly_name,
+                    title: Helper.localize("component.linus_dashboard.entity.text.area_state_popup_title"),
                     content: {
                         type: "vertical-stack",
                         cards: [
-                            {
+                            (device && {
                                 type: "horizontal-stack",
                                 cards: [
                                     {
@@ -82,7 +86,7 @@ class AreaInformations extends AbstractPopup {
                                         }
                                     },
                                 ]
-                            },
+                            }),
                             ...(!minimalist ? [
                                 {
                                     type: "custom:mushroom-template-card",
@@ -163,7 +167,7 @@ class AreaInformations extends AbstractPopup {
                             },
                             (minimalist ? {
                                 type: "vertical-stack",
-                                cards: presence_sensors?.map((sensor: string) => ({
+                                cards: presenceEntities?.map((sensor: string) => ({
                                     type: "custom:mushroom-entity-card",
                                     entity: sensor,
                                     content_info: "name",
@@ -173,7 +177,7 @@ class AreaInformations extends AbstractPopup {
                             } :
                                 {
                                     type: "custom:mushroom-chips-card",
-                                    chips: presence_sensors?.map((sensor: string) => ({
+                                    chips: presenceEntities?.map((sensor: string) => ({
                                         type: "entity",
                                         entity: sensor,
                                         content_info: "name",
@@ -186,7 +190,7 @@ class AreaInformations extends AbstractPopup {
                                         style: `ha-card .chip-container * {margin-bottom: 0px!important;}`
                                     }
                                 }),
-                            ...(!minimalist ? [
+                            ...(device && !minimalist ? [
                                 {
                                     type: "custom:mushroom-template-card",
                                     primary: `Présence détecté pour les états :`,
@@ -234,10 +238,10 @@ class AreaInformations extends AbstractPopup {
      *
      * @param {chips.PopupActionConfig} options The chip options.
      */
-    constructor(device: MagicAreaRegistryEntry, minimalist: boolean = false) {
+    constructor(minimalist: boolean = false, all_entities: string[], device?: MagicAreaRegistryEntry) {
         super();
 
-        const defaultConfig = this.getDefaultConfig(device, minimalist)
+        const defaultConfig = this.getDefaultConfig(minimalist, all_entities, device);
 
         this.config = Object.assign(this.config, defaultConfig);
 

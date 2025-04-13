@@ -63,6 +63,7 @@
                 "occupied": "Occupied",
                 "clear": "Clear"
             },
+            "area_state_popup_title": "Area State",
             "area_state_popup": "Sensors used for presence detection:",
             "greeting": {
                 "morning": "Good morning, ",

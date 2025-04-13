@@ -581,7 +581,7 @@ class Helper {
    * @return {StrategyEntity[]} Array of device entities.
    * @static
    */
-  static getAreaEntities(area: StrategyArea, domain?: string, device_class?: string): StrategyEntity[] {
+  static getAreaEntities(areas: StrategyArea[], domain?: string, device_class?: string): StrategyEntity[] {
 
     if (!this.isInitialized()) {
       console.warn("Helper class should be initialized before calling this method!");
@@ -590,15 +590,17 @@ class Helper {
     const dc = domain === "binary_sensor" || domain === "sensor" ? device_class : undefined;
     const domainTag = `${domain}${dc ? ":" + dc : ""}`;
 
-    if (domainTag) {
-      if (domain === "cover") {
-        return DEVICE_CLASSES.cover.flatMap(d => area.domains?.[`cover:${d}`]?.map(entity_id => this.#entities[entity_id]) ?? []);
+    return areas.flatMap(area => {
+      if (domainTag) {
+        if (domain === "cover") {
+          return DEVICE_CLASSES.cover.flatMap(d => area.domains?.[`cover:${d}`]?.map(entity_id => this.#entities[entity_id]) ?? []);
+        } else {
+          return area.domains?.[domainTag]?.map(entity_id => this.#entities[entity_id]) ?? [];
+        }
       } else {
-        return area.domains?.[domainTag]?.map(entity_id => this.#entities[entity_id]) ?? [];
+        return area.entities.map(entity_id => this.#entities[entity_id]) ?? [];
       }
-    } else {
-      return area.entities.map(entity_id => this.#entities[entity_id]) ?? []
-    }
+    });
   }
 
   /**

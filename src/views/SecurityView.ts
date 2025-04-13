@@ -218,7 +218,7 @@ class SecurityView {
 
       // Create cards for each area.
       for (const area of floor.areas_slug.map(area_slug => Helper.areas[area_slug])) {
-        const entities = Helper.getAreaEntities(area, domain);
+        const entities = Helper.getAreaEntities([area], domain);
         const className = Helper.sanitizeClassName(domain + "Card");
 
         const cardModule = await import(`../cards/${className}`);

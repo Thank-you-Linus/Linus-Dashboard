@@ -7,7 +7,7 @@ import { AreaStateChip } from "../chips/AreaStateChip";
 import { generic } from "../types/strategy/generic";
 import StrategyArea = generic.StrategyArea;
 import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
-import { getAreaName, getMAEntity, slugify } from "../utils";
+import { getAreaName, getGlobalEntitiesExceptUndisclosed, getMAEntity, slugify } from "../utils";
 import { EntityRegistryEntry } from "../types/homeassistant/data/entity_registry";
 import { ClimateChip } from "../chips/ClimateChip";
 import { LightChip } from "../chips/LightChip";
@@ -147,7 +147,17 @@ class HomeAreaCard {
   getChipsCard(): any {
 
     const { light_control, aggregate_health, aggregate_window, aggregate_door, aggregate_cover } = this.magicDevice?.entities || {};
-    const { motion, occupancy, presence, window, climate, fan, door, cover, health, light } = this.area.domains ?? {};
+    const motion = Helper.getAreaEntities([this.area], "binary_sensor", "motion")
+    const occupancy = Helper.getAreaEntities([this.area], "binary_sensor", "occupancy")
+    const presence = Helper.getAreaEntities([this.area], "binary_sensor", "presence")
+
+    const window = Helper.getAreaEntities([this.area], "binary_sensor", "window")
+    const climate = Helper.getAreaEntities([this.area], "binary_sensor", "climate")
+    const fan = Helper.getAreaEntities([this.area], "binary_sensor", "fan")
+    const door = Helper.getAreaEntities([this.area], "binary_sensor", "door")
+    const cover = Helper.getAreaEntities([this.area], "binary_sensor", "cover")
+    const health = Helper.getAreaEntities([this.area], "binary_sensor", "health")
+    const light = Helper.getAreaEntities([this.area], "binary_sensor", "light")
     const magicLight = getMAEntity(this.magicDevice?.id, "light") as EntityRegistryEntry;
     const magicClimate = getMAEntity(this.magicDevice?.id, "climate") as EntityRegistryEntry;
     const magicFan = getMAEntity(this.magicDevice?.id, "fan") as EntityRegistryEntry;
@@ -156,26 +166,26 @@ class HomeAreaCard {
       type: "custom:mushroom-chips-card",
       alignment: "end",
       chips: [
-        (motion || occupancy || presence) && new AreaStateChip({ area: this.area }).getChip(),
-        health && new ConditionalChip(
-          aggregate_health ? [{ entity: aggregate_health?.entity_id, state: "on" }] : health.map(entity => ({ entity, state: "on" })),
+        (motion.length > 0 || occupancy.length > 0 || presence.length > 0) && new AreaStateChip({ area: this.area, motion, occupancy, presence }).getChip(),
+        health?.length && new ConditionalChip(
+          aggregate_health ? [{ entity: aggregate_health?.entity_id, state: "on" }] : health.map(entity => ({ entity: entity.entity_id, state: "on" })),
           new AggregateChip({ domain: "health", device_class: "health" }).getChip()
         ).getChip(),
         window?.length && new ConditionalChip(
-          aggregate_window ? [{ entity: aggregate_window?.entity_id, state: "on" }] : window.map(entity => ({ entity, state: "on" })),
-          new AggregateChip({ domain: "binary_ensor", magic_device_id: this.area.slug, area_slug: this.area.slug, device_class: "window", show_content: false }).getChip()
+          aggregate_window ? [{ entity: aggregate_window?.entity_id, state: "on" }] : window.map(entity => ({ entity: entity.entity_id, state: "on" })),
+          new AggregateChip({ domain: "binary_sensor", magic_device_id: this.area.slug, area_slug: this.area.slug, device_class: "window", show_content: false }).getChip()
         ).getChip(),
-        door && new ConditionalChip(
-          aggregate_door ? [{ entity: aggregate_door?.entity_id, state: "on" }] : door.map(entity => ({ entity, state: "on" })),
-          new AggregateChip({ domain: "binary_ensor", magic_device_id: this.area.slug, area_slug: this.area.slug, device_class: "door", show_content: false }).getChip()
+        door?.length && new ConditionalChip(
+          aggregate_door ? [{ entity: aggregate_door?.entity_id, state: "on" }] : door.map(entity => ({ entity: entity.entity_id, state: "on" })),
+          new AggregateChip({ domain: "binary_sensor", magic_device_id: this.area.slug, area_slug: this.area.slug, device_class: "door", show_content: false }).getChip()
         ).getChip(),
-        cover && new ConditionalChip(
-          aggregate_cover ? [{ entity: aggregate_cover?.entity_id, state: "on" }] : cover.map(entity => ({ entity, state: "on" })),
+        cover?.length && new ConditionalChip(
+          aggregate_cover ? [{ entity: aggregate_cover?.entity_id, state: "on" }] : cover.map(entity => ({ entity: entity.entity_id, state: "on" })),
           new AggregateChip({ domain: "cover", magic_device_id: this.area.slug, area_slug: this.area.slug, device_class: "cover", show_content: false }).getChip()
         ).getChip(),
-        climate && new ClimateChip({ magic_device_id: this.area.slug, area_slug: this.area.slug }, magicClimate,).getChip(),
-        fan && new FanChip({ magic_device_id: this.area.slug, area_slug: this.area.slug }, magicFan).getChip(),
-        light && new LightChip({ area_slug: this.area.slug, magic_device_id: this.area.slug, tap_action: { action: "toggle" } }, magicLight).getChip(),
+        climate?.length && new ClimateChip({ magic_device_id: this.area.slug, area_slug: this.area.slug }, magicClimate,).getChip(),
+        fan?.length && new FanChip({ magic_device_id: this.area.slug, area_slug: this.area.slug }, magicFan).getChip(),
+        light?.length && new LightChip({ area_slug: this.area.slug, magic_device_id: this.area.slug, tap_action: { action: "toggle" } }, magicLight).getChip(),
         new ConditionalChip(
           [{ entity: this.magicDevice?.entities?.all_lights?.entity_id, state_not: UNAVAILABLE }],
           new ControlChip("light", light_control?.entity_id).getChip()

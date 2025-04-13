@@ -393,7 +393,7 @@ export async function processFloorsAndAreas(
         const floorCards = [];
 
         for (const area of floor.areas_slug.map(area_slug => Helper.areas[area_slug])) {
-            let entities = Helper.getAreaEntities(area, domain, device_class);
+            let entities = Helper.getAreaEntities([area], domain, device_class);
             const className = Helper.sanitizeClassName(domain + "Card");
             const cardModule = await import(`./cards/${className}`);
 
@@ -523,7 +523,7 @@ export async function processEntitiesForAreaOrFloorView({
 
             try {
                 const cardModule = await import(`./cards/${Helper.sanitizeClassName(domain + "Card")}`);
-                let entities = Helper.getAreaEntities(area, domain);
+                let entities = Helper.getAreaEntities([area], domain);
                 const configEntityHidden = Helper.strategyOptions.domains[domain]?.hide_config_entities || Helper.strategyOptions.domains["_"].hide_config_entities;
 
                 if (entities.length) {

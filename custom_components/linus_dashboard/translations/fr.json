@@ -51,6 +51,7 @@
                 "occupied": "Occupé",
                 "clear": "Libre"
             },
+            "area_state_popup_title": "État de la zone",
             "area_state_popup": "Capteurs utilisés pour la détection de présence :",
             "greeting": {
                 "morning": "Bonjour, ",

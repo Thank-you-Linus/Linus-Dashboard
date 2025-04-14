@@ -22,7 +22,6 @@ class AggregateChip extends AbstractChip {
 
     const icon = Helper.getIcon(domain, device_class, entity_id);
     const icon_color = Helper.getIconColor(domain, device_class, entity_id);
-    // console.log('couleur = ', domain, device_class, icon_color)
     const content = Helper.getContent(domain, device_class, entity_id);
 
     return {

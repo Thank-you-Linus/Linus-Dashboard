@@ -230,7 +230,7 @@ export const colorMapping: Record<string, Record<string, string | Record<number,
         75: "green",
         50: "amber",
         25: "orange",
-        10: "red"
+        0: "red"
       }
     },
     temperature: {

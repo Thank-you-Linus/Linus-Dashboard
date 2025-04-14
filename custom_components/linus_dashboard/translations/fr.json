@@ -47,7 +47,7 @@
             "area_states": {
                 "presence_hold": "Maintien de présence",
                 "sleep": "Sommeil",
-                "extended": "Étendu",
+                "extended": "Prolongé",
                 "occupied": "Occupé",
                 "clear": "Libre"
             },

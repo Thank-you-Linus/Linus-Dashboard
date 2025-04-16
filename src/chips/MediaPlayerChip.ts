@@ -2,7 +2,7 @@ import { Helper } from "../Helper";
 import { AbstractChip } from "./AbstractChip";
 import { chips } from "../types/strategy/chips";
 import { TemplateChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
-import { getMAEntity } from "../utils";
+import { getMAEntity, navigateTo } from "../utils";
 import { EntityRegistryEntry } from "../types/homeassistant/data/entity_registry";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
@@ -56,11 +56,23 @@ class MediaPlayerChip extends AbstractChip {
     this.#defaultConfig.icon = Helper.getIcon("media_player", undefined, entities);
     this.#defaultConfig.icon_color = Helper.getIconColor("media_player", undefined, entities);
 
-    // const magicAreasEntity = getMAEntity(options?.magic_device_id ?? "global", "media_player");
+    const magicAreasEntity = getMAEntity(options?.magic_device_id ?? "global", "media_player");
 
-    // if (magicAreasEntity) {
-    //   this.#defaultConfig.entity = magicAreasEntity.entity_id;
-    // }
+    if (magicAreasEntity) {
+      this.#defaultConfig.entity = magicAreasEntity.entity_id;
+      this.#defaultConfig.tap_action = undefined
+      this.#defaultConfig.hold_action = navigateTo('media_player')
+    } else {
+
+      const area_slug = Array.isArray(options?.area_slug) ? options?.area_slug : [options?.area_slug]
+      const entity_id = area_slug.flatMap((area) => Helper.areas[area ?? "global"]?.domains?.light ?? []);
+      this.#defaultConfig.entity_id = entity_id
+
+      if (entity_id.length == 1) {
+        this.#defaultConfig.entity = entity_id[0]
+        this.#defaultConfig.tap_action = undefined
+      }
+    }
 
     this.config = Object.assign(this.config, this.#defaultConfig, options);
   }

@@ -2,7 +2,7 @@ import { Helper } from "../Helper";
 import { AbstractChip } from "./AbstractChip";
 import { chips } from "../types/strategy/chips";
 import { TemplateChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
-import { getMAEntity } from "../utils";
+import { getMAEntity, navigateTo } from "../utils";
 import { EntityRegistryEntry } from "../types/homeassistant/data/entity_registry";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
@@ -59,6 +59,17 @@ class ClimateChip extends AbstractChip {
 
     if (magicAreasEntity) {
       this.#defaultConfig.entity = magicAreasEntity.entity_id;
+      this.#defaultConfig.tap_action = undefined
+      this.#defaultConfig.hold_action = navigateTo('climate')
+    } else {
+      const area_slug = Array.isArray(options?.area_slug) ? options?.area_slug : [options?.area_slug]
+      const entity_id = area_slug.flatMap((area) => Helper.areas[area ?? "global"]?.domains?.climate ?? []);
+      this.#defaultConfig.entity_id = entity_id
+
+      if (entity_id.length == 1) {
+        this.#defaultConfig.entity = entity_id[0]
+        this.#defaultConfig.tap_action = undefined
+      }
     }
 
     this.config = Object.assign(this.config, this.#defaultConfig, options);

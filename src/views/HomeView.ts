@@ -14,6 +14,8 @@ import { WeatherChip } from "../chips/WeatherChip";
 import { UnavailableChip } from "../chips/UnavailableChip";
 import { PersonCard } from "../cards/PersonCard";
 import { AggregateChip } from "../chips/AggregateChip";
+import { LightChip } from "../chips/LightChip";
+import { ClimateChip } from "../chips/ClimateChip";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**
@@ -198,6 +200,27 @@ class HomeView {
       }
 
       const temperatureEntities = Helper.getEntityIds({ domain: "sensor", device_class: "temperature", area_slug: floor.areas_slug });
+      const lightEntities = Helper.getEntityIds({ domain: "light", area_slug: floor.areas_slug });
+      const climateEntities = Helper.getEntityIds({ domain: "climate", area_slug: floor.areas_slug });
+
+      const chips = floor.floor_id === UNDISCLOSED ? [] : [
+        temperatureEntities.length > 0 && new AggregateChip({
+          domain: "sensor",
+          device_class: "temperature",
+          show_content: true,
+          magic_device_id: floor.floor_id,
+          area_slug: floor.areas_slug,
+          tap_action: navigateTo('temperature')
+        }).getChip(),
+        lightEntities.length > 0 && new LightChip({
+          magic_device_id: floor.floor_id,
+          area_slug: floor.areas_slug,
+        }).getChip(),
+        climateEntities.length > 0 && new ClimateChip({
+          magic_device_id: floor.floor_id,
+          area_slug: floor.areas_slug,
+        }).getChip(),
+      ].filter(Boolean) as LovelaceChipConfig[];
 
       if (floors.length > 1) {
         floorSection.cards.push({
@@ -208,21 +231,11 @@ class HomeView {
           badges: [{
             type: "custom:mushroom-chips-card",
             alignment: "end",
-            chips: [
-              floor.floor_id !== UNDISCLOSED && temperatureEntities.length > 0 &&
-              new AggregateChip({
-                domain: "sensor",
-                device_class: "temperature",
-                show_content: true,
-                magic_device_id: floor.floor_id,
-                area_slug: floor.areas_slug,
-                tap_action: navigateTo('temperature')
-              }).getChip(),
-            ],
+            chips,
             card_mod: {
               style: `
                 ha-card {
-                  min-width: 100px;
+                  min-width: 200px;
                 }
               `,
             }

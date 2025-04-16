@@ -3088,17 +3088,23 @@ class AggregateChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_0__.AbstractC
      */
     getDefaultConfig({ domain, device_class, show_content = true, magic_device_id = "global", area_slug, tap_action }) {
         const magicEntity = (0,_utils__WEBPACK_IMPORTED_MODULE_2__.getMAEntity)(magic_device_id, domain, device_class);
-        const entity_id = magicEntity?.entity_id ? [magicEntity?.entity_id] : _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.getEntityIds({ domain, device_class, area_slug });
-        const icon = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.getIcon(domain, device_class, entity_id);
-        const icon_color = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.getIconColor(domain, device_class, entity_id);
-        const content = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.getContent(domain, device_class, entity_id);
-        return {
-            entity: entity_id,
-            icon_color,
-            icon,
-            content: show_content ? content : "",
-            tap_action: tap_action ?? { action: "none" }
+        const entity_id = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.getEntityIds({ domain, device_class, area_slug });
+        let config = {
+            type: "template",
+            entity: entity_id.length == 1 ? entity_id[0] : undefined,
+            entity_id: _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.getEntityIds({ domain, device_class, area_slug }),
+            icon_color: _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.getIconColor(domain, device_class, entity_id),
+            icon: _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.getIcon(domain, device_class, entity_id),
+            content: show_content ? _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.getContent(domain, device_class, entity_id) : "",
+            tap_action: tap_action ?? entity_id.length == 1 ? undefined : (0,_utils__WEBPACK_IMPORTED_MODULE_2__.navigateTo)(device_class ?? domain),
+            hold_action: (0,_utils__WEBPACK_IMPORTED_MODULE_2__.navigateTo)(device_class ?? domain),
         };
+        if (magicEntity) {
+            config.type = "template";
+            config.entity = magicEntity.entity_id;
+            config.tap_action = { action: "more-info" };
+        }
+        return config;
     }
     /**
      * Class Constructor.
@@ -3496,6 +3502,17 @@ class ClimateChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.AbstractChi
         const magicAreasEntity = (0,_utils__WEBPACK_IMPORTED_MODULE_2__.getMAEntity)(options.magic_device_id ?? "global", "climate");
         if (magicAreasEntity) {
             __classPrivateFieldGet(this, _ClimateChip_defaultConfig, "f").entity = magicAreasEntity.entity_id;
+            __classPrivateFieldGet(this, _ClimateChip_defaultConfig, "f").tap_action = undefined;
+            __classPrivateFieldGet(this, _ClimateChip_defaultConfig, "f").hold_action = (0,_utils__WEBPACK_IMPORTED_MODULE_2__.navigateTo)('climate');
+        }
+        else {
+            const area_slug = Array.isArray(options?.area_slug) ? options?.area_slug : [options?.area_slug];
+            const entity_id = area_slug.flatMap((area) => _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas[area ?? "global"]?.domains?.climate ?? []);
+            __classPrivateFieldGet(this, _ClimateChip_defaultConfig, "f").entity_id = entity_id;
+            if (entity_id.length == 1) {
+                __classPrivateFieldGet(this, _ClimateChip_defaultConfig, "f").entity = entity_id[0];
+                __classPrivateFieldGet(this, _ClimateChip_defaultConfig, "f").tap_action = undefined;
+            }
         }
         this.config = Object.assign(this.config, __classPrivateFieldGet(this, _ClimateChip_defaultConfig, "f"), options);
     }
@@ -3697,6 +3714,17 @@ class CoverChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.AbstractChip 
         const magicAreasEntity = (0,_utils__WEBPACK_IMPORTED_MODULE_2__.getMAEntity)(options?.magic_device_id ?? "global", "cover", options?.device_class);
         if (magicAreasEntity) {
             __classPrivateFieldGet(this, _CoverChip_defaultConfig, "f").entity = magicAreasEntity.entity_id;
+            __classPrivateFieldGet(this, _CoverChip_defaultConfig, "f").tap_action = undefined;
+            __classPrivateFieldGet(this, _CoverChip_defaultConfig, "f").hold_action = (0,_utils__WEBPACK_IMPORTED_MODULE_2__.navigateTo)('cover');
+        }
+        else {
+            const area_slug = Array.isArray(options?.area_slug) ? options?.area_slug : [options?.area_slug];
+            const entity_id = area_slug.flatMap((area) => _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas[area ?? "global"]?.domains?.cover ?? []);
+            __classPrivateFieldGet(this, _CoverChip_defaultConfig, "f").entity_id = entity_id;
+            if (entity_id.length == 1) {
+                __classPrivateFieldGet(this, _CoverChip_defaultConfig, "f").entity = entity_id[0];
+                __classPrivateFieldGet(this, _CoverChip_defaultConfig, "f").tap_action = undefined;
+            }
         }
         this.config = Object.assign(this.config, __classPrivateFieldGet(this, _CoverChip_defaultConfig, "f"), options);
     }
@@ -3720,12 +3748,14 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var _Helper__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../Helper */ "./src/Helper.ts");
 /* harmony import */ var _AbstractChip__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./AbstractChip */ "./src/chips/AbstractChip.ts");
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../utils */ "./src/utils.ts");
 var __classPrivateFieldGet = (undefined && undefined.__classPrivateFieldGet) || function (receiver, state, kind, f) {
     if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a getter");
     if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
     return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
 };
 var _FanChip_defaultConfig;
+
 
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
@@ -3772,6 +3802,20 @@ class FanChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.AbstractChip {
         }
         __classPrivateFieldGet(this, _FanChip_defaultConfig, "f").icon = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getIcon("fan", undefined, entities);
         __classPrivateFieldGet(this, _FanChip_defaultConfig, "f").icon_color = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getIconColor("fan", undefined, entities);
+        const magicAreasEntity = (0,_utils__WEBPACK_IMPORTED_MODULE_2__.getMAEntity)(options?.magic_device_id ?? "global", "fan");
+        if (magicAreasEntity) {
+            __classPrivateFieldGet(this, _FanChip_defaultConfig, "f").tap_action = undefined;
+            __classPrivateFieldGet(this, _FanChip_defaultConfig, "f").hold_action = (0,_utils__WEBPACK_IMPORTED_MODULE_2__.navigateTo)('fan');
+        }
+        else {
+            const area_slug = Array.isArray(options?.area_slug) ? options?.area_slug : [options?.area_slug];
+            const entity_id = area_slug.flatMap((area) => _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas[area ?? "global"]?.domains?.fan ?? []);
+            __classPrivateFieldGet(this, _FanChip_defaultConfig, "f").entity_id = entity_id;
+            if (entity_id.length == 1) {
+                __classPrivateFieldGet(this, _FanChip_defaultConfig, "f").entity = entity_id[0];
+                __classPrivateFieldGet(this, _FanChip_defaultConfig, "f").tap_action = undefined;
+            }
+        }
         this.config = Object.assign(this.config, __classPrivateFieldGet(this, _FanChip_defaultConfig, "f"), options);
     }
 }
@@ -3851,10 +3895,17 @@ class LightChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.AbstractChip 
         const magicAreasEntity = (0,_utils__WEBPACK_IMPORTED_MODULE_2__.getMAEntity)(options?.magic_device_id ?? "global", "light");
         if (magicAreasEntity) {
             __classPrivateFieldGet(this, _LightChip_defaultConfig, "f").entity = magicAreasEntity.entity_id;
+            __classPrivateFieldGet(this, _LightChip_defaultConfig, "f").tap_action = undefined;
+            __classPrivateFieldGet(this, _LightChip_defaultConfig, "f").hold_action = (0,_utils__WEBPACK_IMPORTED_MODULE_2__.navigateTo)('light');
         }
         else {
             const area_slug = Array.isArray(options?.area_slug) ? options?.area_slug : [options?.area_slug];
-            __classPrivateFieldGet(this, _LightChip_defaultConfig, "f").entity_id = area_slug.flatMap((area) => _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas[area ?? "global"]?.domains?.light ?? []);
+            const entity_id = area_slug.flatMap((area) => _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas[area ?? "global"]?.domains?.light ?? []);
+            __classPrivateFieldGet(this, _LightChip_defaultConfig, "f").entity_id = entity_id;
+            if (entity_id.length == 1) {
+                __classPrivateFieldGet(this, _LightChip_defaultConfig, "f").entity = entity_id[0];
+                __classPrivateFieldGet(this, _LightChip_defaultConfig, "f").tap_action = undefined;
+            }
         }
         this.config = Object.assign(this.config, __classPrivateFieldGet(this, _LightChip_defaultConfig, "f"), options);
     }
@@ -3878,12 +3929,14 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var _Helper__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../Helper */ "./src/Helper.ts");
 /* harmony import */ var _AbstractChip__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./AbstractChip */ "./src/chips/AbstractChip.ts");
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../utils */ "./src/utils.ts");
 var __classPrivateFieldGet = (undefined && undefined.__classPrivateFieldGet) || function (receiver, state, kind, f) {
     if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a getter");
     if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
     return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
 };
 var _MediaPlayerChip_defaultConfig;
+
 
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
@@ -3930,10 +3983,21 @@ class MediaPlayerChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_1__.Abstrac
         }
         __classPrivateFieldGet(this, _MediaPlayerChip_defaultConfig, "f").icon = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getIcon("media_player", undefined, entities);
         __classPrivateFieldGet(this, _MediaPlayerChip_defaultConfig, "f").icon_color = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getIconColor("media_player", undefined, entities);
-        // const magicAreasEntity = getMAEntity(options?.magic_device_id ?? "global", "media_player");
-        // if (magicAreasEntity) {
-        //   this.#defaultConfig.entity = magicAreasEntity.entity_id;
-        // }
+        const magicAreasEntity = (0,_utils__WEBPACK_IMPORTED_MODULE_2__.getMAEntity)(options?.magic_device_id ?? "global", "media_player");
+        if (magicAreasEntity) {
+            __classPrivateFieldGet(this, _MediaPlayerChip_defaultConfig, "f").entity = magicAreasEntity.entity_id;
+            __classPrivateFieldGet(this, _MediaPlayerChip_defaultConfig, "f").tap_action = undefined;
+            __classPrivateFieldGet(this, _MediaPlayerChip_defaultConfig, "f").hold_action = (0,_utils__WEBPACK_IMPORTED_MODULE_2__.navigateTo)('media_player');
+        }
+        else {
+            const area_slug = Array.isArray(options?.area_slug) ? options?.area_slug : [options?.area_slug];
+            const entity_id = area_slug.flatMap((area) => _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas[area ?? "global"]?.domains?.light ?? []);
+            __classPrivateFieldGet(this, _MediaPlayerChip_defaultConfig, "f").entity_id = entity_id;
+            if (entity_id.length == 1) {
+                __classPrivateFieldGet(this, _MediaPlayerChip_defaultConfig, "f").entity = entity_id[0];
+                __classPrivateFieldGet(this, _MediaPlayerChip_defaultConfig, "f").tap_action = undefined;
+            }
+        }
         this.config = Object.assign(this.config, __classPrivateFieldGet(this, _MediaPlayerChip_defaultConfig, "f"), options);
     }
 }
@@ -5237,7 +5301,7 @@ class LinusStrategy extends HTMLTemplateElement {
     }
 }
 customElements.define("ll-strategy-linus-strategy", LinusStrategy);
-const version = "v1.1.1-alpha.4";
+const version = "v1.1.1-alpha.5";
 console.info("%c Linus Strategy %c ".concat(version, " "), "color: #F5F5DC; background: #004225; font-weight: 700;", "color: #004225; background: #F5F5DC; font-weight: 700;");
 
 
@@ -9699,12 +9763,16 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _chips_UnavailableChip__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../chips/UnavailableChip */ "./src/chips/UnavailableChip.ts");
 /* harmony import */ var _cards_PersonCard__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../cards/PersonCard */ "./src/cards/PersonCard.ts");
 /* harmony import */ var _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../chips/AggregateChip */ "./src/chips/AggregateChip.ts");
+/* harmony import */ var _chips_LightChip__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../chips/LightChip */ "./src/chips/LightChip.ts");
+/* harmony import */ var _chips_ClimateChip__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ../chips/ClimateChip */ "./src/chips/ClimateChip.ts");
 var __classPrivateFieldGet = (undefined && undefined.__classPrivateFieldGet) || function (receiver, state, kind, f) {
     if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a getter");
     if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
     return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
 };
 var _HomeView_instances, _HomeView_createPersonCards;
+
+
 
 
 
@@ -9881,6 +9949,26 @@ class HomeView {
                 isFirstLoop = false;
             }
             const temperatureEntities = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getEntityIds({ domain: "sensor", device_class: "temperature", area_slug: floor.areas_slug });
+            const lightEntities = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getEntityIds({ domain: "light", area_slug: floor.areas_slug });
+            const climateEntities = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getEntityIds({ domain: "climate", area_slug: floor.areas_slug });
+            const chips = floor.floor_id === _variables__WEBPACK_IMPORTED_MODULE_3__.UNDISCLOSED ? [] : [
+                temperatureEntities.length > 0 && new _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_8__.AggregateChip({
+                    domain: "sensor",
+                    device_class: "temperature",
+                    show_content: true,
+                    magic_device_id: floor.floor_id,
+                    area_slug: floor.areas_slug,
+                    tap_action: (0,_utils__WEBPACK_IMPORTED_MODULE_4__.navigateTo)('temperature')
+                }).getChip(),
+                lightEntities.length > 0 && new _chips_LightChip__WEBPACK_IMPORTED_MODULE_9__.LightChip({
+                    magic_device_id: floor.floor_id,
+                    area_slug: floor.areas_slug,
+                }).getChip(),
+                climateEntities.length > 0 && new _chips_ClimateChip__WEBPACK_IMPORTED_MODULE_10__.ClimateChip({
+                    magic_device_id: floor.floor_id,
+                    area_slug: floor.areas_slug,
+                }).getChip(),
+            ].filter(Boolean);
             if (floors.length > 1) {
                 floorSection.cards.push({
                     type: "heading",
@@ -9890,21 +9978,11 @@ class HomeView {
                     badges: [{
                             type: "custom:mushroom-chips-card",
                             alignment: "end",
-                            chips: [
-                                floor.floor_id !== _variables__WEBPACK_IMPORTED_MODULE_3__.UNDISCLOSED && temperatureEntities.length > 0 &&
-                                    new _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_8__.AggregateChip({
-                                        domain: "sensor",
-                                        device_class: "temperature",
-                                        show_content: true,
-                                        magic_device_id: floor.floor_id,
-                                        area_slug: floor.areas_slug,
-                                        tap_action: (0,_utils__WEBPACK_IMPORTED_MODULE_4__.navigateTo)('temperature')
-                                    }).getChip(),
-                            ],
+                            chips,
                             card_mod: {
                                 style: `
                 ha-card {
-                  min-width: 100px;
+                  min-width: 200px;
                 }
               `,
                             }

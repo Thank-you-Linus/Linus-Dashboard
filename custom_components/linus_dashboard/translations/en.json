@@ -74,10 +74,10 @@
             "greeting": {
                 "name": "Greeting",
                 "state": {
-                    "morning": "Good morning, ",
-                    "afternoon": "Good afternoon, ",
-                    "evening": "Good evening, ",
-                    "night": "Good night, "
+                    "morning": "Good morning,",
+                    "afternoon": "Good afternoon,",
+                    "evening": "Good evening,",
+                    "night": "Good night,"
                 }
             }
         }

@@ -1,14 +1,14 @@
 <div align="center">
   <a href="https://thankyou-linus.com/">
-    <img src="https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/images/mongramme-linus-or.png?raw=true" alt="Logo" height="200">
+    <img src="https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/images/screenshots/linus-dashboard-banner-en.jpg?raw=true" alt="Linus Dashboard">
   </a>
-  <h1 align="center">Linus Dashboard</h1>
   <p align="center">
-    ✨ Plug n Play Magic Dashboard with Smart Sections for Rooms and Devices ✨ <br><br> A modern, intuitive, and auto-organized dashboard for Home Assistant. <br>
+    <br>
+    ✨ The modern, intuitive Plug n Play Magic Dashboard that auto-organizes your rooms and devices into Smart Sections. Home Assistant has never looked this good! ✨
     <br />
-    <a href="https://thankyou-linus.com/"><strong>Discover More »</strong></a>
-    <br />
-    <br />
+    <p align="center">
+      <a href="README-fr.md"><strong>🇫🇷 Lire en français</strong></a>
+    </p>
     <a href="https://community.home-assistant.io/t/looking-for-beta-testers-for-linus-dashboard-integration/804564">
       <img src="https://img.shields.io/badge/Home%20Assistant-Community%20Forum-blue?logo=home-assistant" alt="Home Assistant Community Forum"/>
     </a>
@@ -43,15 +43,14 @@
       <img width="32px" alt="LinkedIn" title="LinkedIn" src="https://raw.githubusercontent.com/Thank-you-Linus/.github/master/images/socials/linkedin.svg"/>
     </a>
   </p>
+    <a href="https://thankyou-linus.com/"><strong>Discover More »</strong></a>
+    <br />
+    <br />
   </div>
 
----
 
-<p align="center">
-  <a href="README-fr.md"><strong>🇫🇷 Lire en français</strong></a>
-</p>
 
----
+
 ## ✨ What is Linus Dashboard?
 Linus Dashboard is a Plug n Play magic dashboard designed to simplify and elevate your Home Assistant experience. It automatically organizes your devices into smart sections, grouped by rooms and device types, without requiring complicated setup.
 
@@ -71,51 +70,33 @@ Whether you're using [hass-magic_areas](https://github.com/jseidl/hass-magic_are
 > **Curious about what more automation and customization can do for your smart home?**
 > Explore [thankyou-linus.com](https://thankyou-linus.com/) to discover the full potential of Linus Dashboard and beyond.
 
----
 
 ## 🌟 Features You'll Love
 
-- ✨ **Plug n Play Simplicity**: Minimal configuration, ready to use out of the box.
-- 🏠 **Smart Sections**: Automatically organizes devices by rooms and categories.
-- 🎨 **Customizable Interface**: Tailor it to your needs with ease.
-- 📱 **Responsive Design**: Looks great on mobile, tablet, or desktop.
-- **🚀 Enhanced with Magic Areas**: Unlock advanced organization and area-based features with this integration.
 
----
-
-## 📷 Screenshots
-
-### 🏠 **Home Page**
-Interactive cards allow you to control lighting, climate, and more for each room.
 <div align="center">
-  <img src="https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/images/screenshots/home-page-example.png" alt="Home Page" width="50%">
-</div>
-
-### 🛋️ **Room-Based Smart Sections**
-Organized views of all your devices by room for quick and intuitive control.
-<div align="center">
-  <img src="https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/images/screenshots/room-page-example.png" alt="Room Page" width="50%">
-</div>
-
-### 📟 **Device-Focused Views**
-Easily navigate between lights, sensors, and other device categories.
-<div align="center">
-  <img src="https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/images/screenshots/motion-page-example.png" alt="Motion Overview" width="50%">
-</div>
-
-### 🔒 **Security Page**
-Keep an eye on security devices such as alarms, cameras, and motion sensors. Check their real-time status and interact quickly in case of any issues.
-<div align="center">
-  <img src="https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/images/screenshots/security-page-example.png" alt="Security Page" width="50%">
-</div>
-
-### ⚠️ **Offline Devices Page**
-Quickly identify and troubleshoot unavailable devices.
-<div align="center">
-  <img src="https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/images/screenshots/offline-page-example.png" alt="Offline Devices" width="50%">
+  <img src="https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/images/screenshots/home-view-en.jpg?raw=true" alt="Home view">
 </div>
 
 ---
+
+<div align="center">
+  <img src="https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/images/screenshots/room-view-en.jpg?raw=true" alt="Room view">
+</div>
+
+---
+
+<div align="center">
+  <img src="https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/images/screenshots/security-view-en.jpg?raw=true" alt="Security view">
+</div>
+
+---
+
+<div align="center">
+  <img src="https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/images/screenshots/aggregate-views-en.jpg?raw=true" alt="Aggregate view">
+</div>
+
+
 
 ## 📦 Installation Guide
 
@@ -166,7 +147,7 @@ After installation, follow these steps to configure and access Linus Dashboard:
 
 If you encounter an error message like the one below when trying to use Linus Dashboard:
 
-![Timeout Error](https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/images/timeout-error.png)
+![Timeout Error](https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/images/timeout-error.png?raw=true)
 
 **Follow these steps to resolve the issue**:
 
@@ -185,7 +166,7 @@ If you encounter an error message like the one below when trying to use Linus Da
 
 If these steps don’t resolve the issue, feel free to open an issue on the [GitHub repository](https://github.com/Thank-you-Linus/Linus-Dashboard/issues) with details about your setup and the error message.
 
----
+
 
 ## 📣 Join Our Community
 
@@ -193,13 +174,13 @@ If these steps don’t resolve the issue, feel free to open an issue on the [Git
 - 🐛 **Report Issues**: [GitHub Issues](https://github.com/Thank-you-Linus/Linus-Dashboard/issues)
 - 💬 **Feedback & Support**: [Discord](https://discord.gg/cZ7NH4ex)
 
----
+
 
 ## ❤️ Contribute
 
 We’re always open to contributions! Fork the project, submit improvements, or report bugs to help us make Linus Dashboard even better.
 
----
+
 
 <div align="center">
   <h2>✨ Take Your Smart Home Further ✨</h2>

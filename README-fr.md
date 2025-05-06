@@ -1,14 +1,14 @@
 <div align="center">
   <a href="https://thankyou-linus.com/">
-    <img src="https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/images/mongramme-linus-or.png?raw=true" alt="Logo" height="200">
+    <img src="https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/images/screenshots/linus-dashboard-banner-fr.jpg?raw=true" alt="Linus Dashboard">
   </a>
-  <h1 align="center">Linus Dashboard</h1>
   <p align="center">
-    ✨ Tableau de bord magique Plug n Play avec des sections intelligentes pour les pièces et les appareils ✨ <br><br> Un tableau de bord moderne, intuitif et auto-organisé pour Home Assistant. <br>
+    <br>
+    ✨ Le tableau de bord moderne et intuitif Plug n Play qui organise automatiquement vos pièces et appareils en sections intelligentes. Home Assistant n’a jamais été aussi beau ! ✨
     <br />
-    <a href="https://thankyou-linus.com/"><strong>Découvrez-en plus »</strong></a>
-    <br />
-    <br />
+    <p align="center">
+      <a href="README.md"><strong>🇬🇧 Lire en anglais</strong></a>
+    </p>
     <a href="https://community.home-assistant.io/t/looking-for-beta-testers-for-linus-dashboard-integration/804564">
       <img src="https://img.shields.io/badge/Home%20Assistant-Community%20Forum-blue?logo=home-assistant" alt="Forum Communautaire Home Assistant"/>
     </a>
@@ -16,13 +16,12 @@
       <img src="https://discordapp.com/api/guilds/1104794215440978042/widget.png?style=shield" alt="Communauté Discord"/>
     </a>
     <a href="https://github.com/Thank-you-Linus/Linus-Dashboard/stargazers">
-      <img src="https://img.shields.io/github/stars/Thank-you-Linus/Linus-Dashboard?style=social" alt="GitHub Stars"/>
+      <img src="https://img.shields.io/github/stars/Thank-you-Linus/Linus-Dashboard?style=social" alt="Étoiles GitHub"/>
     </a>
   </p>
 
-  ![Statut Validation](https://github.com/Thank-you-Linus/Linus-Dashboard/actions/workflows/validate.yml/badge.svg) ![Statut Lint](https://github.com/Thank-you-Linus/Linus-Dashboard/actions/workflows/lint.yml/badge.svg) [![Dernière version](https://img.shields.io/github/v/release/Thank-you-Linus/Linus-Dashboard.svg)](https://github.com/Thank-you-Linus/Linus-Dashboard/releases) [![Dernier commit GitHub](https://badgen.net/github/last-commit/Thank-you-Linus/Linus-Dashboard)](https://github.com/Thank-you-Linus/Linus-Dashboard/commit/) [![Contributeurs GitHub](https://badgen.net/github/contributors/Thank-you-Linus/Linus-Dashboard)](https://GitHub.com/Thank-you-Linus/Linus-Dashboard/graphs/contributors/)
+  ![Statut Validation](https://github.com/Thank-you-Linus/Linus-Dashboard/actions/workflows/validate.yml/badge.svg) ![Statut Lint](https://github.com/Thank-you-Linus/Linus-Dashboard/actions/workflows/lint.yml/badge.svg) [![Dernière version](https://img.shields.io/github/v/release/Thank-you-Linus/Linus-Dashboard.svg)](https://github.com/Thank-you-Linus/Linus-Dashboard/releases) [![Dernier commit](https://badgen.net/github/last-commit/Thank-you-Linus/Linus-Dashboard)](https://github.com/Thank-you-Linus/Linus-Dashboard/commit/) [![Contributeurs GitHub](https://badgen.net/github/contributors/Thank-you-Linus/Linus-Dashboard)](https://GitHub.com/Thank-you-Linus/Linus-Dashboard/graphs/contributors/)
 
-  <!-- Social icons section -->
   <p align="center">
     <a href="https://www.instagram.com/thankyoulinus.ai/">
       <img width="32px" alt="Instagram" title="Instagram" src="https://raw.githubusercontent.com/Thank-you-Linus/.github/master/images/socials/instagram.svg"/>
@@ -43,172 +42,134 @@
       <img width="32px" alt="LinkedIn" title="LinkedIn" src="https://raw.githubusercontent.com/Thank-you-Linus/.github/master/images/socials/linkedin.svg"/>
     </a>
   </p>
+  <a href="https://thankyou-linus.com/"><strong>En savoir plus »</strong></a>
+  <br />
+  <br />
+</div>
+
+## ✨ Qu’est-ce que Linus Dashboard ?
+
+Linus Dashboard est un tableau de bord magique Plug n Play conçu pour simplifier et améliorer votre expérience Home Assistant.
+Il organise automatiquement vos appareils en sections intelligentes, regroupées par pièces et types d’appareils, sans nécessiter de configuration compliquée.
+
+**Principaux avantages** :
+
+- 🏠 **Sections intelligentes basées sur les pièces** : affiche automatiquement les appareils par pièce pour une navigation facile.
+- 📟 **Vues centrées sur les appareils** : accédez rapidement aux lumières, capteurs et interrupteurs.
+- 🎨 **Design élégant et réactif** : s’adapte parfaitement à toutes les tailles d’écran.
+- ⚡ **Installation sans tracas** : branchez, utilisez et profitez.
+
+Que vous utilisiez déjà [hass-magic_areas](https://github.com/jseidl/hass-magic_areas) ou que vous débutiez avec Home Assistant, Linus Dashboard est la solution idéale pour une interface propre, organisée et intuitive.
+
+> **Envie de découvrir tout le potentiel de l’automatisation et de la personnalisation de votre maison connectée ?**
+> Explorez [thankyou-linus.com](https://thankyou-linus.com/) pour en savoir plus sur Linus et bien plus encore.
+
+## 🌟 Fonctionnalités que vous allez adorer
+
+<div align="center">
+  <img src="https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/images/screenshots/home-view-fr.jpg?raw=true" alt="Vue d'accueil">
 </div>
 
 ---
 
-<p align="center">
-  <a href="README.md"><strong>🇬🇧 Read in english</strong></a>
-</p>
-
-## ✨ Qu'est-ce que Linus Dashboard ?
-
-Linus Dashboard est un tableau de bord magique Plug n Play conçu pour simplifier et améliorer votre expérience avec Home Assistant. Il organise automatiquement vos appareils en sections intelligentes, regroupées par pièces et types d'appareils, sans configuration compliquée.
-
-Points forts :
-
-- 🏠 **Sections intelligentes par pièce** : Affichez automatiquement les appareils par pièce pour une navigation facile.
-- 📟 **Vues centrées sur les appareils** : Accédez rapidement aux appareils comme les lumières, capteurs, et interrupteurs.
-- 🎨 **Design moderne et réactif** : S'adapte parfaitement à toutes les tailles d'écran.
-- ⚡ **Installation simplifiée** : Installez, utilisez, et profitez.
-
-Que vous utilisiez [hass-magic_areas](https://github.com/jseidl/hass-magic_areas) ou que vous débutiez avec Home Assistant, Linus Dashboard est la solution idéale pour une interface propre, organisée et intuitive.
-
-> **Curieux de découvrir ce que plus d'automatisation et de personnalisation peuvent apporter à votre maison connectée ?**
-> Découvrez le potentiel de Linus Dashboard et bien plus encore sur [thankyou-linus.com](https://thankyou-linus.com/).
-
----
-
-## 🌟 Fonctionnalités clés
-
-- ✨ **Simplicité Plug n Play** : Configuration minimale, prêt à l'emploi.
-- 🏠 **Sections intelligentes** : Organise automatiquement les appareils par pièce et catégorie.
-- 🎨 **Interface personnalisable** : Adaptez-le facilement à vos besoins.
-- 📱 **Design réactif** : Magnifique sur mobile, tablette ou ordinateur.
-- 🚀 **Amélioré avec Magic Areas** : Débloquez des fonctionnalités avancées avec cette intégration.
-
----
-
-## 📷 Captures d'écran
-
-### 🏠 **Page d'accueil**
-Cartes interactives pour contrôler l'éclairage, le climat, et plus encore pour chaque pièce.
-
 <div align="center">
-  <img src="https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/images/screenshots/home-page-example.png" alt="Page d'accueil" width="50%">
-</div>
-
-### 🛋️ **Sections par pièce**
-Vues organisées de tous vos appareils par pièce pour un contrôle rapide et intuitif.
-
-<div align="center">
-  <img src="https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/images/screenshots/room-page-example.png" alt="Page pièce" width="50%">
-</div>
-
-### 📟 **Vues par catégorie d'appareil**
-Naviguez facilement entre les lumières, capteurs, et autres catégories d'appareils.
-
-<div align="center">
-  <img src="https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/images/screenshots/motion-page-example.png" alt="Vue des lumières" width="50%">
-</div>
-
-### 🔒 **Page Sécurité**
-Gardez un œil sur les appareils de sécurité comme les alarmes, caméras, et détecteurs de mouvement.
-
-<div align="center">
-  <img src="https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/images/screenshots/security-page-example.png" alt="Page Sécurité" width="50%">
-</div>
-
-### ⚠️ **Page Appareils Hors Ligne**
-Identifiez et résolvez rapidement les appareils indisponibles.
-
-<div align="center">
-  <img src="https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/images/screenshots/offline-page-example.png" alt="Appareils hors ligne" width="50%">
+  <img src="https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/images/screenshots/room-view-fr.jpg?raw=true" alt="Vue pièce">
 </div>
 
 ---
 
-## 📦 Guide d'installation
+<div align="center">
+  <img src="https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/images/screenshots/security-view-fr.jpg?raw=true" alt="Vue sécurité">
+</div>
+
+---
+
+<div align="center">
+  <img src="https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/images/screenshots/aggregate-views-fr.jpg?raw=true" alt="Vue agrégée">
+</div>
+
+## 📦 Guide d’installation
 
 ### Prérequis
 
 - **Home Assistant** (version 2023.9 ou plus récente recommandée).
-- **HACS** (Home Assistant Community Store), recommandé pour des mises à jour simplifiées.
+- **HACS** (Home Assistant Community Store), facultatif mais recommandé pour simplifier les mises à jour.
 
-### Méthodes d'installation
+### Méthodes d’installation
 
-#### Option 1 : Via HACS (recommandée)
+#### Option 1 : Via HACS (Recommandé)
 
 1. Ouvrez Home Assistant et allez dans **HACS > Intégrations**.
 2. Cliquez sur le menu à trois points en haut à droite et sélectionnez **Dépôts personnalisés**.
-3. Ajoutez l'URL du dépôt :
+3. Ajoutez l’URL du dépôt :
    `[https://github.com/Thank-you-Linus/Linus-Dashboard](https://github.com/Thank-you-Linus/Linus-Dashboard)`
    Choisissez **Intégration** comme catégorie et confirmez.
-4. Recherchez "Linus Dashboard" dans HACS, cliquez sur **Installer**, et redémarrez Home Assistant.
+4. Recherchez "Linus Dashboard" dans HACS, cliquez sur **Installer**, puis redémarrez Home Assistant.
 
-#### Option 2 : Installation manuelle
+#### Option 2 : Installation manuelle
 
 1. Téléchargez la dernière version depuis la page [Releases GitHub](https://github.com/Thank-you-Linus/Linus-Dashboard/releases).
-2. Extrayez les fichiers et copiez le dossier `linus_dashboard` dans le répertoire `custom_components` de votre installation Home Assistant.
-3. Redémarrez Home Assistant pour charger l'intégration.
+2. Extrayez les fichiers et copiez le dossier `linus_dashboard` dans le répertoire `custom_components` de Home Assistant.
+3. Redémarrez Home Assistant pour charger l’intégration.
 
 ---
 
 ### 🛠️ Configuration et utilisation
 
-Une fois l'installation terminée, voici comment configurer et accéder à Linus Dashboard :
+Après l’installation, suivez ces étapes :
 
-1. **Redémarrez Home Assistant** après l’installation via HACS.
-2. Accédez à la **page des Intégrations** dans Home Assistant.
+1. **Redémarrez Home Assistant** après avoir installé Linus Dashboard via HACS.
+2. Allez sur la page **Intégrations** de Home Assistant.
 3. Recherchez et ajoutez **Linus Dashboard** comme nouvelle intégration.
-4. Pendant la configuration, sélectionnez une entité météo ou d’alarme si nécessaire (ces étapes sont facultatives).
+4. Pendant la configuration, vous pouvez sélectionner une entité météo ou alarme (facultatif).
 5. Une fois la configuration terminée, un nouvel **icône avec un nœud papillon** apparaîtra dans le menu de gauche. Cliquez dessus pour accéder directement à Linus Dashboard.
 
 #### ✨ Astuce
-- Si l’icône n’apparaît pas immédiatement, essayez de redémarrer Home Assistant une nouvelle fois.
+- Si l’icône n’apparaît pas immédiatement, essayez de redémarrer Home Assistant à nouveau.
 
 ---
 
 ### ❗ Dépannage
 
-#### Résolution des erreurs de timeout ou des messages d’erreur en rouge
+#### Correction des erreurs de délai d’attente ou des messages d’erreur rouges
 
-Si vous rencontrez un message d’erreur comme celui-ci en essayant d’utiliser Linus Dashboard :
+Si vous voyez un message d’erreur comme ci-dessous :
 
-![Erreur de Timeout](https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/images/timeout-error.png)
+![Erreur Timeout](https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/images/timeout-error.png?raw=true)
 
-**Suivez ces étapes pour résoudre le problème** :
+**Procédez comme suit** :
 
-1. **Videz votre cache** :
-   - Pour les navigateurs : Videz le cache de votre navigateur.
-   - Pour l’application mobile Home Assistant : Effacez le cache de l’application via les paramètres de votre appareil.
-   - Si vous utilisez un proxy inverse ou un service DNS comme Cloudflare : Videz également le cache là-bas.
+1. **Videz le cache** :
+   - Navigateur : effacez le cache de votre navigateur.
+   - Application mobile Home Assistant : videz le cache de l’application via les paramètres de votre appareil.
+   - Si vous utilisez un proxy inverse ou un service DNS (Cloudflare par exemple), videz également le cache.
 
 2. **Forcez un rafraîchissement** :
-   - Sur **Windows** : Appuyez sur `CTRL + F5`.
-   - Sur **Mac** :
-     - Maintenez `⇧ Shift` et cliquez sur le bouton Recharger.
-     - Ou maintenez les touches `⌘ Cmd` et `⇧ Shift`, puis appuyez sur `R`.
+   - **Windows** : appuyez sur `CTRL + F5`.
+   - **Mac** : maintenez `⇧ Shift` et cliquez sur le bouton de rechargement, ou maintenez `⌘ Cmd` + `⇧ Shift` puis appuyez sur `R`.
 
-3. **Vérifiez votre configuration** : Assurez-vous que votre instance Home Assistant est correctement configurée et qu’il n’y a pas de problèmes liés au réseau.
+3. **Vérifiez votre configuration** : assurez-vous que votre instance Home Assistant est correctement configurée et qu’il n’y a pas de problèmes réseau.
 
-Si ces étapes ne résolvent pas le problème, n’hésitez pas à ouvrir une issue sur le [dépôt GitHub](https://github.com/Thank-you-Linus/Linus-Dashboard/issues) en fournissant des détails sur votre configuration et le message d’erreur.
+Si le problème persiste, ouvrez un ticket sur le [dépôt GitHub](https://github.com/Thank-you-Linus/Linus-Dashboard/issues) en fournissant des détails sur votre configuration et le message d’erreur.
 
----
+## 📣 Rejoignez la communauté
 
-## 📣 Rejoignez notre communauté
+- 🌟 **Soutenez-nous** : [Étoiles GitHub](https://github.com/Thank-you-Linus/Linus-Dashboard/stargazers)
+- 🐛 **Signaler un problème** : [Issues GitHub](https://github.com/Thank-you-Linus/Linus-Dashboard/issues)
+- 💬 **Retour et support** : [Discord](https://discord.gg/cZ7NH4ex)
 
-- 🌟 **Montrez votre soutien** : [GitHub Stars](https://github.com/Thank-you-Linus/Linus-Dashboard/stargazers)
-- 🐛 **Signalez des problèmes** : [GitHub Issues](https://github.com/Thank-you-Linus/Linus-Dashboard/issues)
-- 💬 **Support et retours** : [Discord](https://discord.gg/cZ7NH4ex)
+## ❤️ Contribuer
 
----
-
-## ❤️ Contribuez
-
-Nous sommes toujours ouverts aux contributions ! Forkez le projet, proposez des améliorations, ou signalez des bugs pour aider à améliorer Linus Dashboard.
-
----
+Nous sommes toujours ouverts aux contributions !
+Forkez le projet, proposez des améliorations ou signalez des bugs pour nous aider à améliorer Linus Dashboard.
 
 <div align="center">
-  <h2>✨ Allez plus loin avec votre maison connectée ✨</h2>
+  <h2>✨ Faites passer votre maison connectée au niveau supérieur ✨</h2>
   <p>
-    <strong>Curieux de savoir comment Linus peut transformer votre maison connectée ? Prêt pour plus d'automatisation et de personnalisation ?</strong><br>
-    Visitez <a href="https://thankyou-linus.com/">thankyou-linus.com</a> pour explorer plus en profondeur l'écosystème Linus et découvrir toutes les possibilités.
+    <strong>Curieux de savoir comment Linus peut transformer votre maison connectée ? Prêt pour plus d’automatisation et de personnalisation ?</strong><br>
+    Visitez <a href="https://thankyou-linus.com/">thankyou-linus.com</a> pour plonger dans l’écosystème Linus et découvrir toutes les possibilités.
   </p>
   <a href="https://thankyou-linus.com/" style="text-decoration: none;">
-    <img src="https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/images/thank-you-linus.png?raw=true" alt="Visitez thankyou-linus.com" >
+    <img src="https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/images/thank-you-linus.png?raw=true" alt="Visiter thankyou-linus.com" >
   </a>
 </div>
-
----

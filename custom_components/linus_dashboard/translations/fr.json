@@ -62,10 +62,10 @@
             "greeting": {
                 "name": "Salutation",
                 "state": {
-                    "morning": "Bonjour, ",
-                    "afternoon": "Bonne après-midi, ",
-                    "evening": "Bonne soirée, ",
-                    "night": "Bonne nuit, "
+                    "morning": "Bonjour,",
+                    "afternoon": "Bonne après-midi,",
+                    "evening": "Bonne soirée,",
+                    "night": "Bonne nuit,"
                 }
             }
         }

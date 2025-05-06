@@ -1967,6 +1967,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   GroupedCard: () => (/* binding */ GroupedCard)
 /* harmony export */ });
 /* harmony import */ var _SwipeCard__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./SwipeCard */ "./src/cards/SwipeCard.ts");
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utils */ "./src/utils.ts");
+
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**
@@ -2003,11 +2005,21 @@ class GroupedCard {
     getCard() {
         // Group entity cards into pairs and create vertical stacks
         const groupedEntityCards = [];
-        for (let i = 0; i < this.config.cards.length; i += 2) {
-            groupedEntityCards.push({
-                type: "vertical-stack",
-                cards: this.config.cards.slice(i, i + 2),
-            });
+        for (let i = 0; i < this.config.cards.length; i++) {
+            const card = this.config.cards[i];
+            if ('entity' in card && (0,_utils__WEBPACK_IMPORTED_MODULE_1__.getEntityDomain)(card.entity) === "sensor") {
+                // If it's a sensor, add the card directly
+                groupedEntityCards.push(card);
+            }
+            else {
+                // Otherwise, group into vertical stacks
+                const stack = {
+                    type: "vertical-stack",
+                    cards: this.config.cards.slice(i, i + 2),
+                };
+                groupedEntityCards.push(stack);
+                i++; // Skip the next card as it's already included in the stack
+            }
         }
         // If there are more than 2 groups, use a GroupedCard, otherwise use a horizontal stack
         const groupedCards = groupedEntityCards.length > 2
@@ -2055,40 +2067,6 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-// Utility function to generate badge icon and color
-const getBadgeIcon = (entityId) => `
-  {% set bl = states('${entityId}') %}
-  {% if bl == 'unknown' or bl == 'unavailable' %}
-  {% elif bl | int() < 10 %} mdi:battery-outline
-  {% elif bl | int() < 20 %} mdi:battery-10
-  {% elif bl | int() < 30 %} mdi:battery-20
-  {% elif bl | int() < 40 %} mdi:battery-30
-  {% elif bl | int() < 50 %} mdi:battery-40
-  {% elif bl | int() < 60 %} mdi:battery-50
-  {% elif bl | int() < 70 %} mdi:battery-60
-  {% elif bl | int() < 80 %} mdi:battery-70
-  {% elif bl | int() < 90 %} mdi:battery-80
-  {% elif bl | int() < 100 %} mdi:battery-90
-  {% elif bl | int() == 100 %} mdi:battery
-  {% else %} mdi:battery-unknown
-  {% endif %}
-`;
-const getBadgeColor = (entityId) => `
-  {% set bl = states('${entityId}') %}
-  {% if bl == 'unknown' or bl == 'unavailable' %} disabled
-  {% elif bl | int() < 10 %} red
-  {% elif bl | int() < 20 %} red
-  {% elif bl | int() < 30 %} red
-  {% elif bl | int() < 40 %} orange
-  {% elif bl | int() < 50 %} orange
-  {% elif bl | int() < 60 %} green
-  {% elif bl | int() < 70 %} green
-  {% elif bl | int() < 80 %} green
-  {% elif bl | int() < 90 %} green
-  {% elif bl | int() == 100 %} green
-  {% else %} disabled
-  {% endif %}
-`;
 class HomeAreaCard {
     constructor(options) {
         /**
@@ -2152,23 +2130,32 @@ class HomeAreaCard {
         };
     }
     getChipsCard() {
-        const { light_control, aggregate_health, aggregate_window, aggregate_door, aggregate_cover } = this.magicDevice?.entities || {};
-        const { motion, occupancy, presence, window, climate, fan, door, cover, health, light } = this.area.domains ?? {};
+        const { light_control, aggregate_health, climate_group, aggregate_window, aggregate_door, aggregate_cover } = this.magicDevice?.entities || {};
+        const { health } = this.area.domains ?? {};
         const magicLight = (0,_utils__WEBPACK_IMPORTED_MODULE_4__.getMAEntity)(this.magicDevice?.id, "light");
         const magicClimate = (0,_utils__WEBPACK_IMPORTED_MODULE_4__.getMAEntity)(this.magicDevice?.id, "climate");
         const magicFan = (0,_utils__WEBPACK_IMPORTED_MODULE_4__.getMAEntity)(this.magicDevice?.id, "fan");
+        const motion = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getEntityIds({ domain: "binary_sensor", device_class: "motion", area_slug: this.area.slug });
+        const occupancy = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getEntityIds({ domain: "binary_sensor", device_class: "occupancy", area_slug: this.area.slug });
+        const presence = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getEntityIds({ domain: "binary_sensor", device_class: "presence", area_slug: this.area.slug });
+        const climate = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getEntityIds({ domain: "climate", area_slug: this.area.slug });
+        const fan = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getEntityIds({ domain: "fan", area_slug: this.area.slug });
+        const door = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getEntityIds({ domain: "binary_sensor", device_class: "door", area_slug: this.area.slug });
+        const window = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getEntityIds({ domain: "binary_sensor", device_class: "window", area_slug: this.area.slug });
+        const cover = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getEntityIds({ domain: "cover", area_slug: this.area.slug });
+        const light = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getEntityIds({ domain: "light", area_slug: this.area.slug });
         return {
             type: "custom:mushroom-chips-card",
             alignment: "end",
             chips: [
                 (motion || occupancy || presence) && new _chips_AreaStateChip__WEBPACK_IMPORTED_MODULE_3__.AreaStateChip({ area: this.area }).getChip(),
-                health && new _chips_ConditionalChip__WEBPACK_IMPORTED_MODULE_7__.ConditionalChip(aggregate_health ? [{ entity: aggregate_health?.entity_id, state: "on" }] : health.map(entity => ({ entity, state: "on" })), new _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_2__.AggregateChip({ domain: "health", device_class: "health" }).getChip()).getChip(),
-                window?.length && new _chips_ConditionalChip__WEBPACK_IMPORTED_MODULE_7__.ConditionalChip(aggregate_window ? [{ entity: aggregate_window?.entity_id, state: "on" }] : window.map(entity => ({ entity, state: "on" })), new _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_2__.AggregateChip({ domain: "binary_ensor", magic_device_id: this.area.slug, area_slug: this.area.slug, device_class: "window", show_content: false }).getChip()).getChip(),
-                door && new _chips_ConditionalChip__WEBPACK_IMPORTED_MODULE_7__.ConditionalChip(aggregate_door ? [{ entity: aggregate_door?.entity_id, state: "on" }] : door.map(entity => ({ entity, state: "on" })), new _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_2__.AggregateChip({ domain: "binary_ensor", magic_device_id: this.area.slug, area_slug: this.area.slug, device_class: "door", show_content: false }).getChip()).getChip(),
-                cover && new _chips_ConditionalChip__WEBPACK_IMPORTED_MODULE_7__.ConditionalChip(aggregate_cover ? [{ entity: aggregate_cover?.entity_id, state: "on" }] : cover.map(entity => ({ entity, state: "on" })), new _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_2__.AggregateChip({ domain: "cover", magic_device_id: this.area.slug, area_slug: this.area.slug, device_class: "cover", show_content: false }).getChip()).getChip(),
-                climate && new _chips_ClimateChip__WEBPACK_IMPORTED_MODULE_5__.ClimateChip({ magic_device_id: this.area.slug, area_slug: this.area.slug }, magicClimate).getChip(),
-                fan && new _chips_FanChip__WEBPACK_IMPORTED_MODULE_9__.FanChip({ magic_device_id: this.area.slug, area_slug: this.area.slug }, magicFan).getChip(),
-                light && new _chips_LightChip__WEBPACK_IMPORTED_MODULE_6__.LightChip({ area_slug: this.area.slug, magic_device_id: this.area.slug, tap_action: { action: "toggle" } }, magicLight).getChip(),
+                health?.length && new _chips_ConditionalChip__WEBPACK_IMPORTED_MODULE_7__.ConditionalChip(aggregate_health ? [{ entity: aggregate_health?.entity_id, state: "on" }] : health.map(entity => ({ entity, state: "on" })), new _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_2__.AggregateChip({ domain: "health", device_class: "health" }).getChip()).getChip(),
+                window?.length && new _chips_ConditionalChip__WEBPACK_IMPORTED_MODULE_7__.ConditionalChip(aggregate_window ? [{ entity: aggregate_window?.entity_id, state: "on" }] : window.map(entity => ({ entity, state: "on" })), new _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_2__.AggregateChip({ domain: "binary_sensor", device_class: "window", magic_device_id: this.area.slug, area_slug: this.area.slug, show_content: false }).getChip()).getChip(),
+                door?.length && new _chips_ConditionalChip__WEBPACK_IMPORTED_MODULE_7__.ConditionalChip(aggregate_door ? [{ entity: aggregate_door?.entity_id, state: "on" }] : door.map(entity => ({ entity, state: "on" })), new _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_2__.AggregateChip({ domain: "binary_sensor", device_class: "door", magic_device_id: this.area.slug, area_slug: this.area.slug, show_content: false }).getChip()).getChip(),
+                cover?.length && new _chips_ConditionalChip__WEBPACK_IMPORTED_MODULE_7__.ConditionalChip(aggregate_cover ? [{ entity: aggregate_cover?.entity_id, state: "on" }] : cover.map(entity => ({ entity, state: "on" })), new _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_2__.AggregateChip({ domain: "cover", magic_device_id: this.area.slug, area_slug: this.area.slug, device_class: "cover", show_content: false }).getChip()).getChip(),
+                climate?.length && new _chips_ConditionalChip__WEBPACK_IMPORTED_MODULE_7__.ConditionalChip(climate_group ? [{ entity: climate_group?.entity_id, state: "on" }] : cover.map(entity => ({ entity, state: "on" })), new _chips_ClimateChip__WEBPACK_IMPORTED_MODULE_5__.ClimateChip({ magic_device_id: this.area.slug, area_slug: this.area.slug }, magicClimate).getChip()).getChip(),
+                fan?.length && new _chips_FanChip__WEBPACK_IMPORTED_MODULE_9__.FanChip({ magic_device_id: this.area.slug, area_slug: this.area.slug }, magicFan).getChip(),
+                light?.length && new _chips_LightChip__WEBPACK_IMPORTED_MODULE_6__.LightChip({ area_slug: this.area.slug, magic_device_id: this.area.slug, tap_action: { action: "toggle" } }, magicLight).getChip(),
                 new _chips_ConditionalChip__WEBPACK_IMPORTED_MODULE_7__.ConditionalChip([{ entity: this.magicDevice?.entities?.all_lights?.entity_id, state_not: _variables__WEBPACK_IMPORTED_MODULE_8__.UNAVAILABLE }], new _chips_ControlChip__WEBPACK_IMPORTED_MODULE_1__.ControlChip("light", light_control?.entity_id).getChip()).getChip()
             ].filter(Boolean),
             card_mod: { style: this.getChipsCardModStyle() }
@@ -2184,7 +2171,7 @@ class HomeAreaCard {
         };
     }
     getIconColorTemplate(area_state) {
-        const condition = area_state?.entity_id ? `"dark" in state_attr('${area_state?.entity_id}', 'states')` : `not is_state("sun.sun", "above_horizon")`;
+        const condition = area_state?.entity_id ? `"dark" in state_attr('${area_state?.entity_id}', 'states')` : `not is_state("sun.sun", "below_horizon")`;
         return `
       {{ "indigo" if ${condition} else "amber" }}
     `;
@@ -4661,11 +4648,12 @@ const configurationDefaults = {
             showControls: true,
             controlChip: _chips_LightChip__WEBPACK_IMPORTED_MODULE_8__.LightChip,
             extraControls: (device) => {
+                const { light_control, adaptive_lighting_range, minimum_brightness, maximum_brightness, maximum_lighting_level } = device?.entities ?? {};
                 const chips = [];
-                if (device?.entities.light_control?.entity_id) {
-                    chips.push(new _chips_ControlChip__WEBPACK_IMPORTED_MODULE_0__.ControlChip("light", device?.entities.light_control?.entity_id).getChip());
+                if (light_control?.entity_id) {
+                    chips.push(new _chips_ControlChip__WEBPACK_IMPORTED_MODULE_0__.ControlChip("light", light_control?.entity_id).getChip());
                 }
-                if (device?.entities.all_lights?.entity_id) {
+                if (adaptive_lighting_range && minimum_brightness && maximum_brightness && maximum_lighting_level) {
                     chips.push(new _chips_SettingsChip__WEBPACK_IMPORTED_MODULE_1__.SettingsChip({ tap_action: new _popups_LightSettingsPopup__WEBPACK_IMPORTED_MODULE_2__.LightSettings(device).getPopup() }).getChip());
                 }
                 return chips;
@@ -5872,6 +5860,7 @@ class LightSettings extends _AbstractPopup__WEBPACK_IMPORTED_MODULE_3__.Abstract
             "Extra large": 100,
         };
         const adaptive_lighting_range_state = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getEntityState(adaptive_lighting_range?.entity_id)?.state;
+        const adaptive_lighting_entity = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getEntityState(`switch.adaptive_lighting_${device_slug}`);
         return {
             action: "fire-dom-event",
             browser_mod: {
@@ -5881,7 +5870,7 @@ class LightSettings extends _AbstractPopup__WEBPACK_IMPORTED_MODULE_3__.Abstract
                     content: {
                         type: "vertical-stack",
                         cards: [
-                            {
+                            adaptive_lighting_entity ? {
                                 type: "horizontal-stack",
                                 cards: [
                                     {
@@ -5905,14 +5894,14 @@ class LightSettings extends _AbstractPopup__WEBPACK_IMPORTED_MODULE_3__.Abstract
                                         vertical: "true",
                                     }
                                 ]
-                            },
-                            {
+                            } : false,
+                            adaptive_lighting_range?.entity_id ? {
                                 type: "custom:mushroom-select-card",
                                 entity: adaptive_lighting_range?.entity_id,
                                 secondary_info: "last-changed",
                                 icon_color: "blue",
-                            },
-                            {
+                            } : false,
+                            maximum_lighting_level?.entity_id ? {
                                 type: "horizontal-stack",
                                 cards: [
                                     {
@@ -5941,93 +5930,96 @@ class LightSettings extends _AbstractPopup__WEBPACK_IMPORTED_MODULE_3__.Abstract
                                         },
                                     },
                                 ],
-                            },
-                            {
+                            } : false,
+                            minimum_brightness?.entity_id ? {
                                 type: "custom:mushroom-number-card",
                                 entity: minimum_brightness?.entity_id,
                                 icon_color: "green",
                                 card_mod: {
                                     style: ":host {--mush-control-height: 10px;}"
                                 }
-                            },
-                            {
+                            } : false,
+                            maximum_brightness?.entity_id ? {
                                 type: "custom:mushroom-number-card",
                                 entity: maximum_brightness?.entity_id,
                                 icon_color: "green",
                                 card_mod: {
                                     style: ":host {--mush-control-height: 10px;}"
                                 }
-                            },
-                            {
-                                type: "custom:apexcharts-card",
-                                graph_span: "15h",
-                                header: {
-                                    show: true,
-                                    title: "Luminosité en fonction du temps",
-                                    show_states: true,
-                                    colorize_states: true
-                                },
-                                yaxis: [
-                                    {
-                                        id: "illuminance",
-                                        min: 0,
-                                        apex_config: {
-                                            tickAmount: 4
-                                        }
+                            } : false,
+                            (aggregate_illuminance?.entity_id &&
+                                adaptive_lighting_range?.entity_id &&
+                                maximum_lighting_level?.entity_id)
+                                ? {
+                                    type: "custom:apexcharts-card",
+                                    graph_span: "15h",
+                                    header: {
+                                        show: true,
+                                        title: "Luminosité en fonction du temps",
+                                        show_states: true,
+                                        colorize_states: true
                                     },
-                                    {
-                                        id: "brightness",
-                                        opposite: true,
-                                        min: 0,
-                                        max: 100,
-                                        apex_config: {
-                                            tickAmount: 4
-                                        }
-                                    }
-                                ],
-                                series: [
-                                    (aggregate_illuminance?.entity_id ? {
-                                        entity: aggregate_illuminance?.entity_id,
-                                        yaxis_id: "illuminance",
-                                        color: "orange",
-                                        name: "Luminosité ambiante (lx)",
-                                        type: "line",
-                                        group_by: {
-                                            func: "last",
-                                            duration: "30m"
-                                        }
-                                    } : undefined),
-                                    {
-                                        entity: adaptive_lighting_range?.entity_id,
-                                        type: "area",
-                                        yaxis_id: "illuminance",
-                                        show: {
-                                            in_header: false
+                                    yaxis: [
+                                        {
+                                            id: "illuminance",
+                                            min: 0,
+                                            apex_config: {
+                                                tickAmount: 4
+                                            }
                                         },
-                                        color: "blue",
-                                        name: "Zone d'éclairage adaptatif",
-                                        unit: "lx",
-                                        transform: `return parseInt(hass.states['${maximum_lighting_level?.entity_id}'].state) + ${OPTIONS_ADAPTIVE_LIGHTING_RANGE[adaptive_lighting_range_state]};`,
-                                        group_by: {
-                                            func: "last",
+                                        {
+                                            id: "brightness",
+                                            opposite: true,
+                                            min: 0,
+                                            max: 100,
+                                            apex_config: {
+                                                tickAmount: 4
+                                            }
                                         }
-                                    },
-                                    {
-                                        entity: maximum_lighting_level?.entity_id,
-                                        type: "area",
-                                        yaxis_id: "illuminance",
-                                        name: "Zone d'éclairage à 100%",
-                                        color: "red",
-                                        show: {
-                                            in_header: false
+                                    ],
+                                    series: [
+                                        (aggregate_illuminance?.entity_id ? {
+                                            entity: aggregate_illuminance?.entity_id,
+                                            yaxis_id: "illuminance",
+                                            color: "orange",
+                                            name: "Luminosité ambiante (lx)",
+                                            type: "line",
+                                            group_by: {
+                                                func: "last",
+                                                duration: "30m"
+                                            }
+                                        } : undefined),
+                                        {
+                                            entity: adaptive_lighting_range?.entity_id,
+                                            type: "area",
+                                            yaxis_id: "illuminance",
+                                            show: {
+                                                in_header: false
+                                            },
+                                            color: "blue",
+                                            name: "Zone d'éclairage adaptatif",
+                                            unit: "lx",
+                                            transform: `return parseInt(hass.states['${maximum_lighting_level?.entity_id}'].state) + ${OPTIONS_ADAPTIVE_LIGHTING_RANGE[adaptive_lighting_range_state]};`,
+                                            group_by: {
+                                                func: "last",
+                                            }
                                         },
-                                        group_by: {
-                                            func: "last",
-                                        }
-                                    },
-                                ].filter(Boolean)
-                            },
-                        ]
+                                        {
+                                            entity: maximum_lighting_level?.entity_id,
+                                            type: "area",
+                                            yaxis_id: "illuminance",
+                                            name: "Zone d'éclairage à 100%",
+                                            color: "red",
+                                            show: {
+                                                in_header: false
+                                            },
+                                            group_by: {
+                                                func: "last",
+                                            }
+                                        },
+                                    ].filter(Boolean)
+                                } : false,
+                        ].filter(Boolean)
                     }
                 }
             }
@@ -6086,69 +6078,54 @@ class SceneSettings extends _AbstractPopup__WEBPACK_IMPORTED_MODULE_2__.Abstract
                         type: "vertical-stack",
                         cards: [
                             ...(selectControl.length ? _variables__WEBPACK_IMPORTED_MODULE_1__.TOD_ORDER.map(tod => ({
-                                type: "custom:config-template-card",
-                                variables: {
-                                    SCENE_STATE: `states['${device?.entities[('scene_' + tod)]?.entity_id}'].state`
-                                },
-                                entities: [device?.entities[('scene_' + tod)]?.entity_id],
-                                card: {
-                                    type: "horizontal-stack",
-                                    cards: [
-                                        {
-                                            type: "entities",
-                                            entities: [device?.entities[('scene_' + tod)]?.entity_id]
-                                        },
-                                        {
-                                            type: "conditional",
-                                            conditions: [
-                                                {
-                                                    entity: "${SCENE_STATE}",
-                                                    state: "on"
-                                                },
-                                                // {
-                                                //   entity: "${SCENE_STATE}",
-                                                //   state: "off"
-                                                // }
-                                            ],
-                                            card: {
-                                                type: "tile",
-                                                entity: "${SCENE_STATE}",
-                                                show_entity_picture: true,
-                                                tap_action: {
-                                                    action: "toggle"
-                                                },
+                                type: "horizontal-stack",
+                                cards: [
+                                    {
+                                        type: "entities",
+                                        entities: [device?.entities[('scene_' + tod)]?.entity_id]
+                                    },
+                                    {
+                                        type: "conditional",
+                                        conditions: [
+                                            {
+                                                entity: device?.entities[('scene_' + tod)]?.entity_id,
+                                                state: "on"
                                             }
-                                        },
-                                        {
-                                            type: "conditional",
-                                            conditions: [
-                                                {
-                                                    entity: "${SCENE_STATE}",
-                                                    state: "unavailable"
-                                                },
-                                                // {
-                                                //   entity: "${SCENE_STATE}",
-                                                //   state: "off"
-                                                // }
-                                            ],
-                                            card: {
-                                                type: "custom:mushroom-template-card",
-                                                secondary: "Utiliser l'éclairage actuel",
-                                                multiline_secondary: true,
-                                                icon: "mdi:pencil",
-                                                layout: "vertical",
-                                                tap_action: {
-                                                    action: "call-service",
-                                                    service: `${_variables__WEBPACK_IMPORTED_MODULE_1__.MAGIC_AREAS_DOMAIN}.snapshot_lights_as_tod_scene`,
-                                                    data: {
-                                                        area: (0,_utils__WEBPACK_IMPORTED_MODULE_0__.slugify)(device.name),
-                                                        tod
-                                                    }
-                                                },
+                                        ],
+                                        card: {
+                                            type: "tile",
+                                            entity: device?.entities[('scene_' + tod)]?.entity_id,
+                                            show_entity_picture: true,
+                                            tap_action: {
+                                                action: "toggle"
                                             },
                                         }
-                                    ]
-                                }
+                                    },
+                                    {
+                                        type: "conditional",
+                                        conditions: [
+                                            {
+                                                entity: device?.entities[('scene_' + tod)]?.entity_id,
+                                                state: "unavailable"
+                                            }
+                                        ],
+                                        card: {
+                                            type: "custom:mushroom-template-card",
+                                            secondary: "Utiliser l'éclairage actuel",
+                                            multiline_secondary: true,
+                                            icon: "mdi:pencil",
+                                            layout: "vertical",
+                                            tap_action: {
+                                                action: "call-service",
+                                                service: `${_variables__WEBPACK_IMPORTED_MODULE_1__.MAGIC_AREAS_DOMAIN}.snapshot_lights_as_tod_scene`,
+                                                data: {
+                                                    area: (0,_utils__WEBPACK_IMPORTED_MODULE_0__.slugify)(device.name),
+                                                    tod
+                                                }
+                                            },
+                                        },
+                                    }
+                                ]
                             })) : [{
                                     type: "custom:mushroom-template-card",
                                     primary: "Ajouter une nouvelle scène",
@@ -6175,10 +6152,10 @@ class SceneSettings extends _AbstractPopup__WEBPACK_IMPORTED_MODULE_2__.Abstract
                                     },
                                     card_mod: {
                                         style: `
-              ha-card {
-                box-shadow: none!important;
-              }
-            `
+          ha-card {
+          box-shadow: none!important;
+          }
+        `
                                     }
                                 }])
                         ].filter(Boolean)
@@ -8847,7 +8824,7 @@ const colorMapping = {
         { state: { open: "purple", opening: "purple", closing: "purple" } }
     ])),
     fan: { '_': { state: { on: "cyan" } } },
-    media_player: { '_': { state: { playing: "blue", paused: "amber", stopped: "gray" } } },
+    media_player: { '_': { state: { playing: "blue", paused: "grey", stopped: "grey" } } },
     switch: { '_': { state: { on: "green" } } },
     binary_sensor: {
         motion: { state: { on: "red" } },
@@ -8902,7 +8879,7 @@ const colorMapping = {
         },
         illuminance: {
             state: {
-                0: "gray",
+                0: "grey",
                 100: "amber",
                 1000: "orange",
                 10000: "white"
@@ -8917,7 +8894,7 @@ const colorMapping = {
         },
         power: {
             state: {
-                0: "gray",
+                0: "grey",
                 100: "amber",
                 500: "orange",
                 1000: "red"
@@ -8925,7 +8902,7 @@ const colorMapping = {
         },
         voltage: {
             state: {
-                0: "gray",
+                0: "grey",
                 110: "green",
                 220: "orange",
                 240: "red"
@@ -8933,7 +8910,7 @@ const colorMapping = {
         },
         current: {
             state: {
-                0: "gray",
+                0: "grey",
                 10: "amber",
                 20: "orange",
                 30: "red"
@@ -8981,7 +8958,7 @@ const colorMapping = {
         },
         frequency: {
             state: {
-                0: "gray",
+                0: "grey",
                 50: "green",
                 60: "amber",
                 70: "red"
@@ -8997,7 +8974,7 @@ const colorMapping = {
         },
         energy: {
             state: {
-                0: "gray",
+                0: "grey",
                 100: "amber",
                 500: "orange",
                 1000: "red"

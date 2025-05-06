@@ -54,11 +54,12 @@ export const configurationDefaults: StrategyDefaults = {
       showControls: true,
       controlChip: LightChip,
       extraControls: (device: MagicAreaRegistryEntry) => {
+        const { light_control, adaptive_lighting_range, minimum_brightness, maximum_brightness, maximum_lighting_level } = device?.entities ?? {}
         const chips = [];
-        if (device?.entities.light_control?.entity_id) {
-          chips.push(new ControlChip("light", device?.entities.light_control?.entity_id).getChip());
+        if (light_control?.entity_id) {
+          chips.push(new ControlChip("light", light_control?.entity_id).getChip());
         }
-        if (device?.entities.all_lights?.entity_id) {
+        if (adaptive_lighting_range && minimum_brightness && maximum_brightness && maximum_lighting_level) {
           chips.push(new SettingsChip({ tap_action: new LightSettings(device).getPopup() }).getChip());
         }
         return chips

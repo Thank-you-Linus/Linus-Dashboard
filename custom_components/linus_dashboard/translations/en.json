@@ -53,22 +53,32 @@
         "text": {
             "settings_chip": {
                 "name": "Linus Settings",
-                "reload": "Reload Magic Areas",
-                "restart": "Restart HA"
+                "state": {
+                    "reload": "Reload magic areas",
+                    "restart": "Restart HA"
+                }
             },
             "area_states": {
-                "presence_hold": "Presence Hold",
-                "sleep": "Sleep",
-                "extended": "Extended",
-                "occupied": "Occupied",
-                "clear": "Clear"
+                "name": "Area States",
+                "state": {
+                    "presence_hold": "Presence Hold",
+                    "sleep": "Sleep",
+                    "extended": "Extended",
+                    "occupied": "Occupied",
+                    "clear": "Clear"
+                }
             },
-            "area_state_popup": "Sensors used for presence detection:",
+            "area_state_popup": {
+                "name": "Sensors used for presence detection:"
+            },
             "greeting": {
-                "morning": "Good morning, ",
-                "afternoon": "Good afternoon, ",
-                "evening": "Good evening, ",
-                "night": "Good night, "
+                "name": "Greeting",
+                "state": {
+                    "morning": "Good morning, ",
+                    "afternoon": "Good afternoon, ",
+                    "evening": "Good evening, ",
+                    "night": "Good night, "
+                }
             }
         }
     }

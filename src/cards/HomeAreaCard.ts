@@ -16,42 +16,6 @@ import { UNAVAILABLE, UNDISCLOSED } from "../variables";
 import { EntityCardConfig } from "../types/lovelace-mushroom/cards/entity-card-config";
 import { FanChip } from "../chips/FanChip";
 
-// Utility function to generate badge icon and color
-const getBadgeIcon = (entityId: string) => `
-  {% set bl = states('${entityId}') %}
-  {% if bl == 'unknown' or bl == 'unavailable' %}
-  {% elif bl | int() < 10 %} mdi:battery-outline
-  {% elif bl | int() < 20 %} mdi:battery-10
-  {% elif bl | int() < 30 %} mdi:battery-20
-  {% elif bl | int() < 40 %} mdi:battery-30
-  {% elif bl | int() < 50 %} mdi:battery-40
-  {% elif bl | int() < 60 %} mdi:battery-50
-  {% elif bl | int() < 70 %} mdi:battery-60
-  {% elif bl | int() < 80 %} mdi:battery-70
-  {% elif bl | int() < 90 %} mdi:battery-80
-  {% elif bl | int() < 100 %} mdi:battery-90
-  {% elif bl | int() == 100 %} mdi:battery
-  {% else %} mdi:battery-unknown
-  {% endif %}
-`;
-
-const getBadgeColor = (entityId: string) => `
-  {% set bl = states('${entityId}') %}
-  {% if bl == 'unknown' or bl == 'unavailable' %} disabled
-  {% elif bl | int() < 10 %} red
-  {% elif bl | int() < 20 %} red
-  {% elif bl | int() < 30 %} red
-  {% elif bl | int() < 40 %} orange
-  {% elif bl | int() < 50 %} orange
-  {% elif bl | int() < 60 %} green
-  {% elif bl | int() < 70 %} green
-  {% elif bl | int() < 80 %} green
-  {% elif bl | int() < 90 %} green
-  {% elif bl | int() == 100 %} green
-  {% else %} disabled
-  {% endif %}
-`;
-
 class HomeAreaCard {
   /**
    * Magic area device to create the card for.
@@ -146,36 +110,49 @@ class HomeAreaCard {
 
   getChipsCard(): any {
 
-    const { light_control, aggregate_health, aggregate_window, aggregate_door, aggregate_cover } = this.magicDevice?.entities || {};
-    const { motion, occupancy, presence, window, climate, fan, door, cover, health, light } = this.area.domains ?? {};
+    const { light_control, aggregate_health, climate_group, aggregate_window, aggregate_door, aggregate_cover } = this.magicDevice?.entities || {};
+    const { health } = this.area.domains ?? {};
     const magicLight = getMAEntity(this.magicDevice?.id, "light") as EntityRegistryEntry;
     const magicClimate = getMAEntity(this.magicDevice?.id, "climate") as EntityRegistryEntry;
     const magicFan = getMAEntity(this.magicDevice?.id, "fan") as EntityRegistryEntry;
+
+    const motion = Helper.getEntityIds({ domain: "binary_sensor", device_class: "motion", area_slug: this.area.slug });
+    const occupancy = Helper.getEntityIds({ domain: "binary_sensor", device_class: "occupancy", area_slug: this.area.slug });
+    const presence = Helper.getEntityIds({ domain: "binary_sensor", device_class: "presence", area_slug: this.area.slug });
+    const climate = Helper.getEntityIds({ domain: "climate", area_slug: this.area.slug });
+    const fan = Helper.getEntityIds({ domain: "fan", area_slug: this.area.slug });
+    const door = Helper.getEntityIds({ domain: "binary_sensor", device_class: "door", area_slug: this.area.slug });
+    const window = Helper.getEntityIds({ domain: "binary_sensor", device_class: "window", area_slug: this.area.slug });
+    const cover = Helper.getEntityIds({ domain: "cover", area_slug: this.area.slug });
+    const light = Helper.getEntityIds({ domain: "light", area_slug: this.area.slug });
 
     return {
       type: "custom:mushroom-chips-card",
       alignment: "end",
       chips: [
         (motion || occupancy || presence) && new AreaStateChip({ area: this.area }).getChip(),
-        health && new ConditionalChip(
+        health?.length && new ConditionalChip(
           aggregate_health ? [{ entity: aggregate_health?.entity_id, state: "on" }] : health.map(entity => ({ entity, state: "on" })),
           new AggregateChip({ domain: "health", device_class: "health" }).getChip()
         ).getChip(),
         window?.length && new ConditionalChip(
           aggregate_window ? [{ entity: aggregate_window?.entity_id, state: "on" }] : window.map(entity => ({ entity, state: "on" })),
-          new AggregateChip({ domain: "binary_ensor", magic_device_id: this.area.slug, area_slug: this.area.slug, device_class: "window", show_content: false }).getChip()
+          new AggregateChip({ domain: "binary_sensor", device_class: "window", magic_device_id: this.area.slug, area_slug: this.area.slug, show_content: false }).getChip()
         ).getChip(),
-        door && new ConditionalChip(
+        door?.length && new ConditionalChip(
           aggregate_door ? [{ entity: aggregate_door?.entity_id, state: "on" }] : door.map(entity => ({ entity, state: "on" })),
-          new AggregateChip({ domain: "binary_ensor", magic_device_id: this.area.slug, area_slug: this.area.slug, device_class: "door", show_content: false }).getChip()
+          new AggregateChip({ domain: "binary_sensor", device_class: "door", magic_device_id: this.area.slug, area_slug: this.area.slug, show_content: false }).getChip()
         ).getChip(),
-        cover && new ConditionalChip(
+        cover?.length && new ConditionalChip(
           aggregate_cover ? [{ entity: aggregate_cover?.entity_id, state: "on" }] : cover.map(entity => ({ entity, state: "on" })),
           new AggregateChip({ domain: "cover", magic_device_id: this.area.slug, area_slug: this.area.slug, device_class: "cover", show_content: false }).getChip()
         ).getChip(),
-        climate && new ClimateChip({ magic_device_id: this.area.slug, area_slug: this.area.slug }, magicClimate,).getChip(),
-        fan && new FanChip({ magic_device_id: this.area.slug, area_slug: this.area.slug }, magicFan).getChip(),
-        light && new LightChip({ area_slug: this.area.slug, magic_device_id: this.area.slug, tap_action: { action: "toggle" } }, magicLight).getChip(),
+        climate?.length && new ConditionalChip(
+          climate_group ? [{ entity: climate_group?.entity_id, state: "on" }] : cover.map(entity => ({ entity, state: "on" })),
+          new ClimateChip({ magic_device_id: this.area.slug, area_slug: this.area.slug }, magicClimate,).getChip(),
+        ).getChip(),
+        fan?.length && new FanChip({ magic_device_id: this.area.slug, area_slug: this.area.slug }, magicFan).getChip(),
+        light?.length && new LightChip({ area_slug: this.area.slug, magic_device_id: this.area.slug, tap_action: { action: "toggle" } }, magicLight).getChip(),
         new ConditionalChip(
           [{ entity: this.magicDevice?.entities?.all_lights?.entity_id, state_not: UNAVAILABLE }],
           new ControlChip("light", light_control?.entity_id).getChip()
@@ -196,7 +173,7 @@ class HomeAreaCard {
   }
 
   getIconColorTemplate(area_state: EntityRegistryEntry): string {
-    const condition = area_state?.entity_id ? `"dark" in state_attr('${area_state?.entity_id}', 'states')` : `not is_state("sun.sun", "above_horizon")`;
+    const condition = area_state?.entity_id ? `"dark" in state_attr('${area_state?.entity_id}', 'states')` : `not is_state("sun.sun", "below_horizon")`;
     return `
       {{ "indigo" if ${condition} else "amber" }}
     `;

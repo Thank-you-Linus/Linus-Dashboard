@@ -21,3 +21,4 @@ config/*
 /node_modules/
 custom_components/hacs/*
 custom_components/magic_areas/*
+ha-env/

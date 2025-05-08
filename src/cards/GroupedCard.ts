@@ -2,6 +2,7 @@ import { AbstractCard } from "./AbstractCard";
 import { EntityCardConfig } from "../types/lovelace-mushroom/cards/entity-card-config";
 import { SwipeCard } from "./SwipeCard";
 import { SwipeCardConfig } from "../types/lovelace-mushroom/cards/swipe-card-config";
+import { getEntityDomain } from "../utils";
 
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
@@ -44,11 +45,20 @@ class GroupedCard {
 
     // Group entity cards into pairs and create vertical stacks
     const groupedEntityCards = [];
-    for (let i = 0; i < this.config.cards.length; i += 2) {
-      groupedEntityCards.push({
-        type: "vertical-stack",
-        cards: this.config.cards.slice(i, i + 2),
-      });
+    for (let i = 0; i < this.config.cards.length; i++) {
+      const card = this.config.cards[i];
+      if ('entity' in card && getEntityDomain(card.entity) === "sensor") {
+        // If it's a sensor, add the card directly
+        groupedEntityCards.push(card);
+      } else {
+        // Otherwise, group into vertical stacks
+        const stack = {
+          type: "vertical-stack",
+          cards: this.config.cards.slice(i, i + 2),
+        };
+        groupedEntityCards.push(stack);
+        i++; // Skip the next card as it's already included in the stack
+      }
     }
 
     // If there are more than 2 groups, use a GroupedCard, otherwise use a horizontal stack

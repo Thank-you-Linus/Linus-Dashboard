@@ -196,7 +196,7 @@ export const colorMapping: Record<string, Record<string, string | Record<number,
     ])
   ),
   fan: { '_': { state: { on: "cyan" } } },
-  media_player: { '_': { state: { playing: "blue", paused: "amber", stopped: "gray" } } },
+  media_player: { '_': { state: { playing: "blue", paused: "grey", stopped: "grey" } } },
   switch: { '_': { state: { on: "green" } } },
   binary_sensor: {
     motion: { state: { on: "red" } },
@@ -230,7 +230,7 @@ export const colorMapping: Record<string, Record<string, string | Record<number,
         75: "green",
         50: "amber",
         25: "orange",
-        10: "red"
+        0: "red"
       }
     },
     temperature: {
@@ -251,7 +251,7 @@ export const colorMapping: Record<string, Record<string, string | Record<number,
     },
     illuminance: {
       state: {
-        0: "gray",
+        0: "grey",
         100: "amber",
         1000: "orange",
         10000: "white"
@@ -266,7 +266,7 @@ export const colorMapping: Record<string, Record<string, string | Record<number,
     },
     power: {
       state: {
-        0: "gray",
+        0: "grey",
         100: "amber",
         500: "orange",
         1000: "red"
@@ -274,7 +274,7 @@ export const colorMapping: Record<string, Record<string, string | Record<number,
     },
     voltage: {
       state: {
-        0: "gray",
+        0: "grey",
         110: "green",
         220: "orange",
         240: "red"
@@ -282,7 +282,7 @@ export const colorMapping: Record<string, Record<string, string | Record<number,
     },
     current: {
       state: {
-        0: "gray",
+        0: "grey",
         10: "amber",
         20: "orange",
         30: "red"
@@ -330,7 +330,7 @@ export const colorMapping: Record<string, Record<string, string | Record<number,
     },
     frequency: {
       state: {
-        0: "gray",
+        0: "grey",
         50: "green",
         60: "amber",
         70: "red"
@@ -346,7 +346,7 @@ export const colorMapping: Record<string, Record<string, string | Record<number,
     },
     energy: {
       state: {
-        0: "gray",
+        0: "grey",
         100: "amber",
         500: "orange",
         1000: "red"

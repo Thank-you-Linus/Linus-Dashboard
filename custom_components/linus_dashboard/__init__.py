@@ -3,7 +3,6 @@
 import logging
 from pathlib import Path
 
-import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.components.frontend import async_remove_panel
 from homeassistant.components.http import StaticPathConfig
@@ -34,7 +33,10 @@ async def async_setup(hass: HomeAssistant, _config: dict) -> bool:
     _LOGGER.info("Setting up Linus Dashboard")
     hass.data.setdefault(DOMAIN, {})
 
-    hass.components.websocket_api.async_register_command(websocket_get_entities)
+    websocket_api.async_register_command(
+        hass,
+        websocket_get_entities,
+    )
 
     return True
 
@@ -68,7 +70,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "require_admin": False,
     }
 
-    hass.data["lovelace"]["dashboards"][DOMAIN] = LovelaceYAML(
+    hass.data["lovelace"].dashboards[DOMAIN] = LovelaceYAML(
         hass, DOMAIN, dashboard_config
     )
 
@@ -120,7 +122,11 @@ async def register_static_paths_and_resources(
     await utils.init_resource(hass, js_url, str(version))
 
 
-@websocket_api.websocket_command({vol.Required("type"): "linus_dashboard/get_config"})
+@websocket_api.websocket_command(
+    {
+        "type": "linus_dashboard/get_config",
+    }
+)
 @websocket_api.async_response
 async def websocket_get_entities(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict

@@ -587,17 +587,18 @@ class Helper {
       console.warn("Helper class should be initialized before calling this method!");
     }
 
-    const dc = domain === "binary_sensor" || domain === "sensor" ? device_class : undefined;
-    const domainTag = `${domain}${dc ? ":" + dc : ""}`;
-
-    if (domainTag) {
-      if (domain === "cover") {
-        return DEVICE_CLASSES.cover.flatMap(d => area.domains?.[`cover:${d}`]?.map(entity_id => this.#entities[entity_id]) ?? []);
-      } else {
+    if (domain) {
+      if (device_class) {
+        const domainTag = `${domain}:${device_class}`;
         return area.domains?.[domainTag]?.map(entity_id => this.#entities[entity_id]) ?? [];
+      } else {
+        // If device_class is not specified, get all entities of the domain regardless of device class
+        const domainTags = Object.keys(area.domains || {}).filter(tag => tag.startsWith(`${domain}:`) || tag === domain);
+        return domainTags.flatMap(tag => area.domains?.[tag]?.map(entity_id => this.#entities[entity_id]) ?? []);
       }
     } else {
-      return area.entities.map(entity_id => this.#entities[entity_id]) ?? []
+      // If domain is not specified, return all entities in the area
+      return area.entities.map(entity_id => this.#entities[entity_id]) ?? [];
     }
   }
 
@@ -910,9 +911,17 @@ class Helper {
     if (domain === "sensor" && device_class === "battery") {
       // Handle battery level icons
       if (states.length) {
-        return `{% set entities = [${states}] %}{% set valid_states = entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | map(attribute='state') | map('float') | list %}{% set battery_level = valid_states | max if valid_states | length > 0 else 0 %}{% if battery_level >= 95 %}mdi:battery{% elif battery_level >= 85 %}mdi:battery-90{% elif battery_level >= 75 %}mdi:battery-80{% elif battery_level >= 65 %}mdi:battery-70{% elif battery_level >= 55 %}mdi:battery-60{% elif battery_level >= 45 %}mdi:battery-50{% elif battery_level >= 35 %}mdi:battery-40{% elif battery_level >= 25 %}mdi:battery-30{% elif battery_level >= 15 %}mdi:battery-20{% elif battery_level >= 5 %}mdi:battery-10{% else %}mdi:battery-outline{% endif %}`;
+        return `{% set entities = [${states}] %}{% set valid_states = entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | map(attribute='state') | map('float') | list %}{% if valid_states | length > 0 %}{% set battery_level = valid_states | max %}{% if battery_level >= 95 %}mdi:battery{% elif battery_level >= 85 %}mdi:battery-90{% elif battery_level >= 75 %}mdi:battery-80{% elif battery_level >= 65 %}mdi:battery-70{% elif battery_level >= 55 %}mdi:battery-60{% elif battery_level >= 45 %}mdi:battery-50{% elif battery_level >= 35 %}mdi:battery-40{% elif battery_level >= 25 %}mdi:battery-30{% elif battery_level >= 15 %}mdi:battery-20{% elif battery_level >= 5 %}mdi:battery-10{% else %}mdi:battery-outline{% endif %}{% else %}mdi:battery-outline{% endif %}`;
       }
       return "mdi:battery-outline"; // Default battery icon if no states are available
+    }
+
+    if (domain === "sensor" && device_class === "temperature") {
+      // Handle temperature icons
+      if (states.length) {
+        return `{% set entities = [${states}] %}{% set valid_states = entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | map(attribute='state') | map('float') | list %}{% set temperature = valid_states | max if valid_states | length > 0 else 0 %}{% if temperature >= 30 %}mdi:thermometer-high{% elif temperature >= 20 %}mdi:thermometer{% elif temperature >= 10 %}mdi:thermometer-low{% else %}mdi:snowflake{% endif %}`;
+      }
+      return "mdi:thermometer"; // Default temperature icon if no states are available
     }
 
     if (device_class && domainIcons[device_class as keyof IconResources[keyof IconResources]]) {
@@ -963,15 +972,16 @@ class Helper {
       if (domain === "sensor" && typeof deviceClassColors === "object") {
         // Handle threshold-based color mapping for sensors
         const thresholds = deviceClassColors.state as Record<number, string>;
-        const thresholdKeys = Object.keys(thresholds).map(Number).sort((a, b) => a - b); // Sort ascending for minimum value
+        const thresholdKeys = Object.keys(thresholds).map(Number).sort((a, b) => b - a); // Sort descending for maximum value
         const aggregation = SENSOR_STATE_CLASS_TOTAL.includes(device_class) || SENSOR_STATE_CLASS_TOTAL_INCREASING.includes(device_class) ? 'sum' : 'sum / valid_states | length';
         defaultColor = states.length
           ? `{% set entities = [${states}] %}{% set valid_states = entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | map(attribute='state') | map('float') | list %}{% set aggregated_state = valid_states | ${aggregation} if valid_states | length > 0 else 0 %}`
           : `{% set aggregated_state = 0 %}`;
         for (const threshold of thresholdKeys) {
-          defaultColor += `{% if aggregated_state <= ${threshold} %}${thresholds[threshold]}{% else %}`;
+          defaultColor += `{% if aggregated_state >= ${threshold} %}${thresholds[threshold]}{% else %}`;
         }
         defaultColor += "grey" + "{% endif %}".repeat(thresholdKeys.length);
+        return defaultColor;
       } else if (deviceClassColors.state) {
         // Handle state-based color mapping for non-sensors
         let stateColorTemplate = states.length
@@ -1020,7 +1030,13 @@ class Helper {
     const templates: Record<string, { filter: string, default: string }> = {
       sensor: {
         filter: `valid_states = entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | map(attribute='state') | map('float') | list`,
-        default: `{{ valid_states | sum / valid_states | length | round(1) }}{% if entities[0].attributes.unit_of_measurement is defined %} {{ entities[0].attributes.unit_of_measurement }}{% endif %}`
+        default: `{% set state_class = entities[0].attributes.state_class if entities[0].attributes.state_class is defined else 'measurement' %}
+                  {% if state_class in ['total', 'total_increasing'] %}
+                    {{ (valid_states | sum) | round(1, 'floor') }}
+                  {% else %}
+                    {{ (valid_states | sum / valid_states | length) | round(1, 'floor') }}
+                  {% endif %}
+                  {% if entities[0].attributes.unit_of_measurement is defined %} {{ entities[0].attributes.unit_of_measurement }}{% endif %}`
       },
       binary_sensor: {
         filter: `active_states = entities | selectattr('state', 'eq', 'on') | list`,

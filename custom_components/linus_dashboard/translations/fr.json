@@ -40,23 +40,33 @@
         },
         "text": {
             "settings_chip": {
-                "title": "Paramètres Linus",
-                "reload": "Recharger les zones magiques",
-                "restart": "Redémarrer HA"
+                "name": "Paramètres Linus",
+                "state": {
+                    "reload": "Recharger les zones magiques",
+                    "restart": "Redémarrer HA"
+                }
             },
             "area_states": {
-                "presence_hold": "Maintien de présence",
-                "sleep": "Sommeil",
-                "extended": "Étendu",
-                "occupied": "Occupé",
-                "clear": "Libre"
+                "name": "État de la zone",
+                "state": {
+                    "presence_hold": "Maintien de présence",
+                    "sleep": "Sommeil",
+                    "extended": "Prolongé",
+                    "occupied": "Occupé",
+                    "clear": "Libre"
+                }
             },
-            "area_state_popup": "Capteurs utilisés pour la détection de présence :",
+            "area_state_popup": {
+                "name": "Capteurs utilisés pour la détection de présence :"
+            },
             "greeting": {
-                "morning": "Bonjour, ",
-                "afternoon": "Bonne après-midi, ",
-                "evening": "Bonne soirée, ",
-                "night": "Bonne nuit, "
+                "name": "Salutation",
+                "state": {
+                    "morning": "Bonjour,",
+                    "afternoon": "Bonne après-midi,",
+                    "evening": "Bonne soirée,",
+                    "night": "Bonne nuit,"
+                }
             }
         }
     }

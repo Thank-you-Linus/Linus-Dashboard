@@ -29,6 +29,7 @@ class LightSettings extends AbstractPopup {
     } as Record<string, number>
 
     const adaptive_lighting_range_state = Helper.getEntityState(adaptive_lighting_range?.entity_id)?.state
+    const adaptive_lighting_entity = Helper.getEntityState(`switch.adaptive_lighting_${device_slug}`)
 
     return {
       action: "fire-dom-event",
@@ -39,7 +40,7 @@ class LightSettings extends AbstractPopup {
           content: {
             type: "vertical-stack",
             cards: [
-              {
+              adaptive_lighting_entity ? {
                 type: "horizontal-stack",
                 cards: [
                   {
@@ -63,14 +64,14 @@ class LightSettings extends AbstractPopup {
                     vertical: "true",
                   }
                 ]
-              },
-              {
+              } : false,
+              adaptive_lighting_range?.entity_id ? {
                 type: "custom:mushroom-select-card",
                 entity: adaptive_lighting_range?.entity_id,
                 secondary_info: "last-changed",
                 icon_color: "blue",
-              },
-              {
+              } : false,
+              maximum_lighting_level?.entity_id ? {
                 type: "horizontal-stack",
                 cards: [
                   {
@@ -99,93 +100,96 @@ class LightSettings extends AbstractPopup {
                     },
                   },
                 ],
-              },
-              {
+              } : false,
+              minimum_brightness?.entity_id ? {
                 type: "custom:mushroom-number-card",
                 entity: minimum_brightness?.entity_id,
                 icon_color: "green",
                 card_mod: {
                   style: ":host {--mush-control-height: 10px;}"
                 }
-              },
-              {
+              } : false,
+              maximum_brightness?.entity_id ? {
                 type: "custom:mushroom-number-card",
                 entity: maximum_brightness?.entity_id,
                 icon_color: "green",
                 card_mod: {
                   style: ":host {--mush-control-height: 10px;}"
                 }
-              },
-              {
-                type: "custom:apexcharts-card",
-                graph_span: "15h",
-                header: {
-                  show: true,
-                  title: "Luminosité en fonction du temps",
-                  show_states: true,
-                  colorize_states: true
-                },
-                yaxis: [
-                  {
-                    id: "illuminance",
-                    min: 0,
-                    apex_config: {
-                      tickAmount: 4
-                    }
+              } : false,
+              (aggregate_illuminance?.entity_id &&
+                adaptive_lighting_range?.entity_id &&
+                maximum_lighting_level?.entity_id)
+                ? {
+                  type: "custom:apexcharts-card",
+                  graph_span: "15h",
+                  header: {
+                    show: true,
+                    title: "Luminosité en fonction du temps",
+                    show_states: true,
+                    colorize_states: true
                   },
-                  {
-                    id: "brightness",
-                    opposite: true,
-                    min: 0,
-                    max: 100,
-                    apex_config: {
-                      tickAmount: 4
-                    }
-                  }
-                ],
-                series: [
-                  (aggregate_illuminance?.entity_id ? {
-                    entity: aggregate_illuminance?.entity_id,
-                    yaxis_id: "illuminance",
-                    color: "orange",
-                    name: "Luminosité ambiante (lx)",
-                    type: "line",
-                    group_by: {
-                      func: "last",
-                      duration: "30m"
-                    }
-                  } : undefined),
-                  {
-                    entity: adaptive_lighting_range?.entity_id,
-                    type: "area",
-                    yaxis_id: "illuminance",
-                    show: {
-                      in_header: false
+                  yaxis: [
+                    {
+                      id: "illuminance",
+                      min: 0,
+                      apex_config: {
+                        tickAmount: 4
+                      }
                     },
-                    color: "blue",
-                    name: "Zone d'éclairage adaptatif",
-                    unit: "lx",
-                    transform: `return parseInt(hass.states['${maximum_lighting_level?.entity_id}'].state) + ${OPTIONS_ADAPTIVE_LIGHTING_RANGE[adaptive_lighting_range_state]};`,
-                    group_by: {
-                      func: "last",
+                    {
+                      id: "brightness",
+                      opposite: true,
+                      min: 0,
+                      max: 100,
+                      apex_config: {
+                        tickAmount: 4
+                      }
                     }
-                  },
-                  {
-                    entity: maximum_lighting_level?.entity_id,
-                    type: "area",
-                    yaxis_id: "illuminance",
-                    name: "Zone d'éclairage à 100%",
-                    color: "red",
-                    show: {
-                      in_header: false
+                  ],
+                  series: [
+                    (aggregate_illuminance?.entity_id ? {
+                      entity: aggregate_illuminance?.entity_id,
+                      yaxis_id: "illuminance",
+                      color: "orange",
+                      name: "Luminosité ambiante (lx)",
+                      type: "line",
+                      group_by: {
+                        func: "last",
+                        duration: "30m"
+                      }
+                    } : undefined),
+                    {
+                      entity: adaptive_lighting_range?.entity_id,
+                      type: "area",
+                      yaxis_id: "illuminance",
+                      show: {
+                        in_header: false
+                      },
+                      color: "blue",
+                      name: "Zone d'éclairage adaptatif",
+                      unit: "lx",
+                      transform: `return parseInt(hass.states['${maximum_lighting_level?.entity_id}'].state) + ${OPTIONS_ADAPTIVE_LIGHTING_RANGE[adaptive_lighting_range_state]};`,
+                      group_by: {
+                        func: "last",
+                      }
                     },
-                    group_by: {
-                      func: "last",
-                    }
-                  },
-                ].filter(Boolean)
-              },
-            ]
+                    {
+                      entity: maximum_lighting_level?.entity_id,
+                      type: "area",
+                      yaxis_id: "illuminance",
+                      name: "Zone d'éclairage à 100%",
+                      color: "red",
+                      show: {
+                        in_header: false
+                      },
+                      group_by: {
+                        func: "last",
+                      }
+                    },
+                  ].filter(Boolean)
+                } : false,
+            ].filter(Boolean)
           }
         }
       }

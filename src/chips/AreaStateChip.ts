@@ -91,15 +91,15 @@ class AreaStateChip extends AbstractChip {
           {% set presence_hold = states('${presence_hold?.entity_id}') %}
           {% set bl = state_attr('${area_state?.entity_id}', 'states') %}
           {% if presence_hold == 'on' %}
-            {{ '${Helper.localize("component.linus_dashboard.entity.text.area_states.presence_hold")}' }}
+            {{ '${Helper.localize("component.linus_dashboard.entity.text.area_states.state.presence_hold")}' }}
           {% elif 'sleep' in bl %}
-            {{ '${Helper.localize("component.linus_dashboard.entity.text.area_states.sleep")}' }}
+            {{ '${Helper.localize("component.linus_dashboard.entity.text.area_states.state.sleep")}' }}
           {% elif 'extended' in bl %}
-            {{ '${Helper.localize("component.linus_dashboard.entity.text.area_states.extended")}' }}
+            {{ '${Helper.localize("component.linus_dashboard.entity.text.area_states.state.extended")}' }}
           {% elif 'occupied' in bl %}
-            {{ '${Helper.localize("component.linus_dashboard.entity.text.area_states.occupied")}' }}
+            {{ '${Helper.localize("component.linus_dashboard.entity.text.area_states.state.occupied")}' }}
           {% else %}
-            {{ '${Helper.localize("component.linus_dashboard.entity.text.area_states.clear")}' }}
+            {{ '${Helper.localize("component.linus_dashboard.entity.text.area_states.state.clear")}' }}
           {% endif %}` : "",
       tap_action: device ? new AreaInformations(device, true).getPopup() : { action: "none" },
     };

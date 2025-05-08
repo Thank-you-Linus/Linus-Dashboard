@@ -30,75 +30,56 @@ class SceneSettings extends AbstractPopup {
             cards: [
               ...(selectControl.length ? TOD_ORDER.map(tod => (
                 {
-                  type: "custom:config-template-card",
-                  variables: {
-                    SCENE_STATE: `states['${device?.entities[('scene_' + tod) as "scene_morning"]?.entity_id}'].state`
-                  },
-                  entities: [device?.entities[('scene_' + tod) as "scene_morning"]?.entity_id],
-                  card: {
-                    type: "horizontal-stack",
-                    cards: [
-                      {
-                        type: "entities",
-                        entities: [device?.entities[('scene_' + tod) as "scene_morning"]?.entity_id]
-                      },
-                      {
-                        type: "conditional",
-                        conditions: [
-                          {
-                            entity: "${SCENE_STATE}",
-                            state: "on"
-                          },
-                          // {
-                          //   entity: "${SCENE_STATE}",
-                          //   state: "off"
-                          // }
-                        ],
-                        card:
+                  type: "horizontal-stack",
+                  cards: [
+                    {
+                      type: "entities",
+                      entities: [device?.entities[('scene_' + tod) as "scene_morning"]?.entity_id]
+                    },
+                    {
+                      type: "conditional",
+                      conditions: [
                         {
-                          type: "tile",
-                          entity: "${SCENE_STATE}",
-                          show_entity_picture: true,
-                          tap_action: {
-                            action: "toggle"
-                          },
+                          entity: device?.entities[('scene_' + tod) as "scene_morning"]?.entity_id,
+                          state: "on"
                         }
-                      },
-                      {
-                        type: "conditional",
-                        conditions: [
-                          {
-                            entity: "${SCENE_STATE}",
-                            state: "unavailable"
-                          },
-                          // {
-                          //   entity: "${SCENE_STATE}",
-                          //   state: "off"
-                          // }
-                        ],
-                        card:
-
-                        {
-                          type: "custom:mushroom-template-card",
-                          secondary: "Utiliser l'éclairage actuel",
-                          multiline_secondary: true,
-                          icon: "mdi:pencil",
-                          layout: "vertical",
-                          tap_action: {
-                            action: "call-service",
-                            service: `${MAGIC_AREAS_DOMAIN}.snapshot_lights_as_tod_scene`,
-                            data: {
-                              area: slugify(device.name),
-                              tod
-                            }
-                          },
+                      ],
+                      card: {
+                        type: "tile",
+                        entity: device?.entities[('scene_' + tod) as "scene_morning"]?.entity_id,
+                        show_entity_picture: true,
+                        tap_action: {
+                          action: "toggle"
                         },
                       }
-                    ]
-                  }
+                    },
+                    {
+                      type: "conditional",
+                      conditions: [
+                        {
+                          entity: device?.entities[('scene_' + tod) as "scene_morning"]?.entity_id,
+                          state: "unavailable"
+                        }
+                      ],
+                      card: {
+                        type: "custom:mushroom-template-card",
+                        secondary: "Utiliser l'éclairage actuel",
+                        multiline_secondary: true,
+                        icon: "mdi:pencil",
+                        layout: "vertical",
+                        tap_action: {
+                          action: "call-service",
+                          service: `${MAGIC_AREAS_DOMAIN}.snapshot_lights_as_tod_scene`,
+                          data: {
+                            area: slugify(device.name),
+                            tod
+                          }
+                        },
+                      },
+                    }
+                  ]
                 }
-              )
-              ) : [{
+              )) : [{
                 type: "custom:mushroom-template-card",
                 primary: "Ajouter une nouvelle scène",
                 secondary: `Cliquer ici pour vous rendre sur la page des scènes`,
@@ -124,10 +105,10 @@ class SceneSettings extends AbstractPopup {
                 },
                 card_mod: {
                   style: `
-              ha-card {
-                box-shadow: none!important;
-              }
-            `
+          ha-card {
+          box-shadow: none!important;
+          }
+        `
                 }
               }])
             ].filter(Boolean)

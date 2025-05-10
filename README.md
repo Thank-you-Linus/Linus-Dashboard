@@ -105,6 +105,12 @@ Whether you're using [hass-magic_areas](https://github.com/jseidl/hass-magic_are
 - **Home Assistant** (version 2023.9 or newer recommended).
 - **HACS** (Home Assistant Community Store), optional but recommended for easier updates.
 
+### 🎥 **Installation Tutorial**
+
+* **Option 1:** For a comprehensive guide, watch the YouTube video by the amazing @BeardedConti where he presents Linus Dashboard and explains the installation process: [Watch the video](https://www.youtube.com/watch?v=GHE_UIczBCQ&t=367s&ab_channel=BeardedTinker)
+* **Option 2:** For a quick visual overview, here’s a silent screen capture showing the installation process: [**Video link**](https://youtu.be/MLkVmtXgNBE?si=clJ1sREewRWDkTnE)
+
+
 ### Installation Methods
 
 #### Option 1: Via HACS (Recommended)

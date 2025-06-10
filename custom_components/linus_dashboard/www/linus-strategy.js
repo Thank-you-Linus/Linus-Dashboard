@@ -6215,10 +6215,10 @@ class SettingsPopup extends _AbstractPopup__WEBPACK_IMPORTED_MODULE_2__.Abstract
                     content: {
                         type: "vertical-stack",
                         cards: [
-                            {
+                            linusDeviceIds.length > 0 && {
                                 type: "horizontal-stack",
                                 cards: [
-                                    linusDeviceIds.length > 0 && {
+                                    {
                                         type: "custom:mushroom-template-card",
                                         primary: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.entity.text.settings_chip.state.reload"),
                                         icon: "mdi:refresh",
@@ -6231,15 +6231,39 @@ class SettingsPopup extends _AbstractPopup__WEBPACK_IMPORTED_MODULE_2__.Abstract
                                     },
                                     {
                                         type: "custom:mushroom-template-card",
-                                        primary: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.entity.text.settings_chip.state.restart"),
-                                        icon: "mdi:restart",
-                                        icon_color: "red",
+                                        primary: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.entity.text.settings_chip.state.integrations"),
+                                        icon: "mdi:magic-staff",
+                                        icon_color: "yellow",
                                         tap_action: {
-                                            action: "call-service",
-                                            service: "homeassistant.restart",
+                                            action: "fire-dom-event",
+                                            browser_mod: {
+                                                service: "browser_mod.sequence",
+                                                data: {
+                                                    sequence: [
+                                                        {
+                                                            service: "browser_mod.close_popup",
+                                                            data: {}
+                                                        },
+                                                        {
+                                                            service: "browser_mod.navigate",
+                                                            data: { path: `/config/integrations/integration/magic_areas` }
+                                                        }
+                                                    ]
+                                                }
+                                            }
                                         }
                                     },
                                 ].filter(Boolean)
+                            },
+                            {
+                                type: "custom:mushroom-template-card",
+                                primary: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.entity.text.settings_chip.state.restart"),
+                                icon: "mdi:restart",
+                                icon_color: "red",
+                                tap_action: {
+                                    action: "call-service",
+                                    service: "homeassistant.restart",
+                                }
                             },
                             {
                                 type: "markdown",

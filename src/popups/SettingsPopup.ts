@@ -1,6 +1,7 @@
 import { Helper } from "../Helper";
 import { version } from "../linus-strategy";
 import { PopupActionConfig } from "../types/homeassistant/data/lovelace";
+import { navigateTo } from "../utils";
 import { AbstractPopup } from "./AbstractPopup";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
@@ -24,10 +25,10 @@ class SettingsPopup extends AbstractPopup {
           content: {
             type: "vertical-stack",
             cards: [
-              {
+              linusDeviceIds.length > 0 && {
                 type: "horizontal-stack",
                 cards: [
-                  linusDeviceIds.length > 0 && {
+                  {
                     type: "custom:mushroom-template-card",
                     primary: Helper.localize("component.linus_dashboard.entity.text.settings_chip.state.reload"),
                     icon: "mdi:refresh",
@@ -40,15 +41,39 @@ class SettingsPopup extends AbstractPopup {
                   },
                   {
                     type: "custom:mushroom-template-card",
-                    primary: Helper.localize("component.linus_dashboard.entity.text.settings_chip.state.restart"),
-                    icon: "mdi:restart",
-                    icon_color: "red",
+                    primary: Helper.localize("component.linus_dashboard.entity.text.settings_chip.state.integrations"),
+                    icon: "mdi:magic-staff",
+                    icon_color: "yellow",
                     tap_action: {
-                      action: "call-service",
-                      service: "homeassistant.restart",
+                      action: "fire-dom-event",
+                      browser_mod: {
+                        service: "browser_mod.sequence",
+                        data: {
+                          sequence: [
+                            {
+                              service: "browser_mod.close_popup",
+                              data: {}
+                            },
+                            {
+                              service: "browser_mod.navigate",
+                              data: { path: `/config/integrations/integration/magic_areas` }
+                            }
+                          ]
+                        }
+                      }
                     }
                   },
                 ].filter(Boolean)
+              },
+              {
+                type: "custom:mushroom-template-card",
+                primary: Helper.localize("component.linus_dashboard.entity.text.settings_chip.state.restart"),
+                icon: "mdi:restart",
+                icon_color: "red",
+                tap_action: {
+                  action: "call-service",
+                  service: "homeassistant.restart",
+                }
               },
               {
                 type: "markdown",

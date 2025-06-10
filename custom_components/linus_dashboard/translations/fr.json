@@ -42,7 +42,8 @@
             "settings_chip": {
                 "name": "Paramètres Linus",
                 "state": {
-                    "reload": "Recharger les zones magiques",
+                    "integrations": "Intégration Pièces magiques",
+                    "reload": "Recharger les pièces magiques",
                     "restart": "Redémarrer HA"
                 }
             },

@@ -54,6 +54,7 @@
             "settings_chip": {
                 "name": "Linus Settings",
                 "state": {
+                    "integrations": "Magic Areas Integration",
                     "reload": "Reload magic areas",
                     "restart": "Restart HA"
                 }

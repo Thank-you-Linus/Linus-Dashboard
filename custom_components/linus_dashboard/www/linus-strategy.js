@@ -9766,12 +9766,14 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../chips/AggregateChip */ "./src/chips/AggregateChip.ts");
 /* harmony import */ var _chips_LightChip__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../chips/LightChip */ "./src/chips/LightChip.ts");
 /* harmony import */ var _chips_ClimateChip__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ../chips/ClimateChip */ "./src/chips/ClimateChip.ts");
+/* harmony import */ var _chips_FanChip__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ../chips/FanChip */ "./src/chips/FanChip.ts");
 var __classPrivateFieldGet = (undefined && undefined.__classPrivateFieldGet) || function (receiver, state, kind, f) {
     if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a getter");
     if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
     return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
 };
 var _HomeView_instances, _HomeView_createPersonCards;
+
 
 
 
@@ -9949,18 +9951,10 @@ class HomeView {
                 });
                 isFirstLoop = false;
             }
-            const temperatureEntities = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getEntityIds({ domain: "sensor", device_class: "temperature", area_slug: floor.areas_slug });
             const lightEntities = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getEntityIds({ domain: "light", area_slug: floor.areas_slug });
             const climateEntities = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getEntityIds({ domain: "climate", area_slug: floor.areas_slug });
+            const fanEntities = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getEntityIds({ domain: "fan", area_slug: floor.areas_slug });
             const chips = floor.floor_id === _variables__WEBPACK_IMPORTED_MODULE_3__.UNDISCLOSED ? [] : [
-                temperatureEntities.length > 0 && new _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_8__.AggregateChip({
-                    domain: "sensor",
-                    device_class: "temperature",
-                    show_content: true,
-                    magic_device_id: floor.floor_id,
-                    area_slug: floor.areas_slug,
-                    tap_action: (0,_utils__WEBPACK_IMPORTED_MODULE_4__.navigateTo)('temperature')
-                }).getChip(),
                 lightEntities.length > 0 && new _chips_LightChip__WEBPACK_IMPORTED_MODULE_9__.LightChip({
                     magic_device_id: floor.floor_id,
                     area_slug: floor.areas_slug,
@@ -9969,6 +9963,29 @@ class HomeView {
                     magic_device_id: floor.floor_id,
                     area_slug: floor.areas_slug,
                 }).getChip(),
+                fanEntities.length > 0 && new _chips_FanChip__WEBPACK_IMPORTED_MODULE_11__.FanChip({
+                    magic_device_id: floor.floor_id,
+                    area_slug: floor.areas_slug,
+                }).getChip(),
+                // Add a chip for each cover type if entities exist
+                ..._variables__WEBPACK_IMPORTED_MODULE_3__.DEVICE_CLASSES.cover.map(device_class => {
+                    const coverEntities = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.getEntityIds({
+                        domain: "cover",
+                        device_class,
+                        area_slug: floor.areas_slug,
+                    });
+                    if (coverEntities.length > 0) {
+                        return new _chips_AggregateChip__WEBPACK_IMPORTED_MODULE_8__.AggregateChip({
+                            domain: "cover",
+                            device_class,
+                            show_content: true,
+                            magic_device_id: floor.floor_id,
+                            area_slug: floor.areas_slug,
+                            tap_action: (0,_utils__WEBPACK_IMPORTED_MODULE_4__.navigateTo)(device_class),
+                        }).getChip();
+                    }
+                    return null;
+                }),
             ].filter(Boolean);
             if (floors.length > 1) {
                 floorSection.cards.push({

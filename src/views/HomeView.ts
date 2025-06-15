@@ -8,7 +8,7 @@ import { ActionConfig, LovelaceSectionConfig, LovelaceViewConfig } from "../type
 import { PersonCardConfig } from "../types/lovelace-mushroom/cards/person-card-config";
 import { SettingsChip } from "../chips/SettingsChip";
 import { SettingsPopup } from "../popups/SettingsPopup";
-import { HOME_EXPOSED_CHIPS, UNDISCLOSED } from "../variables";
+import { DEVICE_CLASSES, HOME_EXPOSED_CHIPS, UNDISCLOSED } from "../variables";
 import { createChipsFromList, getFloorName, navigateTo, slugify } from "../utils";
 import { WeatherChip } from "../chips/WeatherChip";
 import { UnavailableChip } from "../chips/UnavailableChip";
@@ -16,6 +16,7 @@ import { PersonCard } from "../cards/PersonCard";
 import { AggregateChip } from "../chips/AggregateChip";
 import { LightChip } from "../chips/LightChip";
 import { ClimateChip } from "../chips/ClimateChip";
+import { FanChip } from "../chips/FanChip";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**
@@ -199,19 +200,11 @@ class HomeView {
         isFirstLoop = false;
       }
 
-      const temperatureEntities = Helper.getEntityIds({ domain: "sensor", device_class: "temperature", area_slug: floor.areas_slug });
       const lightEntities = Helper.getEntityIds({ domain: "light", area_slug: floor.areas_slug });
       const climateEntities = Helper.getEntityIds({ domain: "climate", area_slug: floor.areas_slug });
+      const fanEntities = Helper.getEntityIds({ domain: "fan", area_slug: floor.areas_slug });
 
       const chips = floor.floor_id === UNDISCLOSED ? [] : [
-        temperatureEntities.length > 0 && new AggregateChip({
-          domain: "sensor",
-          device_class: "temperature",
-          show_content: true,
-          magic_device_id: floor.floor_id,
-          area_slug: floor.areas_slug,
-          tap_action: navigateTo('temperature')
-        }).getChip(),
         lightEntities.length > 0 && new LightChip({
           magic_device_id: floor.floor_id,
           area_slug: floor.areas_slug,
@@ -220,6 +213,30 @@ class HomeView {
           magic_device_id: floor.floor_id,
           area_slug: floor.areas_slug,
         }).getChip(),
+        fanEntities.length > 0 && new FanChip({
+          magic_device_id: floor.floor_id,
+          area_slug: floor.areas_slug,
+        }).getChip(),
+        // Add a chip for each cover type if entities exist
+        ...DEVICE_CLASSES.cover.map(device_class => {
+          const coverEntities = Helper.getEntityIds({
+            domain: "cover",
+            device_class,
+            area_slug: floor.areas_slug,
+          });
+
+          if (coverEntities.length > 0) {
+            return new AggregateChip({
+              domain: "cover",
+              device_class,
+              show_content: true,
+              magic_device_id: floor.floor_id,
+              area_slug: floor.areas_slug,
+              tap_action: navigateTo(device_class),
+            }).getChip();
+          }
+          return null;
+        }),
       ].filter(Boolean) as LovelaceChipConfig[];
 
       if (floors.length > 1) {

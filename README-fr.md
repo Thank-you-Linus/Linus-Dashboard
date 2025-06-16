@@ -108,11 +108,8 @@ Que vous utilisiez déjà [hass-magic_areas](https://github.com/jseidl/hass-magi
 #### Option 1 : Via HACS (Recommandé)
 
 1. Ouvrez Home Assistant et allez dans **HACS > Intégrations**.
-2. Cliquez sur le menu à trois points en haut à droite et sélectionnez **Dépôts personnalisés**.
-3. Ajoutez l’URL du dépôt :
-   `[https://github.com/Thank-you-Linus/Linus-Dashboard](https://github.com/Thank-you-Linus/Linus-Dashboard)`
-   Choisissez **Intégration** comme catégorie et confirmez.
-4. Recherchez "Linus Dashboard" dans HACS, cliquez sur **Installer**, puis redémarrez Home Assistant.
+2. Recherchez directement **Linus Dashboard** dans la liste des intégrations disponibles.
+3. Cliquez sur **Installer**, puis redémarrez Home Assistant.
 
 #### Option 2 : Installation manuelle
 

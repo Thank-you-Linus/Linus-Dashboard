@@ -116,11 +116,8 @@ Whether you're using [hass-magic_areas](https://github.com/jseidl/hass-magic_are
 #### Option 1: Via HACS (Recommended)
 
 1. Open Home Assistant and go to **HACS > Integrations**.
-2. Click the three-dot menu in the top right corner and select **Custom repositories**.
-3. Add the repository URL:
-   `[https://github.com/Thank-you-Linus/Linus-Dashboard](https://github.com/Thank-you-Linus/Linus-Dashboard)`
-   Choose **Integration** as the category and confirm.
-4. Search for "Linus Dashboard" in HACS, click **Install**, and restart Home Assistant.
+2. Search directly for **Linus Dashboard** in the list of available integrations.
+3. Click **Install**, then restart Home Assistant.
 
 #### Option 2: Manual Installation
 

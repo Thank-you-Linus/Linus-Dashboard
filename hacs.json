@@ -2,5 +2,7 @@
     "name": "Linus dashboard",
     "hide_default_branch": true,
     "homeassistant": "2024.10.0",
+    "filename": "linus_dashboard.zip",
+    "zip_release": true,
     "render_readme": true
 }

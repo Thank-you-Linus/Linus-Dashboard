@@ -22,7 +22,7 @@ jobs:
       - name: "Set up Node.js"
         uses: "actions/setup-node@v4"
         with:
-          node-version: 16 # Ajuste la version si nécessaire
+          node-version: 24 # Ajuste la version si nécessaire
 
       # 3. Installer les dépendances
       - name: "Install dependencies"
@@ -37,10 +37,10 @@ jobs:
         shell: "bash"
         run: |
           cd "${{ github.workspace }}/custom_components/linus_dashboard"
-          zip Linus-Dashboard.zip -r ./
+          zip linus_dashboard.zip -r ./
 
       # 6. Télécharger l'archive ZIP dans la release
       - name: "Upload the ZIP file to the release"
         uses: "softprops/action-gh-release@v2.1.0"
         with:
-          files: ${{ github.workspace }}/custom_components/linus_dashboard/Linus-Dashboard.zip
+          files: ${{ github.workspace }}/custom_components/linus_dashboard/linus_dashboard.zip

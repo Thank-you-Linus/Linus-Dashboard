@@ -9,7 +9,7 @@ const config: webpack.Configuration = {
   output: {
     filename: "linus-strategy.js",
     path: path.resolve("./custom_components/linus_dashboard", "www"),
-    clean: true,
+    // clean: true,
   },
   resolve: {
     extensions: [".ts", ".tsx", ".js"],
@@ -20,6 +20,10 @@ const config: webpack.Configuration = {
         test: /\.tsx?$/,
         use: "ts-loader",
         exclude: /node_modules/,
+      },
+      {
+        test: /\.md$/,
+        use: "ignore-loader",
       },
     ],
   },

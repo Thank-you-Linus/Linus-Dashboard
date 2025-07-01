@@ -2,6 +2,8 @@ import { AbstractCard } from "./AbstractCard";
 import { cards } from "../types/strategy/cards";
 import { EntityRegistryEntry } from "../types/homeassistant/data/entity_registry";
 import { EntityCardConfig } from "../types/lovelace-mushroom/cards/entity-card-config";
+import { navigateTo } from "../utils";
+import { AggregateCard } from "./AggregateCard";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**
@@ -23,9 +25,6 @@ class SwitchCard extends AbstractCard {
     type: "tile",
     icon: undefined,
     vertical: false,
-    tap_action: {
-      action: "toggle",
-    },
   };
 
   /**
@@ -37,6 +36,8 @@ class SwitchCard extends AbstractCard {
    */
   constructor(options: cards.EntityCardOptions, entity: EntityRegistryEntry) {
     super(entity);
+
+    if (!entity) this.#defaultConfig = new AggregateCard({ domain: "switch", tap_action: navigateTo("switch") }).config;
 
     this.config = Object.assign(this.config, this.#defaultConfig, options);
   }

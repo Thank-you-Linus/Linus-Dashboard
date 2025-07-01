@@ -2859,12 +2859,22 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   SwitchCard: () => (/* binding */ SwitchCard)
 /* harmony export */ });
 /* harmony import */ var _AbstractCard__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./AbstractCard */ "./src/cards/AbstractCard.ts");
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utils */ "./src/utils.ts");
+/* harmony import */ var _AggregateCard__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./AggregateCard */ "./src/cards/AggregateCard.ts");
+var __classPrivateFieldSet = (undefined && undefined.__classPrivateFieldSet) || function (receiver, state, value, kind, f) {
+    if (kind === "m") throw new TypeError("Private method is not writable");
+    if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a setter");
+    if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot write private member to an object whose class did not declare it");
+    return (kind === "a" ? f.call(receiver, value) : f ? f.value = value : state.set(receiver, value)), value;
+};
 var __classPrivateFieldGet = (undefined && undefined.__classPrivateFieldGet) || function (receiver, state, kind, f) {
     if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a getter");
     if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
     return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
 };
 var _SwitchCard_defaultConfig;
+
+
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**
@@ -2895,10 +2905,9 @@ class SwitchCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractCard
             type: "tile",
             icon: undefined,
             vertical: false,
-            tap_action: {
-                action: "toggle",
-            },
         });
+        if (!entity)
+            __classPrivateFieldSet(this, _SwitchCard_defaultConfig, new _AggregateCard__WEBPACK_IMPORTED_MODULE_2__.AggregateCard({ domain: "switch", tap_action: (0,_utils__WEBPACK_IMPORTED_MODULE_1__.navigateTo)("switch") }).config, "f");
         this.config = Object.assign(this.config, __classPrivateFieldGet(this, _SwitchCard_defaultConfig, "f"), options);
     }
 }
@@ -5289,7 +5298,7 @@ class LinusStrategy extends HTMLTemplateElement {
     }
 }
 customElements.define("ll-strategy-linus-strategy", LinusStrategy);
-const version = "v1.2.1";
+const version = "v1.2.2";
 console.info("%c Linus Strategy %c ".concat(version, " "), "color: #F5F5DC; background: #004225; font-weight: 700;", "color: #004225; background: #F5F5DC; font-weight: 700;");
 
 

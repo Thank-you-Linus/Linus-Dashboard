@@ -8,6 +8,23 @@
   "dependencies": [
     "http"
   ],
+  "after_dependencies": [
+    "sensor",
+    "media_player",
+    "light",
+    "switch",
+    "climate",
+    "cover",
+    "binary_sensor",
+    "device_tracker",
+    "person",
+    "fan",
+    "lock",
+    "vacuum",
+    "water_heater",
+    "input_boolean",
+    "input_select"
+  ],
   "documentation": "https://github.com/Thank-you-Linus/Linus-Dashboard",
   "iot_class": "calculated",
   "issue_tracker": "https://github.com/Thank-you-Linus/Linus-Dashboard/issues",

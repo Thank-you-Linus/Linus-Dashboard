@@ -332,9 +332,9 @@ class HomeView {
     }
 
     const cards: PersonCardConfig[] = [];
-    const persons = Helper.domains.person.filter((entity) => {
+    const persons = Helper.domains.person?.filter((entity) => {
       return entity.hidden_by == null && entity.disabled_by == null;
-    });
+    }) ?? [];
 
     for (const person of persons) {
       cards.push(new PersonCard({}, person).getCard());

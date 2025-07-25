@@ -22,16 +22,16 @@
   },
   "dependencies": {
     "@types/swiper": "^6.0.0",
-    "deepmerge": "^4",
-    "lodash": "^4.17.21"
+    "lodash.merge": "^4.6.2"
   },
   "devDependencies": {
-    "home-assistant-js-websocket": "^9",
+    "@types/lodash.merge": "^4.6.9",
+    "home-assistant-js-websocket": "9.5.0",
     "ignore-loader": "^0.1.2",
-    "superstruct": "^1",
+    "superstruct": "2.0.2",
     "ts-loader": "^9",
     "ts-node": "^10",
-    "typescript": "^5",
+    "typescript": "5.8.3",
     "version-bump-prompt": "^6",
     "webpack": "^5",
     "webpack-cli": "^5"

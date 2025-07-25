@@ -1,6 +1,6 @@
 import { configurationDefaults } from "./configurationDefaults";
 import { HassEntities, HassEntity } from "home-assistant-js-websocket";
-import deepmerge from "deepmerge";
+import merge from "lodash.merge";
 import { DeviceRegistryEntry } from "./types/homeassistant/data/device_registry";
 import { AreaRegistryEntry } from "./types/homeassistant/data/area_registry";
 import { generic } from "./types/strategy/generic";
@@ -283,7 +283,7 @@ class Helper {
     // Initialize properties.
     this.#hassStates = info.hass.states;
     this.#hassLocalize = info.hass.localize;
-    this.#strategyOptions = deepmerge(configurationDefaults, info.config?.strategy?.options ?? {});
+    this.#strategyOptions = merge(configurationDefaults, info.config?.strategy?.options ?? {});
     this.#debug = this.#strategyOptions.debug;
 
     // console.log('this.#', info.hass)
@@ -308,7 +308,7 @@ class Helper {
 
     const [entities, devices, areas, floors, entity_component_icons, services_icons, linus_dashboard_config] = homeAssistantRegistries;
 
-    this.#icons = deepmerge(entity_component_icons.resources, services_icons.resources);
+    this.#icons = merge(entity_component_icons.resources, services_icons.resources);
     this.#linus_dashboard_config = linus_dashboard_config;
 
     // Dictionaries for quick access

@@ -2215,8 +2215,6 @@ class Helper {
         }
         const [entities, devices, areas, floors, entity_component_icons, services_icons, linus_dashboard_config] = homeAssistantRegistries;
         __classPrivateFieldSet(this, _a, lodash_merge__WEBPACK_IMPORTED_MODULE_1___default()(entity_component_icons.resources, services_icons.resources), "f", _Helper_icons);
-        console.log("icons entity_component :", entity_component_icons);
-        console.log("icons services :", services_icons);
         __classPrivateFieldSet(this, _a, linus_dashboard_config, "f", _Helper_linus_dashboard_config);
         // Dictionaries for quick access
         const areasById = Object.fromEntries(areas.map(a => [a.area_id, a]));
@@ -5192,7 +5190,6 @@ class AreaStateChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_2__.AbstractC
         const isPresence = `[${presence_entities?.map(e => `states['${e}']`)}] ${isOn}`;
         const isOccupancy = `[${occupancy_entities?.map(e => `states['${e}']`)}] ${isOn}`;
         const isMediaPlaying = `[${media_player_entities?.map(e => `states['${e}']`)}] | selectattr("state","eq", "playing") | list | count > 0`;
-        console.log('Helper.icons.media_player._?.state?.playing', _Helper__WEBPACK_IMPORTED_MODULE_3__.Helper.icons);
         return {
             type: "template",
             entity: area_state?.entity_id,
@@ -5225,13 +5222,13 @@ class AreaStateChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_2__.AbstractC
           {% set media_player = ${isMediaPlaying} %}
           {% set bl = state_attr('${area_state?.entity_id}', 'states') or [] %}
           {% if motion %}
-            ${_Helper__WEBPACK_IMPORTED_MODULE_3__.Helper.icons.binary_sensor?.motion?.state?.on}
+            ${_Helper__WEBPACK_IMPORTED_MODULE_3__.Helper.icons.binary_sensor.motion?.state?.on}
           {% elif presence %}
-            ${_Helper__WEBPACK_IMPORTED_MODULE_3__.Helper.icons.binary_sensor?.presence?.state?.on}
+            ${_Helper__WEBPACK_IMPORTED_MODULE_3__.Helper.icons.binary_sensor.presence?.state?.on}
           {% elif occupancy %}
-            ${_Helper__WEBPACK_IMPORTED_MODULE_3__.Helper.icons.binary_sensor?.occupancy?.state?.on}
+            ${_Helper__WEBPACK_IMPORTED_MODULE_3__.Helper.icons.binary_sensor.occupancy?.state?.on}
           {% elif media_player %}
-            ${_Helper__WEBPACK_IMPORTED_MODULE_3__.Helper.icons.media_player?._?.state?.playing}
+            ${_Helper__WEBPACK_IMPORTED_MODULE_3__.Helper.icons.media_player._?.state?.playing}
           {% elif presence_hold == 'on' %}
             ${_variables__WEBPACK_IMPORTED_MODULE_1__.DEVICE_ICONS.presence_hold}
           {% elif 'sleep' in bl %}
@@ -7145,7 +7142,7 @@ class LinusStrategy extends HTMLTemplateElement {
     }
 }
 customElements.define("ll-strategy-linus-strategy", LinusStrategy);
-const version = "v1.2.3";
+const version = "v1.2.4-alpha.1";
 console.info("%c Linus Strategy %c ".concat(version, " "), "color: #F5F5DC; background: #004225; font-weight: 700;", "color: #004225; background: #F5F5DC; font-weight: 700;");
 
 

@@ -1,13 +1,6 @@
 {
   "domain": "linus_dashboard",
   "name": "Linus dashboard",
-  "codeowners": [
-    "@Thank-you-Linus"
-  ],
-  "config_flow": true,
-  "dependencies": [
-    "http"
-  ],
   "after_dependencies": [
     "sensor",
     "media_player",
@@ -25,9 +18,16 @@
     "input_boolean",
     "input_select"
   ],
+  "codeowners": [
+    "@Thank-you-Linus"
+  ],
+  "config_flow": true,
+  "dependencies": [
+    "http"
+  ],
   "documentation": "https://github.com/Thank-you-Linus/Linus-Dashboard",
   "iot_class": "calculated",
   "issue_tracker": "https://github.com/Thank-you-Linus/Linus-Dashboard/issues",
   "requirements": [],
-  "version": "1.2.3"
+  "version": "1.2.4-alpha.1"
 }

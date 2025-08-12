@@ -79,7 +79,7 @@ class SettingsPopup extends AbstractPopup {
                 type: "markdown",
                 content: `Linus dashboard est en version ${version}.`,
               },
-            ]
+            ].filter(Boolean),
           }
         }
       }

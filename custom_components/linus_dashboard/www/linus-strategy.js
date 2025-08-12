@@ -8122,7 +8122,7 @@ class SettingsPopup extends _AbstractPopup__WEBPACK_IMPORTED_MODULE_2__.Abstract
                                 type: "markdown",
                                 content: `Linus dashboard est en version ${_linus_strategy__WEBPACK_IMPORTED_MODULE_1__.version}.`,
                             },
-                        ]
+                        ].filter(Boolean),
                     }
                 }
             }

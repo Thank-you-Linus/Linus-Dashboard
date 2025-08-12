@@ -62,7 +62,7 @@
                 }
             },
             "settings_popup": {
-                "name": "Centre de contrôle de Linus dashboard",
+                "name": "Centre de contrôle",
                 "state": {
                     "welcome_message": "Voici ce que Linus organise fièrement :",
                     "reload_magic_areas": "Recharger Magic Areas",

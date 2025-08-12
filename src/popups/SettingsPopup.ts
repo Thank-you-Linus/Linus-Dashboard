@@ -59,9 +59,9 @@ class SettingsPopup extends AbstractPopup {
                 chips: [
                   {
                     type: "template",
-                    content: `${totalAreas} ${Helper.localize("component.linus_dashboard.entity.text.settings_popup.state.areas")}`,
-                    icon: "mdi:floor-plan",
-                    icon_color: "blue",
+                    content: `${totalFloors} ${Helper.localize("component.linus_dashboard.entity.text.settings_popup.state.floors")}`,
+                    icon: "mdi:layers",
+                    icon_color: "green",
                     tap_action: {
                       action: "fire-dom-event",
                       browser_mod: {
@@ -77,9 +77,9 @@ class SettingsPopup extends AbstractPopup {
                   },
                   {
                     type: "template",
-                    content: `${totalFloors} ${Helper.localize("component.linus_dashboard.entity.text.settings_popup.state.floors")}`,
-                    icon: "mdi:layers",
-                    icon_color: "green",
+                    content: `${totalAreas} ${Helper.localize("component.linus_dashboard.entity.text.settings_popup.state.areas")}`,
+                    icon: "mdi:floor-plan",
+                    icon_color: "blue",
                     tap_action: {
                       action: "fire-dom-event",
                       browser_mod: {
@@ -177,7 +177,6 @@ class SettingsPopup extends AbstractPopup {
                   linusDeviceIds.length > 0 && {
                     type: "custom:mushroom-template-card",
                     primary: Helper.localize("component.linus_dashboard.entity.text.settings_popup.state.reload_magic_areas"),
-                    secondary: "Magic Areas",
                     icon: "mdi:refresh",
                     icon_color: "blue",
                     layout: "vertical",

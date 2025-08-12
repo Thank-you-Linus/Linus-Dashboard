@@ -7243,7 +7243,7 @@ class LinusStrategy extends HTMLTemplateElement {
     }
 }
 customElements.define("ll-strategy-linus-strategy", LinusStrategy);
-const version = "v1.2.4-alpha.1";
+const version = "v1.2.4-alpha.2";
 console.info("%c Linus Strategy %c ".concat(version, " "), "color: #F5F5DC; background: #004225; font-weight: 700;", "color: #004225; background: #F5F5DC; font-weight: 700;");
 
 

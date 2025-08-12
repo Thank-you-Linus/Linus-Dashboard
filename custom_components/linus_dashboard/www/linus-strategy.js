@@ -8052,75 +8052,386 @@ __webpack_require__.r(__webpack_exports__);
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**
- * Linus Chip class.
+ * Settings Popup class.
  *
- * Used to create a chip to indicate how many lights are on and to turn all off.
+ * Used to create a comprehensive settings popup for Linus Dashboard.
  */
 class SettingsPopup extends _AbstractPopup__WEBPACK_IMPORTED_MODULE_2__.AbstractPopup {
     getDefaultConfig() {
         const linusDeviceIds = Object.values(_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.magicAreasDevices).map((area) => area?.id).flat();
+        const totalEntities = Object.keys(_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.entities).length;
+        const totalDevices = Object.keys(_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.devices).length;
+        const totalAreas = Object.keys(_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas).length;
+        const totalFloors = Object.keys(_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.floors).length;
         return {
             action: "fire-dom-event",
             browser_mod: {
                 service: "browser_mod.popup",
                 data: {
-                    title: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.entity.text.settings_chip.name"),
+                    title: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.entity.text.settings_popup.name"),
                     content: {
                         type: "vertical-stack",
                         cards: [
-                            linusDeviceIds.length > 0 && {
-                                type: "horizontal-stack",
-                                cards: [
+                            // Message de bienvenue simple
+                            {
+                                type: "custom:mushroom-template-card",
+                                primary: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.entity.text.settings_popup.state.welcome_message"),
+                                icon: "mdi:bow-tie",
+                                icon_color: "#FFB001",
+                                layout: "horizontal",
+                                tap_action: { action: "none" },
+                                card_mod: {
+                                    style: `
+                    ha-card {
+                      background: linear-gradient(45deg, #004226, #004226);
+                      color: #F5F5DC !important;
+                      box-shadow: none;
+                      margin-bottom: 12px;
+                      font-weight: bold;
+                    }
+                    .primary {
+                      color: #F5F5DC !important;
+                    }
+                  `
+                                }
+                            },
+                            // Statistiques avec chips minimalistes
+                            {
+                                type: "custom:mushroom-chips-card",
+                                chips: [
                                     {
-                                        type: "custom:mushroom-template-card",
-                                        primary: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.entity.text.settings_chip.state.reload"),
-                                        icon: "mdi:refresh",
+                                        type: "template",
+                                        content: `${totalAreas} ${_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.entity.text.settings_popup.state.areas")}`,
+                                        icon: "mdi:floor-plan",
                                         icon_color: "blue",
-                                        tap_action: {
-                                            action: "call-service",
-                                            service: `homeassistant.reload_config_entry`,
-                                            target: { "device_id": linusDeviceIds },
-                                        }
-                                    },
-                                    {
-                                        type: "custom:mushroom-template-card",
-                                        primary: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.entity.text.settings_chip.state.integrations"),
-                                        icon: "mdi:magic-staff",
-                                        icon_color: "yellow",
                                         tap_action: {
                                             action: "fire-dom-event",
                                             browser_mod: {
                                                 service: "browser_mod.sequence",
                                                 data: {
                                                     sequence: [
-                                                        {
-                                                            service: "browser_mod.close_popup",
-                                                            data: {}
-                                                        },
-                                                        {
-                                                            service: "browser_mod.navigate",
-                                                            data: { path: `/config/integrations/integration/magic_areas` }
-                                                        }
+                                                        { service: "browser_mod.close_popup", data: {} },
+                                                        { service: "browser_mod.navigate", data: { path: `/config/areas` } }
                                                     ]
                                                 }
                                             }
                                         }
                                     },
-                                ].filter(Boolean)
-                            },
-                            {
-                                type: "custom:mushroom-template-card",
-                                primary: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.entity.text.settings_chip.state.restart"),
-                                icon: "mdi:restart",
-                                icon_color: "red",
-                                tap_action: {
-                                    action: "call-service",
-                                    service: "homeassistant.restart",
+                                    {
+                                        type: "template",
+                                        content: `${totalFloors} ${_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.entity.text.settings_popup.state.floors")}`,
+                                        icon: "mdi:layers",
+                                        icon_color: "green",
+                                        tap_action: {
+                                            action: "fire-dom-event",
+                                            browser_mod: {
+                                                service: "browser_mod.sequence",
+                                                data: {
+                                                    sequence: [
+                                                        { service: "browser_mod.close_popup", data: {} },
+                                                        { service: "browser_mod.navigate", data: { path: `/config/areas` } }
+                                                    ]
+                                                }
+                                            }
+                                        }
+                                    },
+                                    {
+                                        type: "template",
+                                        content: `${totalDevices} ${_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.entity.text.settings_popup.state.devices")}`,
+                                        icon: "mdi:devices",
+                                        icon_color: "purple",
+                                        tap_action: {
+                                            action: "fire-dom-event",
+                                            browser_mod: {
+                                                service: "browser_mod.sequence",
+                                                data: {
+                                                    sequence: [
+                                                        { service: "browser_mod.close_popup", data: {} },
+                                                        { service: "browser_mod.navigate", data: { path: `/config/devices/dashboard` } }
+                                                    ]
+                                                }
+                                            }
+                                        }
+                                    },
+                                    {
+                                        type: "template",
+                                        content: `${totalEntities} ${_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.entity.text.settings_popup.state.entities")}`,
+                                        icon: "mdi:eye",
+                                        icon_color: "orange",
+                                        tap_action: {
+                                            action: "fire-dom-event",
+                                            browser_mod: {
+                                                service: "browser_mod.sequence",
+                                                data: {
+                                                    sequence: [
+                                                        { service: "browser_mod.close_popup", data: {} },
+                                                        { service: "browser_mod.navigate", data: { path: `/config/entities` } }
+                                                    ]
+                                                }
+                                            }
+                                        }
+                                    },
+                                    linusDeviceIds.length > 0 && {
+                                        type: "template",
+                                        content: `${linusDeviceIds.length} Magic Areas`,
+                                        icon: "mdi:magic-staff",
+                                        icon_color: "amber",
+                                        tap_action: {
+                                            action: "fire-dom-event",
+                                            browser_mod: {
+                                                service: "browser_mod.sequence",
+                                                data: {
+                                                    sequence: [
+                                                        { service: "browser_mod.close_popup", data: {} },
+                                                        { service: "browser_mod.navigate", data: { path: `/config/integrations/integration/magic_areas` } }
+                                                    ]
+                                                }
+                                            }
+                                        }
+                                    }
+                                ].filter(Boolean),
+                                card_mod: {
+                                    style: `ha-card { box-shadow: none; margin: 0; }`
                                 }
                             },
+                            // Séparateur minimal
                             {
-                                type: "markdown",
-                                content: `Linus dashboard est en version ${_linus_strategy__WEBPACK_IMPORTED_MODULE_1__.version}.`,
+                                type: "custom:mushroom-template-card",
+                                primary: "",
+                                card_mod: {
+                                    style: `
+                    ha-card {
+                      height: 1px;
+                      background: var(--divider-color);
+                      box-shadow: none;
+                      margin: 12px 0;
+                    }
+                  `
+                                }
+                            },
+                            // Actions rapides - Magic Areas & HA
+                            {
+                                type: "horizontal-stack",
+                                cards: [
+                                    linusDeviceIds.length > 0 && {
+                                        type: "custom:mushroom-template-card",
+                                        primary: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.entity.text.settings_popup.state.reload_magic_areas"),
+                                        secondary: "Magic Areas",
+                                        icon: "mdi:refresh",
+                                        icon_color: "blue",
+                                        layout: "vertical",
+                                        tap_action: {
+                                            action: "call-service",
+                                            service: `homeassistant.reload_config_entry`,
+                                            target: { "device_id": linusDeviceIds },
+                                            confirmation: {
+                                                text: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.entity.text.settings_popup.state.reload_confirm")
+                                            }
+                                        },
+                                        card_mod: {
+                                            style: `ha-card { box-shadow: none; margin: 2px; }`
+                                        }
+                                    },
+                                    linusDeviceIds.length > 0 && {
+                                        type: "custom:mushroom-template-card",
+                                        primary: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.entity.text.settings_popup.state.magic_areas"),
+                                        icon: "mdi:magic-staff",
+                                        icon_color: "amber",
+                                        layout: "vertical",
+                                        tap_action: {
+                                            action: "fire-dom-event",
+                                            browser_mod: {
+                                                service: "browser_mod.sequence",
+                                                data: {
+                                                    sequence: [
+                                                        { service: "browser_mod.close_popup", data: {} },
+                                                        { service: "browser_mod.navigate", data: { path: `/config/integrations/integration/magic_areas` } }
+                                                    ]
+                                                }
+                                            }
+                                        },
+                                        card_mod: {
+                                            style: `ha-card { box-shadow: none; margin: 2px; }`
+                                        }
+                                    },
+                                    {
+                                        type: "custom:mushroom-template-card",
+                                        primary: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.entity.text.settings_popup.state.restart"),
+                                        icon: "mdi:restart",
+                                        icon_color: "red",
+                                        layout: "vertical",
+                                        tap_action: {
+                                            action: "call-service",
+                                            service: "homeassistant.restart",
+                                            confirmation: {
+                                                text: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.entity.text.settings_popup.state.restart_confirm")
+                                            }
+                                        },
+                                        card_mod: {
+                                            style: `ha-card { box-shadow: none; margin: 2px; }`
+                                        }
+                                    }
+                                ].filter(Boolean)
+                            },
+                            // Configuration Home Assistant
+                            {
+                                type: "horizontal-stack",
+                                cards: [
+                                    {
+                                        type: "custom:mushroom-template-card",
+                                        primary: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.entity.text.settings_popup.state.dashboard_config"),
+                                        icon: "mdi:view-dashboard-edit",
+                                        icon_color: "cyan",
+                                        layout: "vertical",
+                                        tap_action: {
+                                            action: "fire-dom-event",
+                                            browser_mod: {
+                                                service: "browser_mod.sequence",
+                                                data: {
+                                                    sequence: [
+                                                        { service: "browser_mod.close_popup", data: {} },
+                                                        { service: "browser_mod.navigate", data: { path: `/config/lovelace/dashboards` } }
+                                                    ]
+                                                }
+                                            }
+                                        },
+                                        card_mod: {
+                                            style: `ha-card { box-shadow: none; margin: 2px; }`
+                                        }
+                                    },
+                                    {
+                                        type: "custom:mushroom-template-card",
+                                        primary: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.entity.text.settings_popup.state.logs"),
+                                        icon: "mdi:math-log",
+                                        icon_color: "amber",
+                                        layout: "vertical",
+                                        tap_action: {
+                                            action: "fire-dom-event",
+                                            browser_mod: {
+                                                service: "browser_mod.sequence",
+                                                data: {
+                                                    sequence: [
+                                                        { service: "browser_mod.close_popup", data: {} },
+                                                        { service: "browser_mod.navigate", data: { path: `/config/logs` } }
+                                                    ]
+                                                }
+                                            }
+                                        },
+                                        card_mod: {
+                                            style: `ha-card { box-shadow: none; margin: 2px; }`
+                                        }
+                                    }
+                                ]
+                            },
+                            // Séparateur minimal
+                            {
+                                type: "custom:mushroom-template-card",
+                                primary: "",
+                                card_mod: {
+                                    style: `
+                    ha-card {
+                      height: 1px;
+                      background: var(--divider-color);
+                      box-shadow: none;
+                      margin: 12px 0;
+                    }
+                  `
+                                }
+                            },
+                            // Support & Documentation
+                            {
+                                type: "horizontal-stack",
+                                cards: [
+                                    {
+                                        type: "custom:mushroom-template-card",
+                                        primary: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.entity.text.settings_popup.state.github"),
+                                        icon: "mdi:github",
+                                        icon_color: "grey",
+                                        layout: "vertical",
+                                        tap_action: {
+                                            action: "url",
+                                            url_path: "https://github.com/Thank-you-Linus/Linus-Dashboard"
+                                        },
+                                        card_mod: {
+                                            style: `ha-card { box-shadow: none; margin: 2px; }`
+                                        }
+                                    },
+                                    {
+                                        type: "custom:mushroom-template-card",
+                                        primary: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.entity.text.settings_popup.state.documentation"),
+                                        icon: "mdi:book-open",
+                                        icon_color: "cyan",
+                                        layout: "vertical",
+                                        tap_action: {
+                                            action: "url",
+                                            url_path: "https://github.com/Thank-you-Linus/Linus-Dashboard#readme"
+                                        },
+                                        card_mod: {
+                                            style: `ha-card { box-shadow: none; margin: 2px; }`
+                                        }
+                                    },
+                                    {
+                                        type: "custom:mushroom-template-card",
+                                        primary: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.entity.text.settings_popup.state.issues"),
+                                        icon: "mdi:bug",
+                                        icon_color: "red",
+                                        layout: "vertical",
+                                        tap_action: {
+                                            action: "url",
+                                            url_path: "https://github.com/Thank-you-Linus/Linus-Dashboard/issues"
+                                        },
+                                        card_mod: {
+                                            style: `ha-card { box-shadow: none; margin: 2px; }`
+                                        }
+                                    }
+                                ]
+                            },
+                            // Message d'encouragement à mettre une étoile
+                            {
+                                type: "custom:mushroom-template-card",
+                                primary: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.entity.text.settings_popup.state.thank_you"),
+                                secondary: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.entity.text.settings_popup.state.star_message"),
+                                icon: "mdi:heart",
+                                icon_color: "red",
+                                layout: "horizontal",
+                                tap_action: {
+                                    action: "url",
+                                    url_path: "https://github.com/Thank-you-Linus/Linus-Dashboard"
+                                },
+                                card_mod: {
+                                    style: `
+                    ha-card {
+                      background: rgba(var(--rgb-primary-color), 0.1);
+                      border: 1px solid rgba(var(--rgb-primary-color), 0.3);
+                      box-shadow: none;
+                      margin-top: 12px;
+                      cursor: pointer;
+                    }
+                    ha-card:hover {
+                      background: rgba(var(--rgb-primary-color), 0.15);
+                    }
+                  `
+                                }
+                            },
+                            // Version en bas
+                            {
+                                type: "custom:mushroom-template-card",
+                                primary: `${_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.entity.text.settings_popup.state.version_info")} ${_linus_strategy__WEBPACK_IMPORTED_MODULE_1__.version}`,
+                                icon: "mdi:information",
+                                icon_color: "grey",
+                                layout: "horizontal",
+                                tap_action: { action: "none" },
+                                card_mod: {
+                                    style: `
+                    ha-card {
+                      background: transparent;
+                      box-shadow: none;
+                      margin-top: 8px;
+                      font-size: 0.9em;
+                      opacity: 0.7;
+                    }
+                  `
+                                }
                             },
                         ].filter(Boolean),
                     }
@@ -11858,7 +12169,7 @@ class HomeView {
               `,
                             }
                         }],
-                    tap_action: floor.floor_id !== _variables__WEBPACK_IMPORTED_MODULE_3__.UNDISCLOSED ? (0,_utils__WEBPACK_IMPORTED_MODULE_4__.navigateTo)((0,_utils__WEBPACK_IMPORTED_MODULE_4__.slugify)(floor.name)) : undefined,
+                    tap_action: floor.floor_id !== _variables__WEBPACK_IMPORTED_MODULE_3__.UNDISCLOSED ? (0,_utils__WEBPACK_IMPORTED_MODULE_4__.navigateTo)((0,_utils__WEBPACK_IMPORTED_MODULE_4__.slugify)(floor.floor_id)) : undefined,
                 });
             }
             for (const area of floor.areas_slug.map(area_slug => _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.areas[area_slug]).values()) {

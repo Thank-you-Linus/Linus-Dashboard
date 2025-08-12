@@ -51,14 +51,6 @@
             }
         },
         "text": {
-            "settings_chip": {
-                "name": "Linus Settings",
-                "state": {
-                    "integrations": "Magic Areas Integration",
-                    "reload": "Reload magic areas",
-                    "restart": "Restart HA"
-                }
-            },
             "area_states": {
                 "name": "Area States",
                 "state": {
@@ -79,6 +71,29 @@
                     "afternoon": "Good afternoon,",
                     "evening": "Good evening,",
                     "night": "Good night,"
+                }
+            },
+            "settings_popup": {
+                "name": "Linus dashboard control center",
+                "state": {
+                    "welcome_message": "Here's what Linus proudly organizes:",
+                    "reload_magic_areas": "Reload Magic Areas",
+                    "reload_confirm": "Are you sure you want to reload Magic Areas?",
+                    "dashboard_config": "Dashboards",
+                    "areas": "areas",
+                    "floors": "floors",
+                    "entities": "entities",
+                    "devices": "devices",
+                    "logs": "Logs",
+                    "magic_areas": "Magic Areas integrations",
+                    "restart": "Restart HA",
+                    "restart_confirm": "Are you sure you want to restart Home Assistant?",
+                    "github": "GitHub",
+                    "documentation": "Documentation",
+                    "issues": "Report a bug",
+                    "thank_you": "Thank you for using Linus Dashboard",
+                    "star_message": "⭐ Love Linus Dashboard? Star us on GitHub!",
+                    "version_info": "Version"
                 }
             }
         }

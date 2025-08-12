@@ -39,14 +39,6 @@
             }
         },
         "text": {
-            "settings_chip": {
-                "name": "Paramètres Linus",
-                "state": {
-                    "integrations": "Intégration Pièces magiques",
-                    "reload": "Recharger les pièces magiques",
-                    "restart": "Redémarrer HA"
-                }
-            },
             "area_states": {
                 "name": "État de la zone",
                 "state": {
@@ -67,6 +59,29 @@
                     "afternoon": "Bonne après-midi,",
                     "evening": "Bonne soirée,",
                     "night": "Bonne nuit,"
+                }
+            },
+            "settings_popup": {
+                "name": "Centre de contrôle de Linus dashboard",
+                "state": {
+                    "welcome_message": "Voici ce que Linus organise fièrement :",
+                    "reload_magic_areas": "Recharger Magic Areas",
+                    "reload_confirm": "Êtes-vous sûr de vouloir recharger Magic Areas ?",
+                    "dashboard_config": "Tableaux de bord",
+                    "areas": "pièces",
+                    "floors": "étages",
+                    "entities": "entités",
+                    "devices": "appareils",
+                    "logs": "Journaux",
+                    "magic_areas": "Intégrations Magic Areas",
+                    "restart": "Redémarrer HA",
+                    "restart_confirm": "Êtes-vous sûr de vouloir redémarrer Home Assistant ?",
+                    "github": "GitHub",
+                    "documentation": "Documentation",
+                    "issues": "Signaler un bug",
+                    "thank_you": "Merci d'utiliser Linus Dashboard",
+                    "star_message": "⭐ Aimez-vous Linus Dashboard ? Mettez une étoile sur GitHub !",
+                    "version_info": "Version"
                 }
             }
         }

@@ -257,7 +257,7 @@ class HomeView {
               `,
             }
           }],
-          tap_action: floor.floor_id !== UNDISCLOSED ? navigateTo(slugify(floor.name)) : undefined,
+          tap_action: floor.floor_id !== UNDISCLOSED ? navigateTo(slugify(floor.floor_id)) : undefined,
         });
       }
 

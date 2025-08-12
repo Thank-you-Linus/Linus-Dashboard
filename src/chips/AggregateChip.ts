@@ -28,14 +28,17 @@ class AggregateChip extends AbstractChip {
       icon_color: Helper.getIconColor(domain, device_class, entity_id),
       icon: Helper.getIcon(domain, device_class, entity_id),
       content: show_content ? Helper.getContent(domain, device_class, entity_id) : "",
-      tap_action: tap_action ?? entity_id.length == 1 ? undefined : navigateTo(device_class ?? domain),
+      tap_action: tap_action ?? navigateTo(device_class ?? domain),
       hold_action: navigateTo(device_class ?? domain),
     }
 
     if (magicEntity) {
       config.type = "template";
       config.entity = magicEntity.entity_id;
-      config.tap_action = { action: "more-info" }
+    }
+
+    if (config.entity_id?.length == 1) {
+      config.tap_action = { action: "more-info" };
     }
 
     return config;

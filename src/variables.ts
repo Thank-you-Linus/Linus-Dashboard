@@ -115,6 +115,19 @@ export const DEVICE_CLASSES = {
 
 export const AREA_CARDS_DOMAINS = [LIGHT_DOMAIN, "switch", "climate", "fan", "vacuum", "media_player", "camera", "cover", "lock", "scene", "plant", "binary_sensor", "sensor"];
 
+export const ALL_HOME_ASSISTANT_DOMAINS = [
+  // Core domains
+  "alarm_control_panel", "automation", "binary_sensor", "button", "calendar", "camera", "climate",
+  "cover", "device_tracker", "fan", "group", "input_boolean", "input_button", "input_datetime",
+  "input_number", "input_select", "input_text", "light", "lock", "media_player", "notify",
+  "number", "person", "plant", "scene", "script", "select", "sensor", "siren", "sun",
+  "switch", "timer", "update", "vacuum", "water_heater", "weather", "zone",
+
+  // Additional domains
+  "air_quality", "counter", "date", "datetime", "event", "humidifier", "image", "lawn_mower",
+  "proximity", "remote", "tag", "text", "time", "todo", "valve", "wake_word"
+];
+
 export const CUSTOM_VIEWS = ["home", "security", "security-details"];
 
 export const DOMAINS_VIEWS = [...AREA_CARDS_DOMAINS, ...DEVICE_CLASSES.binary_sensor, ...DEVICE_CLASSES.sensor];

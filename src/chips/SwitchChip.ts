@@ -3,6 +3,7 @@ import { chips } from "../types/strategy/chips";
 import { AbstractChip } from "./AbstractChip";
 import { TemplateChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
 import { EntityRegistryEntry } from "../types/homeassistant/data/entity_registry";
+import { navigateTo } from "../utils";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**
@@ -23,10 +24,8 @@ class SwitchChip extends AbstractChip {
     type: "template",
     icon: "mdi:dip-switch",
     content: "",
-    tap_action: {
-      action: "navigate",
-      navigation_path: "switch",
-    },
+    tap_action: navigateTo('switch'),
+    hold_action: navigateTo('switch'),
   };
 
   /**

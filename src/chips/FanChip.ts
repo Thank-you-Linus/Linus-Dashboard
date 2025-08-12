@@ -24,10 +24,8 @@ class FanChip extends AbstractChip {
     type: "template",
     icon: "mdi:fan",
     content: Helper.getCountTemplate({ domain: "fan", operator: "eq", value: "on" }),
-    tap_action: {
-      action: "navigate",
-      navigation_path: "fan",
-    },
+    tap_action: navigateTo('fan'),
+    hold_action: navigateTo('fan'),
   };
 
   /**
@@ -60,7 +58,6 @@ class FanChip extends AbstractChip {
 
     if (magicAreasEntity) {
       this.#defaultConfig.tap_action = undefined
-      this.#defaultConfig.hold_action = navigateTo('fan')
     } else {
       const area_slug = Array.isArray(options?.area_slug) ? options?.area_slug : [options?.area_slug]
       const entity_id = area_slug.flatMap((area) => Helper.areas[area ?? "global"]?.domains?.fan ?? []);

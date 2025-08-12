@@ -23,10 +23,8 @@ class CoverChip extends AbstractChip {
   readonly #defaultConfig: TemplateChipConfig = {
     type: "template",
     content: "",
-    tap_action: {
-      action: "navigate",
-      navigation_path: "cover",
-    },
+    tap_action: navigateTo('cover'),
+    hold_action: navigateTo('cover'),
   };
 
   /**
@@ -60,7 +58,6 @@ class CoverChip extends AbstractChip {
     if (magicAreasEntity) {
       this.#defaultConfig.entity = magicAreasEntity.entity_id;
       this.#defaultConfig.tap_action = undefined
-      this.#defaultConfig.hold_action = navigateTo('cover')
     } else {
       const area_slug = Array.isArray(options?.area_slug) ? options?.area_slug : [options?.area_slug]
 

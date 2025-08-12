@@ -10,7 +10,7 @@ import StrategyEntity = generic.StrategyEntity;
 import StrategyDevice = generic.StrategyDevice;
 import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
 import { FloorRegistryEntry } from "./types/homeassistant/data/floor_registry";
-import { DEVICE_CLASSES, MAGIC_AREAS_DOMAIN, MAGIC_AREAS_NAME, SENSOR_STATE_CLASS_TOTAL, SENSOR_STATE_CLASS_TOTAL_INCREASING, UNDISCLOSED, colorMapping } from "./variables";
+import { DEVICE_CLASSES, MAGIC_AREAS_DOMAIN, MAGIC_AREAS_NAME, SENSOR_STATE_CLASS_TOTAL, SENSOR_STATE_CLASS_TOTAL_INCREASING, UNDISCLOSED, colorMapping, ALL_HOME_ASSISTANT_DOMAINS } from "./variables";
 import { getEntityDomain, getGlobalEntitiesExceptUndisclosed, getMAEntity, getMagicAreaSlug, groupEntitiesByDomain, slugify } from "./utils";
 import { EntityRegistryEntry } from "./types/homeassistant/data/entity_registry";
 import { FrontendEntityComponentIconResources, IconResources } from "./types/homeassistant/data/frontend";
@@ -750,6 +750,55 @@ class Helper {
       console.warn("Helper class should be initialized before calling this method!");
     }
 
+    // Si le domaine est "all", on traite tous les domaines directement pour optimiser les performances
+    if (domain === "all") {
+      const areaSlugs = Array.isArray(area_slug) ? area_slug : [area_slug];
+
+      for (const slug of areaSlugs) {
+        if (slug) {
+          // Pour chaque area, récupérer toutes les entités de tous les domaines
+          if (slug === "global") {
+            // Mode global : récupérer toutes les entités sauf undisclosed
+            for (const cardDomain of ALL_HOME_ASSISTANT_DOMAINS) {
+              const entities = getGlobalEntitiesExceptUndisclosed(device_class ?? cardDomain);
+              const newStates = entities?.map((entity_id) => `states['${entity_id}']`);
+              if (newStates) states.push(...newStates);
+            }
+          } else {
+            // Mode area spécifique : récupérer toutes les entités de l'area pour tous les domaines
+            const area = this.#areas[slug];
+            if (area?.domains) {
+              for (const domainKey of Object.keys(area.domains)) {
+                // Filtrer par device_class si spécifié
+                if (!device_class || domainKey.includes(device_class)) {
+                  const entities = area.domains[domainKey];
+                  const newStates = entities?.map((entity_id) => `states['${entity_id}']`);
+                  if (newStates) states.push(...newStates);
+                }
+              }
+            }
+          }
+        } else {
+          // Mode toutes les areas : récupérer toutes les entités de toutes les areas pour tous les domaines
+          for (const area of Object.values(this.#areas)) {
+            if (area.area_id === UNDISCLOSED) continue;
+
+            if (area.domains) {
+              for (const domainKey of Object.keys(area.domains)) {
+                // Filtrer par device_class si spécifié
+                if (!device_class || domainKey.includes(device_class)) {
+                  const entities = area.domains[domainKey];
+                  const newStates = entities?.map((entity_id) => `states['${entity_id}']`);
+                  if (newStates) states.push(...newStates);
+                }
+              }
+            }
+          }
+        }
+      }
+      return states;
+    }
+
     const areaSlugs = Array.isArray(area_slug) ? area_slug : [area_slug];
 
     for (const slug of areaSlugs) {
@@ -763,9 +812,7 @@ class Helper {
         for (const area of Object.values(this.#areas)) {
           if (area.area_id === UNDISCLOSED) continue;
 
-          const newStates = domain === "all"
-            ? this.#areas[area.slug]?.entities.map((entity_id) => `states['${entity_id}']`)
-            : this.#areas[area.slug]?.domains?.[device_class ?? domain]?.map((entity_id) => `states['${entity_id}']`);
+          const newStates = this.#areas[area.slug]?.domains?.[device_class ?? domain]?.map((entity_id) => `states['${entity_id}']`);
           if (newStates) states.push(...newStates);
         }
       }
@@ -794,10 +841,71 @@ class Helper {
     device_class?: string;
     area_slug?: string | string[];
   }): string[] {
+
     const entityIds: string[] = [];
 
     if (!this.isInitialized()) {
       console.warn("Helper class should be initialized before calling this method!");
+    }
+
+    // Si le domaine est "all", on traite tous les domaines directement pour optimiser les performances
+    if (domain === "all") {
+      const areaSlugs = Array.isArray(area_slug) ? area_slug : [area_slug];
+
+      for (const slug of areaSlugs) {
+        if (slug) {
+          // Pour chaque area, récupérer toutes les entités de tous les domaines
+          if (slug === "global") {
+            // Mode global : récupérer toutes les entités sauf undisclosed
+            for (const cardDomain of ALL_HOME_ASSISTANT_DOMAINS) {
+              if (device_class) {
+                const entities = getGlobalEntitiesExceptUndisclosed(cardDomain, device_class);
+                if (entities) entityIds.push(...entities);
+              } else {
+                // Récupérer toutes les device classes pour ce domaine
+                const domainTags = Object.keys(this.#domains).filter(tag => tag.startsWith(`${cardDomain}:`));
+                if (domainTags.length > 0) {
+                  for (const domainTag of domainTags) {
+                    const entities = getGlobalEntitiesExceptUndisclosed(cardDomain, domainTag.split(":")[1]);
+                    if (entities) entityIds.push(...entities);
+                  }
+                } else {
+                  const entities = getGlobalEntitiesExceptUndisclosed(cardDomain);
+                  if (entities) entityIds.push(...entities);
+                }
+              }
+            }
+          } else {
+            // Mode area spécifique : récupérer toutes les entités de l'area pour tous les domaines
+            const area = this.#areas[slug];
+            if (area?.domains) {
+              for (const domainKey of Object.keys(area.domains)) {
+                // Filtrer par device_class si spécifié
+                if (!device_class || domainKey.includes(device_class)) {
+                  const entities = area.domains[domainKey];
+                  if (entities) entityIds.push(...entities);
+                }
+              }
+            }
+          }
+        } else {
+          // Mode toutes les areas : récupérer toutes les entités de toutes les areas pour tous les domaines
+          for (const area of Object.values(this.#areas)) {
+            if (area.area_id === UNDISCLOSED) continue;
+
+            if (area.domains) {
+              for (const domainKey of Object.keys(area.domains)) {
+                // Filtrer par device_class si spécifié
+                if (!device_class || domainKey.includes(device_class)) {
+                  const entities = area.domains[domainKey];
+                  if (entities) entityIds.push(...entities);
+                }
+              }
+            }
+          }
+        }
+      }
+      return entityIds;
     }
 
     const areaSlugs = Array.isArray(area_slug) ? area_slug : [area_slug];
@@ -827,9 +935,7 @@ class Helper {
         for (const area of Object.values(this.#areas)) {
           if (area.area_id === UNDISCLOSED) continue;
           if (device_class) {
-            const entities = domain === "all"
-              ? this.#areas[area.slug]?.entities
-              : this.#areas[area.slug]?.domains?.[`${domain}:${device_class}`];
+            const entities = this.#areas[area.slug]?.domains?.[`${domain}:${device_class}`];
             if (entities) entityIds.push(...entities);
           } else {
             // If device_class is undefined, get all device_classes for the domain

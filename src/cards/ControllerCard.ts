@@ -68,11 +68,6 @@ class ControllerCard {
         heading: this.#defaultConfig.title ?? "No title",
         icon: this.#defaultConfig.titleIcon,
         heading_style: "title",
-        badges: [],
-        layout_options: {
-          grid_columns: "full",
-          grid_rows: 1
-        },
         ...(this.#defaultConfig.titleNavigate && {
           tap_action: navigateTo(this.#defaultConfig.titleNavigate)
         })
@@ -83,13 +78,8 @@ class ControllerCard {
       cards.push({
         type: "heading",
         heading_style: "subtitle",
-        badges: [],
         heading: this.#defaultConfig.subtitle,
         icon: this.#defaultConfig.subtitleIcon,
-        layout_options: {
-          grid_columns: "full",
-          grid_rows: 1
-        },
         ...(this.#defaultConfig.subtitleNavigate && {
           tap_action: this.#defaultConfig.tap_action ?? navigateTo(this.#defaultConfig.subtitleNavigate),
         })

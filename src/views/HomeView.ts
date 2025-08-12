@@ -172,7 +172,6 @@ class HomeView {
             icon_color: "orange",
             layout_options: {
               grid_columns: 4,
-              grid_rows: 1,
             },
             tap_action: { action: "none" } as ActionConfig,
             double_tap_action: { action: "none" } as ActionConfig,
@@ -304,7 +303,6 @@ class HomeView {
           fill_container: true,
           layout_options: {
             grid_columns: 4,
-            grid_rows: 1,
           },
           tap_action: {
             action: "navigate",

@@ -3749,10 +3749,6 @@ class ControllerCard {
                 icon: __classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").titleIcon,
                 heading_style: "title",
                 badges: [],
-                layout_options: {
-                    grid_columns: "full",
-                    grid_rows: 1
-                },
                 ...(__classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").titleNavigate && {
                     tap_action: (0,_utils__WEBPACK_IMPORTED_MODULE_1__.navigateTo)(__classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").titleNavigate)
                 })
@@ -3762,13 +3758,9 @@ class ControllerCard {
             cards.push({
                 type: "heading",
                 heading_style: "subtitle",
-                badges: [],
                 heading: __classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").subtitle,
                 icon: __classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").subtitleIcon,
-                layout_options: {
-                    grid_columns: "full",
-                    grid_rows: 1
-                },
+                badges: [],
                 ...(__classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").subtitleNavigate && {
                     tap_action: __classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").tap_action ?? (0,_utils__WEBPACK_IMPORTED_MODULE_1__.navigateTo)(__classPrivateFieldGet(this, _ControllerCard_defaultConfig, "f").subtitleNavigate),
                 })
@@ -5087,7 +5079,7 @@ class AggregateChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_0__.AbstractC
      * @param {chips.AggregateChipOptions} options The options object containing the parameters.
      * @returns {TemplateChipConfig} The default configuration.
      */
-    getDefaultConfig({ domain, device_class, show_content = true, magic_device_id = "global", area_slug, tap_action }) {
+    getDefaultConfig({ domain, device_class, show_content = true, magic_device_id = "global", area_slug, tap_action, hold_action }) {
         const magicEntity = (0,_utils__WEBPACK_IMPORTED_MODULE_2__.getMAEntity)(magic_device_id, domain, device_class);
         const entity_id = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.getEntityIds({ domain, device_class, area_slug });
         let config = {
@@ -5097,8 +5089,8 @@ class AggregateChip extends _AbstractChip__WEBPACK_IMPORTED_MODULE_0__.AbstractC
             icon_color: _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.getIconColor(domain, device_class, entity_id),
             icon: _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.getIcon(domain, device_class, entity_id),
             content: show_content ? _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.getContent(domain, device_class, entity_id) : "",
-            tap_action: tap_action ?? (0,_utils__WEBPACK_IMPORTED_MODULE_2__.navigateTo)(device_class ?? domain),
-            hold_action: (0,_utils__WEBPACK_IMPORTED_MODULE_2__.navigateTo)(device_class ?? domain),
+            tap_action: tap_action ?? (0,_utils__WEBPACK_IMPORTED_MODULE_2__.navigateTo)(domain === "cover" ? domain : device_class ?? domain),
+            hold_action: hold_action ?? (0,_utils__WEBPACK_IMPORTED_MODULE_2__.navigateTo)(domain === "cover" ? domain : device_class ?? domain),
         };
         if (magicEntity) {
             config.type = "template";
@@ -10828,10 +10820,16 @@ async function processEntitiesForAreaOrFloorView({ area, floor, }) {
                     }
                     const titleCardOptions = {
                         ..._Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.strategyOptions.domains[domain].controllerCardOptions,
-                        subtitle: isFloorView ? area.name : _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize(getDomainTranslationKey(domain)),
-                        subtitleIcon: isFloorView ? area.icon : _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.icons[domain]._?.default,
+                        ...(isFloorView ? {
+                            subtitle: area.name,
+                            subtitleIcon: area.icon ?? "mdi:floor-plan",
+                            subtitleNavigate: area.slug,
+                        } : {
+                            title: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize(getDomainTranslationKey(domain)),
+                            titleIcon: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.icons[domain]._?.default,
+                            titleNavigate: domain,
+                        }),
                         domain,
-                        subtitleNavigate: domain,
                     };
                     if (domain) {
                         if (_variables__WEBPACK_IMPORTED_MODULE_1__.AGGREGATE_DOMAINS.includes(domain)) {
@@ -10906,12 +10904,9 @@ async function processEntitiesForAreaOrFloorView({ area, floor, }) {
             const titleCard = {
                 type: "heading",
                 heading: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("ui.panel.lovelace.editor.card.generic.other_cards"),
-                heading_style: "subtitle",
+                heading_style: "title",
+                icon: "mdi:dots-horizontal",
                 badges: [],
-                layout_options: {
-                    grid_columns: "full",
-                    grid_rows: 1,
-                },
             };
             viewSections.push({
                 type: "grid",
@@ -12250,7 +12245,6 @@ class HomeView {
                         icon_color: "orange",
                         layout_options: {
                             grid_columns: 4,
-                            grid_rows: 1,
                         },
                         tap_action: { action: "none" },
                         double_tap_action: { action: "none" },
@@ -12369,7 +12363,6 @@ class HomeView {
                     fill_container: true,
                     layout_options: {
                         grid_columns: 4,
-                        grid_rows: 1,
                     },
                     tap_action: {
                         action: "navigate",
@@ -12877,11 +12870,13 @@ class SecurityView {
                 type: "heading",
                 heading: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.binary_sensor.entity_component.safety.name"),
                 heading_style: "title",
+                icon: "mdi:shield-home",
             });
             globalSection.cards.push({
                 type: "heading",
                 heading: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.alarm_control_panel.entity_component._.name"),
-                heading_style: "subtitle",
+                heading_style: "title",
+                icon: "mdi:alarm-light",
             });
             globalSection.cards.push(new _cards_AlarmCard__WEBPACK_IMPORTED_MODULE_1__.AlarmCard(_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.entities[alarmEntityId]).getCard());
         }
@@ -12890,7 +12885,8 @@ class SecurityView {
             globalSection.cards.push({
                 type: "heading",
                 heading: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("ui.dialogs.quick-bar.commands.navigation.person"),
-                heading_style: "subtitle",
+                heading_style: "title",
+                icon: "mdi:account-group",
             });
             for (const person of persons) {
                 globalSection.cards.push(new _cards_PersonCard__WEBPACK_IMPORTED_MODULE_2__.PersonCard({}, person).getCard());
@@ -12901,7 +12897,8 @@ class SecurityView {
             globalSection.cards.push({
                 type: "heading",
                 heading: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("ui.components.device-picker.device") + "s",
-                heading_style: "subtitle",
+                heading_style: "title",
+                icon: "mdi:shield",
             });
             globalSection.cards.push(...securityCards);
         }
@@ -12910,7 +12907,8 @@ class SecurityView {
             globalSection.cards.push({
                 type: "heading",
                 heading: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.sensor.entity_component._.name") + "s",
-                heading_style: "subtitle",
+                heading_style: "title",
+                icon: "mdi:motion-sensor",
             });
             globalSection.cards.push(...sensorCards);
         }
@@ -12932,13 +12930,9 @@ class SecurityView {
             cards: [
                 {
                     type: "heading",
-                    heading: `${_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize(`component.camera.entity_component._.name`)}s`,
+                    heading: `${_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.camera.entity_component._.name")}s`,
                     heading_style: "title",
                     badges: [],
-                    layout_options: {
-                        grid_columns: "full",
-                        grid_rows: 1
-                    },
                     icon: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.icons[domain]._?.default,
                 }
             ]
@@ -12953,10 +12947,6 @@ class SecurityView {
                     heading: (0,_utils__WEBPACK_IMPORTED_MODULE_3__.getFloorName)(floor),
                     heading_style: "title",
                     badges: [],
-                    layout_options: {
-                        grid_columns: "full",
-                        grid_rows: 1
-                    },
                     icon: floor.icon ?? "mdi:floor-plan",
                 }
             ];

@@ -17,7 +17,7 @@ class AggregateChip extends AbstractChip {
    * @param {chips.AggregateChipOptions} options The options object containing the parameters.
    * @returns {TemplateChipConfig} The default configuration.
    */
-  getDefaultConfig({ domain, device_class, show_content = true, magic_device_id = "global", area_slug, tap_action }: chips.AggregateChipOptions): TemplateChipConfig | EntityChipConfig {
+  getDefaultConfig({ domain, device_class, show_content = true, magic_device_id = "global", area_slug, tap_action, hold_action }: chips.AggregateChipOptions): TemplateChipConfig | EntityChipConfig {
     const magicEntity = getMAEntity(magic_device_id, domain, device_class);
     const entity_id = Helper.getEntityIds({ domain, device_class, area_slug })
 
@@ -28,8 +28,8 @@ class AggregateChip extends AbstractChip {
       icon_color: Helper.getIconColor(domain, device_class, entity_id),
       icon: Helper.getIcon(domain, device_class, entity_id),
       content: show_content ? Helper.getContent(domain, device_class, entity_id) : "",
-      tap_action: tap_action ?? navigateTo(device_class ?? domain),
-      hold_action: navigateTo(device_class ?? domain),
+      tap_action: tap_action ?? navigateTo(domain === "cover" ? domain : device_class ?? domain),
+      hold_action: hold_action ?? navigateTo(domain === "cover" ? domain : device_class ?? domain),
     }
 
     if (magicEntity) {

@@ -154,7 +154,7 @@ class SecurityView {
       globalSection.cards.push(...securityCards);
     }
 
-    const sensorCards = await createCardsFromList(SECURITY_EXPOSED_SENSORS, {}, "global");
+    const sensorCards = await createCardsFromList(SECURITY_EXPOSED_SENSORS, {}, "global", "global");
     if (sensorCards) {
       globalSection.cards.push(
         {

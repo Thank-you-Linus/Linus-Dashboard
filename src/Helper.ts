@@ -1009,7 +1009,7 @@ class Helper {
   static getIcon(domain: string, device_class = '_', entity_ids?: string[]): string {
     const domainIcons = Helper.icons[domain as keyof IconResources];
     if (!domainIcons) {
-      return "mdi:help-circle"; // Default icon if domain is not found
+      return "mdi:help-circle-circle"; // Default icon if domain is not found
     }
 
     const states = entity_ids?.length ? Helper.getStateStrings(entity_ids) : [];
@@ -1130,63 +1130,110 @@ class Helper {
    * @param {string} entity_id - The entity ID.
    * @returns {string} - The content string.
    */
-  static getContent(domain: string, device_class?: string, entity_ids: string[] = []): string {
+  static getContent(domain: string, device_class?: string, entity_ids: string[] = [], as_icon: boolean = false): string {
     const stateStrings = Helper.getStateStrings(entity_ids);
 
-    const templates: Record<string, { filter: string, default: string }> = {
+    // Define templates for each domain/device_class combination
+    const templates: Record<string, { filter: string, default: string, icon?: string, icon_max?: string }> = {
+      "sensor:battery": {
+        filter: `valid_states = entities | selectattr('attributes.device_class', 'eq', 'battery') | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | map(attribute='state') | map('float') | list`,
+        default: `{{ (valid_states | max if valid_states | length > 0 else 0) | round(0, 'floor') }}%`,
+        icon: "mdi:battery",
+        icon_max: "mdi:battery-90"
+      },
+      "sensor:temperature": {
+        filter: `valid_states = entities | selectattr('attributes.device_class', 'eq', 'temperature') | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | map(attribute='state') | map('float') | list`,
+        default: `{{ (valid_states | max if valid_states | length > 0 else 0) | round(1) }}°`,
+        icon: "mdi:thermometer",
+        icon_max: "mdi:thermometer-high"
+      },
       sensor: {
-        filter: `valid_states = entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | map(attribute='state') | map('float') | list`,
+        filter: `valid_states = entities${device_class ? " | selectattr('attributes.device_class', 'eq', '" + device_class + "')" : ""} | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | map(attribute='state') | map('float') | list`,
         default: `{% set state_class = entities[0].attributes.state_class if entities[0].attributes.state_class is defined else 'measurement' %}
                   {% if state_class in ['total', 'total_increasing'] %}
                     {{ (valid_states | sum) | round(1, 'floor') }}
                   {% else %}
                     {{ (valid_states | sum / valid_states | length) | round(1, 'floor') }}
                   {% endif %}
-                  {% if entities[0].attributes.unit_of_measurement is defined %} {{ entities[0].attributes.unit_of_measurement }}{% endif %}`
+                  {% if entities[0].attributes.unit_of_measurement is defined %} {{ entities[0].attributes.unit_of_measurement }}{% endif %}`,
+        icon: "mdi:numeric-{count}",
+        icon_max: "mdi:numeric-9-plus"
       },
       binary_sensor: {
-        filter: `active_states = entities | selectattr('state', 'eq', 'on') | list`,
-        default: `{{ active_states | length }}`
+        filter: `active_states = entities${device_class ? " | selectattr('attributes.device_class', 'eq', '" + device_class + "')" : ""} | selectattr('state', 'eq', 'on') | list`,
+        default: `{{ active_states | length }}`,
+        icon: "mdi:numeric-{count}",
+        icon_max: "mdi:numeric-9-plus"
       },
       light: {
-        filter: `active_lights = entities | selectattr('state', 'eq', 'on') | list`,
-        default: `{{ active_lights | length }}`
+        filter: `active_lights = entities | selectattr('state', 'eq', 'on')${device_class ? " | selectattr('attributes.device_class', 'eq', '" + device_class + "')" : ""} | list`,
+        default: `{{ active_lights | length }}`,
+        icon: "mdi:numeric-{count}",
+        icon_max: "mdi:numeric-9-plus"
       },
       cover: {
-        filter: `open_covers = entities | selectattr('state', 'eq', 'open') | list`,
-        default: `{{ open_covers | length }}`
+        filter: `open_covers = entities | selectattr('state', 'eq', 'open')${device_class ? " | selectattr('attributes.device_class', 'eq', '" + device_class + "')" : ""} | list`,
+        default: `{{ open_covers | length }}`,
+        icon: "mdi:numeric-{count}",
+        icon_max: "mdi:numeric-9-plus"
       },
       climate: {
-        filter: `active_climates = entities | selectattr('state', 'in', ['heat', 'cool', 'auto']) | list`,
-        default: `{{ active_climates | length }}`
+        filter: `active_climates = entities | selectattr('state', 'in', ['heat', 'cool', 'auto'])${device_class ? " | selectattr('attributes.device_class', 'eq', '" + device_class + "')" : ""} | list`,
+        default: `{{ active_climates | length }}`,
+        icon: "mdi:numeric-{count}",
+        icon_max: "mdi:numeric-9-plus"
       },
       switch: {
-        filter: `active_switches = entities | selectattr('state', 'eq', 'on') | list`,
-        default: `{{ active_switches | length }}`
+        filter: `active_switches = entities | selectattr('state', 'eq', 'on')${device_class ? " | selectattr('attributes.device_class', 'eq', '" + device_class + "')" : ""} | list`,
+        default: `{{ active_switches | length }}`,
+        icon: "mdi:numeric-{count}",
+        icon_max: "mdi:numeric-9-plus"
       },
       media_player: {
-        filter: `active_players = entities | selectattr('state', 'in', ['playing', 'on']) | list`,
-        default: `{{ active_players | length }}`
+        filter: `active_players = entities | selectattr('state', 'in', ['playing', 'on'])${device_class ? " | selectattr('attributes.device_class', 'eq', '" + device_class + "')" : ""} | list`,
+        default: `{{ active_players | length }}`,
+        icon: "mdi:numeric-{count}",
+        icon_max: "mdi:numeric-9-plus"
       },
       default: {
-        filter: `interesting_states = entities | selectattr('state', 'in', ['on', 'open', 'playing', 'heat', 'cool', 'auto']) | list`,
-        default: `{{ interesting_states | length }}`
+        filter: `interesting_states = entities${device_class ? " | selectattr('attributes.device_class', 'eq', '" + device_class + "')" : ""} | selectattr('state', 'in', ['on', 'open', 'playing', 'heat', 'cool', 'auto']) | list`,
+        default: `{{ interesting_states | length }}`,
+        icon: "mdi:numeric-{count}",
+        icon_max: "mdi:numeric-9-plus"
       }
     };
 
-    const filteredEntities = device_class
-      ? stateStrings.filter(state => `states['${state}'].attributes.device_class == '${device_class}'`)
-      : stateStrings;
+    // Prefer device_class-specific template if available
+    const templateKey = device_class ? `${domain}:${device_class}` : domain;
+    const template = templates[templateKey] || templates[domain] || templates.default;
 
-    const template = templates[domain] || templates.default;
+    // Compose the filter variable name (e.g., valid_states, active_lights, etc.)
+    const filterVar = template.filter.split('=')[0].trim();
 
+    // If as_icon is true, return an mdi icon with the count, and if count > 9, use the "9-plus" icon
+    if (as_icon) {
+      return `
+        {% set entities = [${stateStrings}] %}
+        {% set ${template.filter} %}
+        {% set count = ${filterVar} | length %}
+        {% if count > 0 %}
+          {% if count > 9 %}
+            ${template.icon_max}
+          {% else %}
+            ${template.icon?.replace('{count}', '{{ count }}')}
+          {% endif %}
+        {% else %}
+        {% endif %}
+      `;
+    }
+
+    // Default: return the value as before, but return nothing if count is zero
     return `
-      {% set entities = [${filteredEntities}] %}
+      {% set entities = [${stateStrings}] %}
       {% set ${template.filter} %}
-      {% if ${template.filter.split('=')[0].trim()} | length > 0 %}
+      {% if ${filterVar} | length > 0 %}
       ${template.default}
       {% else %}
-
       {% endif %}
     `;
   }

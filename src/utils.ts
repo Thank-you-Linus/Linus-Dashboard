@@ -217,7 +217,7 @@ async function createItemsFromList(
 
         const magicAreasEntity = getMAEntity(magic_device_id, domain, device_class);
 
-        const className = Helper.sanitizeClassName(domain + (isChip ? "Chip" : "Card"));
+        const className = Helper.sanitizeClassName(device_class ?? domain + (isChip ? "Chip" : "Card"));
 
         try {
             let itemModule;

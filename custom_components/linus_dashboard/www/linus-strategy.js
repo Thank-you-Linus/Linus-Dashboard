@@ -8240,9 +8240,9 @@ class SettingsPopup extends _AbstractPopup__WEBPACK_IMPORTED_MODULE_2__.Abstract
                                 chips: [
                                     {
                                         type: "template",
-                                        content: `${totalAreas} ${_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.entity.text.settings_popup.state.areas")}`,
-                                        icon: "mdi:floor-plan",
-                                        icon_color: "blue",
+                                        content: `${totalFloors} ${_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.entity.text.settings_popup.state.floors")}`,
+                                        icon: "mdi:layers",
+                                        icon_color: "green",
                                         tap_action: {
                                             action: "fire-dom-event",
                                             browser_mod: {
@@ -8258,9 +8258,9 @@ class SettingsPopup extends _AbstractPopup__WEBPACK_IMPORTED_MODULE_2__.Abstract
                                     },
                                     {
                                         type: "template",
-                                        content: `${totalFloors} ${_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.entity.text.settings_popup.state.floors")}`,
-                                        icon: "mdi:layers",
-                                        icon_color: "green",
+                                        content: `${totalAreas} ${_Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.entity.text.settings_popup.state.areas")}`,
+                                        icon: "mdi:floor-plan",
+                                        icon_color: "blue",
                                         tap_action: {
                                             action: "fire-dom-event",
                                             browser_mod: {
@@ -8355,7 +8355,6 @@ class SettingsPopup extends _AbstractPopup__WEBPACK_IMPORTED_MODULE_2__.Abstract
                                     linusDeviceIds.length > 0 && {
                                         type: "custom:mushroom-template-card",
                                         primary: _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.localize("component.linus_dashboard.entity.text.settings_popup.state.reload_magic_areas"),
-                                        secondary: "Magic Areas",
                                         icon: "mdi:refresh",
                                         icon_color: "blue",
                                         layout: "vertical",

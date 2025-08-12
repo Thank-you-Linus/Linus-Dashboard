@@ -74,7 +74,7 @@
                 }
             },
             "settings_popup": {
-                "name": "Linus dashboard control center",
+                "name": "Control center",
                 "state": {
                     "welcome_message": "Here's what Linus proudly organizes:",
                     "reload_magic_areas": "Reload Magic Areas",

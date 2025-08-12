@@ -53,8 +53,6 @@ class SecurityView {
     }
   }
 
-
-
   /**
    * Create the cards to include in the view.
    *
@@ -118,13 +116,15 @@ class SecurityView {
           type: "heading",
           heading: Helper.localize("component.binary_sensor.entity_component.safety.name"),
           heading_style: "title",
+          icon: "mdi:shield-home",
         }
       )
       globalSection.cards.push(
         {
           type: "heading",
           heading: Helper.localize("component.alarm_control_panel.entity_component._.name"),
-          heading_style: "subtitle",
+          heading_style: "title",
+          icon: "mdi:alarm-light",
         })
       globalSection.cards.push(new AlarmCard(Helper.entities[alarmEntityId]).getCard())
     }
@@ -135,7 +135,8 @@ class SecurityView {
         {
           type: "heading",
           heading: Helper.localize("ui.dialogs.quick-bar.commands.navigation.person"),
-          heading_style: "subtitle",
+          heading_style: "title",
+          icon: "mdi:account-group",
         })
 
       for (const person of persons) {
@@ -149,7 +150,8 @@ class SecurityView {
         {
           type: "heading",
           heading: Helper.localize("ui.components.device-picker.device") + "s",
-          heading_style: "subtitle",
+          heading_style: "title",
+          icon: "mdi:shield",
         });
       globalSection.cards.push(...securityCards);
     }
@@ -160,11 +162,11 @@ class SecurityView {
         {
           type: "heading",
           heading: Helper.localize("component.sensor.entity_component._.name") + "s",
-          heading_style: "subtitle",
+          heading_style: "title",
+          icon: "mdi:motion-sensor",
         });
       globalSection.cards.push(...sensorCards);
     }
-
 
     const sections = [globalSection]
     if (Helper.domains.camera?.length) sections.push(await this.createCamerasSection())
@@ -185,15 +187,12 @@ class SecurityView {
       cards: [
         {
           type: "heading",
-          heading: `${Helper.localize(`component.camera.entity_component._.name`)}s`,
+          heading: `${Helper.localize("component.camera.entity_component._.name")}s`,
           heading_style: "title",
           badges: [],
-          layout_options: {
-            grid_columns: "full",
-            grid_rows: 1
-          },
           icon: Helper.icons[domain]._?.default,
-        }]
+        }
+      ]
     };
 
     const floors = Helper.orderedFloors;
@@ -208,10 +207,6 @@ class SecurityView {
           heading: getFloorName(floor),
           heading_style: "title",
           badges: [],
-          layout_options: {
-            grid_columns: "full",
-            grid_rows: 1
-          },
           icon: floor.icon ?? "mdi:floor-plan",
         }
       ]

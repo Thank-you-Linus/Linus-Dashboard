@@ -556,10 +556,16 @@ export async function processEntitiesForAreaOrFloorView({
 
                     const titleCardOptions = {
                         ...Helper.strategyOptions.domains[domain].controllerCardOptions,
-                        subtitle: isFloorView ? area.name : Helper.localize(getDomainTranslationKey(domain)),
-                        subtitleIcon: isFloorView ? area.icon : Helper.icons[domain as ResourceKeys]._?.default,
+                        ...(isFloorView ? {
+                            subtitle: area.name,
+                            subtitleIcon: area.icon ?? "mdi:floor-plan",
+                            subtitleNavigate: area.slug,
+                        } : {
+                            title: Helper.localize(getDomainTranslationKey(domain)),
+                            titleIcon: Helper.icons[domain as ResourceKeys]._?.default,
+                            titleNavigate: domain,
+                        }),
                         domain,
-                        subtitleNavigate: domain,
                     };
 
                     if (domain) {
@@ -644,12 +650,9 @@ export async function processEntitiesForAreaOrFloorView({
             const titleCard = {
                 type: "heading",
                 heading: Helper.localize("ui.panel.lovelace.editor.card.generic.other_cards"),
-                heading_style: "subtitle",
+                heading_style: "title",
+                icon: "mdi:dots-horizontal",
                 badges: [],
-                layout_options: {
-                    grid_columns: "full",
-                    grid_rows: 1,
-                },
             };
 
             viewSections.push({

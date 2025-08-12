@@ -10991,7 +10991,7 @@ const TOD_ORDER = ["morning", "daytime", "evening", "night"];
 const LIGHT_DOMAIN = "light";
 const LIGHT_GROUPS = ["overhead_lights", "accent_lights", "task_lights", "sleep_lights"];
 const GROUP_DOMAINS = ["climate", "media_player", "cover"];
-const AGGREGATE_DOMAINS = ["binary_sensor", "sensor"];
+const AGGREGATE_DOMAINS = ["binary_sensor", "sensor", "cover"];
 const DEVICE_CLASSES = {
     cover: [
         "awning",

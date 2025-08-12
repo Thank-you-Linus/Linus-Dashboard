@@ -2809,7 +2809,7 @@ class Helper {
     static getIcon(domain, device_class = '_', entity_ids) {
         const domainIcons = _a.icons[domain];
         if (!domainIcons) {
-            return "mdi:help-circle"; // Default icon if domain is not found
+            return "mdi:help-circle-circle"; // Default icon if domain is not found
         }
         const states = entity_ids?.length ? _a.getStateStrings(entity_ids) : [];
         if (domain === "sensor" && device_class === "battery") {
@@ -2918,59 +2918,105 @@ class Helper {
      * @param {string} entity_id - The entity ID.
      * @returns {string} - The content string.
      */
-    static getContent(domain, device_class, entity_ids = []) {
+    static getContent(domain, device_class, entity_ids = [], as_icon = false) {
         const stateStrings = _a.getStateStrings(entity_ids);
+        // Define templates for each domain/device_class combination
         const templates = {
+            "sensor:battery": {
+                filter: `valid_states = entities | selectattr('attributes.device_class', 'eq', 'battery') | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | map(attribute='state') | map('float') | list`,
+                default: `{{ (valid_states | max if valid_states | length > 0 else 0) | round(0, 'floor') }}%`,
+                icon: "mdi:battery",
+                icon_max: "mdi:battery-90"
+            },
+            "sensor:temperature": {
+                filter: `valid_states = entities | selectattr('attributes.device_class', 'eq', 'temperature') | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | map(attribute='state') | map('float') | list`,
+                default: `{{ (valid_states | max if valid_states | length > 0 else 0) | round(1) }}°`,
+                icon: "mdi:thermometer",
+                icon_max: "mdi:thermometer-high"
+            },
             sensor: {
-                filter: `valid_states = entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | map(attribute='state') | map('float') | list`,
+                filter: `valid_states = entities${device_class ? " | selectattr('attributes.device_class', 'eq', '" + device_class + "')" : ""} | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | map(attribute='state') | map('float') | list`,
                 default: `{% set state_class = entities[0].attributes.state_class if entities[0].attributes.state_class is defined else 'measurement' %}
                   {% if state_class in ['total', 'total_increasing'] %}
                     {{ (valid_states | sum) | round(1, 'floor') }}
                   {% else %}
                     {{ (valid_states | sum / valid_states | length) | round(1, 'floor') }}
                   {% endif %}
-                  {% if entities[0].attributes.unit_of_measurement is defined %} {{ entities[0].attributes.unit_of_measurement }}{% endif %}`
+                  {% if entities[0].attributes.unit_of_measurement is defined %} {{ entities[0].attributes.unit_of_measurement }}{% endif %}`,
+                icon: "mdi:numeric-{count}",
+                icon_max: "mdi:numeric-9-plus"
             },
             binary_sensor: {
-                filter: `active_states = entities | selectattr('state', 'eq', 'on') | list`,
-                default: `{{ active_states | length }}`
+                filter: `active_states = entities${device_class ? " | selectattr('attributes.device_class', 'eq', '" + device_class + "')" : ""} | selectattr('state', 'eq', 'on') | list`,
+                default: `{{ active_states | length }}`,
+                icon: "mdi:numeric-{count}",
+                icon_max: "mdi:numeric-9-plus"
             },
             light: {
-                filter: `active_lights = entities | selectattr('state', 'eq', 'on') | list`,
-                default: `{{ active_lights | length }}`
+                filter: `active_lights = entities | selectattr('state', 'eq', 'on')${device_class ? " | selectattr('attributes.device_class', 'eq', '" + device_class + "')" : ""} | list`,
+                default: `{{ active_lights | length }}`,
+                icon: "mdi:numeric-{count}",
+                icon_max: "mdi:numeric-9-plus"
             },
             cover: {
-                filter: `open_covers = entities | selectattr('state', 'eq', 'open') | list`,
-                default: `{{ open_covers | length }}`
+                filter: `open_covers = entities | selectattr('state', 'eq', 'open')${device_class ? " | selectattr('attributes.device_class', 'eq', '" + device_class + "')" : ""} | list`,
+                default: `{{ open_covers | length }}`,
+                icon: "mdi:numeric-{count}",
+                icon_max: "mdi:numeric-9-plus"
             },
             climate: {
-                filter: `active_climates = entities | selectattr('state', 'in', ['heat', 'cool', 'auto']) | list`,
-                default: `{{ active_climates | length }}`
+                filter: `active_climates = entities | selectattr('state', 'in', ['heat', 'cool', 'auto'])${device_class ? " | selectattr('attributes.device_class', 'eq', '" + device_class + "')" : ""} | list`,
+                default: `{{ active_climates | length }}`,
+                icon: "mdi:numeric-{count}",
+                icon_max: "mdi:numeric-9-plus"
             },
             switch: {
-                filter: `active_switches = entities | selectattr('state', 'eq', 'on') | list`,
-                default: `{{ active_switches | length }}`
+                filter: `active_switches = entities | selectattr('state', 'eq', 'on')${device_class ? " | selectattr('attributes.device_class', 'eq', '" + device_class + "')" : ""} | list`,
+                default: `{{ active_switches | length }}`,
+                icon: "mdi:numeric-{count}",
+                icon_max: "mdi:numeric-9-plus"
             },
             media_player: {
-                filter: `active_players = entities | selectattr('state', 'in', ['playing', 'on']) | list`,
-                default: `{{ active_players | length }}`
+                filter: `active_players = entities | selectattr('state', 'in', ['playing', 'on'])${device_class ? " | selectattr('attributes.device_class', 'eq', '" + device_class + "')" : ""} | list`,
+                default: `{{ active_players | length }}`,
+                icon: "mdi:numeric-{count}",
+                icon_max: "mdi:numeric-9-plus"
             },
             default: {
-                filter: `interesting_states = entities | selectattr('state', 'in', ['on', 'open', 'playing', 'heat', 'cool', 'auto']) | list`,
-                default: `{{ interesting_states | length }}`
+                filter: `interesting_states = entities${device_class ? " | selectattr('attributes.device_class', 'eq', '" + device_class + "')" : ""} | selectattr('state', 'in', ['on', 'open', 'playing', 'heat', 'cool', 'auto']) | list`,
+                default: `{{ interesting_states | length }}`,
+                icon: "mdi:numeric-{count}",
+                icon_max: "mdi:numeric-9-plus"
             }
         };
-        const filteredEntities = device_class
-            ? stateStrings.filter(state => `states['${state}'].attributes.device_class == '${device_class}'`)
-            : stateStrings;
-        const template = templates[domain] || templates.default;
+        // Prefer device_class-specific template if available
+        const templateKey = device_class ? `${domain}:${device_class}` : domain;
+        const template = templates[templateKey] || templates[domain] || templates.default;
+        // Compose the filter variable name (e.g., valid_states, active_lights, etc.)
+        const filterVar = template.filter.split('=')[0].trim();
+        // If as_icon is true, return an mdi icon with the count, and if count > 9, use the "9-plus" icon
+        if (as_icon) {
+            return `
+        {% set entities = [${stateStrings}] %}
+        {% set ${template.filter} %}
+        {% set count = ${filterVar} | length %}
+        {% if count > 0 %}
+          {% if count > 9 %}
+            ${template.icon_max}
+          {% else %}
+            ${template.icon?.replace('{count}', '{{ count }}')}
+          {% endif %}
+        {% else %}
+        {% endif %}
+      `;
+        }
+        // Default: return the value as before, but return nothing if count is zero
         return `
-      {% set entities = [${filteredEntities}] %}
+      {% set entities = [${stateStrings}] %}
       {% set ${template.filter} %}
-      {% if ${template.filter.split('=')[0].trim()} | length > 0 %}
+      {% if ${filterVar} | length > 0 %}
       ${template.default}
       {% else %}
-
       {% endif %}
     `;
     }
@@ -3176,7 +3222,7 @@ class AggregateCard extends _AbstractCard__WEBPACK_IMPORTED_MODULE_0__.AbstractC
         const entity_id = magicEntity?.entity_id ? [magicEntity?.entity_id] : _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.getEntityIds({ domain, device_class, area_slug });
         const icon = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.getIcon(domain, device_class, entity_id);
         const icon_color = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.getIconColor(domain, device_class, entity_id);
-        const content = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.getContent(domain, device_class, entity_id);
+        const content = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.getContent(domain, device_class, entity_id, true);
         const secondary = _Helper__WEBPACK_IMPORTED_MODULE_1__.Helper.getLastChangedTemplate({ domain, device_class, area_slug });
         return {
             type: "custom:mushroom-template-card",
@@ -10499,7 +10545,7 @@ async function createItemsFromList(itemList, itemOptions, magic_device_id = "glo
         if (getGlobalEntitiesExceptUndisclosed(domain, device_class).length === 0)
             continue;
         const magicAreasEntity = getMAEntity(magic_device_id, domain, device_class);
-        const className = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.sanitizeClassName(domain + (isChip ? "Chip" : "Card"));
+        const className = _Helper__WEBPACK_IMPORTED_MODULE_0__.Helper.sanitizeClassName(device_class ?? domain + (isChip ? "Chip" : "Card"));
         try {
             let itemModule;
             let item;
@@ -12859,7 +12905,7 @@ class SecurityView {
             });
             globalSection.cards.push(...securityCards);
         }
-        const sensorCards = await (0,_utils__WEBPACK_IMPORTED_MODULE_3__.createCardsFromList)(_variables__WEBPACK_IMPORTED_MODULE_5__.SECURITY_EXPOSED_SENSORS, {}, "global");
+        const sensorCards = await (0,_utils__WEBPACK_IMPORTED_MODULE_3__.createCardsFromList)(_variables__WEBPACK_IMPORTED_MODULE_5__.SECURITY_EXPOSED_SENSORS, {}, "global", "global");
         if (sensorCards) {
             globalSection.cards.push({
                 type: "heading",

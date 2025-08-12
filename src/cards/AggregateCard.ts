@@ -33,7 +33,7 @@ class AggregateCard extends AbstractCard {
 
     const icon = Helper.getIcon(domain, device_class, entity_id);
     const icon_color = Helper.getIconColor(domain, device_class, entity_id);
-    const content = Helper.getContent(domain, device_class, entity_id);
+    const content = Helper.getContent(domain, device_class, entity_id, true);
 
     const secondary = Helper.getLastChangedTemplate({ domain, device_class, area_slug });
 

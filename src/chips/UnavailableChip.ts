@@ -47,7 +47,6 @@ class UnavailableChip extends AbstractChip {
             allowUnavailable: true
         });
 
-
         this.#defaultConfig.icon_color = Helper.getFromDomainState({
             domain: "all",
             operator: "eq",

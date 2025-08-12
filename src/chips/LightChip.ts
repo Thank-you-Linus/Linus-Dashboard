@@ -24,10 +24,8 @@ class LightChip extends AbstractChip {
     type: "template",
     icon_color: "amber",
     content: "",
-    tap_action: {
-      action: "navigate",
-      navigation_path: "light",
-    },
+    tap_action: navigateTo('light'),
+    hold_action: navigateTo('light'),
   };
 
   /**
@@ -61,7 +59,6 @@ class LightChip extends AbstractChip {
     if (magicAreasEntity) {
       this.#defaultConfig.entity = magicAreasEntity.entity_id;
       this.#defaultConfig.tap_action = undefined
-      this.#defaultConfig.hold_action = navigateTo('light')
     } else {
       const area_slug = Array.isArray(options?.area_slug) ? options?.area_slug : [options?.area_slug]
       const entity_id = area_slug.flatMap((area) => Helper.areas[area ?? "global"]?.domains?.light ?? []);

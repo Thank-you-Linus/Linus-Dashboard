@@ -232,7 +232,6 @@ class HomeView {
               show_content: true,
               magic_device_id: floor.floor_id,
               area_slug: floor.areas_slug,
-              tap_action: navigateTo(device_class),
             }).getChip();
           }
           return null;

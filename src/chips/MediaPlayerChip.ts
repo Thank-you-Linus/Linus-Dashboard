@@ -24,10 +24,8 @@ class MediaPlayerChip extends AbstractChip {
     type: "template",
     icon: Helper.icons.media_player._.default,
     content: "",
-    tap_action: {
-      action: "navigate",
-      navigation_path: "media_player",
-    },
+    tap_action: navigateTo('media_player'),
+    hold_action: navigateTo('media_player'),
   };
 
   /**
@@ -61,7 +59,6 @@ class MediaPlayerChip extends AbstractChip {
     if (magicAreasEntity) {
       this.#defaultConfig.entity = magicAreasEntity.entity_id;
       this.#defaultConfig.tap_action = undefined
-      this.#defaultConfig.hold_action = navigateTo('media_player')
     } else {
 
       const area_slug = Array.isArray(options?.area_slug) ? options?.area_slug : [options?.area_slug]

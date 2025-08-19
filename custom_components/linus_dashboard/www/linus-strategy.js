@@ -8223,14 +8223,13 @@ class SettingsPopup extends _AbstractPopup__WEBPACK_IMPORTED_MODULE_2__.Abstract
                                     style: `
                     ha-card {
                       background: linear-gradient(45deg, #004226, #004226);
-                      color: #F5F5DC !important;
                       box-shadow: none;
                       margin-bottom: 12px;
                       font-weight: bold;
+                      --card-primary-color: #F5F5DC;
                     }
-                    .primary {
-                      color: #F5F5DC !important;
-                    }
+
+
                   `
                                 }
                             },

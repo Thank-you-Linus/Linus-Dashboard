@@ -2407,7 +2407,31 @@ class Helper {
         const areaSlugs = Array.isArray(area_slug) ? area_slug : [area_slug];
         for (const slug of areaSlugs) {
             const magic_entity = (0,_utils__WEBPACK_IMPORTED_MODULE_3__.getMAEntity)(slug, "sensor", device_class);
-            const entities = magic_entity ? [magic_entity.entity_id] : slug === "global" ? (0,_utils__WEBPACK_IMPORTED_MODULE_3__.getGlobalEntitiesExceptUndisclosed)(device_class) : __classPrivateFieldGet(this, _a, "f", _Helper_areas)[slug]?.domains?.[device_class];
+            let entities;
+            if (magic_entity) {
+                // Si on a une magic area, on utilise son entité
+                entities = [magic_entity.entity_id];
+            }
+            else if (slug === "global") {
+                // Mode global : récupérer toutes les entités sauf undisclosed
+                entities = (0,_utils__WEBPACK_IMPORTED_MODULE_3__.getGlobalEntitiesExceptUndisclosed)('sensor', device_class);
+            }
+            else {
+                // Vérifier si on a une entité spécifique pour cette area
+                const area = __classPrivateFieldGet(this, _a, "f", _Helper_areas)[slug];
+                if (area) {
+                    if (device_class === 'temperature' && area.temperature_entity_id) {
+                        entities = [area.temperature_entity_id];
+                    }
+                    else if (device_class === 'humidity' && area.humidity_entity_id) {
+                        entities = [area.humidity_entity_id];
+                    }
+                    else {
+                        // Fallback vers toutes les entités du device_class dans l'area
+                        entities = area.domains?.[`sensor:${device_class}`];
+                    }
+                }
+            }
             const newStates = entities?.map((entity_id) => `states['${entity_id}']`);
             if (newStates)
                 states.push(...newStates);
@@ -2439,6 +2463,16 @@ class Helper {
         }
         if (domain) {
             if (device_class) {
+                // Vérifier si on a une entité spécifique pour cette area
+                if (domain === 'sensor') {
+                    if (device_class === 'temperature' && area.temperature_entity_id) {
+                        return [__classPrivateFieldGet(this, _a, "f", _Helper_entities)[area.temperature_entity_id]].filter(Boolean);
+                    }
+                    else if (device_class === 'humidity' && area.humidity_entity_id) {
+                        return [__classPrivateFieldGet(this, _a, "f", _Helper_entities)[area.humidity_entity_id]].filter(Boolean);
+                    }
+                }
+                // Fallback vers la logique normale
                 const domainTag = `${domain}:${device_class}`;
                 return area.domains?.[domainTag]?.map(entity_id => __classPrivateFieldGet(this, _a, "f", _Helper_entities)[entity_id]) ?? [];
             }
@@ -2567,7 +2601,7 @@ class Helper {
                     if (slug === "global") {
                         // Mode global : récupérer toutes les entités sauf undisclosed
                         for (const cardDomain of _variables__WEBPACK_IMPORTED_MODULE_2__.ALL_HOME_ASSISTANT_DOMAINS) {
-                            const entities = (0,_utils__WEBPACK_IMPORTED_MODULE_3__.getGlobalEntitiesExceptUndisclosed)(device_class ?? cardDomain);
+                            const entities = (0,_utils__WEBPACK_IMPORTED_MODULE_3__.getGlobalEntitiesExceptUndisclosed)(cardDomain);
                             const newStates = entities?.map((entity_id) => `states['${entity_id}']`);
                             if (newStates)
                                 states.push(...newStates);
@@ -2579,7 +2613,7 @@ class Helper {
                         if (area?.domains) {
                             for (const domainKey of Object.keys(area.domains)) {
                                 // Filtrer par device_class si spécifié
-                                if (!device_class || domainKey.includes(device_class)) {
+                                if (!device_class || domainKey === device_class || domainKey.endsWith(`:${device_class}`)) {
                                     const entities = area.domains[domainKey];
                                     const newStates = entities?.map((entity_id) => `states['${entity_id}']`);
                                     if (newStates)
@@ -2597,7 +2631,7 @@ class Helper {
                         if (area.domains) {
                             for (const domainKey of Object.keys(area.domains)) {
                                 // Filtrer par device_class si spécifié
-                                if (!device_class || domainKey.includes(device_class)) {
+                                if (!device_class || domainKey === device_class || domainKey.endsWith(`:${device_class}`)) {
                                     const entities = area.domains[domainKey];
                                     const newStates = entities?.map((entity_id) => `states['${entity_id}']`);
                                     if (newStates)
@@ -2614,7 +2648,35 @@ class Helper {
         for (const slug of areaSlugs) {
             if (slug) {
                 const magic_entity = device_class ? (0,_utils__WEBPACK_IMPORTED_MODULE_3__.getMAEntity)(slug, domain, device_class) : (0,_utils__WEBPACK_IMPORTED_MODULE_3__.getMAEntity)(slug, domain);
-                const entities = magic_entity ? [magic_entity.entity_id] : area_slug === "global" ? (0,_utils__WEBPACK_IMPORTED_MODULE_3__.getGlobalEntitiesExceptUndisclosed)(device_class ?? domain) : __classPrivateFieldGet(this, _a, "f", _Helper_areas)[slug]?.domains?.[device_class ?? domain];
+                let entities;
+                if (magic_entity) {
+                    // Si on a une magic area, on utilise son entité
+                    entities = [magic_entity.entity_id];
+                }
+                else if (slug === "global") {
+                    // Mode global : récupérer toutes les entités sauf undisclosed
+                    entities = (0,_utils__WEBPACK_IMPORTED_MODULE_3__.getGlobalEntitiesExceptUndisclosed)(domain, device_class);
+                }
+                else {
+                    // Vérifier si on a une entité spécifique pour cette area
+                    const area = __classPrivateFieldGet(this, _a, "f", _Helper_areas)[slug];
+                    if (area && domain === 'sensor') {
+                        if (device_class === 'temperature' && area.temperature_entity_id) {
+                            entities = [area.temperature_entity_id];
+                        }
+                        else if (device_class === 'humidity' && area.humidity_entity_id) {
+                            entities = [area.humidity_entity_id];
+                        }
+                        else {
+                            // Fallback vers toutes les entités du device_class dans l'area
+                            entities = area.domains?.[device_class ? `${domain}:${device_class}` : domain];
+                        }
+                    }
+                    else {
+                        // Pour les autres domaines, utiliser la logique normale
+                        entities = __classPrivateFieldGet(this, _a, "f", _Helper_areas)[slug]?.domains?.[device_class ? `${domain}:${device_class}` : domain];
+                    }
+                }
                 const newStates = entities?.map((entity_id) => `states['${entity_id}']`);
                 if (newStates)
                     states.push(...newStates);
@@ -2624,7 +2686,7 @@ class Helper {
                 for (const area of Object.values(__classPrivateFieldGet(this, _a, "f", _Helper_areas))) {
                     if (area.area_id === _variables__WEBPACK_IMPORTED_MODULE_2__.UNDISCLOSED)
                         continue;
-                    const newStates = __classPrivateFieldGet(this, _a, "f", _Helper_areas)[area.slug]?.domains?.[device_class ?? domain]?.map((entity_id) => `states['${entity_id}']`);
+                    const newStates = __classPrivateFieldGet(this, _a, "f", _Helper_areas)[area.slug]?.domains?.[device_class ? `${domain}:${device_class}` : domain]?.map((entity_id) => `states['${entity_id}']`);
                     if (newStates)
                         states.push(...newStates);
                 }
@@ -2686,7 +2748,7 @@ class Helper {
                         if (area?.domains) {
                             for (const domainKey of Object.keys(area.domains)) {
                                 // Filtrer par device_class si spécifié
-                                if (!device_class || domainKey.includes(device_class)) {
+                                if (!device_class || domainKey === device_class || domainKey.endsWith(`:${device_class}`)) {
                                     const entities = area.domains[domainKey];
                                     if (entities)
                                         entityIds.push(...entities);
@@ -2703,7 +2765,7 @@ class Helper {
                         if (area.domains) {
                             for (const domainKey of Object.keys(area.domains)) {
                                 // Filtrer par device_class si spécifié
-                                if (!device_class || domainKey.includes(device_class)) {
+                                if (!device_class || domainKey === device_class || domainKey.endsWith(`:${device_class}`)) {
                                     const entities = area.domains[domainKey];
                                     if (entities)
                                         entityIds.push(...entities);
@@ -2720,7 +2782,35 @@ class Helper {
             if (slug) {
                 if (device_class) {
                     const magic_entity = (0,_utils__WEBPACK_IMPORTED_MODULE_3__.getMAEntity)(slug, domain, device_class);
-                    const entities = magic_entity ? [magic_entity.entity_id] : area_slug === "global" ? (0,_utils__WEBPACK_IMPORTED_MODULE_3__.getGlobalEntitiesExceptUndisclosed)(domain, device_class) : __classPrivateFieldGet(this, _a, "f", _Helper_areas)[slug]?.domains?.[`${domain}:${device_class}`];
+                    let entities;
+                    if (magic_entity) {
+                        // Si on a une magic area, on utilise son entité
+                        entities = [magic_entity.entity_id];
+                    }
+                    else if (area_slug === "global") {
+                        // Mode global : récupérer toutes les entités sauf undisclosed
+                        entities = (0,_utils__WEBPACK_IMPORTED_MODULE_3__.getGlobalEntitiesExceptUndisclosed)(domain, device_class);
+                    }
+                    else {
+                        // Vérifier si on a une entité spécifique pour cette area
+                        const area = __classPrivateFieldGet(this, _a, "f", _Helper_areas)[slug];
+                        if (area && domain === 'sensor') {
+                            if (device_class === 'temperature' && area.temperature_entity_id) {
+                                entities = [area.temperature_entity_id];
+                            }
+                            else if (device_class === 'humidity' && area.humidity_entity_id) {
+                                entities = [area.humidity_entity_id];
+                            }
+                            else {
+                                // Fallback vers toutes les entités du device_class dans l'area
+                                entities = area.domains?.[`${domain}:${device_class}`];
+                            }
+                        }
+                        else {
+                            // Pour les autres domaines, utiliser la logique normale
+                            entities = __classPrivateFieldGet(this, _a, "f", _Helper_areas)[slug]?.domains?.[`${domain}:${device_class}`];
+                        }
+                    }
                     if (entities)
                         entityIds.push(...entities);
                 }

@@ -553,7 +553,30 @@ class Helper {
 
     for (const slug of areaSlugs) {
       const magic_entity = getMAEntity(slug!, "sensor", device_class);
-      const entities = magic_entity ? [magic_entity.entity_id] : slug === "global" ? getGlobalEntitiesExceptUndisclosed(device_class) : this.#areas[slug]?.domains?.[device_class]
+
+      let entities: string[] | undefined;
+
+      if (magic_entity) {
+        // Si on a une magic area, on utilise son entité
+        entities = [magic_entity.entity_id];
+      } else if (slug === "global") {
+        // Mode global : récupérer toutes les entités sauf undisclosed
+        entities = getGlobalEntitiesExceptUndisclosed('sensor', device_class);
+      } else {
+        // Vérifier si on a une entité spécifique pour cette area
+        const area = this.#areas[slug];
+        if (area) {
+          if (device_class === 'temperature' && area.temperature_entity_id) {
+            entities = [area.temperature_entity_id];
+          } else if (device_class === 'humidity' && area.humidity_entity_id) {
+            entities = [area.humidity_entity_id];
+          } else {
+            // Fallback vers toutes les entités du device_class dans l'area
+            entities = area.domains?.[`sensor:${device_class}`];
+          }
+        }
+      }
+
       const newStates = entities?.map((entity_id: string) => `states['${entity_id}']`);
       if (newStates) states.push(...newStates);
     }
@@ -589,6 +612,16 @@ class Helper {
 
     if (domain) {
       if (device_class) {
+        // Vérifier si on a une entité spécifique pour cette area
+        if (domain === 'sensor') {
+          if (device_class === 'temperature' && area.temperature_entity_id) {
+            return [this.#entities[area.temperature_entity_id]].filter(Boolean);
+          } else if (device_class === 'humidity' && area.humidity_entity_id) {
+            return [this.#entities[area.humidity_entity_id]].filter(Boolean);
+          }
+        }
+
+        // Fallback vers la logique normale
         const domainTag = `${domain}:${device_class}`;
         return area.domains?.[domainTag]?.map(entity_id => this.#entities[entity_id]) ?? [];
       } else {
@@ -760,7 +793,7 @@ class Helper {
           if (slug === "global") {
             // Mode global : récupérer toutes les entités sauf undisclosed
             for (const cardDomain of ALL_HOME_ASSISTANT_DOMAINS) {
-              const entities = getGlobalEntitiesExceptUndisclosed(device_class ?? cardDomain);
+              const entities = getGlobalEntitiesExceptUndisclosed(cardDomain);
               const newStates = entities?.map((entity_id) => `states['${entity_id}']`);
               if (newStates) states.push(...newStates);
             }
@@ -770,7 +803,7 @@ class Helper {
             if (area?.domains) {
               for (const domainKey of Object.keys(area.domains)) {
                 // Filtrer par device_class si spécifié
-                if (!device_class || domainKey.includes(device_class)) {
+                if (!device_class || domainKey === device_class || domainKey.endsWith(`:${device_class}`)) {
                   const entities = area.domains[domainKey];
                   const newStates = entities?.map((entity_id) => `states['${entity_id}']`);
                   if (newStates) states.push(...newStates);
@@ -786,7 +819,7 @@ class Helper {
             if (area.domains) {
               for (const domainKey of Object.keys(area.domains)) {
                 // Filtrer par device_class si spécifié
-                if (!device_class || domainKey.includes(device_class)) {
+                if (!device_class || domainKey === device_class || domainKey.endsWith(`:${device_class}`)) {
                   const entities = area.domains[domainKey];
                   const newStates = entities?.map((entity_id) => `states['${entity_id}']`);
                   if (newStates) states.push(...newStates);
@@ -804,7 +837,33 @@ class Helper {
     for (const slug of areaSlugs) {
       if (slug) {
         const magic_entity = device_class ? getMAEntity(slug!, domain, device_class) : getMAEntity(slug!, domain);
-        const entities = magic_entity ? [magic_entity.entity_id] : area_slug === "global" ? getGlobalEntitiesExceptUndisclosed(device_class ?? domain) : this.#areas[slug]?.domains?.[device_class ?? domain];
+
+        let entities: string[] | undefined;
+
+        if (magic_entity) {
+          // Si on a une magic area, on utilise son entité
+          entities = [magic_entity.entity_id];
+        } else if (slug === "global") {
+          // Mode global : récupérer toutes les entités sauf undisclosed
+          entities = getGlobalEntitiesExceptUndisclosed(domain, device_class);
+        } else {
+          // Vérifier si on a une entité spécifique pour cette area
+          const area = this.#areas[slug];
+          if (area && domain === 'sensor') {
+            if (device_class === 'temperature' && area.temperature_entity_id) {
+              entities = [area.temperature_entity_id];
+            } else if (device_class === 'humidity' && area.humidity_entity_id) {
+              entities = [area.humidity_entity_id];
+            } else {
+              // Fallback vers toutes les entités du device_class dans l'area
+              entities = area.domains?.[device_class ? `${domain}:${device_class}` : domain];
+            }
+          } else {
+            // Pour les autres domaines, utiliser la logique normale
+            entities = this.#areas[slug]?.domains?.[device_class ? `${domain}:${device_class}` : domain];
+          }
+        }
+
         const newStates = entities?.map((entity_id) => `states['${entity_id}']`);
         if (newStates) states.push(...newStates);
       } else {
@@ -812,7 +871,7 @@ class Helper {
         for (const area of Object.values(this.#areas)) {
           if (area.area_id === UNDISCLOSED) continue;
 
-          const newStates = this.#areas[area.slug]?.domains?.[device_class ?? domain]?.map((entity_id) => `states['${entity_id}']`);
+          const newStates = this.#areas[area.slug]?.domains?.[device_class ? `${domain}:${device_class}` : domain]?.map((entity_id) => `states['${entity_id}']`);
           if (newStates) states.push(...newStates);
         }
       }
@@ -881,7 +940,7 @@ class Helper {
             if (area?.domains) {
               for (const domainKey of Object.keys(area.domains)) {
                 // Filtrer par device_class si spécifié
-                if (!device_class || domainKey.includes(device_class)) {
+                if (!device_class || domainKey === device_class || domainKey.endsWith(`:${device_class}`)) {
                   const entities = area.domains[domainKey];
                   if (entities) entityIds.push(...entities);
                 }
@@ -896,7 +955,7 @@ class Helper {
             if (area.domains) {
               for (const domainKey of Object.keys(area.domains)) {
                 // Filtrer par device_class si spécifié
-                if (!device_class || domainKey.includes(device_class)) {
+                if (!device_class || domainKey === device_class || domainKey.endsWith(`:${device_class}`)) {
                   const entities = area.domains[domainKey];
                   if (entities) entityIds.push(...entities);
                 }
@@ -914,7 +973,33 @@ class Helper {
       if (slug) {
         if (device_class) {
           const magic_entity = getMAEntity(slug!, domain, device_class);
-          const entities = magic_entity ? [magic_entity.entity_id] : area_slug === "global" ? getGlobalEntitiesExceptUndisclosed(domain, device_class) : this.#areas[slug]?.domains?.[`${domain}:${device_class}`];
+
+          let entities: string[] | undefined;
+
+          if (magic_entity) {
+            // Si on a une magic area, on utilise son entité
+            entities = [magic_entity.entity_id];
+          } else if (area_slug === "global") {
+            // Mode global : récupérer toutes les entités sauf undisclosed
+            entities = getGlobalEntitiesExceptUndisclosed(domain, device_class);
+          } else {
+            // Vérifier si on a une entité spécifique pour cette area
+            const area = this.#areas[slug];
+            if (area && domain === 'sensor') {
+              if (device_class === 'temperature' && area.temperature_entity_id) {
+                entities = [area.temperature_entity_id];
+              } else if (device_class === 'humidity' && area.humidity_entity_id) {
+                entities = [area.humidity_entity_id];
+              } else {
+                // Fallback vers toutes les entités du device_class dans l'area
+                entities = area.domains?.[`${domain}:${device_class}`];
+              }
+            } else {
+              // Pour les autres domaines, utiliser la logique normale
+              entities = this.#areas[slug]?.domains?.[`${domain}:${device_class}`];
+            }
+          }
+
           if (entities) entityIds.push(...entities);
         } else {
           // If device_class is undefined, get all device_classes for the domain

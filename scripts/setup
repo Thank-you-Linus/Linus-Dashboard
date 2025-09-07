@@ -4,4 +4,45 @@ set -e
 
 cd "$(dirname "$0")/.."
 
-python3 -m pip install --requirement requirements.txt
+echo "🔧 Setting up Linus Dashboard development environment..."
+
+# Create Python virtual environment if it doesn't exist
+if [[ ! -d "ha-env" ]]; then
+    echo "🐍 Creating Python virtual environment..."
+    python3 -m venv ha-env
+fi
+
+# Activate virtual environment
+echo "🔌 Activating virtual environment..."
+source ha-env/bin/activate
+
+# Upgrade pip
+echo "⬆️ Upgrading pip..."
+python -m pip install --upgrade pip
+
+# Install Python requirements
+echo "📚 Installing Python dependencies..."
+python -m pip install --requirement requirements.txt
+
+# Note: Node.js dependencies will be installed by postStartCommand
+echo "✅ Python setup completed!"
+echo "   Node.js dependencies will be installed automatically after container startup."
+
+# Create .env file from example if it doesn't exist
+if [[ ! -f ".env" && -f ".env.example" ]]; then
+    echo "📄 Creating .env file from example..."
+    cp .env.example .env
+fi
+
+# Create config directory if it doesn't exist
+if [[ ! -d "config" ]]; then
+    echo "📁 Creating Home Assistant config directory..."
+    mkdir -p config
+fi
+
+echo "✅ Setup complete!"
+echo ""
+echo "🎯 Next steps:"
+echo "  1. Review and modify .env file if needed"
+echo "  2. Start development server: ./scripts/develop"
+echo "  3. Build frontend: npm run build"

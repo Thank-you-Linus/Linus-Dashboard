@@ -1,0 +1,9 @@
+# Modern browsers (default)
+defaults and not IE 11
+
+[legacy]
+# Legacy browsers support
+> 0.2%
+not dead
+not op_mini all
+IE 11

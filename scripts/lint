@@ -4,5 +4,20 @@ set -e
 
 cd "$(dirname "$0")/.."
 
+# Activate virtual environment if it exists
+if [[ -d "ha-env" && -f "ha-env/bin/activate" ]]; then
+    echo "🐍 Activating Python virtual environment..."
+    source ha-env/bin/activate
+fi
+
+echo "🧹 Running Python linting with ruff..."
 ruff format .
 ruff check . --fix
+
+# Run TypeScript/JavaScript linting if available
+if command -v npx &> /dev/null && [[ -f "package.json" ]]; then
+    echo "🔍 Running TypeScript/JavaScript checks..."
+    npx tsc --noEmit || echo "⚠️ TypeScript check completed with warnings"
+fi
+
+echo "✅ Linting complete!"

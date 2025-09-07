@@ -1,0 +1,59 @@
+{
+  "name": "Linus Dashboard",
+  "image": "mcr.microsoft.com/devcontainers/python:1-3.13-bookworm",
+
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "20"
+    },
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+
+  "onCreateCommand": [
+    "bash", "-c",
+    "sudo apt-get update && sudo apt-get install -y ffmpeg libpcap-dev && python -m venv ha-env && ./ha-env/bin/pip install -U pip setuptools wheel && ./ha-env/bin/pip install -r requirements.txt && npm install"
+  ],
+
+  "postStartCommand": [
+    "bash", "-c",
+    "echo '🚀 Linus Dashboard ready!' && echo '   Start: make dev' && echo '   URL: http://localhost:8123'"
+  ],
+
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "python.defaultInterpreterPath": "./ha-env/bin/python",
+        "python.analysis.extraPaths": [
+          "./ha-env/lib/python3.13/site-packages",
+          "./custom_components"
+        ],
+        "python.analysis.typeCheckingMode": "basic",
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "[python]": {
+          "editor.defaultFormatter": "charliermarsh.ruff"
+        }
+      },
+      "extensions": [
+        "ms-python.python",
+        "charliermarsh.ruff",
+        "ms-python.debugpy",
+        "esbenp.prettier-vscode",
+        "@typescript-eslint/typescript-eslint",
+        "ms-vscode.vscode-typescript-next",
+        "GitHub.copilot",
+        "GitHub.copilot-chat"
+      ]
+    }
+  },
+
+  "forwardPorts": [8123],
+  "portsAttributes": {
+    "8123": {
+      "label": "Home Assistant",
+      "onAutoForward": "notify"
+    }
+  },
+
+  "remoteUser": "vscode"
+}

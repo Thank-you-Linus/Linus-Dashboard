@@ -1,15 +1,54 @@
-# https://www.home-assistant.io/integrations/default_config/
-default_config:
-
+# Configuration manuelle au lieu de default_config pour éviter go2rtc
 # https://www.home-assistant.io/integrations/homeassistant/
 homeassistant:
   debug: true
 
-demo:
+# Composants essentiels (remplace default_config sans go2rtc)
+automation: !include automations.yaml
+script: !include scripts.yaml
+scene: !include scenes.yaml
+
+# Intégrations de base - compatibles avec Home Assistant 2025.9.1
+frontend:
+config:
+http:
+conversation:
+history:
+logbook:
+sun:
+system_health:
+mobile_app:
+person:
+zone:
+energy:
+analytics:
+application_credentials:
+backup:
+blueprint:
+counter:
+input_boolean:
+input_button:
+input_datetime:
+input_number:
+input_select:
+input_text:
+media_source:
+my:
+network:
+schedule:
+ssdp:
+tag:
+timer:
+zeroconf:
+
+# Configuration démo désactivée pour éviter les erreurs d'image_processing
+# demo:
 
 # https://www.home-assistant.io/integrations/logger/
 logger:
   default: info
   logs:
     custom_components.linus_dashboard: debug
+    # Réduire les erreurs de image_processing
+    homeassistant.components.image_processing: warning
     # homeassistant.helpers.translation: debug

@@ -2,11 +2,14 @@
 
 target-version = "py312"
 
-[lint]
-select = [
-    "ALL",
-]
 
+[format]
+preview = true
+docstring-code-format = true
+quote-style = "double"
+
+[lint]
+select = ["ALL"]
 ignore = [
     "ANN101", # Missing type annotation for `self` in method
     "ANN401", # Dynamically typed expressions (typing.Any) are disallowed

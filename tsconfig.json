@@ -1,22 +1,41 @@
 {
   "include": [
-    "src/**/*"
+    "src/**/*",
+    "webpack.*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "custom_components/linus_dashboard/www",
+    "ha-env"
   ],
   "compilerOptions": {
     /* Visit https://aka.ms/tsconfig to read more about this file */
 
     /* Language and Environment */
     "target": "es2021",
+    "lib": ["ES2021", "DOM", "DOM.Iterable"],
     "jsx": "react",
 
     /* Modules */
     "module": "ES2020",
     "moduleResolution": "Node",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    },
+    "resolveJsonModule": true,
+
+    /* Emit */
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "outDir": "./dist",
+    "removeComments": true,
+    "newLine": "lf",
 
     /* JavaScript Support */
     "allowJs": true,
-    "sourceMap": true,
-    "outDir": "./dist",
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
@@ -26,14 +45,36 @@
     "noImplicitAny": true,
     "noImplicitThis": true,
     "noImplicitReturns": true,
+    "noImplicitOverride": true,
+    "noUncheckedIndexedAccess": true,
     "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "strictPropertyInitialization": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "exactOptionalPropertyTypes": true,
 
     /* Completeness */
-    "skipLibCheck": true
+    "skipLibCheck": true,
+
+    /* Performance */
+    "incremental": true,
+    "tsBuildInfoFile": "./dist/.tsbuildinfo"
   },
   "ts-node": {
     "compilerOptions": {
-      "module": "CommonJS"
+      "module": "CommonJS",
+      "target": "ES2020"
     }
+  },
+  "watchOptions": {
+    "excludeDirectories": [
+      "node_modules",
+      "dist",
+      "custom_components/linus_dashboard/www",
+      "ha-env"
+    ]
   }
 }

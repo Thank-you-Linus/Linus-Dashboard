@@ -1,0 +1,2 @@
+# This file ensures the config directory is tracked by Git
+# The config directory is needed for Home Assistant development

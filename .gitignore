@@ -1,24 +1,83 @@
-# artifacts
-__pycache__
-.pytest*
-*.egg-info
-*/build/*
-*/dist/*
+# Build artifacts
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
 
-
-# misc
+# Testing
+.pytest_cache/
 .coverage
-.vscode
 coverage.xml
-.ruff_cache
+*.cover
+.hypothesis/
 
+# IDE and editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Linting and formatting
+.ruff_cache/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
 
 # Home Assistant configuration
 config/*
 !config/configuration.yaml
+!config/scenes.yaml
+!config/.gitkeep
 
-# Linus Dashboard
-/node_modules/
+# Python virtual environment
+ha-env/
+venv/
+ENV/
+env/
+.venv/
+
+# Linus Dashboard specific
 custom_components/hacs/*
 custom_components/magic_areas/*
-ha-env/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+logs/

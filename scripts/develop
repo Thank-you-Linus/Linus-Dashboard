@@ -4,10 +4,23 @@ set -e
 
 cd "$(dirname "$0")/.."
 
+# Load environment variables if .env exists
+if [[ -f .env ]]; then
+    echo "📄 Loading environment variables from .env file..."
+    export $(grep -v '^#' .env | xargs)
+fi
+
+# Activate virtual environment if it exists
+if [[ -d "ha-env" && -f "ha-env/bin/activate" ]]; then
+    echo "🐍 Activating Python virtual environment..."
+    source ha-env/bin/activate
+fi
+
 # Create config dir if not present
 if [[ ! -d "${PWD}/config" ]]; then
+    echo "📁 Creating Home Assistant config directory..."
     mkdir -p "${PWD}/config"
-    hass --config "${PWD}/config" --script ensure_config
+    python -m homeassistant --config "${PWD}/config" --script ensure_config
 fi
 
 # Set the path to custom_components
@@ -16,5 +29,11 @@ fi
 ## without resulting to symlinks.
 export PYTHONPATH="${PYTHONPATH}:${PWD}/custom_components"
 
+echo "🚀 Starting Home Assistant on http://localhost:8123"
+echo "   Config directory: ${PWD}/config"
+echo "   Custom components: ${PWD}/custom_components"
+echo "   Build system: Rspack (Home Assistant style)"
+echo ""
+
 # Start Home Assistant
-hass --config "${PWD}/config" --debug
+python -m homeassistant --config "${PWD}/config" --debug

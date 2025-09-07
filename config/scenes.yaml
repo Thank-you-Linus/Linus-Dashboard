@@ -1,0 +1,68 @@
+- id: '1745265916834'
+  name: Nouvelle scène 1
+  entities:
+    light.bed_light:
+      min_color_temp_kelvin: 2000
+      max_color_temp_kelvin: 6535
+      min_mireds: 153
+      max_mireds: 500
+      effect_list:
+      - rainbow
+      - none
+      supported_color_modes:
+      - color_temp
+      - hs
+      effect: rainbow
+      color_mode: color_temp
+      brightness: 180
+      color_temp_kelvin: 2000
+      color_temp: 500
+      hs_color:
+      - 30.601
+      - 94.547
+      rgb_color:
+      - 255
+      - 137
+      - 14
+      xy_color:
+      - 0.598
+      - 0.383
+      friendly_name: Bed Light
+      supported_features: 4
+      state: 'on'
+  metadata: {}
+- id: '1745265989942'
+  name: Nouvelle scène
+  entities:
+    light.bed_light:
+      min_color_temp_kelvin: 2000
+      max_color_temp_kelvin: 6535
+      min_mireds: 153
+      max_mireds: 500
+      effect_list:
+      - rainbow
+      - none
+      supported_color_modes:
+      - color_temp
+      - hs
+      effect: rainbow
+      color_mode: color_temp
+      brightness: 180
+      color_temp_kelvin: 3512
+      color_temp: 284
+      hs_color:
+      - 27.161
+      - 44.514
+      rgb_color:
+      - 255
+      - 193
+      - 141
+      xy_color:
+      - 0.453
+      - 0.374
+      friendly_name: Bed Light
+      supported_features: 4
+      state: 'on'
+  metadata:
+    light.bed_light:
+      entity_only: true

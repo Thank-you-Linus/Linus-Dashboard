@@ -1,0 +1,22 @@
+#!/bin/bash
+# Linus Dashboard - Simple development server
+
+set -e
+
+echo "📄 Loading environment variables from .env file..."
+if [ -f ".env" ]; then
+    set -a
+    source .env
+    set +a
+fi
+
+echo "🐍 Activating Python virtual environment..."
+source ha-env/bin/activate
+
+echo "🚀 Starting Home Assistant on http://localhost:8123"
+echo "   Config directory: $(pwd)/config"
+echo "   Custom components: $(pwd)/custom_components"
+echo "   Build system: Rspack (Home Assistant style)"
+echo ""
+
+exec hass --config ./config

@@ -127,6 +127,43 @@ Whether you're using [hass-magic_areas](https://github.com/jseidl/hass-magic_are
 
 ---
 
+## 🚀 Development Setup
+
+### Dev Container Setup (Recommended)
+
+The project includes a complete development environment that sets up automatically:
+
+1. **Open in VS Code**: Clone the repository and open in VS Code
+2. **Reopen in Container**: VS Code will prompt to reopen in dev container
+3. **Auto-setup**: Dependencies install automatically (Python 3.13, Node.js 20, Home Assistant)
+4. **Start developing**: `make dev` launches Home Assistant on http://localhost:8123
+
+### Development Commands
+
+```bash
+make dev         # Start Home Assistant development server
+make build       # Build frontend (development)
+make build-prod  # Build frontend (production) 
+make build-watch # Build frontend in watch mode
+make lint        # Run ESLint and Prettier
+make clean       # Clean build artifacts
+make install     # Install all dependencies
+```
+
+### Project Structure
+
+```
+├── .devcontainer/           # VS Code dev container configuration
+├── build-scripts/           # Rspack build configuration
+├── config/                  # Home Assistant configuration
+├── custom_components/       # Linus Dashboard integration
+│   └── linus_dashboard/
+├── src/                     # Frontend TypeScript source
+└── scripts/                 # Development scripts
+```
+
+---
+
 ### 🛠️ Setup and Usage
 
 After installation, follow these steps to configure and access Linus Dashboard:

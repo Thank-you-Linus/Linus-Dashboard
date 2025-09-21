@@ -591,9 +591,10 @@ export async function processEntitiesForAreaOrFloorView({
                         .map(entity => {
                             const cardOptions = Helper.strategyOptions.card_options?.[entity.entity_id];
                             if (domain === "sensor" && Helper.getEntityState(entity.entity_id)?.attributes.unit_of_measurement) {
+                                console.log('sensor card', domain, cardOptions);
                                 return new cardModule[Helper.sanitizeClassName(domain + "Card")]({
-                                    type: "custom:mini-graph-card",
-                                    entities: [entity.entity_id],
+                                    // type: "tile",
+                                    entity: entity.entity_id,
                                     ...cardOptions,
                                 }, entity).getCard();
                             }

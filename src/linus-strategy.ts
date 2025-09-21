@@ -73,7 +73,7 @@ class LinusStrategy extends HTMLTemplateElement {
 
       views.push({
         title: Helper.localize(getDomainTranslationKey(domain, device_class ?? "_")),
-        icon: (VIEWS_ICONS as Record<string, string>)[viewId] ?? Helper.icons[device_class === "battery" ? "binary_sensor" : domain as ResourceKeys]?.[device_class ?? "_"]?.default,
+        icon: (VIEWS_ICONS as Record<string, string>)[viewId] ?? Helper.icons[device_class === "battery" ? "binary_sensor" : domain as ResourceKeys]?.[device_class ?? "_"]?.default ?? "mdi:view-dashboard",
         path: viewId,
         subview: !Object.keys(VIEWS_ICONS).includes(viewId),
         strategy: {

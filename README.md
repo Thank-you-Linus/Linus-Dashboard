@@ -146,7 +146,6 @@ make build       # Build frontend (development)
 make build-prod  # Build frontend (production) 
 make build-watch # Build frontend in watch mode
 make lint        # Run ESLint and Prettier
-make clean       # Clean build artifacts
 make install     # Install all dependencies
 ```
 

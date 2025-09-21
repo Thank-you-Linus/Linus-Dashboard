@@ -41,10 +41,10 @@ class AreaStateChip extends AbstractChip {
       type: "template",
       entity: area_state?.entity_id,
       icon_color: `
-          {% set presence_hold = states('${presence_hold?.entity_id}') %}
+          {% set presence_hold = states('${presence_hold?.entity_id || 'unavailable'}') %}
           {% set motion = ${isSomeone} %}
           {% set media_player = ${isMediaPlaying} %}
-          {% set bl = state_attr('${area_state?.entity_id}', 'states') or [] %}
+          {% set bl = state_attr('${area_state?.entity_id || 'unavailable'}', 'states') or [] %}
           {% if motion %}
               red
           {% elif media_player %}
@@ -62,12 +62,12 @@ class AreaStateChip extends AbstractChip {
           {% endif %}
         `,
       icon: `
-          {% set presence_hold = states('${presence_hold?.entity_id}') %}
+          {% set presence_hold = states('${presence_hold?.entity_id || 'unavailable'}') %}
           {% set motion = ${isMotion} %}
           {% set presence = ${isPresence} %}
           {% set occupancy = ${isOccupancy} %}
           {% set media_player = ${isMediaPlaying} %}
-          {% set bl = state_attr('${area_state?.entity_id}', 'states') or [] %}
+          {% set bl = state_attr('${area_state?.entity_id || 'unavailable'}', 'states') or [] %}
           {% if motion %}
             ${Helper.icons.binary_sensor.motion?.state?.on}
           {% elif presence %}
@@ -88,8 +88,8 @@ class AreaStateChip extends AbstractChip {
             ${AREA_STATE_ICONS.clear}
           {% endif %}`,
       content: showContent ? `
-          {% set presence_hold = states('${presence_hold?.entity_id}') %}
-          {% set bl = state_attr('${area_state?.entity_id}', 'states') %}
+          {% set presence_hold = states('${presence_hold?.entity_id || 'unavailable'}') %}
+          {% set bl = state_attr('${area_state?.entity_id || 'unavailable'}', 'states') or [] %}
           {% if presence_hold == 'on' %}
             {{ '${Helper.localize("component.linus_dashboard.entity.text.area_states.state.presence_hold")}' }}
           {% elif 'sleep' in bl %}

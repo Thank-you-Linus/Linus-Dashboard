@@ -71,17 +71,17 @@ class SecurityView {
 
     let chipModule;
 
-    // Alarm chip.
-    const alarmEntityId = Helper.linus_dashboard_config?.alarm_entity_id
-
-    if (alarmEntityId) {
+    // Multi-alarmes : affiche un chip pour chaque alarme
+    const alarmEntityIds = Helper.linus_dashboard_config?.alarm_entity_ids || [];
+    if (Array.isArray(alarmEntityIds) && alarmEntityIds.length > 0) {
       try {
         chipModule = await import("../chips/AlarmChip");
-        const alarmChip = new chipModule.AlarmChip(alarmEntityId);
-
-        chips.push(alarmChip.getChip());
+        for (const alarmEntityId of alarmEntityIds) {
+          const alarmChip = new chipModule.AlarmChip(alarmEntityId);
+          chips.push(alarmChip.getChip());
+        }
       } catch (e) {
-        Helper.logError("An error occurred while creating the alarm chip!", e);
+        Helper.logError("An error occurred while creating the alarm chips!", e);
       }
     }
 
@@ -109,24 +109,26 @@ class SecurityView {
       cards: []
     };
 
-    const alarmEntityId = Helper.linus_dashboard_config?.alarm_entity_id
-    if (alarmEntityId) {
-      globalSection.cards.push(
-        {
-          type: "heading",
-          heading: Helper.localize("component.binary_sensor.entity_component.safety.name"),
-          heading_style: "title",
-          icon: "mdi:shield-home",
+    // Multi-alarmes : affiche une carte pour chaque alarme
+    const alarmEntityIds = Helper.linus_dashboard_config?.alarm_entity_ids || [];
+    if (Array.isArray(alarmEntityIds) && alarmEntityIds.length > 0) {
+      globalSection.cards.push({
+        type: "heading",
+        heading: Helper.localize("component.binary_sensor.entity_component.safety.name"),
+        heading_style: "title",
+        icon: "mdi:shield-home",
+      });
+      globalSection.cards.push({
+        type: "heading",
+        heading: Helper.localize("component.alarm_control_panel.entity_component._.name"),
+        heading_style: "title",
+        icon: "mdi:alarm-light",
+      });
+      for (const alarmEntityId of alarmEntityIds) {
+        if (Helper.entities[alarmEntityId]) {
+          globalSection.cards.push(new AlarmCard(Helper.entities[alarmEntityId]).getCard());
         }
-      )
-      globalSection.cards.push(
-        {
-          type: "heading",
-          heading: Helper.localize("component.alarm_control_panel.entity_component._.name"),
-          heading_style: "title",
-          icon: "mdi:alarm-light",
-        })
-      globalSection.cards.push(new AlarmCard(Helper.entities[alarmEntityId]).getCard())
+      }
     }
 
     const persons = Helper.domains.person

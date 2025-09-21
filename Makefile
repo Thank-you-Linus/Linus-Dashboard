@@ -1,6 +1,6 @@
 # Linus Dashboard - Minimal Development Commands
 
-.PHONY: help dev build build-watch build-prod lint clean install
+.PHONY: help dev build build-watch build-prod lint install
 
 # Default help
 help:
@@ -11,7 +11,6 @@ help:
 	@echo "   build-watch Build frontend in watch mode"
 	@echo "   build-prod  Build frontend (production)"
 	@echo "   lint        Run linting and formatting"
-	@echo "   clean       Clean build artifacts"
 	@echo "   install     Install dependencies"
 	@echo ""
 
@@ -44,9 +43,3 @@ install:
 	./ha-env/bin/pip install -r requirements.txt
 	npm install
 
-# Clean
-clean:
-	rm -rf node_modules/.cache/
-	rm -rf src/dist/
-	rm -rf custom_components/linus_dashboard/www/*.js*
-	rm -rf custom_components/linus_dashboard/www/*.map

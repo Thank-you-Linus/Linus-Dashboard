@@ -320,11 +320,23 @@ class Helper {
     const devicesByAreaId: Record<string, StrategyDevice[]> = {};
 
     this.#entities = entities.reduce((acc, entity) => {
+      // Exclusion par entité
       if (!(entity.entity_id in this.#hassStates) || entity.hidden_by) return acc;
       if (Helper.linus_dashboard_config?.excluded_entities?.includes(entity.entity_id)) return acc;
 
+      // Exclusion par label
+      const excludedLabel = Helper.linus_dashboard_config?.excluded_label || "linus_exclude";
+      const entityState = Helper.getEntityState(entity.entity_id);
+      if (entityState?.attributes && entityState.attributes[excludedLabel]) return acc;
+
+      // Exclusion par intégration
+      if (Helper.linus_dashboard_config?.excluded_integrations?.length) {
+        const integration = entity.platform;
+        if (Helper.linus_dashboard_config.excluded_integrations.includes(integration)) return acc;
+      }
+
       let domain = getEntityDomain(entity.entity_id);
-      let device_class
+      let device_class;
 
       if (Object.keys(DEVICE_CLASSES).includes(domain)) {
         const entityState = Helper.getEntityState(entity.entity_id);
@@ -341,7 +353,7 @@ class Helper {
       const floor = area?.floor_id ? floorsById[area?.floor_id] : {} as StrategyFloor;
       const enrichedEntity = {
         ...entity,
-        floor_id: floor.floor_id || null,
+        floor_id: floor?.floor_id || null,
       };
 
       acc[entity.entity_id] = enrichedEntity;
@@ -354,7 +366,7 @@ class Helper {
 
       if (entity.device_id) {
         if (!entitiesByDeviceId[entity.device_id]) entitiesByDeviceId[entity.device_id] = [];
-        entitiesByDeviceId[entity.device_id].push(enrichedEntity);
+        entitiesByDeviceId[entity.device_id]?.push(enrichedEntity);
       }
 
       if (entity.platform !== MAGIC_AREAS_DOMAIN) this.#domains[domainTag].push(enrichedEntity);
@@ -370,7 +382,7 @@ class Helper {
 
       const enrichedDevice = {
         ...device,
-        floor_id: floor.floor_id || null,
+        floor_id: floor?.floor_id || null,
         entities: entitiesInDevice.map(entity => entity.entity_id),
       };
 
@@ -410,13 +422,15 @@ class Helper {
       const areaEntities = entitiesByAreaId[area.area_id]?.map(entity => entity.entity_id) || [];
       const slug = area.area_id === UNDISCLOSED ? area.area_id : slugify(area.name);
 
+      const magicAreaDevice = Object.values(this.#devices).find(device => device.manufacturer === MAGIC_AREAS_NAME && device.name === area.name);
+
       const enrichedArea = {
         ...area,
         floor_id: area?.floor_id || UNDISCLOSED,
         slug,
         domains: groupEntitiesByDomain(areaEntities) ?? {},
         devices: devicesByAreaId[area.area_id]?.map(device => device.id) || [],
-        magicAreaDevice: Object.values(this.#devices).find(device => device.manufacturer === MAGIC_AREAS_NAME && device.name === area.name),
+        ...(magicAreaDevice && { magicAreaDevice }),
         entities: areaEntities,
       };
 
@@ -509,7 +523,11 @@ class Helper {
       console.warn("Helper class should be initialized before calling this method!");
     }
 
-    const entitiesId = this.getEntityIds({ domain, device_class, area_slug });
+    const entitiesId = this.getEntityIds({
+      domain,
+      ...(device_class && { device_class }),
+      ...(area_slug && { area_slug })
+    });
     const states = this.getStateStrings(entitiesId);
 
     const formattedValue = Array.isArray(value) ? JSON.stringify(value).replaceAll('"', "'") : `'${value}'`;
@@ -615,23 +633,23 @@ class Helper {
         // Vérifier si on a une entité spécifique pour cette area
         if (domain === 'sensor') {
           if (device_class === 'temperature' && area.temperature_entity_id) {
-            return [this.#entities[area.temperature_entity_id]].filter(Boolean);
+            return [this.#entities[area.temperature_entity_id]].filter(Boolean) as StrategyEntity[];
           } else if (device_class === 'humidity' && area.humidity_entity_id) {
-            return [this.#entities[area.humidity_entity_id]].filter(Boolean);
+            return [this.#entities[area.humidity_entity_id]].filter(Boolean) as StrategyEntity[];
           }
         }
 
         // Fallback vers la logique normale
         const domainTag = `${domain}:${device_class}`;
-        return area.domains?.[domainTag]?.map(entity_id => this.#entities[entity_id]) ?? [];
+        return area.domains?.[domainTag]?.map(entity_id => this.#entities[entity_id]).filter(Boolean) as StrategyEntity[] ?? [];
       } else {
         // If device_class is not specified, get all entities of the domain regardless of device class
         const domainTags = Object.keys(area.domains || {}).filter(tag => tag.startsWith(`${domain}:`) || tag === domain);
-        return domainTags.flatMap(tag => area.domains?.[tag]?.map(entity_id => this.#entities[entity_id]) ?? []);
+        return domainTags.flatMap(tag => area.domains?.[tag]?.map(entity_id => this.#entities[entity_id]).filter(Boolean) as StrategyEntity[] ?? []);
       }
     } else {
       // If domain is not specified, return all entities in the area
-      return area.entities.map(entity_id => this.#entities[entity_id]) ?? [];
+      return area.entities.map(entity_id => this.#entities[entity_id]).filter(Boolean) as StrategyEntity[];
     }
   }
 
@@ -651,7 +669,7 @@ class Helper {
     }
 
     // Get states whose entity-id starts with the given string.
-    const stateEntities = this.#areas[area.slug].domains?.[domain]?.map(entity_id => this.#hassStates[entity_id]);
+    const stateEntities = this.#areas[area.slug]?.domains?.[domain]?.map(entity_id => this.#hassStates[entity_id]).filter(Boolean) as HassEntity[];
 
     return stateEntities ?? [];
   }
@@ -749,7 +767,7 @@ class Helper {
    * @return {HassEntity}
    */
   static getEntityState(entity_id: string): HassEntity {
-    return this.#hassStates[entity_id]
+    return this.#hassStates[entity_id]!;
   }
 
 
@@ -1044,14 +1062,22 @@ class Helper {
   static getLastChangedTemplate({ domain, device_class, area_slug }: { domain: string, device_class?: string, area_slug?: string | string[] }): string {
 
 
-    const states = this.getStateStrings(this.getEntityIds({ domain, device_class, area_slug }));
+    const states = this.getStateStrings(this.getEntityIds({
+      domain,
+      ...(device_class && { device_class }),
+      ...(area_slug && { area_slug })
+    }));
 
     return `{% set entities = [${states}] %}{{ relative_time(entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | map(attribute='last_changed') | max) }}`;
   }
 
   static getLastChangedEntityIdTemplate({ domain, device_class, area_slug }: { domain: string, device_class?: string, area_slug?: string | string[] }): string {
 
-    const states = this.getStateStrings(this.getEntityIds({ domain, device_class, area_slug }));
+    const states = this.getStateStrings(this.getEntityIds({
+      domain,
+      ...(device_class && { device_class }),
+      ...(area_slug && { area_slug })
+    }));
 
     return `{% set entities = [${states}] %}{{ entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | sort(attribute='last_changed', reverse=True) | first }}`;
   }
@@ -1061,7 +1087,11 @@ class Helper {
       console.warn("Helper class should be initialized before calling this method!");
     }
 
-    const states = this.getStateStrings(this.getEntityIds({ domain, device_class, area_slug }));
+    const states = this.getStateStrings(this.getEntityIds({
+      domain,
+      ...(device_class && { device_class }),
+      ...(area_slug && { area_slug })
+    }));
 
     const domainColors = colorMapping[domain] || {};
     let defaultColor: string = "grey";
@@ -1070,7 +1100,7 @@ class Helper {
       const thresholds = domainColors[device_class] as Record<number, string>;
       const thresholdKeys = Object.keys(thresholds).map(Number).sort((a, b) => b - a);
       const matchingThreshold = thresholdKeys.find(threshold => Number(value) >= threshold);
-      defaultColor = matchingThreshold !== undefined ? thresholds[matchingThreshold] : "grey";
+      defaultColor = matchingThreshold !== undefined ? (thresholds[matchingThreshold] ?? "grey") : "grey";
     } else {
       const colorValue = domainColors[device_class as string];
       defaultColor = typeof colorValue === "string" ? colorValue : (typeof domainColors.default === "string" ? domainColors.default : "grey");
@@ -1290,9 +1320,14 @@ class Helper {
 
     // Prefer device_class-specific template if available
     const templateKey = device_class ? `${domain}:${device_class}` : domain;
-    const template = templates[templateKey] || templates[domain] || templates.default;
+    const template = templates[templateKey] ?? templates[domain] ?? templates.default!;
+
+    if (!template) {
+      throw new Error(`No template found for ${templateKey}`);
+    }
 
     // Compose the filter variable name (e.g., valid_states, active_lights, etc.)
+    // @ts-ignore - template.filter is guaranteed to exist after null check above
     const filterVar = template.filter.split('=')[0].trim();
 
     // If as_icon is true, return an mdi icon with the count, and if count > 9, use the "9-plus" icon

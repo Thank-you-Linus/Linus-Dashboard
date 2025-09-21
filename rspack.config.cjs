@@ -3,12 +3,8 @@ const { createBundleConfig } = require("./build-scripts/bundle.cjs");
 const paths = require("./build-scripts/paths.cjs");
 const env = require("./build-scripts/env.cjs");
 
-const createLinusDashboardConfig = ({
-  isProdBuild,
-  latestBuild = true,
-  isStatsBuild,
-  isTestBuild
-}) => {
+// Simple configuration matching your working Webpack setup
+const createLinusDashboardConfig = () => {
   return createBundleConfig({
     name: "linus-dashboard",
     entry: {
@@ -20,37 +16,12 @@ const createLinusDashboardConfig = ({
       __LINUS_DASHBOARD__: true,
       __VERSION__: JSON.stringify(env.version()),
     },
-    isProdBuild,
-    latestBuild,
-    isStatsBuild,
-    isTestBuild,
-    dontHash: new Set(["linus-strategy"]), // Don't hash main entry for predictable filename
+    isProdBuild: env.isProdBuild(),
+    latestBuild: false, // Always use legacy for compatibility
+    isStatsBuild: env.isStatsBuild(),
+    isTestBuild: env.isTestBuild(),
+    dontHash: new Set(["linus-strategy"]),
   });
 };
 
-// Export configuration based on environment
-const configs = [];
-
-// Always build modern version
-configs.push(
-  createLinusDashboardConfig({
-    isProdBuild: env.isProdBuild(),
-    latestBuild: true,
-    isStatsBuild: env.isStatsBuild(),
-    isTestBuild: env.isTestBuild(),
-  })
-);
-
-// In production, also build legacy version for older browsers
-if (env.isProdBuild() && !env.isStatsBuild()) {
-  configs.push(
-    createLinusDashboardConfig({
-      isProdBuild: env.isProdBuild(),
-      latestBuild: false,
-      isStatsBuild: env.isStatsBuild(),
-      isTestBuild: env.isTestBuild(),
-    })
-  );
-}
-
-module.exports = configs.length === 1 ? configs[0] : configs;
+module.exports = createLinusDashboardConfig();

@@ -19,10 +19,17 @@ class SensorCard extends AbstractCard {
    * @private
    */
   #defaultConfig: EntityCardConfig = {
-    type: "custom:mushroom-entity-card",
+    type: "tile",
     icon: "mdi:information",
     animate: true,
     line_color: "green",
+    features: [
+      {
+        type: "trend-graph",
+        hours_to_show: 20,
+      }
+    ],
+    features_position: "bottom"
   };
 
   /**

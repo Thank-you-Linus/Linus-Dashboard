@@ -2,6 +2,7 @@ import { AbstractCard } from "./AbstractCard";
 import { cards } from "../types/strategy/cards";
 import { EntityRegistryEntry } from "../types/homeassistant/data/entity_registry";
 import { PersonCardConfig } from "../types/lovelace-mushroom/cards/person-card-config";
+import { PersonInformationsPopup } from "../popups/PersonInformationsPopup";
 
 /**
  * Person Card Class
@@ -32,6 +33,8 @@ class PersonCard extends AbstractCard {
    */
   constructor(options: cards.PersonCardOptions, entity: EntityRegistryEntry) {
     super(entity);
+
+    this.#defaultConfig.tap_action = new PersonInformationsPopup(entity).getPopup();
 
     this.config = Object.assign(this.config, this.#defaultConfig, options);
   }

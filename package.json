@@ -61,15 +61,13 @@
   "scripts": {
     "build-dev": "rspack build --config rspack.dev.config.cjs --watch",
     "build": "rspack build --config rspack.config.cjs",
-    "build:prod": "npm run clean && rspack build --config rspack.config.cjs --mode production",
+    "build:prod": "rspack build --config rspack.config.cjs --mode production",
     "build:analyze": "STATS=1 npm run build",
     "build:test": "rspack build --config rspack.config.cjs --dry-run",
-    "clean": "rimraf custom_components/linus_dashboard/www dist .tsbuildinfo",
     "type-check": "tsc --noEmit",
     "type-check:watch": "tsc --noEmit --watch",
     "lint": "eslint src --ext .ts,.tsx --fix",
     "lint:check": "eslint src --ext .ts,.tsx",
-    "dev": "concurrently \"npm run build-dev\" \"npm run type-check:watch\"",
     "bump": "bump --preid alpha package.json package-lock.json README.md ./custom_components/linus_dashboard/manifest.json ./custom_components/linus_dashboard/const.py ./src/linus-strategy.ts"
   }
 }

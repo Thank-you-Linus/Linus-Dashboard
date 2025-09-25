@@ -2,31 +2,32 @@
 
 import logging
 from pathlib import Path
-from homeassistant.core import HomeAssistant
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.components.lovelace.dashboard import LovelaceYAML
-from homeassistant.components.lovelace import _register_panel
-from homeassistant.components import frontend
+
+from homeassistant.components import frontend, websocket_api
 from homeassistant.components.http import StaticPathConfig
-from homeassistant.components import websocket_api
-from homeassistant.components.websocket_api.decorators import (
-    websocket_command,
-    async_response,
-)
+from homeassistant.components.lovelace import _register_panel
+from homeassistant.components.lovelace.dashboard import LovelaceYAML
 from homeassistant.components.websocket_api.connection import ActiveConnection
+from homeassistant.components.websocket_api.decorators import (
+    async_response,
+    websocket_command,
+)
 from homeassistant.components.websocket_api.messages import result_message
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+
+from custom_components.linus_dashboard import utils
 from custom_components.linus_dashboard.const import (
-    DOMAIN,
     CONF_ALARM_ENTITY_IDS,
     CONF_EXCLUDED_DEVICE_CLASSES,
     CONF_EXCLUDED_DOMAINS,
+    CONF_EXCLUDED_INTEGRATIONS,
     CONF_EXCLUDED_TARGETS,
     CONF_HIDE_GREETING,
     CONF_WEATHER_ENTITY,
     CONF_WEATHER_ENTITY_ID,
-    CONF_EXCLUDED_INTEGRATIONS,
+    DOMAIN,
 )
-from custom_components.linus_dashboard import utils
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -7,9 +7,13 @@ from typing import Any
 
 import voluptuous as vol
 from homeassistant import config_entries
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.const import Platform
 from homeassistant.helpers import (
     device_registry as dr,
-    entity_registry as er,
+)
+from homeassistant.helpers import (
     label_registry as lr,
 )
 from homeassistant.helpers.selector import (
@@ -24,16 +28,13 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.translation import async_get_translations
-from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.components.binary_sensor import BinarySensorDeviceClass
-from homeassistant.const import Platform
 
 from .const import (
     CONF_ALARM_ENTITY_IDS,
     CONF_EXCLUDED_DEVICE_CLASSES,
-    CONF_EXCLUDED_TARGETS,
     CONF_EXCLUDED_DOMAINS,
     CONF_EXCLUDED_INTEGRATIONS,
+    CONF_EXCLUDED_TARGETS,
     CONF_HIDE_GREETING,
     CONF_WEATHER_ENTITY,
     DOMAIN,
@@ -108,11 +109,11 @@ class LinusDashboardEditFlow(config_entries.OptionsFlow):
                     except (OSError, ValueError, KeyError):
                         continue
 
-            # Use system language as fallback
-            return self.hass.config.language or "en"
-
         except (AttributeError, KeyError):
-            return "en"
+            pass
+
+        # Fallback: try hass.config.language, else default to "en"
+        return getattr(self.hass.config, "language", None) or "en"
 
     def _format_name(self, name: str) -> str:
         """Format a name by replacing underscores with spaces and capitalizing."""
@@ -129,7 +130,7 @@ class LinusDashboardEditFlow(config_entries.OptionsFlow):
         return display_string
 
     async def _process_form_data(self, form_data: dict[str, Any]) -> dict[str, Any]:
-        """Process form data to extract original values from display labels and handle TargetSelector targets."""
+        """Process form data to extract original values from display labels."""
         # Get all dynamic options
         options = {
             CONF_EXCLUDED_TARGETS: await self._get_device_options(),
@@ -148,7 +149,7 @@ class LinusDashboardEditFlow(config_entries.OptionsFlow):
         for key, value in form_data.items():
             if key in mappings and isinstance(value, list):
                 processed_data[key] = [mappings[key].get(v, v) for v in value]
-            # Handle TargetSelector (target) values: expect dict with 'entity_id', 'device_id', or 'area_id' keys
+            # Handle TargetSelector (target)
             elif key == CONF_EXCLUDED_TARGETS and isinstance(value, dict):
                 # Store the target dict as-is (Home Assistant expects this format)
                 processed_data[key] = value
@@ -173,7 +174,7 @@ class LinusDashboardEditFlow(config_entries.OptionsFlow):
 
         domain_set = set()
         # Use all available platforms from Home Assistant as domains
-        domain_set = set([platform.value for platform in Platform])
+        domain_set = {platform.value for platform in Platform}
 
         # Get translations using the entity_component category with dynamic language
         lang = await self._get_current_language()
@@ -333,7 +334,7 @@ class LinusDashboardEditFlow(config_entries.OptionsFlow):
             return []
 
     def _collect_device_classes(self) -> dict[str, set[str]]:
-        """Collect device classes grouped by domain, including all Sensor and BinarySensor device classes."""
+        """Collect device classes grouped by domain."""
         device_classes_by_domain = {}
 
         # Add all known Sensor and BinarySensor device classes

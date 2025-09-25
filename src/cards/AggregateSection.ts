@@ -1,6 +1,6 @@
 import { StackCardConfig } from "../types/homeassistant/lovelace/cards/types";
 import { LovelaceCardConfig } from "../types/homeassistant/data/lovelace";
-import { getAggregateEntity, getAreaName, getFloorName, getStateContent, groupBy } from "../utils";
+import { getAggregateEntity, getAreaName, getFloorName, getStateContent } from "../utils";
 import { Helper } from "../Helper";
 import { TemplateCardConfig } from "../types/lovelace-mushroom/cards/template-card-config";
 import { UNDISCLOSED } from "../variables";

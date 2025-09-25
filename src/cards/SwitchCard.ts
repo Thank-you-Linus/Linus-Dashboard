@@ -25,6 +25,11 @@ class SwitchCard extends AbstractCard {
     type: "tile",
     icon: undefined,
     vertical: false,
+    features: [
+      {
+        type: "toggle"
+      }
+    ]
   };
 
   /**

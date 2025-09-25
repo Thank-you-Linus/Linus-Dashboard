@@ -322,12 +322,16 @@ class Helper {
     this.#entities = entities.reduce((acc, entity) => {
       // Exclusion par entité
       if (!(entity.entity_id in this.#hassStates) || entity.hidden_by) return acc;
-      if (Helper.linus_dashboard_config?.excluded_entities?.includes(entity.entity_id)) return acc;
-
-      // Exclusion par label
-      const excludedLabel = Helper.linus_dashboard_config?.excluded_label || "linus_exclude";
-      const entityState = Helper.getEntityState(entity.entity_id);
-      if (entityState?.attributes && entityState.attributes[excludedLabel]) return acc;
+      const targets = Helper.linus_dashboard_config?.excluded_targets;
+      if (entity.area_id && targets?.area_id?.includes(entity.area_id)) return acc;
+      if (targets?.entity_id?.includes(entity.entity_id)) return acc;
+      if (entity.device_id && targets?.device_id?.includes(entity.device_id)) return acc;
+      if (targets?.label_id?.length && entity.labels?.length) {
+        const hasExcludedLabel = entity.labels.some(label => targets.label_id?.includes(label));
+        if (hasExcludedLabel) {
+          return acc;
+        }
+      }
 
       // Exclusion par intégration
       if (Helper.linus_dashboard_config?.excluded_integrations?.length) {
@@ -347,7 +351,11 @@ class Helper {
 
       if (!this.#domains[domainTag]) this.#domains[domainTag] = [];
 
+      // Exclusion par domaine
       if (Helper.linus_dashboard_config?.excluded_domains?.includes(domain)) return acc;
+
+      // Exclusion par classe de dispositif
+      if (device_class && Helper.linus_dashboard_config?.excluded_device_classes?.includes(device_class)) return acc;
 
       const area = entity.area_id ? areasById[entity.area_id] : {} as StrategyArea;
       const floor = area?.floor_id ? floorsById[area?.floor_id] : {} as StrategyFloor;

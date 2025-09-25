@@ -5,37 +5,33 @@
         },
         "step": {
             "user": {
-                "title": "Linus Dashboard Settings",
-                "description": "",
-                "data": {
-                    "alarm_entity": "Select alarm entity",
-                    "weather_entity": "Select weather entity",
-                    "excluded_domains": "Select domains to exclude",
-                    "excluded_device_classes": "Select device classes to exclude"
-                }
+                "title": "Linus Dashboard Setup",
+                "description": "Welcome to Linus Dashboard configuration! This smart dashboard automatically organizes your devices by room and type for a modern and intuitive Home Assistant experience."
             }
         }
     },
     "options": {
         "step": {
             "init": {
-                "title": "Linus Dashboard Settings",
-                "description": "",
+                "title": "Customize Linus Dashboard",
+                "description": "Configure your Linus Dashboard according to your preferences. You can select weather and alarm entities, exclude certain domains or devices, and customize the display. For more information, visit the documentation: {docs_url}",
                 "data": {
-                    "alarm_entity": "Select alarm entity",
-                    "weather_entity": "Select weather entity",
-                    "excluded_domains": "Select domains to exclude",
-                    "excluded_device_classes": "Select device classes to exclude",
-                    "excluded_entities": "Select entities to exclude",
-                    "hide_greeting": "Hide greeting message"
+                    "alarm_entity_ids": "Alarms to display",
+                    "weather_entity": "Weather entity",
+                    "hide_greeting": "Hide greeting message",
+                    "excluded_targets": "Targets to exclude",
+                    "excluded_domains": "Domains to exclude",
+                    "excluded_device_classes": "Device classes to exclude",
+                    "excluded_integrations": "Integrations to exclude"
                 },
                 "data_description": {
-                    "alarm_entity": "Alarm entity used to display the alarm status.",
+                    "alarm_entity_ids": "List of alarms to control in the dashboard.",
                     "weather_entity": "Weather entity used to display weather conditions.",
+                    "hide_greeting": "Check this box to hide the greeting message on the dashboard.",
+                    "excluded_targets": "Specific targets that will be excluded from the dashboard.",
                     "excluded_domains": "Domains that will be excluded from the dashboard.",
                     "excluded_device_classes": "Device classes that will be excluded from the dashboard.",
-                    "excluded_entities": "Specific entities that will be excluded from the dashboard.",
-                    "hide_greeting": "Check this box to hide the greeting message on the dashboard."
+                    "excluded_integrations": "Integrations to exclude from the dashboard."
                 }
             }
         }

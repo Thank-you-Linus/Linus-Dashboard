@@ -2,28 +2,36 @@
     "config": {
         "abort": {
             "single_instance_allowed": "Une seule configuration du tableau de bord Linus est autorisée."
+        },
+        "step": {
+            "user": {
+                "title": "Configuration de Linus Dashboard",
+                "description": "Bienvenue dans l'assistant de configuration de Linus Dashboard ! Ce tableau de bord intelligent organise automatiquement vos appareils par pièce et type pour une expérience Home Assistant moderne et intuitive."
+            }
         }
     },
     "options": {
         "step": {
             "init": {
-                "title": "Paramètres du tableau de bord Linus",
-                "description": "Configurez les paramètres pour le tableau de bord Linus.",
+                "title": "Personnalisation du tableau de bord Linus",
+                "description": "Configurez votre tableau de bord Linus selon vos préférences. Vous pouvez sélectionner des entités météo et d'alarme, exclure certains domaines ou appareils, et personnaliser l'affichage. Pour plus d'informations, consultez la documentation : {docs_url}",
                 "data": {
-                    "alarm_entity": "Sélectionnez l'entité d'alarme",
-                    "weather_entity": "Sélectionnez l'entité météo",
-                    "excluded_domains": "Sélectionnez les domaines à exclure",
-                    "excluded_device_classes": "Sélectionnez les classes de dispositifs à exclure",
-                    "excluded_entities": "Sélectionnez les entités à exclure",
-                    "hide_greeting": "Masquer le message de salutation"
+                    "alarm_entity_ids": "Alarmes à afficher",
+                    "weather_entity": "Entité météo",
+                    "hide_greeting": "Masquer le message de salutation",
+                    "excluded_targets": "Cibles à exclure",
+                    "excluded_domains": "Domaines à exclure",
+                    "excluded_device_classes": "Classes de dispositifs à exclure",
+                    "excluded_integrations": "Intégrations à exclure"
                 },
                 "data_description": {
-                    "alarm_entity": "Entité d'alarme utilisée pour afficher l'état de l'alarme.",
+                    "alarm_entity_ids": "Liste des alarmes à piloter dans le tableau de bord.",
                     "weather_entity": "Entité météo utilisée pour afficher les conditions météorologiques.",
+                    "hide_greeting": "Cochez cette case pour masquer le message de salutation sur le tableau de bord.",
+                    "excluded_targets": "Cibles spécifiques qui seront exclues du tableau de bord.",
                     "excluded_domains": "Domaines qui seront exclus du tableau de bord.",
                     "excluded_device_classes": "Classes de dispositifs qui seront exclues du tableau de bord.",
-                    "excluded_entities": "Entités spécifiques qui seront exclues du tableau de bord.",
-                    "hide_greeting": "Cochez cette case pour masquer le message de salutation sur le tableau de bord."
+                    "excluded_integrations": "Intégrations à exclure du tableau de bord."
                 }
             }
         }

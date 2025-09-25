@@ -3,9 +3,7 @@ import { LovelaceGridCardConfig, StackCardConfig } from "../types/homeassistant/
 import { LovelaceCardConfig, LovelaceSectionConfig, LovelaceViewConfig } from "../types/homeassistant/data/lovelace";
 import { AlarmCard } from "../cards/AlarmCard";
 import { PersonCard } from "../cards/PersonCard";
-import { createCardsFromList, createChipsFromList, getAreaName, getFloorName, navigateTo } from "../utils";
-import { HassServiceTarget } from "home-assistant-js-websocket";
-import { ControllerCard } from "../cards/ControllerCard";
+import { createCardsFromList, createChipsFromList, processEntitiesForView } from "../utils";
 import { views } from "../types/strategy/views";
 import { ChipsCardConfig } from "../types/lovelace-mushroom/cards/chips-card";
 import { TemplateCardConfig } from "../types/lovelace-mushroom/cards/template-card-config";
@@ -171,7 +169,7 @@ class SecurityView {
     }
 
     const sections = [globalSection]
-    if (Helper.domains.camera?.length) sections.push(await this.createCamerasSection())
+    if (Helper.domains.camera?.length) sections.push(...await this.createCamerasSection())
 
     return sections;
   }
@@ -179,104 +177,24 @@ class SecurityView {
   /**
    * Create the cards to include in the view.
    *
-   * @return {Promise<LovelaceGridCardConfig >} An array of card objects.
+   * @return {Promise<LovelaceGridCardConfig[] >} An array of card objects.
    */
-  async createCamerasSection(): Promise<LovelaceGridCardConfig> {
-    const domain = "camera";
-    const camerasSection: LovelaceGridCardConfig = {
-      type: "grid",
-      column_span: 1,
-      cards: [
+  async createCamerasSection(): Promise<LovelaceGridCardConfig[]> {
+
+    const sections = await processEntitiesForView("camera", undefined, []) ?? []
+    if (sections.length > 0) {
+      sections[0]?.cards.unshift(
         {
           type: "heading",
           heading: `${Helper.localize("component.camera.entity_component._.name")}s`,
           heading_style: "title",
           badges: [],
-          icon: Helper.icons[domain]._?.default,
-        }
-      ]
-    };
-
-    const floors = Helper.orderedFloors;
-
-    for (const floor of floors) {
-
-      if (floor.areas_slug.length === 0) continue
-
-      let floorCards: LovelaceCardConfig[] = [
-        {
-          type: "heading",
-          heading: getFloorName(floor),
-          heading_style: "title",
-          badges: [],
-          icon: floor.icon ?? "mdi:floor-plan",
-        }
-      ]
-
-      // Create cards for each area.
-      for (const area of floor.areas_slug.map(area_slug => Helper.areas[area_slug])) {
-        const entities = Helper.getAreaEntities(area, domain);
-        const className = Helper.sanitizeClassName(domain + "Card");
-
-        const cardModule = await import(`../cards/${className}`);
-
-        if (entities.length === 0 || !cardModule) {
-          continue;
-        }
-
-        // Set the target for controller cards to the current area.
-        let target: HassServiceTarget = {
-          area_id: [area.slug],
-        };
-
-        let areaCards: LovelaceCardConfig[] = [];
-
-        const entityCards = []
-
-        // Create a card for each domain-entity of the current area.
-        for (const entity of entities) {
-          let cardOptions = Helper.strategyOptions.card_options?.[entity.entity_id];
-          let deviceOptions = Helper.strategyOptions.card_options?.[entity.device_id ?? "null"];
-
-          if (cardOptions?.hidden || deviceOptions?.hidden) {
-            continue;
-          }
-
-          const configEntityHidden =
-            Helper.strategyOptions.domains[domain ?? "_"].hide_config_entities
-            || Helper.strategyOptions.domains["_"].hide_config_entities;
-          if (entity.entity_category === "config" && configEntityHidden) {
-            continue;
-          }
-          entityCards.push(new cardModule[className](cardOptions, entity).getCard());
-        }
-
-        if (entityCards.length) {
-          areaCards.push(new GroupedCard(entityCards).getCard())
-        }
-
-        // Vertical stack the area cards if it has entities.
-        if (areaCards.length) {
-          const titleCardOptions: any = {};
-          titleCardOptions.subtitle = getAreaName(area)
-          titleCardOptions.subtitleIcon = area.icon ?? "mdi:floor-plan";
-          titleCardOptions.navigate = area.slug;
-          if (domain) {
-            titleCardOptions.showControls = Helper.strategyOptions.domains[domain].showControls;
-            titleCardOptions.extraControls = Helper.strategyOptions.domains[domain].extraControls;
-          }
-
-          // Create and insert a Controller card.
-          areaCards.unshift(...new ControllerCard(titleCardOptions, domain).createCard())
-
-          floorCards.push(...areaCards);
-        }
-      }
-
-      if (floorCards.length > 1) camerasSection.cards.push(...floorCards)
+          icon: Helper.icons["camera"]._?.default,
+        });
     }
 
-    return camerasSection;
+    return sections
+
   }
 
   /**

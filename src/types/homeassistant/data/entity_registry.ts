@@ -1,4 +1,4 @@
-import {LightColor} from "./light";
+import { LightColor } from "./light";
 
 type EntityCategory = "config" | "diagnostic";
 
@@ -50,6 +50,7 @@ export interface EntityRegistryEntry {
   original_name?: string;
   unique_id: string;
   translation_key?: string;
+  labels: string[];
   options: EntityRegistryOptions | null;
 }
 

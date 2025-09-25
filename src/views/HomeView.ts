@@ -78,15 +78,20 @@ class HomeView {
       }
     }
 
-    // Alarm chip.
-    const alarmEntityId = Helper.linus_dashboard_config?.alarm_entity_id;
-    if (alarmEntityId) {
+    // Alarm chips.
+    const alarmEntityIds = Helper.linus_dashboard_config?.alarm_entity_ids || [];
+    if (alarmEntityIds.length > 0) {
       try {
         const chipModule = await import("../chips/AlarmChip");
-        const alarmChip = new chipModule.AlarmChip(alarmEntityId);
-        chips.push(alarmChip.getChip());
+        // Créer un chip pour chaque alarme
+        for (const alarmEntityId of alarmEntityIds) {
+          if (alarmEntityId) {
+            const alarmChip = new chipModule.AlarmChip(alarmEntityId);
+            chips.push(alarmChip.getChip());
+          }
+        }
       } catch (e) {
-        Helper.logError("An error occurred while creating the alarm chip!", e);
+        Helper.logError("An error occurred while creating the alarm chips!", e);
       }
     }
 

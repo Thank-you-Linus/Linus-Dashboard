@@ -26,6 +26,10 @@ class LightCard extends AbstractCard {
     type: "tile",
     icon: undefined,
     vertical: false,
+    features: [
+      { type: 'light-brightness' },
+      // { type: 'toggle' },
+    ],
   };
 
   /**

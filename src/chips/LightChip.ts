@@ -33,7 +33,7 @@ class LightChip extends AbstractChip {
    *
    * @param {chips.ChipOptions} options The chip options.
    */
-  constructor(options: chips.ChipOptions, entity?: EntityRegistryEntry) {
+  constructor(options: chips.ChipOptions) {
     super();
 
 

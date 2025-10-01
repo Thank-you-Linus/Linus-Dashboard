@@ -24,16 +24,22 @@ class ImageAreaCard {
   /**
    * Configuration of the card.
    *
-   * @type {EntityCardConfig}
+   * @type {EntityCardConfig[]}
    */
-  config: ImageAreaCardConfig = {
-    type: "area",
-    area: "",
-    show_camera: true,
-    alert_classes: [],
-    sensor_classes: [],
-    card_mod: {
-      style: `
+  config: ImageAreaCardConfig[] = [
+    {
+      type: "area",
+      area: "",
+      show_camera: true,
+      alert_classes: [],
+      sensor_classes: [],
+      grid_options: {
+        columns: 12,
+        rows: 3,
+      },
+      visibility: [{ condition: "screen", media_query: "(max-width: 767px)" }],
+      card_mod: {
+        style: `
         .sensors {
           display: none;
         }
@@ -41,8 +47,31 @@ class ImageAreaCard {
           display: none;
         }
       `
-    }
-  };
+      }
+    },
+    {
+      type: "area",
+      area: "",
+      show_camera: true,
+      alert_classes: [],
+      sensor_classes: [],
+      grid_options: {
+        columns: 12,
+        rows: 5
+      },
+      visibility: [{ condition: "screen", media_query: "(min-width: 768px)" }],
+      card_mod: {
+        style: `
+        .sensors {
+          display: none;
+        }
+        .buttons {
+          display: none;
+        }
+      `
+      }
+    },
+  ]
 
   /**
    * Class constructor.
@@ -51,15 +80,17 @@ class ImageAreaCard {
    */
   constructor(area_slug: string) {
 
-    this.config.area = area_slug;
+    for (const config of this.config) {
+      config.area = area_slug;
+    }
   }
 
   /**
    * Get a card.
    *
-   * @return {cards.AbstractCardConfig} A card object.
+   * @return {cards.AbstractCardConfig[]} A card object.
    */
-  getCard(): cards.AbstractCardConfig {
+  getCard(): cards.AbstractCardConfig[] {
     return this.config;
   }
 }

@@ -201,7 +201,7 @@ export const SENSOR_STATE_CLASS_TOTAL_INCREASING: string[] = [
 
 export const colorMapping: Record<string, Record<string, string | Record<number, string> | Record<string, string | Record<string, string>>>> = {
   light: { '_': { state: { on: "amber" } } },
-  climate: { '_': { state: { heat: "orange", cool: "blue" } } },
+  climate: { '_': { state: { heat: "deep-orange", cool: "blue" } } },
   cover: Object.fromEntries(
     ['_', ...DEVICE_CLASSES.cover].map(deviceClass => [
       deviceClass,
@@ -209,8 +209,8 @@ export const colorMapping: Record<string, Record<string, string | Record<number,
     ])
   ),
   fan: { '_': { state: { on: "cyan" } } },
-  media_player: { '_': { state: { playing: "blue", paused: "grey", stopped: "grey" } } },
-  switch: { '_': { state: { on: "green" } } },
+  media_player: { '_': { state: { playing: "light-blue", paused: "grey", stopped: "grey" } } },
+  switch: { '_': { state: { on: "yellow" } } },
   binary_sensor: {
     motion: { state: { on: "red" } },
     door: { state: { on: "orange" } },

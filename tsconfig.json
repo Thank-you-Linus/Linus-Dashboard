@@ -1,14 +1,6 @@
 {
-  "include": [
-    "src/**/*",
-    "webpack.*.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "custom_components/linus_dashboard/www",
-    "ha-env"
-  ],
+  "include": ["src/**/*", "webpack.*.ts"],
+  "exclude": ["node_modules", "dist", "custom_components/linus_dashboard/www", "ha-env"],
   "compilerOptions": {
     /* Visit https://aka.ms/tsconfig to read more about this file */
 
@@ -54,7 +46,6 @@
     "noFallthroughCasesInSwitch": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "exactOptionalPropertyTypes": true,
 
     /* Completeness */
     "skipLibCheck": true,

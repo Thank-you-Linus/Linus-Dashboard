@@ -88,7 +88,7 @@ class ControllerCard {
       })
     }
 
-    if (this.#defaultConfig.showControls || this.#defaultConfig.extraControls) {
+    if (this.#defaultConfig.showControls || this.#defaultConfig.extraControls?.length) {
 
       const magic_device = Helper.magicAreasDevices[this.#magic_device_id ?? ""]
       const badges: LovelaceBadgeConfig[] = [];
@@ -123,7 +123,7 @@ class ControllerCard {
         });
       }
 
-      if (magic_device && this.#defaultConfig.extraControls) {
+      if (magic_device && this.#defaultConfig.extraControls?.length) {
         badges.push(...this.#defaultConfig.extraControls(magic_device)?.map((chip: any) => {
           return {
             type: "custom:mushroom-chips-card",

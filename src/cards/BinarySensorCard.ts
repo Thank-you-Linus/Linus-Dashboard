@@ -25,12 +25,15 @@ class BinarySensorCard extends SensorCard {
     state_content: "last_changed",
     vertical: false,
     features: [
-      {
-        type: "trend-graph",
-        hours_to_show: 20,
-      }
+      // {
+      //   type: "trend-graph",
+      //   hours_to_show: 20,
+      // }
     ],
-    features_position: "bottom"
+    features_position: "bottom",
+    grid_options: {
+      columns: 6,
+    },
   };
 
   /**

@@ -15,6 +15,7 @@ import { ConditionalChip } from "../chips/ConditionalChip";
 import { UNAVAILABLE, UNDISCLOSED } from "../variables";
 import { EntityCardConfig } from "../types/lovelace-mushroom/cards/entity-card-config";
 import { FanChip } from "../chips/FanChip";
+import { TemplateChipConfig } from "@/types/lovelace-mushroom/utils/lovelace/chip/types";
 
 class HomeAreaCard {
   /**
@@ -47,8 +48,8 @@ class HomeAreaCard {
       throw new Error("The Helper module must be initialized before using this one.");
     }
 
-    this.magicDevice = Helper.magicAreasDevices[options.area_slug];
-    this.area = Helper.areas[options.area_slug];
+    this.magicDevice = Helper.magicAreasDevices[options.area_slug]!;
+    this.area = Helper.areas[options.area_slug]!;
 
     this.config = { ...this.config, ...options };
   }
@@ -69,7 +70,11 @@ class HomeAreaCard {
 
     return {
       type: "custom:stack-in-card",
-      cards: cards
+      cards: cards,
+      grid_options: {
+        columns: 6,
+      },
+
     };
   }
 
@@ -82,7 +87,11 @@ class HomeAreaCard {
       fill_container: true,
       layout: "horizontal",
       tap_action: { action: "navigate", navigation_path: area.slug },
-      card_mod: { style: this.getCardModStyle() }
+      card_mod: { style: this.getCardModStyle() },
+      grid_options: {
+        columns: 6,
+        rows: 1.5,
+      },
     };
   }
 
@@ -91,18 +100,27 @@ class HomeAreaCard {
     const { area_state } = this.magicDevice?.entities || {};
     const icon = this.area.icon || "mdi:home-outline";
 
-    const hasBattery = this.area.domains?.['sensor:battery'] && this.area.domains['sensor:battery'].length > 0;
+    // const hasBattery = this.area.domains?.['sensor:battery'] && this.area.domains['sensor:battery'].length > 0;
+    // const badge_icon = hasBattery && Helper.getIcon("sensor", "battery", Helper.getEntityIds({ domain: "sensor", device_class: "battery", area_slug: this.area.slug }))
+    // const badge_color = Helper.getIconColor('sensor', "battery", Helper.getEntityIds({ domain: "sensor", device_class: "battery", area_slug: this.area.slug }))
+
+    const areaState = new AreaStateChip({ area: this.area }).getChip() as TemplateChipConfig;
+    const badge_icon = areaState?.icon
+    const badge_color = areaState?.icon_color
+
+    const secondarySensors = `${Helper.getSensorStateTemplate("temperature", this.area.slug)} ${Helper.getSensorStateTemplate("humidity", this.area.slug)}`
+
 
     return {
       type: "custom:mushroom-template-card",
       primary: getAreaName(this.area),
-      secondary: Helper.getSensorStateTemplate("temperature", this.area.slug),
+      secondary: secondarySensors,
       icon: icon,
       icon_color: this.getIconColorTemplate(area_state),
       fill_container: true,
       layout: "horizontal",
-      badge_icon: hasBattery && Helper.getIcon("sensor", "battery", Helper.getEntityIds({ domain: "sensor", device_class: "battery", area_slug: this.area.slug })),
-      badge_color: Helper.getIconColor('sensor', "battery", Helper.getEntityIds({ domain: "sensor", device_class: "battery", area_slug: this.area.slug })),
+      badge_icon,
+      badge_color,
       tap_action: { action: "navigate", navigation_path: this.area.slug },
       card_mod: { style: this.getCardModStyle() }
     };
@@ -152,8 +170,8 @@ class HomeAreaCard {
           new ClimateChip({ magic_device_id: this.area.slug, area_slug: this.area.slug }, magicClimate,).getChip(),
         ).getChip(),
         fan?.length && new FanChip({ magic_device_id: this.area.slug, area_slug: this.area.slug }, magicFan).getChip(),
-        light?.length && new LightChip({ area_slug: this.area.slug, magic_device_id: this.area.slug, tap_action: { action: "toggle" } }, magicLight).getChip(),
-        new ConditionalChip(
+        light?.length && new LightChip({ area_slug: this.area.slug, magic_device_id: this.area.slug, tap_action: { action: "toggle" } }).getChip(),
+        this.magicDevice?.entities?.all_lights?.entity_id && light_control?.entity_id && new ConditionalChip(
           [{ entity: this.magicDevice?.entities?.all_lights?.entity_id, state_not: UNAVAILABLE }],
           new ControlChip("light", light_control?.entity_id).getChip()
         ).getChip()
@@ -172,7 +190,7 @@ class HomeAreaCard {
     };
   }
 
-  getIconColorTemplate(area_state: EntityRegistryEntry): string {
+  getIconColorTemplate(area_state?: EntityRegistryEntry): string {
     const condition = area_state?.entity_id ? `"dark" in state_attr('${area_state?.entity_id}', 'states')` : `not is_state("sun.sun", "below_horizon")`;
     return `
       {{ "indigo" if ${condition} else "amber" }}

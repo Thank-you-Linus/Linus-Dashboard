@@ -69,3 +69,26 @@ alarm_control_panel:
     armed_home:
       arming_time: 0
       delay_time: 0
+
+media_player:
+  - platform: media_player_template
+    media_players:
+      receiver:
+        friendly_name: Receiver
+        unique_id: receiver
+        # device_class: receiver
+        # current_source_template: "{{ states('input_text.selected_source') }}"
+        value_template: >
+          {% if is_state("switch.decorative_lights", "on") -%}
+            playing
+          {%- else -%}
+            off
+          {%- endif %}
+        turn_on:
+          service: switch.turn_on
+          data_template:
+            entity_id: switch.decorative_lights
+        turn_off:
+          service: switch.turn_off
+          data_template:
+            entity_id: switch.decorative_lights

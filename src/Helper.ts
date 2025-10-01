@@ -1156,7 +1156,7 @@ class Helper {
     if (device_class && domainIcons[device_class as keyof IconResources[keyof IconResources]]) {
       const deviceClassIcons = domainIcons[device_class as keyof IconResources[keyof IconResources]];
 
-      if (deviceClassIcons?.state) {
+      if (device_class !== '_' && deviceClassIcons?.state) {
         let stateIconTemplate = states.length
           ? `{% set entities = [${states}] %}{% set state = entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | map(attribute='state') | list %}`
           : '{% set state = [] %}';

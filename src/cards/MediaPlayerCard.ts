@@ -20,18 +20,12 @@ class MediaPlayerCard extends AbstractCard {
    * @private
    */
   #defaultConfig: MediaPlayerCardConfig = {
-    type: "custom:mushroom-media-player-card",
+    type: "tile",
     use_media_info: true,
-    media_controls: [
-      "on_off",
-      "play_pause_stop",
-    ],
-    show_volume_level: true,
-    volume_controls: [
-      "volume_mute",
-      "volume_set",
-      "volume_buttons",
-    ],
+    features: [{
+      type: "media-player-playback"
+    }]
+
   };
 
   /**

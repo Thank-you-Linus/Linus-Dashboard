@@ -175,8 +175,8 @@ class HomeView {
               {% endif %}`,
             icon: "mdi:hand-wave",
             icon_color: "orange",
-            layout_options: {
-              grid_columns: 4,
+            grid_options: {
+              columns: 12,
             },
             tap_action: { action: "none" } as ActionConfig,
             double_tap_action: { action: "none" } as ActionConfig,
@@ -265,6 +265,7 @@ class HomeView {
       }
 
       for (const area of floor.areas_slug.map(area_slug => Helper.areas[area_slug]).values()) {
+        if (!area) continue;
         type ModuleType = typeof import("../cards/HomeAreaCard");
 
         let module: ModuleType;
@@ -291,9 +292,6 @@ class HomeView {
 
           floorSection.cards.push({
             ...new module.HomeAreaCard(options).getCard(),
-            layout_options: {
-              grid_columns: 2
-            }
           });
         }
       }
@@ -306,8 +304,8 @@ class HomeView {
           multiline_secondary: true,
           icon: "mdi:view-dashboard-variant",
           fill_container: true,
-          layout_options: {
-            grid_columns: 4,
+          grid_options: {
+            columns: 12,
           },
           tap_action: {
             action: "navigate",

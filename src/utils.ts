@@ -154,7 +154,7 @@ export const getMAEntity = memoize(function getMAEntity(magic_device_id: string,
  * @param {string} entityId - The entity ID.
  * @returns {string} - The domain.
  */
-export const getEntityDomain = memoize(function getEntityDomain(entityId: string): string {
+export const getEntityDomain = memoize(function getEntityDomain(entityId: string): string | undefined {
     return entityId.split(".")[0];
 });
 
@@ -235,7 +235,6 @@ async function createItemsFromList(
                         magic_device_id,
                         tap_action: navigateTo(domain === "binary_sensor" || domain === "sensor" ? device_class ?? domain : domain)
                     });
-                    // }, magicAreasEntity);
                 }
                 items.push(item.getChip ? item.getChip() : item.getCard());
             } catch (e) {
@@ -347,7 +346,7 @@ export const getGlobalEntitiesExceptUndisclosed = memoize(function getGlobalEnti
         : Helper.domains[domainTag] ?? []);
 
     return entities?.filter(entity =>
-        !Helper.areas[UNDISCLOSED].domains?.[domainTag]?.includes(entity.entity_id)
+        !Helper.areas[UNDISCLOSED]?.domains?.[domainTag]?.includes(entity.entity_id)
     ).map(e => e.entity_id) ?? [];
 }) as (domain: string, device_class?: string) => string[];
 
@@ -404,6 +403,7 @@ export async function processFloorsAndAreas(
         const floorCards = [];
 
         for (const area of floor.areas_slug.map(area_slug => Helper.areas[area_slug])) {
+            if (!area) continue;
             let entities = Helper.getAreaEntities(area, domain, device_class);
 
             if (entities.length === 0) continue;
@@ -415,15 +415,15 @@ export async function processFloorsAndAreas(
             if (entityCards.length) {
                 const areaCards = [new GroupedCard(entityCards).getCard()]
                 const titleCardOptions = {
-                    ...Helper.strategyOptions.domains[domain].controllerCardOptions,
+                    ...Helper.strategyOptions.domains[domain]?.controllerCardOptions,
                     subtitle: getAreaName(area),
                     subtitleIcon: area.area_id === UNDISCLOSED ? "mdi:help-circle" : area.icon ?? "mdi:floor-plan",
                     subtitleNavigate: area.slug
                 } as any;
                 if (domain) {
                     if (area.slug !== UNDISCLOSED && (!AGGREGATE_DOMAINS.includes(domain) || device_class)) {
-                        titleCardOptions.showControls = Helper.strategyOptions.domains[domain].showControls;
-                        titleCardOptions.extraControls = Helper.strategyOptions.domains[domain].extraControls;
+                        titleCardOptions.showControls = Helper.strategyOptions.domains[domain]?.showControls;
+                        titleCardOptions.extraControls = Helper.strategyOptions.domains[domain]?.extraControls;
                         titleCardOptions.controlChipOptions = { device_class, area_slug: area.slug }
                     } else {
                         titleCardOptions.showControls = false;
@@ -438,15 +438,15 @@ export async function processFloorsAndAreas(
 
         if (floorCards.length) {
             const titleSectionOptions: any = {
-                ...Helper.strategyOptions.domains[domain].controllerCardOptions,
+                ...Helper.strategyOptions.domains[domain]?.controllerCardOptions,
                 title: getFloorName(floor),
                 titleIcon: floor.icon ?? "mdi:floor-plan",
                 titleNavigate: slugify(floor.name)
             };
             if (domain) {
                 if (floor.floor_id !== UNDISCLOSED && (!AGGREGATE_DOMAINS.includes(domain) || device_class)) {
-                    titleSectionOptions.showControls = Helper.strategyOptions.domains[domain].showControls;
-                    titleSectionOptions.extraControls = Helper.strategyOptions.domains[domain].extraControls;
+                    titleSectionOptions.showControls = Helper.strategyOptions.domains[domain]?.showControls;
+                    titleSectionOptions.extraControls = Helper.strategyOptions.domains[domain]?.extraControls;
                     titleSectionOptions.controlChipOptions = {
                         device_class,
                         area_slug: floor.areas_slug
@@ -522,7 +522,7 @@ export async function processEntitiesForAreaOrFloorView({
             viewSections.push({
                 type: "grid",
                 column_span: 1,
-                cards: [new ImageAreaCard(area.area_id).getCard()],
+                cards: new ImageAreaCard(area.area_id).getCard(),
             });
         }
 
@@ -596,13 +596,12 @@ export async function processEntitiesForAreaOrFloorView({
                         // Regroupe par device_class
                         const byDeviceClass: Record<string, any[]> = {};
                         for (const entity of entities) {
-                            console.log('device_class sensor', entity.entity_id, entity.attributes?.device_class);
                             const deviceClass = entity.attributes?.device_class || "_";
                             if (!byDeviceClass[deviceClass]) byDeviceClass[deviceClass] = [];
                             byDeviceClass[deviceClass].push(entity);
                         }
                         for (const deviceClass in byDeviceClass) {
-                            const cards = await processEntities(byDeviceClass[deviceClass]);
+                            const cards = await processEntities(byDeviceClass[deviceClass] ?? []);
                             entityCards.push(...cards);
                         }
                     } else {
@@ -628,7 +627,7 @@ export async function processEntitiesForAreaOrFloorView({
                 if (!entity) return false;
                 const entityLinked = areaDevices.includes(entity.device_id ?? "null") || entity.area_id === area.area_id;
                 const entityUnhidden = entity.hidden_by === null && entity.disabled_by === null;
-                const domainExposed = exposedDomainIds.includes((entity.entity_id ?? '').split(".", 1)[0]);
+                const domainExposed = exposedDomainIds.includes((entity.entity_id ?? '').split(".", 1)[0] ?? "");
                 return entityUnhidden && !domainExposed && entityLinked;
             })
             : [];
@@ -636,11 +635,11 @@ export async function processEntitiesForAreaOrFloorView({
     }
 
     for (const domain in domainCardsMap) {
-        if (!domainCardsMap[domain]) continue;
+        if (!domainCardsMap[domain]?.length) continue;
         viewSections.push({
             type: "grid",
             column_span: 1,
-            cards: domainCardsMap[domain] ?? [],
+            cards: domainCardsMap[domain],
         });
     }
 
@@ -652,9 +651,9 @@ export async function processEntitiesForAreaOrFloorView({
             const miscellaneousEntityCards = miscellaneousEntities
                 .filter(entity_id => {
                     const entity = Helper.entities[entity_id];
-                    const cardOptions = Helper.strategyOptions.card_options?.[entity.entity_id];
-                    const deviceOptions = Helper.strategyOptions.card_options?.[entity.device_id ?? "null"];
-                    return !cardOptions?.hidden && !deviceOptions?.hidden && !(entity.entity_category === "config" && Helper.strategyOptions.domains["_"].hide_config_entities);
+                    const cardOptions = Helper.strategyOptions.card_options?.[entity?.entity_id];
+                    const deviceOptions = Helper.strategyOptions.card_options?.[entity?.device_id ?? "null"];
+                    return !cardOptions?.hidden && !deviceOptions?.hidden && !(entity?.entity_category === "config" && Helper.strategyOptions.domains["_"]?.hide_config_entities);
                 })
                 .map(entity_id => new cardModule.MiscellaneousCard(Helper.strategyOptions.card_options?.[entity_id], Helper.entities[entity_id]).getCard());
 

@@ -22,6 +22,9 @@ class MiscellaneousCard extends AbstractCard {
     type: "tile",
     icon: undefined,
     vertical: false,
+    grid_options: {
+      columns: 6,
+    },
   };
 
   /**
@@ -31,7 +34,7 @@ class MiscellaneousCard extends AbstractCard {
    * @param {cards.EntityCardOptions} [options={}] Options for the card.
    * @throws {Error} If the Helper module isn't initialized.
    */
-  constructor(options: cards.EntityCardOptions = {}, entity: EntityRegistryEntry) {
+  constructor(options: cards.EntityCardOptions = {}, entity?: EntityRegistryEntry) {
     super(entity);
 
     this.config = Object.assign(this.config, this.#defaultConfig, options);

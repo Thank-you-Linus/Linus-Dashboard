@@ -1,4 +1,5 @@
 colorlog==6.9.0
-homeassistant==2025.9.1
+# run this command to install the requirements : ./scripts/setup 
+homeassistant==2025.10.1
 pip>=21.3.1
 ruff==0.13.1

@@ -9,7 +9,6 @@ import { ChipsCardConfig } from "../types/lovelace-mushroom/cards/chips-card";
 import { TemplateCardConfig } from "../types/lovelace-mushroom/cards/template-card-config";
 import { LovelaceChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
 import { SECURITY_EXPOSED_CHIPS, SECURITY_EXPOSED_DOMAINS, SECURITY_EXPOSED_SENSORS } from "../variables";
-import { GroupedCard } from "../cards/GroupedCard";
 
 /**
  * Security View Class.

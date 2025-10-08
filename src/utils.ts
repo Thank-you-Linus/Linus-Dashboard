@@ -23,6 +23,7 @@ import { ResourceKeys } from "./types/homeassistant/data/frontend";
 import { EntityCardConfig } from "./types/lovelace-mushroom/cards/entity-card-config";
 import { ImageAreaCard } from "./cards/ImageAreaCard";
 import { AggregateChip } from "./chips/AggregateChip";
+import { AggregateCard } from "./cards/AggregateCard";
 
 /**
  * Mémoïse une fonction pour éviter les calculs répétitifs.
@@ -216,18 +217,29 @@ async function createItemsFromList(
         if (device_class && Helper.linus_dashboard_config?.excluded_device_classes?.includes(device_class)) continue;
         if (!domains.includes(itemType)) continue;
 
-        if (isChip) {
-            if (getGlobalEntitiesExceptUndisclosed(domain, device_class).length === 0) continue;
-            const magicAreasEntity = getMAEntity(magic_device_id, domain, device_class);
-            const className = Helper.sanitizeClassName(device_class ?? domain + "Chip");
+        if (getGlobalEntitiesExceptUndisclosed(domain, device_class).length === 0) continue;
+        const magicAreasEntity = getMAEntity(magic_device_id, domain, device_class);
+        const className = Helper.sanitizeClassName(device_class ?? domain + (isChip ? "Chip" : "Card"));
+
+        try {
+            let itemModule;
+            let item;
             try {
-                let itemModule;
-                let item;
-                try {
-                    itemModule = await import(`./chips/${className}`);
-                    item = new itemModule[className]({ ...itemOptions, device_class, magic_device_id, area_slug }, magicAreasEntity);
-                } catch {
+                itemModule = await import(`./${isChip ? "chips" : "cards"}/${className}`);
+                item = new itemModule[className]({ ...itemOptions, device_class, magic_device_id, area_slug }, magicAreasEntity);
+            } catch {
+                if (isChip) {
                     item = new AggregateChip({
+                        ...itemOptions,
+                        domain,
+                        device_class,
+                        icon: undefined,
+                        area_slug,
+                        magic_device_id,
+                        tap_action: navigateTo(domain === "binary_sensor" || domain === "sensor" ? device_class ?? domain : domain)
+                    });
+                } else {
+                    item = new AggregateCard({
                         ...itemOptions,
                         domain,
                         device_class,
@@ -236,21 +248,10 @@ async function createItemsFromList(
                         tap_action: navigateTo(domain === "binary_sensor" || domain === "sensor" ? device_class ?? domain : domain)
                     });
                 }
-                items.push(item.getChip ? item.getChip() : item.getCard());
-            } catch (e) {
-                Helper.logError(`An error occurred while creating the ${itemType} chip!`, e);
             }
-        } else {
-            // Utilise processEntities pour les cards
-            const entityIds = getGlobalEntitiesExceptUndisclosed(domain, device_class);
-            const entities = entityIds.map(id => Helper.entities[id]).filter(Boolean);
-            if (entities.length === 0) continue;
-            try {
-                const cards = await processEntities(entities);
-                items.push(...cards);
-            } catch (e) {
-                Helper.logError(`An error occurred while creating the ${itemType} card(s)!`, e);
-            }
+            items.push(isChip ? item.getChip() : item.getCard());
+        } catch (e) {
+            Helper.logError(`An error occurred while creating the ${itemType} chip!`, e);
         }
     }
     return items;

@@ -101,7 +101,6 @@ class AreaView {
    */
   async getView(): Promise<LovelaceViewConfig> {
 
-    console.log('this.createSectionCards()', await this.createSectionCards());
     return {
       ...this.config,
       badges: await this.createSectionBadges(),

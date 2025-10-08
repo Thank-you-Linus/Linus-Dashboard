@@ -8,7 +8,7 @@ automation: !include automations.yaml
 script: !include scripts.yaml
 scene: !include scenes.yaml
 
-# Intégrations de base - compatibles avec Home Assistant 2025.9.1
+# Intégrations de base
 frontend:
 config:
 http:

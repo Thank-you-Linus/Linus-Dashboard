@@ -169,11 +169,55 @@ class SettingsPopup extends AbstractPopup {
                 }
               },
 
-              // Actions rapides - Magic Areas & HA
+              // Actions rapides - HA
               {
                 type: "horizontal-stack",
+                cards: [{
+                  type: "custom:mushroom-template-card",
+                  primary: Helper.localize("component.linus_dashboard.entity.text.settings_popup.state.linus_dashboard"),
+                  icon: "mdi:magic-staff",
+                  icon_color: "amber",
+                  layout: "vertical",
+                  tap_action: {
+                    action: "fire-dom-event",
+                    browser_mod: {
+                      service: "browser_mod.sequence",
+                      data: {
+                        sequence: [
+                          { service: "browser_mod.close_popup", data: {} },
+                          { service: "browser_mod.navigate", data: { path: `/config/integrations/integration/linus_dashboard` } }
+                        ]
+                      }
+                    }
+                  },
+                  card_mod: {
+                    style: `ha-card { box-shadow: none; margin: 2px; }`
+                  }
+                },
+                {
+                  type: "custom:mushroom-template-card",
+                  primary: Helper.localize("component.linus_dashboard.entity.text.settings_popup.state.restart"),
+                  icon: "mdi:restart",
+                  icon_color: "red",
+                  layout: "vertical",
+                  tap_action: {
+                    action: "call-service",
+                    service: "homeassistant.restart",
+                    confirmation: {
+                      text: Helper.localize("component.linus_dashboard.entity.text.settings_popup.state.restart_confirm")
+                    }
+                  },
+                  card_mod: {
+                    style: `ha-card { box-shadow: none; margin: 2px; }`
+                  }
+                }
+                ].filter(Boolean)
+              },
+              // Actions rapides - Magic Areas & HA
+              linusDeviceIds.length > 0 && {
+                type: "horizontal-stack",
                 cards: [
-                  linusDeviceIds.length > 0 && {
+                  {
                     type: "custom:mushroom-template-card",
                     primary: Helper.localize("component.linus_dashboard.entity.text.settings_popup.state.reload_magic_areas"),
                     icon: "mdi:refresh",
@@ -191,7 +235,7 @@ class SettingsPopup extends AbstractPopup {
                       style: `ha-card { box-shadow: none; margin: 2px; }`
                     }
                   },
-                  linusDeviceIds.length > 0 && {
+                  {
                     type: "custom:mushroom-template-card",
                     primary: Helper.localize("component.linus_dashboard.entity.text.settings_popup.state.magic_areas"),
                     icon: "mdi:magic-staff",
@@ -213,23 +257,6 @@ class SettingsPopup extends AbstractPopup {
                       style: `ha-card { box-shadow: none; margin: 2px; }`
                     }
                   },
-                  {
-                    type: "custom:mushroom-template-card",
-                    primary: Helper.localize("component.linus_dashboard.entity.text.settings_popup.state.restart"),
-                    icon: "mdi:restart",
-                    icon_color: "red",
-                    layout: "vertical",
-                    tap_action: {
-                      action: "call-service",
-                      service: "homeassistant.restart",
-                      confirmation: {
-                        text: Helper.localize("component.linus_dashboard.entity.text.settings_popup.state.restart_confirm")
-                      }
-                    },
-                    card_mod: {
-                      style: `ha-card { box-shadow: none; margin: 2px; }`
-                    }
-                  }
                 ].filter(Boolean)
               },
 

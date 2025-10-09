@@ -82,6 +82,7 @@
                     "devices": "appareils",
                     "logs": "Journaux",
                     "magic_areas": "Intégrations Magic Areas",
+                    "linus_dashboard": "Intégrations Linus Dashboard",
                     "restart": "Redémarrer HA",
                     "restart_confirm": "Êtes-vous sûr de vouloir redémarrer Home Assistant ?",
                     "github": "GitHub",

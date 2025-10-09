@@ -1,7 +1,7 @@
 import { AreaInformations } from "../popups/AreaInformationsPopup";
 import { generic } from "../types/strategy/generic";
 import { TemplateChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
-import { AREA_STATE_ICONS, DEVICE_ICONS } from "../variables";
+import { AREA_STATE_ICONS, colorMapping, DEVICE_ICONS } from "../variables";
 import { AbstractChip } from "./AbstractChip";
 import { Helper } from "../Helper";
 
@@ -18,7 +18,7 @@ class AreaStateChip extends AbstractChip {
    * @type {ConditionalChipConfig}
    *
    */
-  getDefaultConfig({ area, floor, showContent = false }: { area?: generic.StrategyArea, floor?: generic.StrategyFloor, showContent?: boolean }): TemplateChipConfig {
+  getDefaultConfig({ area, floor, showContent = false, showClearState = true }: { area?: generic.StrategyArea, floor?: generic.StrategyFloor, showContent?: boolean, showClearState?: boolean }): TemplateChipConfig {
 
     const device_id = area?.slug ?? floor?.floor_id;
 
@@ -46,9 +46,9 @@ class AreaStateChip extends AbstractChip {
           {% set media_player = ${isMediaPlaying} %}
           {% set bl = state_attr('${area_state?.entity_id || 'unavailable'}', 'states') or [] %}
           {% if motion %}
-              red
+            ${colorMapping.binary_sensor?.motion?.state?.on}
           {% elif media_player %}
-              blue
+              ${colorMapping.media_player?._?.state?.playing}
           {% elif presence_hold == 'on' %}
               orange
           {% elif 'sleep' in bl %}
@@ -85,7 +85,7 @@ class AreaStateChip extends AbstractChip {
           {% elif 'occupied' in bl %}
             ${AREA_STATE_ICONS.occupied}
           {% else %}
-            ${AREA_STATE_ICONS.clear}
+            ${showClearState ? AREA_STATE_ICONS.clear : ''}
           {% endif %}`,
       content: showContent ? `
           {% set presence_hold = states('${presence_hold?.entity_id || 'unavailable'}') %}
@@ -99,7 +99,7 @@ class AreaStateChip extends AbstractChip {
           {% elif 'occupied' in bl %}
             {{ '${Helper.localize("component.linus_dashboard.entity.text.area_states.state.occupied")}' }}
           {% else %}
-            {{ '${Helper.localize("component.linus_dashboard.entity.text.area_states.state.clear")}' }}
+             '${Helper.localize("component.linus_dashboard.entity.text.area_states.state.clear")}'
           {% endif %}` : "",
       tap_action: device ? new AreaInformations(device, true).getPopup() : { action: "none" },
     };
@@ -110,7 +110,7 @@ class AreaStateChip extends AbstractChip {
    *
    * @param {chips.TemplateChipOptions} options The chip options.
    */
-  constructor(options: { area?: generic.StrategyArea, floor?: generic.StrategyFloor, showContent?: boolean }) {
+  constructor(options: { area?: generic.StrategyArea, floor?: generic.StrategyFloor, showContent?: boolean, showClearState?: boolean }) {
     super();
 
     const defaultConfig = this.getDefaultConfig(options);

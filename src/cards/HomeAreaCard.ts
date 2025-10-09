@@ -100,13 +100,9 @@ class HomeAreaCard {
     const { area_state } = this.magicDevice?.entities || {};
     const icon = this.area.icon || "mdi:home-outline";
 
-    // const hasBattery = this.area.domains?.['sensor:battery'] && this.area.domains['sensor:battery'].length > 0;
-    // const badge_icon = hasBattery && Helper.getIcon("sensor", "battery", Helper.getEntityIds({ domain: "sensor", device_class: "battery", area_slug: this.area.slug }))
-    // const badge_color = Helper.getIconColor('sensor', "battery", Helper.getEntityIds({ domain: "sensor", device_class: "battery", area_slug: this.area.slug }))
-
-    const areaState = new AreaStateChip({ area: this.area }).getChip() as TemplateChipConfig;
-    const badge_icon = areaState?.icon
-    const badge_color = areaState?.icon_color
+    const areaState = new AreaStateChip({ area: this.area, showClearState: false }).getChip() as TemplateChipConfig;
+    const badge_icon = areaState?.icon;
+    const badge_color = areaState?.icon_color;
 
     const secondarySensors = `${Helper.getSensorStateTemplate("temperature", this.area.slug)} ${Helper.getSensorStateTemplate("humidity", this.area.slug)}`
 

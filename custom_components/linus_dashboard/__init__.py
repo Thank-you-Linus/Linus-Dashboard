@@ -54,9 +54,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await register_static_paths_and_resources(hass, "lovelace-card-mod/card-mod.js")
     await register_static_paths_and_resources(hass, "swipe-card/swipe-card.js")
     await register_static_paths_and_resources(hass, "stack-in-card/stack-in-card.js")
-    await register_static_paths_and_resources(
-        hass, "mini-graph-card/mini-graph-card-bundle.js"
-    )
     await register_static_paths_and_resources(hass, "linus-strategy.js")
 
     # Use a unique name for the panel to avoid conflicts

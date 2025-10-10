@@ -41,7 +41,10 @@ export interface ShowViewConfig {
 }
 
 export interface LovelaceBadgeConfig {
-  type?: string;
+  type: string;
+  show_name?: boolean;
+  show_state?: boolean;
+  show_icon?: boolean;
   [key: string]: any;
 }
 

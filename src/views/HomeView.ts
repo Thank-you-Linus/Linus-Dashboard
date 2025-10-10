@@ -4,7 +4,7 @@ import { LovelaceChipConfig } from "../types/lovelace-mushroom/utils/lovelace/ch
 import { ChipsCardConfig } from "../types/lovelace-mushroom/cards/chips-card";
 import { LovelaceGridCardConfig, StackCardConfig } from "../types/homeassistant/lovelace/cards/types";
 import { TemplateCardConfig } from "../types/lovelace-mushroom/cards/template-card-config";
-import { ActionConfig, LovelaceSectionConfig, LovelaceViewConfig } from "../types/homeassistant/data/lovelace";
+import { LovelaceBadgeConfig, LovelaceSectionConfig, LovelaceViewConfig } from "../types/homeassistant/data/lovelace";
 import { PersonCardConfig } from "../types/lovelace-mushroom/cards/person-card-config";
 import { SettingsChip } from "../chips/SettingsChip";
 import { SettingsPopup } from "../popups/SettingsPopup";
@@ -17,6 +17,7 @@ import { AggregateChip } from "../chips/AggregateChip";
 import { LightChip } from "../chips/LightChip";
 import { ClimateChip } from "../chips/ClimateChip";
 import { FanChip } from "../chips/FanChip";
+import { WelcomeCard } from "../cards/WelcomeCard";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**
@@ -55,21 +56,24 @@ class HomeView {
   /**
    * Create the chips to include in the view.
    *
-   * @return {Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig)[]>} Promise a View Card array.
+   * @return {Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig | LovelaceBadgeConfig)[]>} Promise a View Card array.
    * @override
    */
-  async createSectionBadges(): Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig)[]> {
+  async createSectionBadges(): Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig | LovelaceBadgeConfig)[]> {
     if (Helper.strategyOptions.home_view.hidden.includes("chips")) {
       // Chips section is hidden.
       return [];
     }
 
     const chips: LovelaceChipConfig[] = [];
+    const badges: LovelaceBadgeConfig[] = [];
     const chipOptions = Helper.strategyOptions.chips;
+
+    const hideGreeting = Helper.linus_dashboard_config.hide_greeting;
 
     // Weather chip.
     const weatherEntityId = Helper.linus_dashboard_config?.weather_entity_id;
-    if (weatherEntityId) {
+    if (weatherEntityId && hideGreeting) {
       try {
         const weatherChip = new WeatherChip(weatherEntityId);
         chips.push(weatherChip.getChip());
@@ -80,14 +84,14 @@ class HomeView {
 
     // Alarm chips.
     const alarmEntityIds = Helper.linus_dashboard_config?.alarm_entity_ids || [];
-    if (alarmEntityIds.length > 0) {
+    if (alarmEntityIds.length > 0 && hideGreeting) {
       try {
-        const chipModule = await import("../chips/AlarmChip");
+        const badgeModule = await import("../badges/AlarmBadge");
         // Créer un chip pour chaque alarme
         for (const alarmEntityId of alarmEntityIds) {
           if (alarmEntityId) {
-            const alarmChip = new chipModule.AlarmChip(alarmEntityId);
-            chips.push(alarmChip.getChip());
+            const alarmBadge = new badgeModule.AlarmBadge(alarmEntityId);
+            badges.push(alarmBadge.getBadge());
           }
         }
       } catch (e) {
@@ -123,11 +127,11 @@ class HomeView {
     const linusSettings = new SettingsChip({ tap_action: new SettingsPopup().getPopup() });
     chips.push(linusSettings.getChip());
 
-    return chips.map(chip => ({
+    return [...badges, ...chips.map(chip => ({
       type: "custom:mushroom-chips-card",
       alignment: "center",
       chips: [chip],
-    }));
+    }))];
   }
 
   /**
@@ -156,33 +160,19 @@ class HomeView {
       } as LovelaceGridCardConfig;
 
       if (isFirstLoop) {
+
+        // Add WelcomeCard with clock, greeting, weather, alarms, and person chips
+
+        if (!Helper.linus_dashboard_config?.hide_greeting) {
+          const clockWelcomeCard = new WelcomeCard();
+          floorSection.cards.push(await clockWelcomeCard.getCard());
+        }
+
         const personCards = await this.#createPersonCards();
         floorSection.cards.push({
           type: "horizontal-stack",
           cards: personCards,
         } as StackCardConfig);
-
-        if (!Helper.linus_dashboard_config?.hide_greeting) {
-          const tod = Helper.magicAreasDevices.global?.entities.time_of_the_day;
-          floorSection.cards.push({
-            type: "custom:mushroom-template-card",
-            primary: `
-              {% set tod = states("${tod?.entity_id}") %}
-              {% if (tod == "evening") %} ${Helper.localize("component.linus_dashboard.entity.text.greeting.state.evening")} {{user}} !
-              {% elif (tod == "daytime") %} ${Helper.localize("component.linus_dashboard.entity.text.greeting.state.daytime")} {{user}} !
-              {% elif (tod == "night") %} ${Helper.localize("component.linus_dashboard.entity.text.greeting.state.night")} {{user}} !
-              {% else %} ${Helper.localize("component.linus_dashboard.entity.text.greeting.state.morning")} {{user}} !
-              {% endif %}`,
-            icon: "mdi:hand-wave",
-            icon_color: "orange",
-            grid_options: {
-              columns: 12,
-            },
-            tap_action: { action: "none" } as ActionConfig,
-            double_tap_action: { action: "none" } as ActionConfig,
-            hold_action: { action: "none" } as ActionConfig,
-          } as TemplateCardConfig);
-        }
 
         // Add quick access cards.
         if (Helper.strategyOptions.quick_access_cards) {
@@ -240,7 +230,7 @@ class HomeView {
           }
           return null;
         }),
-      ].filter(Boolean) as LovelaceChipConfig[];
+      ].filter(Boolean);
 
       if (floors.length > 1) {
         floorSection.cards.push({

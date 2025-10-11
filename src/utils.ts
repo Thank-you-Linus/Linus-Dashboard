@@ -84,7 +84,8 @@ export const slugify = memoize(function slugify(text: string | null, separator: 
  * @returns {string} - The slug for the device.
  */
 export const getMagicAreaSlug = memoize(function getMagicAreaSlug(device: MagicAreaRegistryEntry): string {
-    return slugify(device.name ?? "".replace('-', '_'));
+    const slug = device.identifiers[0]?.[1].replace("magic_area_device_", "") ?? "unknown";
+    return slug
 });
 
 /**
@@ -442,7 +443,7 @@ export async function processFloorsAndAreas(
                 ...Helper.strategyOptions.domains[domain]?.controllerCardOptions,
                 title: getFloorName(floor),
                 titleIcon: floor.icon ?? "mdi:floor-plan",
-                titleNavigate: slugify(floor.name)
+                titleNavigate: floor.floor_id
             };
             if (domain) {
                 if (floor.floor_id !== UNDISCLOSED && (!AGGREGATE_DOMAINS.includes(domain) || device_class)) {

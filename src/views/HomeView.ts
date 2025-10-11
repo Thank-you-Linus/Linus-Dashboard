@@ -18,6 +18,7 @@ import { LightChip } from "../chips/LightChip";
 import { ClimateChip } from "../chips/ClimateChip";
 import { FanChip } from "../chips/FanChip";
 import { WelcomeCard } from "../cards/WelcomeCard";
+import { ConditionalLightChip } from "../chips/ConditionalLightChip";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**
@@ -199,10 +200,7 @@ class HomeView {
       const fanEntities = Helper.getEntityIds({ domain: "fan", area_slug: floor.areas_slug });
 
       const chips = floor.floor_id === UNDISCLOSED ? [] : [
-        lightEntities.length > 0 && new LightChip({
-          magic_device_id: floor.floor_id,
-          area_slug: floor.areas_slug,
-        }).getChip(),
+        ...(lightEntities.length > 0 ? new ConditionalLightChip({ area_slug: floor.areas_slug, magic_device_id: floor.floor_id }).getChip() : []),
         climateEntities.length > 0 && new ClimateChip({
           magic_device_id: floor.floor_id,
           area_slug: floor.areas_slug,

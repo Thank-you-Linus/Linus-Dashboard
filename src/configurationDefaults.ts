@@ -14,6 +14,7 @@ import { MediaPlayerChip } from "./chips/MediaPlayerChip";
 import { CoverChip } from "./chips/CoverChip";
 import { FanChip } from "./chips/FanChip";
 import { SwitchChip } from "./chips/SwitchChip";
+import { ConditionalLightChip } from "./chips/ConditionalLightChip";
 
 /**
  * Default configuration for the mushroom strategy.
@@ -52,7 +53,7 @@ export const configurationDefaults: StrategyDefaults = {
     },
     light: {
       showControls: true,
-      controlChip: LightChip,
+      controlChip: ConditionalLightChip,
       extraControls: (device: MagicAreaRegistryEntry) => {
         const { light_control, adaptive_lighting_range, minimum_brightness, maximum_brightness, maximum_lighting_level } = device?.entities ?? {}
         const chips = [];

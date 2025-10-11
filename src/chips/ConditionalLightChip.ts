@@ -30,7 +30,7 @@ class ConditionalLightChip {
     const magicAreaAllLight = magic_device_id && Helper.magicAreasDevices[magic_device_id]?.entities?.all_lights;
 
     if (magicAreaAllLight) {
-      this.config.push(new LightChip({ area_slug, magic_device_id }).getChip());
+      this.config.push(new LightChip({ area_slug, magic_device_id, tap_action: { action: "toggle" } }).getChip());
 
     } else {
       const entity_ids = Helper.getEntityIds({

@@ -21,6 +21,7 @@ class MediaPlayerCard extends AbstractCard {
    */
   #defaultConfig: MediaPlayerCardConfig = {
     type: "tile",
+    icon: undefined,
     use_media_info: true,
     features: [{
       type: "media-player-playback"

@@ -58,7 +58,6 @@ class LightChip extends AbstractChip {
     if (magicAreasEntity) {
       // Magic Areas entity exists - use toggle action on single entity
       this.#defaultConfig.entity = magicAreasEntity.entity_id;
-      this.#defaultConfig.tap_action = { action: "toggle" };
       this.#defaultConfig.hold_action = { action: "more-info" };
     } else {
       // No magic entity - use call-service with smart logic for multiple lights

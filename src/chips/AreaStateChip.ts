@@ -99,7 +99,7 @@ class AreaStateChip extends AbstractChip {
           {% elif 'occupied' in bl %}
             {{ '${Helper.localize("component.linus_dashboard.entity.text.area_states.state.occupied")}' }}
           {% else %}
-             '${Helper.localize("component.linus_dashboard.entity.text.area_states.state.clear")}'
+             {{ '${Helper.localize("component.linus_dashboard.entity.text.area_states.state.clear")}' }}
           {% endif %}` : "",
       tap_action: device ? new AreaInformations(device, true).getPopup() : { action: "none" },
     };

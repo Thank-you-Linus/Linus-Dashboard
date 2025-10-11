@@ -165,7 +165,7 @@ export const getEntityDomain = memoize(function getEntityDomain(entityId: string
  * @returns {Record<string, string[]>} - The grouped entities.
  */
 export const groupEntitiesByDomain = memoize(function groupEntitiesByDomain(entity_ids: string[]): Record<string, string[]> {
-    return entity_ids.reduce((acc: Record<string, string[]>, entity_id) => {
+    const grouped = entity_ids.reduce((acc: Record<string, string[]>, entity_id) => {
         let domain = getEntityDomain(entity_id);
         let device_class
         if (Object.keys(DEVICE_CLASSES).includes(domain)) {
@@ -181,6 +181,27 @@ export const groupEntitiesByDomain = memoize(function groupEntitiesByDomain(enti
         acc[domainTag].push(entity_id);
         return acc;
     }, {});
+
+    // Trier chaque groupe pour placer les entités unavailable/unknown à la fin
+    Object.keys(grouped).forEach(domainTag => {
+        const entities = grouped[domainTag];
+        if (entities) {
+            entities.sort((a, b) => {
+                const stateA = Helper.getEntityState(a)?.state;
+                const stateB = Helper.getEntityState(b)?.state;
+
+                const isUnavailableA = stateA === "unavailable" || stateA === "unknown";
+                const isUnavailableB = stateB === "unavailable" || stateB === "unknown";
+
+                if (isUnavailableA && !isUnavailableB) return 1;
+                if (!isUnavailableA && isUnavailableB) return -1;
+
+                return 0;
+            });
+        }
+    });
+
+    return grouped;
 });
 
 /**

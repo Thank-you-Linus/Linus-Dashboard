@@ -50,13 +50,13 @@ class AreaStateChip extends AbstractChip {
           {% elif media_player %}
               ${colorMapping.media_player?._?.state?.playing}
           {% elif presence_hold == 'on' %}
-              orange
+              pink
           {% elif 'sleep' in bl %}
               purple
           {% elif 'extended' in bl %}
-              yellow
+              deep-orange
           {% elif 'occupied' in bl %}
-              amber
+              orange
           {% else %}
               grey
           {% endif %}

@@ -3,13 +3,12 @@ import { chips } from "../types/strategy/chips";
 import { AbstractChip } from "./AbstractChip";
 import { TemplateChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
 import { getMAEntity, navigateTo } from "../utils";
-import { EntityRegistryEntry } from "../types/homeassistant/data/entity_registry";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**
  * Light Chip class.
  *
- * Used to create a chip to indicate how many lights are on and to turn all off.
+ * Used to create a chip to indicate how many lights are on and control them.
  */
 class LightChip extends AbstractChip {
   /**
@@ -57,16 +56,24 @@ class LightChip extends AbstractChip {
     const magicAreasEntity = getMAEntity(options?.magic_device_id ?? "global", "light");
 
     if (magicAreasEntity) {
+      // Magic Areas entity exists - use toggle action on single entity
       this.#defaultConfig.entity = magicAreasEntity.entity_id;
-      this.#defaultConfig.tap_action = undefined
+      this.#defaultConfig.tap_action = { action: "toggle" };
+      this.#defaultConfig.hold_action = { action: "more-info" };
     } else {
-      const area_slug = Array.isArray(options?.area_slug) ? options?.area_slug : [options?.area_slug]
+      // No magic entity - use call-service with smart logic for multiple lights
+      const area_slug = Array.isArray(options?.area_slug) ? options?.area_slug : [options?.area_slug];
       const entity_id = area_slug.flatMap((area) => Helper.areas[area ?? "global"]?.domains?.light ?? []);
-      this.#defaultConfig.entity_id = entity_id
+      this.#defaultConfig.entity_id = entity_id;
 
-      if (entity_id.length == 1) {
-        this.#defaultConfig.entity = entity_id[0]
+      if (entity_id.length === 1) {
+        // Single light - simple toggle
+        this.#defaultConfig.entity = entity_id[0];
         this.#defaultConfig.tap_action = undefined
+      }
+
+      if (options.hold_action) {
+        this.#defaultConfig.hold_action = options.hold_action;
       }
     }
 

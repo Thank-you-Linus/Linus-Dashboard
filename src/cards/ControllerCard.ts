@@ -23,7 +23,7 @@ class ControllerCard {
    * @type {string} The target to control the entities of.
    * @private
    */
-  readonly #magic_device_id: string;
+  readonly #area_slug: string;
 
   /**
    * Default configuration of the card.
@@ -45,9 +45,9 @@ class ControllerCard {
    *
    * @param {cards.ControllerCardOptions} options Controller Card options.
    */
-  constructor(options: cards.ControllerCardOptions = {}, domain: string, magic_device_id: string = "global") {
+  constructor(options: cards.ControllerCardOptions = {}, domain: string, area_slug: string = "global") {
     this.#domain = domain;
-    this.#magic_device_id = magic_device_id;
+    this.#area_slug = area_slug;
     this.#defaultConfig = {
       ...this.#defaultConfig,
       ...options,
@@ -90,7 +90,7 @@ class ControllerCard {
 
     if (this.#defaultConfig.showControls || this.#defaultConfig.extraControls?.length) {
 
-      const magic_device = Helper.magicAreasDevices[this.#magic_device_id ?? ""]
+      const magic_device = Helper.magicAreasDevices[this.#area_slug ?? ""]
       const badges: LovelaceBadgeConfig[] = [];
 
       if (this.#defaultConfig.showControls) {
@@ -98,7 +98,8 @@ class ControllerCard {
         const chipModule = Helper.strategyOptions.domains[this.#domain]?.controlChip;
         const chipOptions = {
           show_content: true,
-          magic_device_id: this.#magic_device_id,
+          magic_device_id: this.#area_slug,
+          area_slug: this.#area_slug,
           ...this.#defaultConfig.controlChipOptions,
           domain: this.#domain,
         };
@@ -106,7 +107,7 @@ class ControllerCard {
           ? (
             chipOptions.device_class
               ? [chipOptions.device_class]
-              : DEVICE_CLASSES[this.#domain as keyof typeof DEVICE_CLASSES] ?? [undefined]).map((device_class) => new chipModule({ ...chipOptions, device_class }, magic_device).getChip()).filter((chip: any) => chip?.icon !== undefined)
+              : DEVICE_CLASSES[this.#domain as keyof typeof DEVICE_CLASSES] ?? [undefined]).flatMap((device_class) => new chipModule({ ...chipOptions, device_class }, magic_device).getChip()).filter((chip: any) => chip?.icon !== undefined || chip.chip.icon !== undefined)
           : [];
 
         badges.push({

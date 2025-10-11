@@ -7,15 +7,15 @@ import { AreaStateChip } from "../chips/AreaStateChip";
 import { generic } from "../types/strategy/generic";
 import StrategyArea = generic.StrategyArea;
 import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
-import { getAreaName, getMAEntity, slugify } from "../utils";
+import { getAreaName, getMAEntity } from "../utils";
 import { EntityRegistryEntry } from "../types/homeassistant/data/entity_registry";
 import { ClimateChip } from "../chips/ClimateChip";
-import { LightChip } from "../chips/LightChip";
 import { ConditionalChip } from "../chips/ConditionalChip";
 import { UNAVAILABLE, UNDISCLOSED } from "../variables";
 import { EntityCardConfig } from "../types/lovelace-mushroom/cards/entity-card-config";
 import { FanChip } from "../chips/FanChip";
-import { TemplateChipConfig } from "@/types/lovelace-mushroom/utils/lovelace/chip/types";
+import { TemplateChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
+import { ConditionalLightChip } from "../chips/ConditionalLightChip";
 
 class HomeAreaCard {
   /**
@@ -126,7 +126,6 @@ class HomeAreaCard {
 
     const { light_control, aggregate_health, climate_group, aggregate_window, aggregate_door, aggregate_cover } = this.magicDevice?.entities || {};
     const { health } = this.area.domains ?? {};
-    const magicLight = getMAEntity(this.magicDevice?.id, "light") as EntityRegistryEntry;
     const magicClimate = getMAEntity(this.magicDevice?.id, "climate") as EntityRegistryEntry;
     const magicFan = getMAEntity(this.magicDevice?.id, "fan") as EntityRegistryEntry;
 
@@ -166,7 +165,8 @@ class HomeAreaCard {
           new ClimateChip({ magic_device_id: this.area.slug, area_slug: this.area.slug }, magicClimate,).getChip(),
         ).getChip(),
         fan?.length && new FanChip({ magic_device_id: this.area.slug, area_slug: this.area.slug }, magicFan).getChip(),
-        light?.length && new LightChip({ area_slug: this.area.slug, magic_device_id: this.area.slug, tap_action: { action: "toggle" } }).getChip(),
+        // Two conditional light chips: one for ON state (turns off), one for OFF state (turns on)
+        ...(light?.length ? new ConditionalLightChip({ area_slug: this.area.slug, magic_device_id: this.area.slug }).getChip() : []),
         this.magicDevice?.entities?.all_lights?.entity_id && light_control?.entity_id && new ConditionalChip(
           [{ entity: this.magicDevice?.entities?.all_lights?.entity_id, state_not: UNAVAILABLE }],
           new ControlChip("light", light_control?.entity_id).getChip()

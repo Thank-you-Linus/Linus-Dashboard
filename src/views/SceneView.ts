@@ -60,7 +60,7 @@ class SceneView extends AbstractView {
     this.viewControllerCard = new ControllerCard(
       {
         ...this.#viewControllerCardConfig,
-        ...Helper.strategyOptions.domains.scene.controllerCardOptions,
+        ...Helper.strategyOptions.domains.scene?.controllerCardOptions,
       }, SceneView.#domain).createCard();
   }
 }

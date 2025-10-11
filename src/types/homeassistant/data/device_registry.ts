@@ -1,5 +1,3 @@
-import { EntityRegistryEntry } from "./entity_registry";
-
 /**
  * Device Entity.
  *

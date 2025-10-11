@@ -14,7 +14,7 @@
     "moduleResolution": "Node",
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      // "@/*": ["src/*"]
     },
     "resolveJsonModule": true,
 

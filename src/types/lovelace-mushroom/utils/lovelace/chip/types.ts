@@ -158,10 +158,33 @@ export type TemplateChipConfig = {
  * @property {LovelaceChipConfig} [chip] A chip configuration.
  * @property {[]} conditions
  */
+interface OrCondition {
+  condition: "or";
+  conditions?: ChipCondition[];
+}
+interface AndCondition {
+  condition: "and";
+  conditions?: ChipCondition[];
+}
+type StateCondition =
+  | {
+    entity: string;
+    state_not?: string;
+    match?: "all" | "any";
+  }
+  | {
+    entity: string;
+    state?: string;
+    match?: "all" | "any";
+  };
+
+type ChipCondition = OrCondition | AndCondition | StateCondition;
+
+
 export interface ConditionalChipConfig {
   type: "conditional";
-  chip?: LovelaceChipConfig;
-  conditions?: Array<{ entity: string; state_not?: string; state?: string; }>
+  chip: LovelaceChipConfig;
+  conditions?: ChipCondition[];
 }
 
 /**

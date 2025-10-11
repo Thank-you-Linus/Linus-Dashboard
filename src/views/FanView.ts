@@ -60,7 +60,7 @@ class FanView extends AbstractView {
     this.viewControllerCard = new ControllerCard(
       {
         ...this.#viewControllerCardConfig,
-        ...Helper.strategyOptions.domains.fan.controllerCardOptions,
+        ...Helper.strategyOptions.domains.fan?.controllerCardOptions,
       }, FanView.#domain).createCard();
   }
 }

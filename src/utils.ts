@@ -84,8 +84,7 @@ export const slugify = memoize(function slugify(text: string | null, separator: 
  * @returns {string} - The slug for the device.
  */
 export const getMagicAreaSlug = memoize(function getMagicAreaSlug(device: MagicAreaRegistryEntry): string {
-    const slug = device.identifiers[0]?.[1].replace("magic_area_device_", "") ?? "unknown";
-    return slug
+    return slugify(device.name ?? "".replace('-', '_'));
 });
 
 /**

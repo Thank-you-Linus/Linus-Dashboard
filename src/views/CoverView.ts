@@ -60,7 +60,7 @@ class CoverView extends AbstractView {
     this.viewControllerCard = new ControllerCard(
       {
         ...this.#viewControllerCardConfig,
-        ...Helper.strategyOptions.domains.cover.controllerCardOptions,
+        ...Helper.strategyOptions.domains.cover?.controllerCardOptions,
       }, CoverView.#domain).createCard();
   }
 }

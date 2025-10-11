@@ -60,7 +60,7 @@ class MediaPlayerView extends AbstractView {
     this.viewControllerCard = new ControllerCard(
       {
         ...this.#viewControllerCardConfig,
-        ...Helper.strategyOptions.domains.media_player.controllerCardOptions,
+        ...Helper.strategyOptions.domains.media_player?.controllerCardOptions,
       }, MediaPlayerView.#domain).createCard();
   }
 }

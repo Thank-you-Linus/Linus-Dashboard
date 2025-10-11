@@ -60,7 +60,7 @@ class CameraView extends AbstractView {
     this.viewControllerCard = new ControllerCard(
       {
         ...this.#viewControllerCardConfig,
-        ...Helper.strategyOptions.domains.camera.controllerCardOptions,
+        ...Helper.strategyOptions.domains.camera?.controllerCardOptions,
       }, CameraView.#domain).createCard();
   }
 }

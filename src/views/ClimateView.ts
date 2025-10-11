@@ -62,7 +62,7 @@ class ClimateView extends AbstractView {
     this.viewControllerCard = new ControllerCard(
       {
         ...this.#viewControllerCardConfig,
-        ...Helper.strategyOptions.domains.climate.controllerCardOptions,
+        ...Helper.strategyOptions.domains.climate?.controllerCardOptions,
       }, ClimateView.#domain).createCard();
   }
 }

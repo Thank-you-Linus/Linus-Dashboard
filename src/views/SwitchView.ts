@@ -60,7 +60,7 @@ class SwitchView extends AbstractView {
     this.viewControllerCard = new ControllerCard(
       {
         ...this.#viewControllerCardConfig,
-        ...Helper.strategyOptions.domains.switch.controllerCardOptions,
+        ...Helper.strategyOptions.domains.switch?.controllerCardOptions,
       }, SwitchView.#domain).createCard();
   }
 }

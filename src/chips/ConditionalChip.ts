@@ -1,7 +1,6 @@
 import { ConditionalChipConfig, LovelaceChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
 import { AbstractChip } from "./AbstractChip";
 
-type ConditionalChipOptions = Omit<ConditionalChipConfig, "type">
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**
@@ -20,6 +19,10 @@ class ConditionalChip extends AbstractChip {
    */
   readonly #defaultConfig: ConditionalChipConfig = {
     type: "conditional",
+    conditions: [],
+    chip: {
+      type: "template",
+    },
   };
 
   /**
@@ -28,7 +31,7 @@ class ConditionalChip extends AbstractChip {
    * @param {MagicAreaRegistryEntry} device The chip device.
    * @param {ConditionalChipOptions} options The chip options.
    */
-  constructor(conditions: Array<{ entity: string; state_not?: string; state?: string; }>, chip: LovelaceChipConfig) {
+  constructor(conditions: ConditionalChipConfig["conditions"], chip: LovelaceChipConfig) {
     super();
 
     this.#defaultConfig.conditions = conditions;

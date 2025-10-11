@@ -60,7 +60,7 @@ class VacuumView extends AbstractView {
     this.viewControllerCard = new ControllerCard(
       {
         ...this.#viewControllerCardConfig,
-        ...Helper.strategyOptions.domains.vacuum.controllerCardOptions,
+        ...Helper.strategyOptions.domains.vacuum?.controllerCardOptions,
       }, VacuumView.#domain).createCard();
   }
 }

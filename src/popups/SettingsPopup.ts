@@ -1,7 +1,6 @@
 import { Helper } from "../Helper";
 import { version } from "../linus-strategy";
 import { PopupActionConfig } from "../types/homeassistant/data/lovelace";
-import { navigateTo } from "../utils";
 import { AbstractPopup } from "./AbstractPopup";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.

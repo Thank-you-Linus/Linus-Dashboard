@@ -1,5 +1,6 @@
 """Linus Dashboard integration for Home Assistant."""
 
+import json
 import logging
 from pathlib import Path
 
@@ -30,6 +31,18 @@ from custom_components.linus_dashboard.const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def get_version() -> str:
+    """Get the version from manifest.json."""
+    manifest_path = Path(__file__).parent / "manifest.json"
+    try:
+        with manifest_path.open(encoding="utf-8") as manifest_file:
+            manifest = json.load(manifest_file)
+            return manifest.get("version", "unknown")
+    except (FileNotFoundError, json.JSONDecodeError, KeyError):
+        _LOGGER.exception("Failed to read version from manifest")
+        return "unknown"
 
 
 async def async_setup(hass: HomeAssistant, _config: dict) -> bool:
@@ -96,45 +109,41 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def register_static_paths_and_resources(
     hass: HomeAssistant, js_file: str
 ) -> None:
-    """Register static paths and resources for a given JavaScript file."""
-    # Check if the file is already installed via HACS
-    if js_file == "browser_mod.js":
-        hacs_installed_path = Path(hass.config.path("custom_components/browser_mod"))
-        if hacs_installed_path.exists():
-            _LOGGER.info(
-                "browser_mod is already installed via HACS, skipping registration."
-            )
-            return
-    else:
-        # Extract the base filename for HACS check
-        base_name = js_file.split("/")[-1].replace(".js", "").replace("-bundle", "")
-        hacs_installed_path = Path(hass.config.path(f"www/community/{base_name}"))
-        if hacs_installed_path.exists():
-            _LOGGER.info(
-                "%s is already installed via HACS, skipping registration.", js_file
-            )
-            return
-
     """
-    Module principal du composant personnalisé Linus Dashboard pour Home Assistant.
-    Gère la configuration, l'API websocket et l'intégration Lovelace.
-    """
+    Register static paths and resources for a given JavaScript file.
 
+    Always registers the bundled resources to ensure compatibility with Linus Dashboard,
+    regardless of whether they are installed via HACS or other means.
+
+    Implements cache-busting by appending version query parameter to resource URLs.
+    """
     js_url = f"/{DOMAIN}_files/www/{js_file}"
     js_path = Path(__file__).parent / f"www/{js_file}"
 
     # Check if the file actually exists
     if not js_path.exists():
-        _LOGGER.warning("JavaScript file not found: %s", js_path)
+        _LOGGER.warning(
+            "JavaScript file not found: %s - skipping registration", js_path
+        )
         return
 
+    # Register the static path (without version param - Home Assistant will handle it)
     await hass.http.async_register_static_paths([
         StaticPathConfig(js_url, str(js_path), cache_headers=False),
     ])
 
-    # fix from https://github.com/hmmbob/WebRTC/blob/a0783df2e5426118599edc50bfd0466b1b0f0716/custom_components/webrtc/__init__.py#L83
-    version = getattr(hass.data["integrations"].get(DOMAIN, {}), "version", 0)
-    await utils.init_resource(hass, js_url, str(version))
+    # Get version from manifest for cache busting
+    manifest_version = get_version()
+
+    # Register as a Lovelace resource with version query param for cache busting
+    # This ensures browsers fetch the new version after updates
+    versioned_url = f"{js_url}?v={manifest_version}"
+
+    await utils.init_resource(hass, versioned_url, str(manifest_version))
+
+    _LOGGER.debug(
+        "Registered resource: %s (version: %s)", versioned_url, manifest_version
+    )
 
 
 @websocket_command({
@@ -144,7 +153,7 @@ async def register_static_paths_and_resources(
 async def websocket_get_entities(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict
 ) -> None:
-    """Handle request for getting entities."""
+    """Handle request for getting entities and version info."""
     config_entries = hass.config_entries.async_entries(DOMAIN)
     config = {
         CONF_ALARM_ENTITY_IDS: config_entries[0].options.get(CONF_ALARM_ENTITY_IDS, []),
@@ -158,6 +167,7 @@ async def websocket_get_entities(
             CONF_EXCLUDED_INTEGRATIONS, []
         ),
         CONF_EXCLUDED_TARGETS: config_entries[0].options.get(CONF_EXCLUDED_TARGETS),
+        "version": get_version(),  # Include version for frontend version check
     }
 
     connection.send_message(result_message(msg["id"], config))

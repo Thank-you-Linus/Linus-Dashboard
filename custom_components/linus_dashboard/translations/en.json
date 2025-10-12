@@ -69,12 +69,20 @@
                     "night": "Good night,"
                 }
             },
+            "reload_cache": {
+                "name": "Reload Cache",
+                "state": {
+                    "restart": "Clear cache",
+                    "confirm": "Are you sure you want to clear the cache and reload the page?"
+                }
+            },
             "settings_popup": {
                 "name": "Control center",
                 "state": {
                     "welcome_message": "Here's what Linus proudly organizes:",
                     "reload_magic_areas": "Reload Magic Areas",
                     "reload_confirm": "Are you sure you want to reload Magic Areas?",
+                    "reload_cache": "Reload Cache",
                     "dashboard_config": "Dashboards",
                     "areas": "areas",
                     "floors": "floors",
@@ -91,6 +99,15 @@
                     "thank_you": "Thank you for using Linus Dashboard",
                     "star_message": "⭐ Love Linus Dashboard? Star us on GitHub!",
                     "version_info": "Version"
+                }
+            },
+            "version_check": {
+                "name": "⚠️ Linus Dashboard Update Required",
+                "state": {
+                    "mismatch": "ℹ️ Version mismatch detected",
+                    "browser": "💻 Frontend (Dashboard)",
+                    "backend": "🔧 Backend (Custom Component)",
+                    "instructions": "🔄 Please refresh your browser (CTRL+F5 or SHIFT+F5) to load the latest version."
                 }
             }
         }

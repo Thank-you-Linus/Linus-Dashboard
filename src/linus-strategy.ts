@@ -6,6 +6,7 @@ import { AreaView } from "./views/AreaView";
 import { getAreaName, getDomainTranslationKey, getFloorName, getGlobalEntitiesExceptUndisclosed } from "./utils";
 import { FloorView } from "./views/FloorView";
 import { ResourceKeys } from "./types/homeassistant/data/frontend";
+import { initVersionCheck } from "./version-check";
 
 /**
  * Linus Dashboard Strategy.<br>
@@ -31,6 +32,11 @@ class LinusStrategy extends HTMLTemplateElement {
    */
   static async generateDashboard(info: generic.DashBoardInfo): Promise<LovelaceConfig> {
     if (!Helper.isInitialized()) await Helper.initialize(info);
+
+    // Initialize version check (runs async, doesn't block dashboard generation)
+    initVersionCheck(info.hass).catch((error) => {
+      console.error("[Linus Dashboard] Version check initialization failed:", error);
+    });
 
     const views: LovelaceViewConfig[] = info.config?.views ?? [];
 
@@ -214,7 +220,7 @@ class LinusStrategy extends HTMLTemplateElement {
 
 customElements.define("ll-strategy-linus-strategy", LinusStrategy);
 
-export const version = "v1.3.0-alpha.1";
+export const version = "1.3.0-alpha.1";
 console.info(
   "%c Linus Strategy %c ".concat(version, " "),
   "color: #F5F5DC; background: #004225; font-weight: 700;", "color: #004225; background: #F5F5DC; font-weight: 700;"

@@ -103,11 +103,12 @@ class ControllerCard {
           ...this.#defaultConfig.controlChipOptions,
           domain: this.#domain,
         };
+
         const chips = chipModule && typeof chipModule === 'function'
           ? (
             chipOptions.device_class
               ? [chipOptions.device_class]
-              : DEVICE_CLASSES[this.#domain as keyof typeof DEVICE_CLASSES] ?? [undefined]).flatMap((device_class) => new chipModule({ ...chipOptions, device_class }, magic_device).getChip()).filter((chip: any) => chip?.icon !== undefined || chip.chip.icon !== undefined)
+              : DEVICE_CLASSES[this.#domain as keyof typeof DEVICE_CLASSES] ?? []).flatMap((device_class) => new chipModule({ ...chipOptions, device_class }, magic_device).getChip())?.filter((chip) => chip?.icon !== undefined || chip.chip?.icon !== undefined)
           : [];
 
         badges.push({

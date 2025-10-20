@@ -43,7 +43,7 @@ class SettingsPopup extends AbstractPopup {
                       box-shadow: none;
                       margin-bottom: 12px;
                       font-weight: bold;
-                      --card-primary-color: #F5F5DC;
+                      --primary-text-color: #F5F5DC;
                     }
 
 

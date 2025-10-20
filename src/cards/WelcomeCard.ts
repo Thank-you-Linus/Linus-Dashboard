@@ -117,12 +117,10 @@ class WelcomeCard {
             },
             card_mod: {
                 style: `
-          ha-card {
-            background: #1f1f1f;
-            border-radius: 12px;
-            padding: 16px;
-          }
-        `
+                    ha-card {
+                        padding: 16px;
+                    }
+                `
             }
         } as TemplateCardConfig;
     }

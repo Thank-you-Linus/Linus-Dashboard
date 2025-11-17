@@ -1,3 +1,12 @@
+export interface EmbeddedDashboardConfig {
+    dashboard: string;
+    view_index?: number;
+    view_path?: string;
+    title?: string;
+    icon?: string;
+    path?: string;
+}
+
 export interface LinusDashboardConfig {
     alarm_entity_ids?: string[]; // multi-alarmes
     weather_entity_id?: string | null;
@@ -11,4 +20,5 @@ export interface LinusDashboardConfig {
     excluded_domains?: string[];
     excluded_device_classes?: string[];
     excluded_integrations?: string[];
+    embedded_dashboards?: EmbeddedDashboardConfig[];
 }

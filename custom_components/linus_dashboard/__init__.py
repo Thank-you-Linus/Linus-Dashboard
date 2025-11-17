@@ -20,6 +20,7 @@ from homeassistant.core import HomeAssistant
 from custom_components.linus_dashboard import utils
 from custom_components.linus_dashboard.const import (
     CONF_ALARM_ENTITY_IDS,
+    CONF_EMBEDDED_DASHBOARDS,
     CONF_EXCLUDED_DEVICE_CLASSES,
     CONF_EXCLUDED_DOMAINS,
     CONF_EXCLUDED_INTEGRATIONS,
@@ -167,7 +168,14 @@ async def websocket_get_entities(
             CONF_EXCLUDED_INTEGRATIONS, []
         ),
         CONF_EXCLUDED_TARGETS: config_entries[0].options.get(CONF_EXCLUDED_TARGETS),
+        CONF_EMBEDDED_DASHBOARDS: config_entries[0].options.get(
+            CONF_EMBEDDED_DASHBOARDS, []
+        ),
         "version": get_version(),  # Include version for frontend version check
     }
+
+    _LOGGER.info(
+        "WebSocket sending embedded_dashboards: %s", config[CONF_EMBEDDED_DASHBOARDS]
+    )
 
     connection.send_message(result_message(msg["id"], config))

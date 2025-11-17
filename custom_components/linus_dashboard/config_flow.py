@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import logging
 from typing import Any
 
@@ -28,9 +29,11 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.translation import async_get_translations
+from homeassistant.util import slugify
 
 from .const import (
     CONF_ALARM_ENTITY_IDS,
+    CONF_EMBEDDED_DASHBOARDS,
     CONF_EXCLUDED_DEVICE_CLASSES,
     CONF_EXCLUDED_DOMAINS,
     CONF_EXCLUDED_INTEGRATIONS,
@@ -85,6 +88,7 @@ class LinusDashboardEditFlow(config_entries.OptionsFlow):
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize the options flow."""
         self._config_entry = config_entry
+        self._dashboard_config = {}  # Store temporary config during multi-step flow
 
     async def _get_current_language(self) -> str:
         """Get the current user's frontend language dynamically."""
@@ -291,6 +295,64 @@ class LinusDashboardEditFlow(config_entries.OptionsFlow):
             _LOGGER.warning("Error getting integrations: %s", e)
             return []
 
+    async def _get_available_dashboard_views(self) -> list[dict[str, str]]:
+        """Get available dashboard views (dashboard + view combinations)."""
+        lovelace_data = self.hass.data.get("lovelace")
+        if not lovelace_data:
+            return []
+
+        dashboard_views = []
+
+        async def process_dashboard(
+            config: dict, title: str, url_path: str, emoji: str
+        ) -> None:
+            """Process a dashboard and extract its views."""
+            if not config or "views" not in config:
+                return
+
+            for idx, view in enumerate(config["views"]):
+                view_title = view.get("title", f"View {idx}")
+                dashboard_views.append({
+                    "value": f"{url_path}|{idx}|{view.get('path', '')}",
+                    "label": f"{emoji} {title} > {view_title}",
+                    "dashboard": url_path,
+                    "view_index": idx,
+                    "view_title": view_title,
+                    "view_path": view.get("path", ""),
+                    "view_icon": view.get("icon", "mdi:view-dashboard"),
+                })
+
+        try:
+            # Process main dashboard
+            if hasattr(lovelace_data, "config"):
+                await process_dashboard(
+                    lovelace_data.config, "Main Dashboard", "lovelace", "🏠"
+                )
+
+            # Process custom dashboards
+            if hasattr(lovelace_data, "dashboards"):
+                for dashboard_obj in lovelace_data.dashboards.values():
+                    title = url_path = getattr(dashboard_obj, "url_path", "unknown")
+                    config = None
+
+                    if hasattr(dashboard_obj, "config") and isinstance(
+                        dashboard_obj.config, dict
+                    ):
+                        title = dashboard_obj.config.get("title", title)
+                        url_path = dashboard_obj.config.get("url_path", url_path)
+
+                    if hasattr(dashboard_obj, "async_load"):
+                        with contextlib.suppress(Exception):
+                            config = await dashboard_obj.async_load(force=False)
+
+                    await process_dashboard(config, title, url_path, "📊")
+
+            return sorted(dashboard_views, key=lambda x: x["label"])
+
+        except (AttributeError, KeyError, TypeError) as e:
+            _LOGGER.warning("Error getting dashboard views: %s", e)
+            return []
+
     async def _get_device_options(self) -> list[dict[str, str]]:
         """Get device options dynamically, filtering out HA created devices."""
         try:
@@ -466,6 +528,7 @@ class LinusDashboardEditFlow(config_entries.OptionsFlow):
             vol.Optional(
                 CONF_ALARM_ENTITY_IDS,
                 default=current_options.get(CONF_ALARM_ENTITY_IDS, []),
+                description={"name": "Alarmes"},
             ): NullableEntitySelector(
                 EntitySelectorConfig(
                     domain="alarm_control_panel",
@@ -475,10 +538,12 @@ class LinusDashboardEditFlow(config_entries.OptionsFlow):
             vol.Optional(
                 CONF_WEATHER_ENTITY,
                 default=current_options.get(CONF_WEATHER_ENTITY, ""),
+                description={"name": "Entité Météo"},
             ): NullableEntitySelector(EntitySelectorConfig(domain="weather")),
             vol.Optional(
                 CONF_HIDE_GREETING,
                 default=current_options.get(CONF_HIDE_GREETING, False),
+                description={"name": "Masquer la salutation"},
             ): BooleanSelector(),
         }
 
@@ -541,6 +606,49 @@ class LinusDashboardEditFlow(config_entries.OptionsFlow):
 
         # Build thematic sections
         basic_config = self._build_basic_config_section(current_options)
+
+        # Add embedded dashboards multi-select with reordering
+        dashboard_views = await self._get_available_dashboard_views()
+        _LOGGER.info("Available dashboard views for config: %d", len(dashboard_views))
+
+        if dashboard_views:
+            # Create simple string options (label will be shown in UI)
+            view_options = [dv["label"] for dv in dashboard_views]
+
+            # Get currently selected views - convert to labels for display
+            current_embedded = current_options.get(CONF_EMBEDDED_DASHBOARDS, [])
+            views_dict = {dv["value"]: dv["label"] for dv in dashboard_views}
+            current_selected = []
+            for d in current_embedded:
+                view_key = (
+                    f"{d['dashboard']}|{d.get('view_index', '')}|"
+                    f"{d.get('view_path', '')}"
+                )
+                label = views_dict.get(view_key)
+                if label:
+                    current_selected.append(label)
+
+            _LOGGER.info("Current selected labels: %s", current_selected)
+
+            basic_config[
+                vol.Optional(
+                    CONF_EMBEDDED_DASHBOARDS,
+                    description={
+                        "suggested_value": current_selected,
+                    },
+                    default=current_selected,
+                )
+            ] = SelectSelector(
+                SelectSelectorConfig(
+                    options=view_options,
+                    multiple=True,
+                    custom_value=False,
+                    mode=SelectSelectorMode.DROPDOWN,
+                )
+            )
+        else:
+            _LOGGER.warning("No dashboard views found!")
+
         exclusion_config = self._build_exclusion_section(
             current_options,
             domain_options=domain_options,
@@ -558,6 +666,43 @@ class LinusDashboardEditFlow(config_entries.OptionsFlow):
     ) -> config_entries.ConfigFlowResult:
         """Manage the options with thematic organization."""
         if user_input is not None:
+            # Process embedded dashboards selection
+            selected_labels = user_input.get(CONF_EMBEDDED_DASHBOARDS, [])
+            embedded_dashboards = []
+
+            # Get all available views for lookup
+            dashboard_views = await self._get_available_dashboard_views()
+            # Create reverse lookup: label -> view info
+            label_to_view = {dv["label"]: dv for dv in dashboard_views}
+
+            # Parse each selected label and build dashboard config
+            for label in selected_labels:
+                # Get view info from label
+                view_info = label_to_view.get(label)
+                if not view_info:
+                    _LOGGER.warning("View not found for label: %s", label)
+                    continue
+
+                # Build config using view information
+                dashboard_config = {
+                    "dashboard": view_info["dashboard"],
+                    "view_index": view_info["view_index"],
+                    "title": view_info["view_title"],
+                    "icon": view_info.get("view_icon", "mdi:view-dashboard"),
+                    "path": slugify(
+                        f"{view_info['dashboard']}_{view_info['view_title']}"
+                    ),
+                }
+
+                # Add view path if available
+                if view_info.get("view_path"):
+                    dashboard_config["view_path"] = view_info["view_path"]
+
+                embedded_dashboards.append(dashboard_config)
+
+            # Update user_input with processed embedded dashboards
+            user_input[CONF_EMBEDDED_DASHBOARDS] = embedded_dashboards
+
             # Process form data to extract original values from display strings
             processed_data = await self._process_form_data(user_input)
             return self.async_create_entry(title="", data=processed_data)

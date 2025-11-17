@@ -481,6 +481,48 @@ class Helper {
       }),
     );
 
+    // Generate extra_views from embedded_dashboards configuration
+    // Note: The actual view metadata (title, icon, type) will be populated
+    // by the strategy when loading the embedded dashboards
+    if (linus_dashboard_config.embedded_dashboards?.length) {
+      console.log(
+        "[Linus Dashboard] Found embedded_dashboards config:",
+        linus_dashboard_config.embedded_dashboards
+      );
+
+      if (!this.#strategyOptions.extra_views) {
+        this.#strategyOptions.extra_views = [];
+      }
+
+      for (const embedConfig of linus_dashboard_config.embedded_dashboards) {
+        const embedCard: any = {
+          type: "linus.embed_view",
+          dashboard: embedConfig.dashboard,
+          view_index: embedConfig.view_index,
+        };
+
+        // Only add view_path if it exists
+        if (embedConfig.view_path) {
+          embedCard.view_path = embedConfig.view_path;
+        }
+
+        // Create placeholder view - will be updated with actual metadata by strategy
+        this.#strategyOptions.extra_views.push({
+          title: embedConfig.title || embedConfig.dashboard,
+          icon: embedConfig.icon || "mdi:view-dashboard",
+          path: embedConfig.path || embedConfig.dashboard,
+          cards: [embedCard],
+          // Store config for later use (TypeScript will complain but it's ok)
+          _embedConfig: embedConfig,
+        } as any);
+      }
+
+      this.#debug && console.log(
+        "[Linus Dashboard] Generated extra views from embedded dashboards:",
+        this.#strategyOptions.extra_views
+      );
+    }
+
     this.#initialized = true;
   }
 

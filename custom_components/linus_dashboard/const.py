@@ -19,3 +19,6 @@ CONF_EXCLUDED_DEVICE_CLASSES = "excluded_device_classes"
 CONF_EXCLUDED_TARGETS = "excluded_targets"
 CONF_HIDE_GREETING = "hide_greeting"
 CONF_EXCLUDED_INTEGRATIONS = "excluded_integrations"
+
+# Embedded dashboards configuration
+CONF_EMBEDDED_DASHBOARDS = "embedded_dashboards"

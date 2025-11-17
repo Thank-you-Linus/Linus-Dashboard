@@ -7,6 +7,7 @@ import { getAreaName, getDomainTranslationKey, getFloorName, getGlobalEntitiesEx
 import { FloorView } from "./views/FloorView";
 import { ResourceKeys } from "./types/homeassistant/data/frontend";
 import { initVersionCheck } from "./version-check";
+import { processEmbeddedViews, loadEmbeddedDashboard, applyEmbeddedViewMetadata } from "./embedLovelace";
 
 /**
  * Linus Dashboard Strategy.<br>
@@ -45,8 +46,53 @@ class LinusStrategy extends HTMLTemplateElement {
     LinusStrategy.createAreaSubviews(views);
     LinusStrategy.createFloorSubviews(views);
 
+    // Process extra_views and embed their cards
     if (Helper.strategyOptions.extra_views) {
-      views.push(...Helper.strategyOptions.extra_views);
+      for (const extraView of Helper.strategyOptions.extra_views) {
+        // Check if view requires admin access
+        const requireAdmin = (extraView as any).require_admin;
+        if (requireAdmin) {
+          // Check if current user is admin
+          const currentUser = info.hass?.user;
+          if (!currentUser || !currentUser.is_admin) {
+            // Skip this view if user is not admin
+            console.info(`[Linus Dashboard] Skipping view "${extraView.title}" (requires admin access)`);
+            continue;
+          }
+        }
+
+        // Process embedded views in extra_views
+        const firstCard = extraView.cards?.[0];
+        if (firstCard?.type === "linus.embed_view") {
+          try {
+            const embedCard = firstCard as any;
+            const result = await loadEmbeddedDashboard(
+              info.hass,
+              embedCard.dashboard,
+              embedCard.view_index,
+              embedCard.view_path
+            );
+
+            if (result.error) {
+              Helper.logError(`Failed to load embedded view for "${extraView.title}"`, new Error(result.error));
+              extraView.cards = [{
+                type: "markdown",
+                content: `⚠️ **Embedding Error**\n\n${result.error}`,
+              }];
+            } else {
+              extraView.cards = result.cards;
+
+              // Apply embedded view metadata for perfect replication
+              if (result.viewMetadata) {
+                applyEmbeddedViewMetadata(extraView, result.viewMetadata, result.cards.length > 0);
+              }
+            }
+          } catch (e) {
+            Helper.logError(`Failed to process embedded view "${extraView.title}"`, e);
+          }
+        }
+        views.push(extraView);
+      }
     }
 
     return { views };
@@ -157,14 +203,6 @@ class LinusStrategy extends HTMLTemplateElement {
    * @param {generic.ViewInfo} info The view's strategy information object.
    * @return {Promise<LovelaceViewConfig>}
    */
-  /**
-   * Generate a view.
-   *
-   * Called when opening a subview.
-   *
-   * @param {generic.ViewInfo} info The view's strategy information object.
-   * @return {Promise<LovelaceViewConfig>}
-   */
   static async generateView(info: generic.ViewInfo): Promise<LovelaceViewConfig> {
     const { viewId, floor, area } = info.view.strategy?.options ?? {};
     let view: LovelaceViewConfig = {};
@@ -212,6 +250,15 @@ class LinusStrategy extends HTMLTemplateElement {
         Helper.logError(`View for '${viewId}' couldn't be loaded!`, e);
       }
 
+    }
+
+    // Process embedded views (linus.embed_view cards)
+    if (view.cards && Array.isArray(view.cards)) {
+      try {
+        view.cards = await processEmbeddedViews(info.hass, view.cards);
+      } catch (e) {
+        Helper.logError("Failed to process embedded views", e);
+      }
     }
 
     return view;

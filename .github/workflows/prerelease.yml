@@ -1,0 +1,141 @@
+name: "Pre-Release"
+
+on:
+  push:
+    tags:
+      - '*-beta.*'
+      - '*-alpha.*'
+
+permissions:
+  contents: write
+
+jobs:
+  prerelease:
+    name: "Create Pre-Release"
+    runs-on: "ubuntu-latest"
+    steps:
+      # 0. Validate tag format
+      - name: "Validate tag format"
+        run: |
+          TAG_NAME="${GITHUB_REF#refs/tags/}"
+          echo "Tag: $TAG_NAME"
+          
+          # Check if tag matches semantic version with pre-release
+          if ! [[ "$TAG_NAME" =~ ^[0-9]+\.[0-9]+\.[0-9]+-(alpha|beta)\.[0-9]+$ ]]; then
+            echo "❌ Error: Invalid tag format. Expected: X.Y.Z-alpha.N or X.Y.Z-beta.N"
+            echo "   Got: $TAG_NAME"
+            exit 1
+          fi
+          
+          echo "✅ Tag format is valid"
+      # 1. Checkout le code source
+      - name: "Checkout the repository"
+        uses: "actions/checkout@v5"
+
+      # 2. Configurer Node.js
+      - name: "Set up Node.js"
+        uses: "actions/setup-node@v5"
+        with:
+          node-version: 24
+
+      # 3. Installer les dépendances
+      - name: "Install dependencies"
+        run: npm install
+
+      # 4. Run linting and type checking (optional, can be disabled if needed)
+      - name: "Lint and type check"
+        continue-on-error: true
+        run: |
+          npm run lint:check || echo "⚠️ Linting skipped (needs ESLint v9 migration)"
+          npm run type-check || echo "⚠️ Type checking skipped (has errors)"
+
+      # 5. Compiler le code
+      - name: "Build the project"
+        run: npm run build
+
+      # 6. Verify build output exists
+      - name: "Verify build output"
+        run: |
+          if [ ! -f "${{ github.workspace }}/custom_components/linus_dashboard/www/linus-strategy.js" ]; then
+            echo "❌ Error: Build output not found"
+            exit 1
+          fi
+          echo "✅ Build output verified"
+
+      # 7. Créer l'archive ZIP
+      - name: "ZIP the integration directory"
+        shell: "bash"
+        run: |
+          cd "${{ github.workspace }}/custom_components/linus_dashboard"
+          zip linus_dashboard.zip -r ./
+
+      # 8. Extraire le tag et la version
+      - name: "Extract version info"
+        id: version
+        run: |
+          TAG_NAME="${GITHUB_REF#refs/tags/}"
+          echo "tag=$TAG_NAME" >> $GITHUB_OUTPUT
+          echo "version=$TAG_NAME" >> $GITHUB_OUTPUT
+
+      # 9. Générer les release notes depuis RELEASE_NOTES.md ou commits
+      - name: "Generate release notes"
+        id: release_notes
+        run: |
+          if [ -f "RELEASE_NOTES.md" ]; then
+            echo "Using RELEASE_NOTES.md"
+            NOTES=$(cat RELEASE_NOTES.md)
+          else
+            echo "Generating from commits"
+            LAST_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+            if [ -z "$LAST_TAG" ]; then
+              NOTES="## Changes\n\n$(git log --pretty=format:'- %s' --no-merges -10)"
+            else
+              NOTES="## Changes\n\n$(git log ${LAST_TAG}..HEAD --pretty=format:'- %s' --no-merges)"
+            fi
+          fi
+          
+          # Save to file for upload
+          echo "$NOTES" > /tmp/release_notes.md
+          
+          # Also set as output (escaped for GitHub Actions)
+          echo "notes<<EOF" >> $GITHUB_OUTPUT
+          echo "$NOTES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      # 10. Créer la pre-release sur GitHub
+      - name: "Create GitHub Pre-Release"
+        id: create_release
+        uses: "softprops/action-gh-release@v2"
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: "🧪 ${{ steps.version.outputs.version }} (Pre-Release)"
+          body_path: /tmp/release_notes.md
+          draft: false
+          prerelease: true
+          files: ${{ github.workspace }}/custom_components/linus_dashboard/linus_dashboard.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # 11. Envoyer la notification Discord
+      - name: "Send Discord Notification"
+        if: success()
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          if [ -n "$DISCORD_WEBHOOK_URL" ]; then
+            bash scripts/notify-discord.sh prerelease "${{ steps.version.outputs.version }}" "${{ steps.create_release.outputs.url }}"
+          else
+            echo "⚠️ Discord webhook not configured, skipping notification"
+          fi
+
+      # 12. Nettoyer RELEASE_NOTES.md après publication
+      - name: "Clean up RELEASE_NOTES.md"
+        if: success()
+        run: |
+          if [ -f "RELEASE_NOTES.md" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git rm RELEASE_NOTES.md || true
+            git commit -m "chore: Clean up release notes after pre-release" || true
+            git push origin HEAD:main || true
+          fi

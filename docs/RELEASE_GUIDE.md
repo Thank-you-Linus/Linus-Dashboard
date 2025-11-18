@@ -418,14 +418,101 @@ npm run forums:open
 ### Available NPM Scripts | Scripts NPM disponibles
 
 ```bash
-npm run release:notes    # Generate RELEASE_NOTES.md
-npm run release:format   # Format release notes for GitHub (with collapsible sections)
-npm run release:check    # Validate release is ready
-npm run bump:alpha       # Bump to alpha version
-npm run bump:beta        # Bump to beta version
-npm run bump:release     # Bump to stable version
-npm run forums:open      # Open forum announcement pages
+# Release Preparation
+npm run release:notes      # Generate RELEASE_NOTES.md
+npm run release:format     # Format release notes for GitHub (with collapsible sections)
+npm run release:validate   # Validate RELEASE_NOTES.md
+npm run release:check      # Validate release is ready (17 checks)
+npm run release:changelog  # Generate CHANGELOG.md for HACS
+
+# Version Management
+npm run bump:alpha         # Bump to alpha version
+npm run bump:beta          # Bump to beta version
+npm run bump:release       # Bump to stable version
+npm run release:rollback   # Rollback a failed release
+
+# Testing
+npm run test:smoke         # Run smoke tests on build
+
+# Publishing
+npm run forums:open        # Open forum announcement pages
 ```
+
+---
+
+## 🆕 New Features | Nouvelles Fonctionnalités
+
+### Release Rollback | Retour en arrière de release
+
+If a release fails, you can safely rollback:
+
+Si une release échoue, vous pouvez revenir en arrière en toute sécurité :
+
+```bash
+npm run release:rollback 2.0.0-beta.3
+```
+
+This will | Cela va :
+- Delete local and remote tags | Supprimer les tags locaux et distants
+- Delete GitHub release | Supprimer la release GitHub
+- Revert version changes | Annuler les changements de version
+- Clean up release notes | Nettoyer les notes de version
+
+### Smoke Tests | Tests de validation
+
+Automated tests run before every release:
+
+Des tests automatisés s'exécutent avant chaque release :
+
+```bash
+npm run test:smoke
+```
+
+Validates | Valide :
+- Build output exists and is valid
+- Version consistency across files
+- Manifest.json and hacs.json syntax
+- Python file syntax
+- No sensitive data in build
+
+### CHANGELOG for HACS | CHANGELOG pour HACS
+
+Automatically generates HACS-compatible changelog:
+
+Génère automatiquement un changelog compatible HACS :
+
+```bash
+npm run release:changelog
+```
+
+Creates `CHANGELOG.md` with:
+- All releases by date
+- Categorized changes (Added, Fixed, Changed)
+- Links to GitHub releases
+
+### Enhanced Validation | Validation améliorée
+
+The `release:check` command now performs 17 checks:
+
+La commande `release:check` effectue maintenant 17 vérifications :
+
+1. Git status is clean
+2. On correct branch
+3. Up to date with remote
+4. RELEASE_NOTES.md exists
+5. Dependencies installed
+6. Linting passes
+7. Type checking passes
+8. Build succeeds
+9. Version consistency
+10. No FIXME/TODO comments
+11. CHANGELOG.md exists (NEW)
+12. Manifest.json valid (NEW)
+13. HACS.json valid (NEW)
+14. No sensitive data (NEW)
+15. Python syntax valid (NEW)
+16. README files exist (NEW)
+17. LICENSE exists (NEW)
 
 ---
 

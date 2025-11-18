@@ -179,6 +179,127 @@ else
 fi
 echo ""
 
+# Check 11: Check for CHANGELOG.md (for HACS)
+echo -e "${BLUE}📖 Checking for CHANGELOG.md...${NC}"
+if [ ! -f "CHANGELOG.md" ]; then
+    print_warning "CHANGELOG.md not found (useful for HACS)"
+    echo "  Run: npm run release:changelog"
+else
+    print_success "CHANGELOG.md exists"
+fi
+echo ""
+
+# Check 12: Check manifest.json validity
+echo -e "${BLUE}🔍 Validating manifest.json...${NC}"
+if python3 -m json.tool custom_components/linus_dashboard/manifest.json > /dev/null 2>&1; then
+    print_success "manifest.json is valid JSON"
+    
+    # Check required fields
+    REQUIRED_FIELDS=("domain" "name" "version" "documentation" "issue_tracker")
+    MANIFEST_VALID=true
+    
+    for field in "${REQUIRED_FIELDS[@]}"; do
+        if ! grep -q "\"$field\"" custom_components/linus_dashboard/manifest.json; then
+            print_error "manifest.json missing required field: $field"
+            MANIFEST_VALID=false
+        fi
+    done
+    
+    if [ "$MANIFEST_VALID" = true ]; then
+        print_success "manifest.json has all required fields"
+    fi
+else
+    print_error "manifest.json is not valid JSON"
+fi
+echo ""
+
+# Check 13: Check hacs.json validity
+echo -e "${BLUE}🔍 Validating hacs.json...${NC}"
+if [ -f "hacs.json" ]; then
+    if python3 -m json.tool hacs.json > /dev/null 2>&1; then
+        print_success "hacs.json is valid JSON"
+    else
+        print_error "hacs.json is not valid JSON"
+    fi
+else
+    print_warning "hacs.json not found (required for HACS)"
+fi
+echo ""
+
+# Check 14: Check for sensitive data in build
+echo -e "${BLUE}🔒 Checking for sensitive data patterns...${NC}"
+SENSITIVE_FOUND=false
+
+if [ -f "custom_components/linus_dashboard/www/linus-strategy.js" ]; then
+    # Check for common sensitive patterns (excluding comments)
+    if grep -i "password\|api_key\|secret\|token" custom_components/linus_dashboard/www/linus-strategy.js | grep -v "//" | grep -v "/\*" | grep -v "\*/" > /dev/null 2>&1; then
+        print_warning "Potential sensitive data patterns found in build"
+        echo "  Please review manually"
+        SENSITIVE_FOUND=true
+    fi
+    
+    if [ "$SENSITIVE_FOUND" = false ]; then
+        print_success "No obvious sensitive data patterns found"
+    fi
+else
+    print_warning "Build file not found, skipping sensitive data check"
+fi
+echo ""
+
+# Check 15: Verify Python files syntax
+echo -e "${BLUE}🐍 Checking Python syntax...${NC}"
+PYTHON_ERRORS=0
+
+for pyfile in custom_components/linus_dashboard/*.py; do
+    if [ -f "$pyfile" ]; then
+        if ! python3 -m py_compile "$pyfile" 2>/dev/null; then
+            print_error "Python syntax error in: $pyfile"
+            PYTHON_ERRORS=$((PYTHON_ERRORS + 1))
+        fi
+    fi
+done
+
+if [ $PYTHON_ERRORS -eq 0 ]; then
+    print_success "All Python files have valid syntax"
+else
+    print_error "Found $PYTHON_ERRORS Python file(s) with syntax errors"
+fi
+echo ""
+
+# Check 16: Check README files exist and are not empty
+echo -e "${BLUE}📄 Checking README files...${NC}"
+README_OK=true
+
+if [ ! -f "README.md" ]; then
+    print_error "README.md not found"
+    README_OK=false
+elif [ ! -s "README.md" ]; then
+    print_error "README.md is empty"
+    README_OK=false
+fi
+
+if [ ! -f "README-fr.md" ]; then
+    print_warning "README-fr.md not found (bilingual support)"
+elif [ ! -s "README-fr.md" ]; then
+    print_warning "README-fr.md is empty"
+fi
+
+if [ "$README_OK" = true ]; then
+    print_success "README files exist and are not empty"
+fi
+echo ""
+
+# Check 17: Verify LICENSE file
+echo -e "${BLUE}⚖️  Checking LICENSE file...${NC}"
+if [ ! -f "LICENSE" ]; then
+    print_warning "LICENSE file not found"
+elif [ ! -s "LICENSE" ]; then
+    print_warning "LICENSE file is empty"
+else
+    print_success "LICENSE file exists"
+fi
+echo ""
+
 # Summary
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo -e "${BLUE}📊 Summary${NC}"

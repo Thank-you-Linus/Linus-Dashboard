@@ -42,18 +42,24 @@ jobs:
       - name: "Install dependencies"
         run: npm install
 
-      # 4. Run linting and type checking (optional, can be disabled if needed)
+      # 4. Generate CHANGELOG.md for HACS
+      - name: "Generate CHANGELOG.md"
+        run: |
+          bash scripts/generate-changelog.sh
+          echo "✅ CHANGELOG.md generated"
+
+      # 5. Run linting and type checking (optional, can be disabled if needed)
       - name: "Lint and type check"
         continue-on-error: true
         run: |
           npm run lint:check || echo "⚠️ Linting skipped (needs ESLint v9 migration)"
           npm run type-check || echo "⚠️ Type checking skipped (has errors)"
 
-      # 5. Compiler le code
+      # 6. Compiler le code
       - name: "Build the project"
         run: npm run build
 
-      # 6. Verify build output exists
+      # 7. Verify build output exists
       - name: "Verify build output"
         run: |
           if [ ! -f "${{ github.workspace }}/custom_components/linus_dashboard/www/linus-strategy.js" ]; then
@@ -62,14 +68,18 @@ jobs:
           fi
           echo "✅ Build output verified"
 
-      # 7. Créer l'archive ZIP
+      # 8. Run smoke tests
+      - name: "Run Smoke Tests"
+        run: npm run test:smoke
+
+      # 9. Créer l'archive ZIP
       - name: "ZIP the integration directory"
         shell: "bash"
         run: |
           cd "${{ github.workspace }}/custom_components/linus_dashboard"
           zip linus_dashboard.zip -r ./
 
-      # 8. Extraire le tag et la version
+      # 10. Extraire le tag et la version
       - name: "Extract version info"
         id: version
         run: |
@@ -77,7 +87,7 @@ jobs:
           echo "tag=$TAG_NAME" >> $GITHUB_OUTPUT
           echo "version=$TAG_NAME" >> $GITHUB_OUTPUT
 
-      # 9. Générer et formater les release notes pour GitHub
+      # 11. Générer et formater les release notes pour GitHub
       - name: "Format release notes for GitHub"
         id: release_notes
         run: |
@@ -112,7 +122,7 @@ jobs:
           echo "$NOTES" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
-      # 10. Créer la pre-release sur GitHub
+      # 12. Créer la pre-release sur GitHub
       - name: "Create GitHub Pre-Release"
         id: create_release
         uses: "softprops/action-gh-release@v2"
@@ -126,26 +136,49 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # 11. Envoyer la notification Discord
+      # 13. Envoyer la notification Discord
       - name: "Send Discord Notification"
         if: success()
+        continue-on-error: true
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: |
           if [ -n "$DISCORD_WEBHOOK_URL" ]; then
-            bash scripts/notify-discord.sh prerelease "${{ steps.version.outputs.version }}" "${{ steps.create_release.outputs.url }}"
+            bash scripts/notify-discord.sh prerelease "${{ steps.version.outputs.version }}" "${{ steps.create_release.outputs.url }}" || {
+              echo "⚠️ Discord notification failed, but release will continue"
+              exit 0
+            }
           else
             echo "⚠️ Discord webhook not configured, skipping notification"
           fi
 
-      # 12. Nettoyer les fichiers de release notes après publication
+      # 14. Nettoyer les fichiers de release notes après publication
       - name: "Clean up release notes files"
         if: success()
+        continue-on-error: true
         run: |
           if [ -f "RELEASE_NOTES.md" ] || [ -f "RELEASE_NOTES_FORMATTED.md" ]; then
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
             git rm RELEASE_NOTES.md RELEASE_NOTES_FORMATTED.md || true
             git commit -m "chore: Clean up release notes after pre-release" || true
-            git push origin HEAD:main || true
+            git push origin HEAD:main || {
+              echo "⚠️ Failed to push cleanup commit, but release succeeded"
+              exit 0
+            }
           fi
+
+      # 15. Notification d'échec (si la release a échoué)
+      - name: "Notify on Failure"
+        if: failure()
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          if [ -n "$DISCORD_WEBHOOK_URL" ]; then
+            curl -H "Content-Type: application/json" \
+              -d '{
+                "content": "❌ **Pre-Release Failed** ❌\n\n**Version:** ${{ steps.version.outputs.version }}\n**Workflow:** ${{ github.workflow }}\n**Run:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\n\nPlease check the logs and consider using `scripts/rollback-release.sh ${{ steps.version.outputs.version }}` if needed."
+              }' \
+              "$DISCORD_WEBHOOK_URL" || echo "Failed to send Discord failure notification"
+          fi
+          echo "⚠️ Release failed. Consider running: scripts/rollback-release.sh ${{ steps.version.outputs.version }}"

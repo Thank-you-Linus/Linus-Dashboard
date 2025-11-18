@@ -37,18 +37,24 @@ jobs:
       - name: "Install dependencies"
         run: npm install
 
-      # 4. Run linting and type checking (optional, can be disabled if needed)
+      # 4. Generate CHANGELOG.md for HACS
+      - name: "Generate CHANGELOG.md"
+        run: |
+          bash scripts/generate-changelog.sh
+          echo "✅ CHANGELOG.md generated"
+
+      # 5. Run linting and type checking (optional, can be disabled if needed)
       - name: "Lint and type check"
         continue-on-error: true
         run: |
           npm run lint:check || echo "⚠️ Linting skipped (needs ESLint v9 migration)"
           npm run type-check || echo "⚠️ Type checking skipped (has errors)"
 
-      # 5. Compiler le code
+      # 6. Compiler le code
       - name: "Build the project"
         run: npm run build
 
-      # 6. Verify build output exists
+      # 7. Verify build output exists
       - name: "Verify build output"
         run: |
           if [ ! -f "${{ github.workspace }}/custom_components/linus_dashboard/www/linus-strategy.js" ]; then
@@ -57,29 +63,62 @@ jobs:
           fi
           echo "✅ Build output verified"
 
-      # 7. Créer l'archive ZIP
+      # 8. Run smoke tests
+      - name: "Run Smoke Tests"
+        run: npm run test:smoke
+
+      # 9. Créer l'archive ZIP
       - name: "ZIP the integration directory"
         shell: "bash"
         run: |
           cd "${{ github.workspace }}/custom_components/linus_dashboard"
           zip linus_dashboard.zip -r ./
 
-      # 8. Télécharger l'archive ZIP dans la release
+      # 10. Télécharger l'archive ZIP dans la release
       - name: "Upload the ZIP file to the release"
         uses: "softprops/action-gh-release@v2.3.3"
         with:
           files: ${{ github.workspace }}/custom_components/linus_dashboard/linus_dashboard.zip
 
-      # 9. Send Discord notification for stable release
+      # 11. Send Discord notification for stable release
       - name: "Send Discord Notification"
         if: success()
+        continue-on-error: true
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: |
           if [ -n "$DISCORD_WEBHOOK_URL" ]; then
             TAG_NAME="${{ github.event.release.tag_name }}"
             RELEASE_URL="${{ github.event.release.html_url }}"
-            bash scripts/notify-discord.sh release "$TAG_NAME" "$RELEASE_URL"
+            bash scripts/notify-discord.sh release "$TAG_NAME" "$RELEASE_URL" || {
+              echo "⚠️ Discord notification failed, but release succeeded"
+              exit 0
+            }
           else
             echo "⚠️ Discord webhook not configured, skipping notification"
           fi
+
+      # 12. Prepare forum notifications (manual posting required)
+      - name: "Prepare Forum Notifications"
+        if: success()
+        continue-on-error: true
+        run: |
+          TAG_NAME="${{ github.event.release.tag_name }}"
+          RELEASE_URL="${{ github.event.release.html_url }}"
+          bash scripts/notify-forums.sh release "$TAG_NAME" "$RELEASE_URL"
+          echo "📝 Forum notification templates generated (manual posting required)"
+
+      # 13. Notification d'échec (si la release a échoué)
+      - name: "Notify on Failure"
+        if: failure()
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          if [ -n "$DISCORD_WEBHOOK_URL" ]; then
+            curl -H "Content-Type: application/json" \
+              -d '{
+                "content": "❌ **Stable Release Failed** ❌\n\n**Version:** ${{ github.event.release.tag_name }}\n**Workflow:** ${{ github.workflow }}\n**Run:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\n\nPlease check the logs and consider using `scripts/rollback-release.sh ${{ github.event.release.tag_name }}` if needed."
+              }' \
+              "$DISCORD_WEBHOOK_URL" || echo "Failed to send Discord failure notification"
+          fi
+          echo "⚠️ Release failed. Consider running: scripts/rollback-release.sh ${{ github.event.release.tag_name }}"

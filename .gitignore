@@ -82,5 +82,3 @@ Thumbs.db
 # Logs
 *.log
 logs/
-
-.opencode/

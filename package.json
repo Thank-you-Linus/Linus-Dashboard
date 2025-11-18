@@ -1,6 +1,6 @@
 {
   "name": "linus-dashboard",
-  "version": "1.3.0",
+  "version": "1.4.0-beta.1",
   "description": "Your ultimate smart home assistant, redefined.",
   "keywords": [
     "smart home",
@@ -68,6 +68,12 @@
     "type-check:watch": "tsc --noEmit --watch",
     "lint": "eslint src --ext .ts,.tsx --fix",
     "lint:check": "eslint src --ext .ts,.tsx",
-    "bump": "bump --preid alpha package.json package-lock.json README.md ./custom_components/linus_dashboard/manifest.json ./custom_components/linus_dashboard/const.py ./src/linus-strategy.ts"
+    "bump": "bump --preid alpha package.json package-lock.json README.md ./custom_components/linus_dashboard/manifest.json ./custom_components/linus_dashboard/const.py ./src/linus-strategy.ts",
+    "release:notes": "bash scripts/generate-release-notes.sh",
+    "release:check": "bash scripts/check-release-ready.sh",
+    "bump:alpha": "bash scripts/bump-version.sh alpha",
+    "bump:beta": "bash scripts/bump-version.sh beta",
+    "bump:release": "bash scripts/bump-version.sh release",
+    "forums:open": "bash scripts/open-forums.sh"
   }
 }

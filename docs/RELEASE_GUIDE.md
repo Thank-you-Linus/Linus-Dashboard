@@ -101,6 +101,23 @@ This creates `RELEASE_NOTES.md` with:
 2. Translate to French
 3. Fill in "For Beta Testers" sections
 4. Remove any commits that shouldn't be public
+5. **Mark main features with bold** (`**text**`) - these will be highlighted in notifications
+
+### Step 1.5: Format Release Notes for GitHub
+
+After editing `RELEASE_NOTES.md`, format it for GitHub with collapsible sections:
+
+```bash
+npm run release:format
+```
+
+This creates `RELEASE_NOTES_FORMATTED.md` with:
+- Concise summary with main features visible
+- Detailed descriptions in collapsible sections
+- Compact bilingual format
+- Better visual organization for GitHub
+
+**This formatted version will be used automatically for GitHub releases.**
 
 ### Step 2: Verify Changes
 
@@ -159,9 +176,10 @@ GitHub Actions will automatically:
 5. ✅ Build the project
 6. ✅ Verify build output
 7. ✅ Create ZIP archive
-8. ✅ Create GitHub pre-release
-9. ✅ Send Discord notification to beta testers
-10. ✅ Clean up RELEASE_NOTES.md
+8. ✅ **Format release notes** with collapsible sections
+9. ✅ Create GitHub pre-release with formatted notes
+10. ✅ Send Discord notification to beta testers (concise format)
+11. ✅ Clean up RELEASE_NOTES.md and RELEASE_NOTES_FORMATTED.md
 
 **View the workflow**: `.github/workflows/prerelease.yml`
 
@@ -374,23 +392,26 @@ git push && git push --tags
 # 1. Generate release notes
 npm run release:notes
 
-# 2. Edit RELEASE_NOTES.md (add explanations, translations)
+# 2. Edit RELEASE_NOTES.md (add explanations, translations, mark main features with **)
 vim RELEASE_NOTES.md
 
-# 3. Verify everything is ready
+# 3. Format release notes for GitHub (optional, done automatically by CI)
+npm run release:format
+
+# 4. Verify everything is ready
 npm run release:check
 
-# 4. Bump version (choose one)
+# 5. Bump version (choose one)
 npm run bump:alpha    # For alpha testing
 npm run bump:beta     # For beta testing
 npm run bump:release  # For stable release
 
-# 5. Push to GitHub
+# 6. Push to GitHub
 git push && git push --tags
 
-# 6. Wait for GitHub Actions to complete
+# 7. Wait for GitHub Actions to complete
 
-# 7. For stable releases only: Publish to forums
+# 8. For stable releases only: Publish to forums
 npm run forums:open
 ```
 
@@ -398,6 +419,7 @@ npm run forums:open
 
 ```bash
 npm run release:notes    # Generate RELEASE_NOTES.md
+npm run release:format   # Format release notes for GitHub (with collapsible sections)
 npm run release:check    # Validate release is ready
 npm run bump:alpha       # Bump to alpha version
 npm run bump:beta        # Bump to beta version
@@ -412,6 +434,8 @@ npm run forums:open      # Open forum announcement pages
 ### ✅ DO | À FAIRE
 
 - Always generate release notes
+- **Mark main features with bold (`**text**`)** for better visibility
+- Format release notes for GitHub to keep them concise
 - Test beta versions before stable release
 - Use semantic versioning correctly
 - Write clear commit messages

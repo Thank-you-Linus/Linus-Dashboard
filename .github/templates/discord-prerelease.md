@@ -1,5 +1,5 @@
 🚨 **New Beta Release | Nouvelle Version Beta** 🚨
-<@&1420724757791379576>
+@Beta Tester 🔍
 
 **Linus Dashboard {{VERSION}}** is now available for testing!
 **Linus Dashboard {{VERSION}}** est maintenant disponible pour les tests !

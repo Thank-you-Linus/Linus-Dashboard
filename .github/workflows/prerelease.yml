@@ -77,15 +77,25 @@ jobs:
           echo "tag=$TAG_NAME" >> $GITHUB_OUTPUT
           echo "version=$TAG_NAME" >> $GITHUB_OUTPUT
 
-      # 9. Générer les release notes depuis RELEASE_NOTES.md ou commits
-      - name: "Generate release notes"
+      # 9. Générer et formater les release notes pour GitHub
+      - name: "Format release notes for GitHub"
         id: release_notes
         run: |
           if [ -f "RELEASE_NOTES.md" ]; then
-            echo "Using RELEASE_NOTES.md"
-            NOTES=$(cat RELEASE_NOTES.md)
+            echo "✅ Found RELEASE_NOTES.md"
+            
+            # Format the release notes with collapsible sections
+            bash scripts/format-release-notes.sh
+            
+            if [ -f "RELEASE_NOTES_FORMATTED.md" ]; then
+              echo "✅ Using formatted release notes"
+              NOTES=$(cat RELEASE_NOTES_FORMATTED.md)
+            else
+              echo "⚠️ Formatted file not found, using original"
+              NOTES=$(cat RELEASE_NOTES.md)
+            fi
           else
-            echo "Generating from commits"
+            echo "⚠️ No RELEASE_NOTES.md found, generating from commits"
             LAST_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
             if [ -z "$LAST_TAG" ]; then
               NOTES="## Changes\n\n$(git log --pretty=format:'- %s' --no-merges -10)"
@@ -128,14 +138,14 @@ jobs:
             echo "⚠️ Discord webhook not configured, skipping notification"
           fi
 
-      # 12. Nettoyer RELEASE_NOTES.md après publication
-      - name: "Clean up RELEASE_NOTES.md"
+      # 12. Nettoyer les fichiers de release notes après publication
+      - name: "Clean up release notes files"
         if: success()
         run: |
-          if [ -f "RELEASE_NOTES.md" ]; then
+          if [ -f "RELEASE_NOTES.md" ] || [ -f "RELEASE_NOTES_FORMATTED.md" ]; then
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
-            git rm RELEASE_NOTES.md || true
+            git rm RELEASE_NOTES.md RELEASE_NOTES_FORMATTED.md || true
             git commit -m "chore: Clean up release notes after pre-release" || true
             git push origin HEAD:main || true
           fi

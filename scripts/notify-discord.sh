@@ -58,53 +58,67 @@ if [ -f "RELEASE_NOTES.md" ]; then
     # Extract English changelog (features, fixes, improvements only)
     CHANGELOG_EN=""
     
-    # Get features
-    FEATURES=$(sed -n '/## 🇬🇧 English/,/## 🇫🇷 Français/p' RELEASE_NOTES.md | sed -n '/### ✨ New Features/,/###/p' | grep '^-' | head -5)
+    # Get features (only bold items - main highlights)
+    FEATURES=$(sed -n '/## 🇬🇧 English/,/## 🇫🇷 Français/p' RELEASE_NOTES.md | sed -n '/### ✨ New Features/,/^### /p' | grep -E '^[[:space:]]*-[[:space:]]*\*\*')
     if [ -n "$FEATURES" ]; then
-        CHANGELOG_EN="${CHANGELOG_EN}**✨ New Features**\n${FEATURES}\n\n"
+        CHANGELOG_EN="${CHANGELOG_EN}**✨ New Features**
+${FEATURES}
+
+"
     fi
     
-    # Get bug fixes
-    FIXES=$(sed -n '/## 🇬🇧 English/,/## 🇫🇷 Français/p' RELEASE_NOTES.md | sed -n '/### 🐛 Bug Fixes/,/###/p' | grep '^-' | head -5)
+    # Get bug fixes (only bold items - main highlights)
+    FIXES=$(sed -n '/## 🇬🇧 English/,/## 🇫🇷 Français/p' RELEASE_NOTES.md | sed -n '/### 🐛 Bug Fixes/,/^### /p' | grep -E '^[[:space:]]*-[[:space:]]*\*\*')
     if [ -n "$FIXES" ]; then
-        CHANGELOG_EN="${CHANGELOG_EN}**🐛 Bug Fixes**\n${FIXES}\n\n"
+        CHANGELOG_EN="${CHANGELOG_EN}**🐛 Bug Fixes**
+${FIXES}
+
+"
     fi
     
-    # Get improvements
-    IMPROVEMENTS=$(sed -n '/## 🇬🇧 English/,/## 🇫🇷 Français/p' RELEASE_NOTES.md | sed -n '/### ⚡ Improvements/,/###/p' | grep '^-' | head -3)
+    # Get improvements (all items, limited to 3)
+    IMPROVEMENTS=$(sed -n '/## 🇬🇧 English/,/## 🇫🇷 Français/p' RELEASE_NOTES.md | sed -n '/### ⚡ Improvements/,/^### /p' | grep -E '^[[:space:]]*-' | head -3)
     if [ -n "$IMPROVEMENTS" ]; then
-        CHANGELOG_EN="${CHANGELOG_EN}**⚡ Improvements**\n${IMPROVEMENTS}"
+        CHANGELOG_EN="${CHANGELOG_EN}**⚡ Improvements**
+${IMPROVEMENTS}"
     fi
     
     # Extract French changelog
     CHANGELOG_FR=""
     
-    # Get features (French)
-    FEATURES_FR=$(sed -n '/## 🇫🇷 Français/,/## 📊 Technical Details/p' RELEASE_NOTES.md | sed -n '/### ✨ Nouvelles fonctionnalités/,/###/p' | grep '^-' | head -5)
+    # Get features (French) (only bold items - main highlights)
+    FEATURES_FR=$(sed -n '/## 🇫🇷 Français/,/## 📊 Technical Details/p' RELEASE_NOTES.md | sed -n '/### ✨ Nouvelles fonctionnalités/,/^### /p' | grep -E '^[[:space:]]*-[[:space:]]*\*\*')
     if [ -n "$FEATURES_FR" ]; then
-        CHANGELOG_FR="${CHANGELOG_FR}**✨ Nouvelles fonctionnalités**\n${FEATURES_FR}\n\n"
+        CHANGELOG_FR="${CHANGELOG_FR}**✨ Nouvelles fonctionnalités**
+${FEATURES_FR}
+
+"
     fi
     
-    # Get bug fixes (French)
-    FIXES_FR=$(sed -n '/## 🇫🇷 Français/,/## 📊 Technical Details/p' RELEASE_NOTES.md | sed -n '/### 🐛 Corrections de bugs/,/###/p' | grep '^-' | head -5)
+    # Get bug fixes (French) (only bold items - main highlights)
+    FIXES_FR=$(sed -n '/## 🇫🇷 Français/,/## 📊 Technical Details/p' RELEASE_NOTES.md | sed -n '/### 🐛 Corrections de bugs/,/^### /p' | grep -E '^[[:space:]]*-[[:space:]]*\*\*')
     if [ -n "$FIXES_FR" ]; then
-        CHANGELOG_FR="${CHANGELOG_FR}**🐛 Corrections de bugs**\n${FIXES_FR}\n\n"
+        CHANGELOG_FR="${CHANGELOG_FR}**🐛 Corrections de bugs**
+${FIXES_FR}
+
+"
     fi
     
-    # Get improvements (French)
-    IMPROVEMENTS_FR=$(sed -n '/## 🇫🇷 Français/,/## 📊 Technical Details/p' RELEASE_NOTES.md | sed -n '/### ⚡ Améliorations/,/###/p' | grep '^-' | head -3)
+    # Get improvements (French) (all items, limited to 3)
+    IMPROVEMENTS_FR=$(sed -n '/## 🇫🇷 Français/,/## 📊 Technical Details/p' RELEASE_NOTES.md | sed -n '/### ⚡ Améliorations/,/^### /p' | grep -E '^[[:space:]]*-' | head -3)
     if [ -n "$IMPROVEMENTS_FR" ]; then
-        CHANGELOG_FR="${CHANGELOG_FR}**⚡ Améliorations**\n${IMPROVEMENTS_FR}"
+        CHANGELOG_FR="${CHANGELOG_FR}**⚡ Améliorations**
+${IMPROVEMENTS_FR}"
     fi
     
     # Extract testing notes EN
-    TESTING_NOTES_EN=$(sed -n '/### 🧪 For Beta Testers/,/## 🇫🇷 Français/p' RELEASE_NOTES.md | sed -n '/What to test:/,/Known Issues:/p' | grep -E '^\s*-' | head -5)
+    TESTING_NOTES_EN=$(sed -n '/### 🧪 For Beta Testers/,/## 🇫🇷 Français/p' RELEASE_NOTES.md | sed -n '/What to test:/,/Known Issues:/p' | grep -E '^[[:space:]]*-' | head -5)
     if [ -z "$TESTING_NOTES_EN" ]; then
         TESTING_NOTES_EN="- See full release notes for testing details"
     fi
     
     # Extract testing notes FR
-    TESTING_NOTES_FR=$(sed -n '/### 🧪 Pour les Beta Testeurs/,/## 📊 Technical Details/p' RELEASE_NOTES.md | sed -n '/Quoi tester/,/Problèmes connus/p' | grep -E '^\s*-' | head -5)
+    TESTING_NOTES_FR=$(sed -n '/### 🧪 Pour les Beta Testeurs/,/## 📊 Technical Details/p' RELEASE_NOTES.md | sed -n '/Quoi tester/,/Problèmes connus/p' | grep -E '^[[:space:]]*-' | head -5)
     if [ -z "$TESTING_NOTES_FR" ]; then
         TESTING_NOTES_FR="- Voir les notes complètes pour les détails de test"
     fi

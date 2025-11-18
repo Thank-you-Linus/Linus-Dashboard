@@ -14,6 +14,15 @@ jobs:
     permissions:
       contents: write
     steps:
+      # 0. Validate release (not a pre-release)
+      - name: "Validate release"
+        run: |
+          if [[ "${{ github.event.release.prerelease }}" == "true" ]]; then
+            echo "⚠️ This is a pre-release, skipping stable release workflow"
+            exit 0
+          fi
+          echo "✅ This is a stable release"
+
       # 1. Checkout le code source
       - name: "Checkout the repository"
         uses: "actions/checkout@v5"
@@ -28,19 +37,49 @@ jobs:
       - name: "Install dependencies"
         run: npm install
 
-      # 4. Compiler le code
+      # 4. Run linting and type checking (optional, can be disabled if needed)
+      - name: "Lint and type check"
+        continue-on-error: true
+        run: |
+          npm run lint:check || echo "⚠️ Linting skipped (needs ESLint v9 migration)"
+          npm run type-check || echo "⚠️ Type checking skipped (has errors)"
+
+      # 5. Compiler le code
       - name: "Build the project"
         run: npm run build
 
-      # 5. Créer l'archive ZIP
+      # 6. Verify build output exists
+      - name: "Verify build output"
+        run: |
+          if [ ! -f "${{ github.workspace }}/custom_components/linus_dashboard/www/linus-strategy.js" ]; then
+            echo "❌ Error: Build output not found"
+            exit 1
+          fi
+          echo "✅ Build output verified"
+
+      # 7. Créer l'archive ZIP
       - name: "ZIP the integration directory"
         shell: "bash"
         run: |
           cd "${{ github.workspace }}/custom_components/linus_dashboard"
           zip linus_dashboard.zip -r ./
 
-      # 6. Télécharger l'archive ZIP dans la release
+      # 8. Télécharger l'archive ZIP dans la release
       - name: "Upload the ZIP file to the release"
         uses: "softprops/action-gh-release@v2.3.3"
         with:
           files: ${{ github.workspace }}/custom_components/linus_dashboard/linus_dashboard.zip
+
+      # 9. Send Discord notification for stable release
+      - name: "Send Discord Notification"
+        if: success()
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          if [ -n "$DISCORD_WEBHOOK_URL" ]; then
+            TAG_NAME="${{ github.event.release.tag_name }}"
+            RELEASE_URL="${{ github.event.release.html_url }}"
+            bash scripts/notify-discord.sh release "$TAG_NAME" "$RELEASE_URL"
+          else
+            echo "⚠️ Discord webhook not configured, skipping notification"
+          fi

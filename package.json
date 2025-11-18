@@ -71,6 +71,7 @@
     "bump": "bump --preid alpha package.json package-lock.json README.md ./custom_components/linus_dashboard/manifest.json ./custom_components/linus_dashboard/const.py ./src/linus-strategy.ts",
     "release:notes": "bash scripts/generate-release-notes.sh",
     "release:format": "bash scripts/format-release-notes.sh",
+    "release:validate": "bash scripts/validate-release-notes.sh",
     "release:check": "bash scripts/check-release-ready.sh",
     "bump:alpha": "bash scripts/bump-version.sh alpha",
     "bump:beta": "bash scripts/bump-version.sh beta",

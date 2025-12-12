@@ -16,6 +16,7 @@ from homeassistant.components.websocket_api.decorators import (
 from homeassistant.components.websocket_api.messages import result_message
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 
 from custom_components.linus_dashboard import utils
 from custom_components.linus_dashboard.const import (
@@ -32,6 +33,8 @@ from custom_components.linus_dashboard.const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 def get_version() -> str:

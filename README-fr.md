@@ -56,7 +56,8 @@ Il organise automatiquement vos appareils en sections intelligentes, regroupées
 
 - 🏠 **Sections intelligentes basées sur les pièces** : affiche automatiquement les appareils par pièce pour une navigation facile.
 - 📟 **Vues centrées sur les appareils** : accédez rapidement aux lumières, capteurs et interrupteurs.
-- 🎨 **Design élégant et réactif** : s’adapte parfaitement à toutes les tailles d’écran.
+- 🎨 **Design élégant et réactif** : s'adapte parfaitement à toutes les tailles d'écran.
+- 🔗 **Intégration de tableaux de bord personnalisés** : intégrez vos propres tableaux de bord de manière transparente. [En savoir plus →](docs/EMBEDDED_DASHBOARDS.md)
 - ⚡ **Installation sans tracas** : branchez, utilisez et profitez.
 
 Que vous utilisiez déjà [hass-magic_areas](https://github.com/jseidl/hass-magic_areas) ou que vous débutiez avec Home Assistant, Linus Dashboard est la solution idéale pour une interface propre, organisée et intuitive.
@@ -87,6 +88,7 @@ Que vous utilisiez déjà [hass-magic_areas](https://github.com/jseidl/hass-magi
 <div align="center">
   <img src="https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/images/screenshots/aggregate-views-fr.jpg?raw=true" alt="Vue agrégée">
 </div>
+
 
 ## 📦 Guide d’installation
 

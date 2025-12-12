@@ -59,6 +59,7 @@ Key highlights include:
 - 🏠 **Room-Based Smart Sections**: Automatically display devices by room for easy navigation.
 - 📟 **Device-Centric Views**: Quickly access devices like lights, sensors, and switches.
 - 🎨 **Sleek, Responsive Design**: Adapts beautifully to any screen size.
+- 🔗 **Embed Custom Dashboards**: Integrate your own dashboards seamlessly. [Learn more →](docs/EMBEDDED_DASHBOARDS.md)
 - ⚡ **Hassle-Free Installation**: Just plug, play, and enjoy.
 
 Whether you're using hass-magic_areas or just starting with Home Assistant, Linus Dashboard is the ideal solution for a clean, organized, and intuitive interface.
@@ -96,7 +97,7 @@ Whether you're using [hass-magic_areas](https://github.com/jseidl/hass-magic_are
   <img src="https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/images/screenshots/aggregate-views-en.jpg?raw=true" alt="Aggregate view">
 </div>
 
-
+---
 
 ## 📦 Installation Guide
 

@@ -43,6 +43,7 @@ class LightView extends AbstractView {
   #viewControllerCardConfig: cards.ControllerCardOptions = {
     title: `${Helper.localize(`component.light.entity_component._.name`)}s`,
     // subtitle: Helper.getCountTemplate(LightView.#domain, "eq", "on") + ` ${Helper.localize("component.light.entity_component._.state.on")}`,
+    showControls: true,
   };
 
   /**

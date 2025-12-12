@@ -2,7 +2,6 @@
 
 import { LovelaceChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
 
-import { ConditionalChip } from "./ConditionalChip";
 import { LightChip } from "./LightChip";
 import { Helper } from "../Helper";
 
@@ -27,10 +26,16 @@ class ConditionalLightChip {
    */
   constructor({ area_slug, magic_device_id }: { area_slug: string | string[], magic_device_id?: string }) {
 
-    const magicAreaAllLight = magic_device_id && Helper.magicAreasDevices[magic_device_id]?.entities?.all_lights;
+    // Use EntityResolver to get all_lights entity (Linus Brain or Magic Areas)
+    const allLightsResolution = magic_device_id
+      ? Helper.entityResolver.resolveAllLights(magic_device_id)
+      : { entity_id: null, source: "native" as const };
 
-    if (magicAreaAllLight) {
-      this.config.push(new LightChip({ area_slug, magic_device_id, tap_action: { action: "toggle" } }).getChip());
+    const allLightsEntity = allLightsResolution.entity_id;
+
+    if (allLightsEntity) {
+      // Let LightChip decide the tap_action based on source (Linus Brain or Magic Areas)
+      this.config.push(new LightChip({ area_slug, magic_device_id }).getChip());
 
     } else {
       const entity_ids = Helper.getEntityIds({
@@ -39,15 +44,8 @@ class ConditionalLightChip {
       });
 
       if (entity_ids?.length) {
-        this.config.push(new ConditionalChip(
-          entity_ids.map(entity => ({ entity, state: "off" })),
-          new LightChip({ area_slug, magic_device_id, tap_action: { action: "call-service", service: "light.turn_on", data: { entity_id: entity_ids } } }).getChip(),
-        ).getChip())
-        this.config.push(new ConditionalChip(
-          [{ condition: "or", conditions: entity_ids.map(entity => ({ entity, state: "on", match: "any" })) }],
-          new LightChip({ area_slug, magic_device_id, tap_action: { action: "call-service", service: "light.turn_off", data: { entity_id: entity_ids } } }).getChip(),
-        ).getChip())
-
+        // Let LightChip handle tap_action (will use popup for native case)
+        this.config.push(new LightChip({ area_slug, magic_device_id }).getChip());
       }
 
 

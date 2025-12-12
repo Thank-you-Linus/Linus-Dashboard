@@ -79,6 +79,8 @@
     "bump:alpha": "bash scripts/bump-version.sh alpha",
     "bump:beta": "bash scripts/bump-version.sh beta",
     "bump:release": "bash scripts/bump-version.sh release",
-    "forums:open": "bash scripts/open-forums.sh"
+    "forums:open": "bash scripts/open-forums.sh",
+    "update:ha": "bash scripts/update-ha-version.sh",
+    "sync:deps": "node scripts/sync-dependencies.js"
   }
 }

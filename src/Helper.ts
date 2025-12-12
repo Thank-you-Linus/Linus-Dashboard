@@ -10,7 +10,7 @@ import StrategyEntity = generic.StrategyEntity;
 import StrategyDevice = generic.StrategyDevice;
 import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
 import { FloorRegistryEntry } from "./types/homeassistant/data/floor_registry";
-import { DEVICE_CLASSES, MAGIC_AREAS_DOMAIN, MAGIC_AREAS_NAME, SENSOR_STATE_CLASS_TOTAL, SENSOR_STATE_CLASS_TOTAL_INCREASING, UNDISCLOSED, colorMapping, ALL_HOME_ASSISTANT_DOMAINS } from "./variables";
+import { DEVICE_CLASSES, MAGIC_AREAS_DOMAIN, MAGIC_AREAS_NAME, LINUS_BRAIN_DOMAIN, SENSOR_STATE_CLASS_TOTAL, SENSOR_STATE_CLASS_TOTAL_INCREASING, UNDISCLOSED, colorMapping, ALL_HOME_ASSISTANT_DOMAINS } from "./variables";
 import { getEntityDomain, getGlobalEntitiesExceptUndisclosed, getMAEntity, getMagicAreaSlug, groupEntitiesByDomain, slugify } from "./utils";
 import { EntityRegistryEntry } from "./types/homeassistant/data/entity_registry";
 import { FrontendEntityComponentIconResources, IconResources } from "./types/homeassistant/data/frontend";
@@ -103,6 +103,14 @@ class Helper {
   static #magicAreasDevices: Record<string, MagicAreaRegistryEntry> = {};
 
   /**
+   * The entity resolver for Linus Brain / Magic Areas hybrid support.
+   *
+   * @type {EntityResolver}
+   * @private
+   */
+  static #entityResolver: any; // Import will be added after
+
+  /**
    * Set to true for more verbose information in the console.
    *
    * @type {boolean}
@@ -156,6 +164,16 @@ class Helper {
    */
   static get magicAreasDevices(): Record<string, MagicAreaRegistryEntry> {
     return this.#magicAreasDevices;
+  }
+
+  /**
+   * Get the entity resolver instance for Linus Brain / Magic Areas hybrid support.
+   *
+   * @returns {EntityResolver} The entity resolver.
+   * @static
+   */
+  static get entityResolver(): any {
+    return this.#entityResolver;
   }
 
   /**
@@ -339,6 +357,12 @@ class Helper {
         if (Helper.linus_dashboard_config.excluded_integrations.includes(integration)) return acc;
       }
 
+      // // Exclusion des entités Linus Brain (entités de contrôle, pas des vraies entités à afficher)
+      // // On filtre toutes les entités dont le nom contient "linus_brain" car ce sont des entités de contrôle
+      // if (entity.entity_id.includes('linus_brain')) {
+      //   return acc;
+      // }
+
       let domain = getEntityDomain(entity.entity_id);
       let device_class;
 
@@ -366,7 +390,7 @@ class Helper {
 
       acc[entity.entity_id] = enrichedEntity;
 
-      if (entity.platform !== MAGIC_AREAS_DOMAIN) {
+      if (entity.platform !== MAGIC_AREAS_DOMAIN && entity.platform !== LINUS_BRAIN_DOMAIN) {
         const areaId = entity.area_id ?? devicesByAreaIdMap[entity.device_id ?? ""] ?? UNDISCLOSED;
         if (!entitiesByAreaId[areaId]) entitiesByAreaId[areaId] = [];
         entitiesByAreaId[areaId].push(enrichedEntity);
@@ -377,7 +401,7 @@ class Helper {
         entitiesByDeviceId[entity.device_id]?.push(enrichedEntity);
       }
 
-      if (entity.platform !== MAGIC_AREAS_DOMAIN) this.#domains[domainTag].push(enrichedEntity);
+      if (entity.platform !== MAGIC_AREAS_DOMAIN && entity.platform !== LINUS_BRAIN_DOMAIN) this.#domains[domainTag].push(enrichedEntity);
 
       return acc;
     }, {} as Record<string, StrategyEntity>);
@@ -403,9 +427,11 @@ class Helper {
       }
 
       if (device.manufacturer === MAGIC_AREAS_NAME) {
-        this.#magicAreasDevices[getMagicAreaSlug(device as MagicAreaRegistryEntry)] = {
+        const magicAreaSlug = getMagicAreaSlug(device as MagicAreaRegistryEntry);
+        this.#magicAreasDevices[magicAreaSlug] = {
           ...device,
           area_name: device.name!,
+          slug: magicAreaSlug,
           entities: entitiesInDevice.reduce((entities: Record<string, StrategyEntity>, entity) => {
             entities[entity.translation_key!] = entity;
             return entities;
@@ -522,6 +548,10 @@ class Helper {
         this.#strategyOptions.extra_views
       );
     }
+
+    // Initialize entity resolver for Linus Brain / Magic Areas hybrid support
+    const { EntityResolver } = await import("./utils/entityResolver");
+    this.#entityResolver = new EntityResolver(info.hass);
 
     this.#initialized = true;
   }

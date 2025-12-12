@@ -19,6 +19,12 @@ class SettingsPopup extends AbstractPopup {
     const totalAreas = Object.keys(Helper.areas).length;
     const totalFloors = Object.keys(Helper.floors).length;
 
+    // Detect Linus Brain integration
+    const detectionStatus = Helper.entityResolver?.getDetectionStatus();
+    const hasLinusBrain = detectionStatus?.hasLinusBrain || !!Helper.entities["sensor.linus_brain_rooms"];
+    const linusBrainRoomsSensor = Helper.entities["sensor.linus_brain_rooms"];
+    const linusBrainRoomsCount = linusBrainRoomsSensor ? Helper.getEntityState(linusBrainRoomsSensor.entity_id).state : "0";
+
     return {
       action: "fire-dom-event",
       browser_mod: {
@@ -127,11 +133,11 @@ class SettingsPopup extends AbstractPopup {
                       }
                     }
                   },
-                  linusDeviceIds.length > 0 && {
+                  hasLinusBrain && {
                     type: "template",
-                    content: `${linusDeviceIds.length} Magic Areas`,
-                    icon: "mdi:magic-staff",
-                    icon_color: "amber",
+                    content: `${linusBrainRoomsCount} Linus Brain`,
+                    icon: "mdi:brain",
+                    icon_color: "cyan",
                     tap_action: {
                       action: "fire-dom-event",
                       browser_mod: {
@@ -139,7 +145,7 @@ class SettingsPopup extends AbstractPopup {
                         data: {
                           sequence: [
                             { service: "browser_mod.close_popup", data: {} },
-                            { service: "browser_mod.navigate", data: { path: `/config/integrations/integration/magic_areas` } }
+                            { service: "browser_mod.navigate", data: { path: `/config/integrations/integration/linus_brain` } }
                           ]
                         }
                       }
@@ -148,23 +154,6 @@ class SettingsPopup extends AbstractPopup {
                 ].filter(Boolean),
                 card_mod: {
                   style: `ha-card { box-shadow: none; margin: 0; }`
-                }
-              },
-
-
-              // Séparateur minimal
-              {
-                type: "custom:mushroom-template-card",
-                primary: "",
-                card_mod: {
-                  style: `
-                    ha-card {
-                      height: 1px;
-                      background: var(--divider-color);
-                      box-shadow: none;
-                      margin: 12px 0;
-                    }
-                  `
                 }
               },
 

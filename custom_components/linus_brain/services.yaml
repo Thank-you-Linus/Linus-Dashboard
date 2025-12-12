@@ -1,0 +1,160 @@
+# Services for Linus Brain integration
+
+sync_now:
+  name: Sync Now
+  description: Force an immediate synchronization of all area states to Supabase.
+  fields: {}
+
+fetch_rules:
+  name: Fetch Rules
+  description: Fetch and apply AI-generated automation rules from Supabase.
+  fields: {}
+
+send_area_update:
+  name: Send Area Update
+  description: Send an immediate update for a specific area to Supabase.
+  fields:
+    area:
+      name: Area
+      description: The name of the area to update (must match area name in Home Assistant).
+      required: true
+      example: "Living Room"
+      selector:
+        text:
+
+reload_rules:
+  name: Reload Rules
+  description: Reload automation rules from local storage.
+  fields: {}
+
+simulate_activity:
+  name: Simulate Activity
+  description: Simulate activity for an area to test automation rules.
+  fields:
+    area_id:
+      name: Area
+      description: Select the area to simulate activity for.
+      required: true
+      selector:
+        area:
+    activity:
+      name: Activity Level
+      description: The activity level to simulate.
+      required: true
+      default: "movement"
+      selector:
+        select:
+          options:
+            - label: "Empty (no activity)"
+              value: "empty"
+            - label: "Inactive (transition state)"
+              value: "inactive"
+            - label: "Movement (motion detected)"
+              value: "movement"
+            - label: "Occupied (long-term presence)"
+              value: "occupied"
+    duration:
+      name: Duration (seconds)
+      description: Auto-reset after this many seconds (0 = no auto-reset).
+      required: false
+      default: 0
+      example: 300
+      selector:
+        number:
+          min: 0
+          max: 3600
+          unit_of_measurement: "seconds"
+
+load_rule_from_cloud:
+  name: Load Rule from Cloud
+  description: Fetch and load a specific area rule from Supabase.
+  fields:
+    area_id:
+      name: Area ID
+      description: The area identifier for the rule to fetch.
+      required: true
+      example: "living_room"
+      selector:
+        text:
+
+debug_area_status:
+  name: Debug Area Status
+  description: Get detailed debugging information for a specific area's feature flag status.
+  fields:
+    area_id:
+      name: Area ID
+      description: The area identifier to debug.
+      required: true
+      example: "living_room"
+      selector:
+        text:
+
+debug_system_overview:
+  name: Debug System Overview
+  description: Get system-wide debugging information about feature flags and areas.
+  fields: {}
+
+debug_validate_area:
+  name: Debug Validate Area
+  description: Validate area configuration and get recommendations for feature flags.
+  fields:
+    area_id:
+      name: Area ID
+      description: The area identifier to validate.
+      required: true
+      example: "living_room"
+      selector:
+        text:
+
+debug_export_data:
+  name: Debug Export Data
+  description: Export debug data in JSON, CSV, or TXT format.
+  fields:
+    format:
+      name: Export Format
+      description: The format for the exported data.
+      required: false
+      default: "json"
+      selector:
+        select:
+          options:
+            - label: "JSON"
+              value: "json"
+            - label: "CSV"
+              value: "csv"
+            - label: "Text"
+              value: "txt"
+    area_id:
+      name: Area ID (Optional)
+      description: Export data for a specific area only (optional).
+      required: false
+      selector:
+        text:
+
+debug_reset_metrics:
+  name: Debug Reset Metrics
+  description: Reset feature flag metrics and debug history.
+  fields: {}
+
+debug_activities:
+  name: Debug Activities
+  description: Show currently loaded activity definitions and their detection conditions.
+  fields: {}
+
+reset_app_preferences:
+  name: Reset App Preferences
+  description: Reset area-specific app preferences (config_overrides) to default values. This removes all customizations and reverts to the app's default behavior.
+  fields:
+    area_id:
+      name: Area
+      description: The area to reset preferences for.
+      required: true
+      selector:
+        area:
+    app_id:
+      name: App ID (Optional)
+      description: The app ID to reset preferences for. If not specified, resets the currently assigned app for this area.
+      required: false
+      example: "automatic_lighting"
+      selector:
+        text:

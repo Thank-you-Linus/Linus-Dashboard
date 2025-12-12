@@ -65,7 +65,31 @@ class AreaView {
 
     const chips: LovelaceChipConfig[] = [];
 
-    chips.push(new AreaStateChip({ area: this.area, showContent: true }).getChip());
+    // Check if Linus Brain is configured for this area
+    const resolver = Helper.entityResolver;
+    const activityResolution = resolver.resolveAreaState(this.area.slug);
+    const hasLinusBrain = activityResolution.source === "linus_brain";
+    const hasAreaStateEntity = activityResolution.entity_id !== undefined && activityResolution.entity_id !== null;
+
+    // FIRST: Activity Detection chip (only if Linus Brain is available and entity exists)
+    if (hasLinusBrain && hasAreaStateEntity) {
+      try {
+        const ActivityDetectionChipModule = await import("../chips/ActivityDetectionChip");
+        const activityDetectionChip = new ActivityDetectionChipModule.ActivityDetectionChip({ area_slug: this.area.slug });
+        const chip = activityDetectionChip.getChip();
+        if (chip) {
+          chips.push(chip);
+        }
+      } catch (e) {
+        Helper.logError("An error occurred while creating the Activity Detection chip!", e);
+      }
+    } else if (!hasLinusBrain && hasAreaStateEntity) {
+      // Show AreaStateChip only if Linus Brain is NOT available but area state entity exists
+      const areaStateChip = new AreaStateChip({ area: this.area, showContent: true }).getChip();
+      if (areaStateChip) {
+        chips.push(areaStateChip);
+      }
+    }
 
     const areaChips = await createChipsFromList(AREA_EXPOSED_CHIPS, { show_content: true }, this.area.slug, this.area.slug);
     if (areaChips) {
@@ -75,11 +99,54 @@ class AreaView {
     const unavailableChip = new UnavailableChip({ area_slug: this.area.slug }).getChip();
     if (unavailableChip) chips.push(unavailableChip);
 
-    return chips.map(chip => ({
-      type: "custom:mushroom-chips-card",
-      alignment: "center",
-      chips: [chip],
-    }));
+    // LinusBrain area-specific chip.
+    try {
+      if (hasLinusBrain) {
+        const linusBrainPopupModule = await import("../popups/LinusBrainAreaPopup");
+        const linusBrainPopup = new linusBrainPopupModule.LinusBrainAreaPopup(this.area.slug);
+        
+        chips.push({
+          type: "template",
+          icon: "mdi:brain",
+          icon_color: "cyan",
+          content: "Linus Brain",
+          tap_action: linusBrainPopup.getPopup(),
+        });
+      }
+    } catch (e) {
+      Helper.logError("An error occurred while creating the Linus Brain area chip!", e);
+    }
+
+    // MagicAreas area-specific chip.
+    try {
+      // Check if Magic Areas is configured for this area
+      const magicAreaDevice = Object.values(Helper.devices).find(
+        device => device.manufacturer === "Magic Areas" && device.area_id === this.area.slug
+      );
+      
+      if (magicAreaDevice) {
+        chips.push({
+          type: "template",
+          icon: "mdi:magic-staff",
+          icon_color: "amber",
+          content: "Magic Areas",
+          tap_action: {
+            action: "navigate",
+            navigation_path: `/config/devices/device/${magicAreaDevice.id}`
+          },
+        });
+      }
+    } catch (e) {
+      Helper.logError("An error occurred while creating the Magic Areas area chip!", e);
+    }
+
+    return chips
+      .filter(chip => chip && chip.type) // Filter out undefined or invalid chips
+      .map(chip => ({
+        type: "custom:mushroom-chips-card",
+        alignment: "center",
+        chips: [chip],
+      }));
   }
 
   /**

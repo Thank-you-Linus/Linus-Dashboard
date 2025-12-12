@@ -14,7 +14,6 @@ import { WeatherChip } from "../chips/WeatherChip";
 import { UnavailableChip } from "../chips/UnavailableChip";
 import { PersonCard } from "../cards/PersonCard";
 import { AggregateChip } from "../chips/AggregateChip";
-import { LightChip } from "../chips/LightChip";
 import { ClimateChip } from "../chips/ClimateChip";
 import { FanChip } from "../chips/FanChip";
 import { WelcomeCard } from "../cards/WelcomeCard";
@@ -123,6 +122,32 @@ class HomeView {
     // Unavailable chip.
     const unavailableChip = new UnavailableChip().getChip();
     if (unavailableChip) chips.push(unavailableChip);
+
+    // LinusBrain chip.
+    try {
+      const linusBrainModule = await import("../chips/LinusBrainChip");
+      const linusBrainChip = new linusBrainModule.LinusBrainChip();
+      const chip = linusBrainChip.getChip() as any;
+      // Only add if chip has icon (checks if LinusBrain is installed)
+      if (chip.icon && chip.icon !== "") {
+        chips.push(chip);
+      }
+    } catch (e) {
+      Helper.logError("An error occurred while creating the Linus Brain chip!", e);
+    }
+
+    // MagicAreas chip.
+    try {
+      const magicAreasModule = await import("../chips/MagicAreasChip");
+      const magicAreasChip = new magicAreasModule.MagicAreasChip();
+      const chip = magicAreasChip.getChip() as any;
+      // Only add if chip has icon (checks if MagicAreas is installed)
+      if (chip.icon && chip.icon !== "") {
+        chips.push(chip);
+      }
+    } catch (e) {
+      Helper.logError("An error occurred while creating the Magic Areas chip!", e);
+    }
 
     // Settings chip.
     const linusSettings = new SettingsChip({ tap_action: new SettingsPopup().getPopup() });

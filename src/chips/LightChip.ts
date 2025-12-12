@@ -53,22 +53,43 @@ class LightChip extends AbstractChip {
     this.#defaultConfig.icon = Helper.getIcon("light", undefined, entities);
     this.#defaultConfig.icon_color = Helper.getIconColor("light", undefined, entities);
 
-    const magicAreasEntity = getMAEntity(options?.magic_device_id ?? "global", "light");
-
-    if (magicAreasEntity) {
-      // Magic Areas entity exists - use toggle action on single entity
-      this.#defaultConfig.entity = magicAreasEntity.entity_id;
-      this.#defaultConfig.hold_action = { action: "more-info" };
+    // Use EntityResolver to get all_lights entity (Linus Brain or Magic Areas)
+    let allLightsEntity: string | null = null;
+    
+    if (options?.magic_device_id && options.magic_device_id !== "global") {
+      const resolver = Helper.entityResolver;
+      const allLightsResolution = resolver.resolveAllLights(options.magic_device_id);
+      allLightsEntity = allLightsResolution.entity_id;
     } else {
-      // No magic entity - use call-service with smart logic for multiple lights
+      // For global, fallback to Magic Areas
+      const magicAreasEntity = getMAEntity("global", "light");
+      allLightsEntity = magicAreasEntity?.entity_id ?? null;
+    }
+
+    if (allLightsEntity) {
+      // Linus Brain or Magic Areas entity exists
+      this.#defaultConfig.entity = allLightsEntity;
+      
+      // UNIFORMISATION: Always use more-info for Linus Brain and Magic Areas
+      this.#defaultConfig.tap_action = { action: "more-info" };
+      this.#defaultConfig.hold_action = navigateTo('light');
+      
+    } else {
+      // No entity resolver match - use custom popup that mimics more-info
       const area_slug = Array.isArray(options?.area_slug) ? options?.area_slug : [options?.area_slug];
       const entity_id = area_slug.flatMap((area) => Helper.areas[area ?? "global"]?.domains?.light ?? []);
       this.#defaultConfig.entity_id = entity_id;
 
-      if (entity_id.length === 1) {
-        // Single light - simple toggle
-        this.#defaultConfig.entity = entity_id[0];
-        this.#defaultConfig.tap_action = undefined
+      if (entity_id.length > 0) {
+        // Import LightsGroupPopup to create a custom popup
+        const { LightsGroupPopup } = require("../popups/LightsGroupPopup");
+        
+        // Use custom popup for all cases (even single light for consistency)
+        this.#defaultConfig.tap_action = new LightsGroupPopup(
+          options?.area_slug ?? "global", 
+          entity_id
+        ).getPopup();
+        this.#defaultConfig.hold_action = navigateTo('light');
       }
 
       if (options.hold_action) {

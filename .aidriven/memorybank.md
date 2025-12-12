@@ -641,6 +641,53 @@ All Magic Areas aggregate entities remain unchanged (no Linus Brain equivalent):
 
 **Design Decision**: Hybrid approach prioritizes Linus Brain when available while maintaining full Magic Areas compatibility for features Linus Brain doesn't provide.
 
+### Manual Area and Floor Ordering (v1.4.0+)
+
+**Home Assistant 2025.1+ Manual Reordering Support**
+
+Starting in v1.4.0, Linus Dashboard fully supports Home Assistant 2025.1+'s new manual reordering feature for areas and floors, while maintaining backward compatibility with older versions.
+
+**Features**:
+- **Automatic Detection**: Dashboard automatically detects and uses manual ordering when available
+- **Backward Compatible**: Falls back gracefully to legacy sorting on older HA versions
+- **Multi-Level Sorting**: Smart sorting priority system ensures consistent ordering
+
+**Sorting Priority for Areas**:
+1. **Manual order** (HA 2025.1+) - User-defined order from Settings > Areas, labels & zones > Reorder
+2. **Areas with order** - Areas with manual order appear before areas without
+3. **Alphabetical fallback** - For backward compatibility and areas without manual order
+
+**Sorting Priority for Floors**:
+1. **Manual order** (HA 2025.1+) - User-defined order from Settings > Areas, labels & zones > Reorder
+2. **Floors with order** - Floors with manual order appear before floors without
+3. **Numeric level** (legacy) - Traditional floor level ordering (basement=-1, ground=0, first=1, etc.)
+4. **Alphabetical fallback** - Final fallback for consistency
+
+**Implementation**:
+- `src/types/homeassistant/data/area_registry.ts` - Added `order?: number` property
+- `src/types/homeassistant/data/floor_registry.ts` - Added `order?: number` property
+- `src/Helper.ts` - Enhanced `orderedAreas` and `orderedFloors` getters with multi-level sorting
+
+**Use Cases**:
+- Prioritize main living areas (living room before guest bathroom)
+- Custom floor ordering (attic doesn't have to be first despite high level number)
+- Mixed installations (some areas/floors ordered, others alphabetical)
+
+**Example Behavior**:
+```typescript
+// Areas without manual order (HA < 2025.1):
+// Alphabetical: Bathroom, Bedroom, Kitchen, Living Room
+
+// Areas with manual order (HA >= 2025.1):
+// User-defined: Living Room (order=0), Kitchen (order=1), Bedroom (order=2), Bathroom (order=3)
+
+// Mixed scenario:
+// Living Room (order=0), Kitchen (order=1), Bathroom (alphabetical), Bedroom (alphabetical)
+// Results: Living Room, Kitchen, Bathroom, Bedroom
+```
+
+**Compatibility**: Works seamlessly with all Home Assistant versions. No user configuration required.
+
 ---
 
 ## 🚀 Future Enhancements

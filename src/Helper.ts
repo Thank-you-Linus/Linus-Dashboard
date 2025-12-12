@@ -188,18 +188,28 @@ class Helper {
 
   /**
    * Get the entities from Home Assistant's floor registry.
+   * 
+   * Sorting priority:
+   * 1. Manual order (HA 2025.1+) - if both areas have 'order' property
+   * 2. Areas with order come before areas without order
+   * 3. Alphabetical by name (fallback for backward compatibility)
    *
    * @returns {StrategyArea[]}
    * @static
    */
   static get orderedAreas(): StrategyArea[] {
     return Object.values(this.#areas).sort((a, b) => {
-      // Check if 'level' is undefined in either object
-      if (a.order === undefined) return 1; // a should come after b
-      if (b.order === undefined) return -1; // b should come after a
-
-      // Both 'order' values are defined, compare them
-      return a.order - b.order;
+      // Priority 1: Manual order (HA 2025.1+)
+      if (a.order !== undefined && b.order !== undefined) {
+        return a.order - b.order;
+      }
+      
+      // Priority 2: If only one has manual order, it comes first
+      if (a.order !== undefined) return -1;
+      if (b.order !== undefined) return 1;
+      
+      // Priority 3: Alphabetical fallback for backward compatibility
+      return a.name.localeCompare(b.name);
     });
   }
 
@@ -215,18 +225,36 @@ class Helper {
 
   /**
    * Get the entities from Home Assistant's floor registry.
+   * 
+   * Sorting priority:
+   * 1. Manual order (HA 2025.1+) - if both floors have 'order' property
+   * 2. Floors with order come before floors without order
+   * 3. Numeric level (legacy behavior for backward compatibility)
+   * 4. Alphabetical by name (final fallback)
    *
    * @returns {StrategyFloor[]}
    * @static
    */
   static get orderedFloors(): StrategyFloor[] {
     return Object.values(this.#floors).sort((a, b) => {
-      // Check if 'level' is undefined in either object
-      if (a.level === undefined) return 1; // a should come after b
-      if (b.level === undefined) return -1; // b should come after a
-
-      // Both 'level' values are defined, compare them
-      return a.level - b.level;
+      // Priority 1: Manual order (HA 2025.1+)
+      if (a.order !== undefined && b.order !== undefined) {
+        return a.order - b.order;
+      }
+      
+      // Priority 2: If only one has manual order, it comes first
+      if (a.order !== undefined) return -1;
+      if (b.order !== undefined) return 1;
+      
+      // Priority 3: Numeric level (legacy behavior)
+      if (a.level !== undefined && b.level !== undefined) {
+        return a.level - b.level;
+      }
+      if (a.level !== undefined) return -1;
+      if (b.level !== undefined) return 1;
+      
+      // Priority 4: Alphabetical fallback
+      return a.name.localeCompare(b.name);
     });
   }
 

@@ -45,11 +45,11 @@ run_test() {
     
     if eval "$test_command" > /dev/null 2>&1; then
         print_success "$test_name"
-        ((PASSED_TESTS++))
+        PASSED_TESTS=$((PASSED_TESTS + 1))
         return 0
     else
         print_error "$test_name"
-        ((FAILED_TESTS++))
+        FAILED_TESTS=$((FAILED_TESTS + 1))
         return 1
     fi
 }
@@ -75,10 +75,10 @@ CONST_VERSION=$(grep -oP "VERSION = \"\K[^\"]+" custom_components/linus_dashboar
 
 if [ "$PACKAGE_VERSION" = "$MANIFEST_VERSION" ] && [ "$PACKAGE_VERSION" = "$CONST_VERSION" ]; then
     print_success "Version consistency (all $PACKAGE_VERSION)"
-    ((PASSED_TESTS++))
+    PASSED_TESTS=$((PASSED_TESTS + 1))
 else
     print_error "Version mismatch: package.json=$PACKAGE_VERSION, manifest.json=$MANIFEST_VERSION, const.py=$CONST_VERSION"
-    ((FAILED_TESTS++))
+    FAILED_TESTS=$((FAILED_TESTS + 1))
 fi
 
 # Test 4: Check required files
@@ -98,15 +98,15 @@ print_step "JavaScript Syntax Tests"
 if command -v node &> /dev/null; then
     if node -c custom_components/linus_dashboard/www/linus-strategy.js 2>/dev/null; then
         print_success "JavaScript syntax check"
-        ((PASSED_TESTS++))
+        PASSED_TESTS=$((PASSED_TESTS + 1))
     else
         print_warning "JavaScript syntax check (non-critical)"
         # Don't fail for this one as build might use different syntax
-        ((PASSED_TESTS++))
+        PASSED_TESTS=$((PASSED_TESTS + 1))
     fi
 else
     print_warning "Node.js not available, skipping JS syntax check"
-    ((PASSED_TESTS++))
+    PASSED_TESTS=$((PASSED_TESTS + 1))
 fi
 
 # Test 7: Check for common issues in code
@@ -117,27 +117,27 @@ if grep -q "console\\.log" custom_components/linus_dashboard/www/linus-strategy.
     print_warning "console.log found in build (consider removing for production)"
 else
     print_success "No console.log in production build"
-    ((PASSED_TESTS++))
+    PASSED_TESTS=$((PASSED_TESTS + 1))
 fi
 
 # Check build size (should be reasonable)
 BUILD_SIZE=$(stat -f%z custom_components/linus_dashboard/www/linus-strategy.js 2>/dev/null || stat -c%s custom_components/linus_dashboard/www/linus-strategy.js 2>/dev/null || echo "0")
 if [ "$BUILD_SIZE" -gt 1000 ] && [ "$BUILD_SIZE" -lt 10000000 ]; then
     print_success "Build size is reasonable ($(numfmt --to=iec $BUILD_SIZE 2>/dev/null || echo "${BUILD_SIZE} bytes"))"
-    ((PASSED_TESTS++))
+    PASSED_TESTS=$((PASSED_TESTS + 1))
 else
     print_warning "Build size unusual: $BUILD_SIZE bytes"
-    ((PASSED_TESTS++))
+    PASSED_TESTS=$((PASSED_TESTS + 1))
 fi
 
 # Test 8: Check for required Python dependencies
 print_step "Python Dependencies Tests"
 if python3 -c "import json" 2>/dev/null; then
     print_success "Python json module available"
-    ((PASSED_TESTS++))
+    PASSED_TESTS=$((PASSED_TESTS + 1))
 else
     print_error "Python json module not available"
-    ((FAILED_TESTS++))
+    FAILED_TESTS=$((FAILED_TESTS + 1))
 fi
 
 # Test 9: Check ZIP creation (if it exists)
@@ -163,10 +163,10 @@ done
 
 if [ "$FOUND_SENSITIVE" = false ]; then
     print_success "No obvious sensitive data patterns found"
-    ((PASSED_TESTS++))
+    PASSED_TESTS=$((PASSED_TESTS + 1))
 else
     # Don't fail, just warn
-    ((PASSED_TESTS++))
+    PASSED_TESTS=$((PASSED_TESTS + 1))
 fi
 
 # Summary

@@ -874,8 +874,6 @@ class TestEnterExitCooldownSeparation:
         mock_app_storage,
     ):
         """Test that turning lights ON doesn't prevent turning them OFF immediately."""
-
-
         # Use app with on_exit actions
         mock_app_storage.get_app = MagicMock(return_value=autolight_app_with_exit)
 
@@ -959,8 +957,6 @@ class TestEnterExitCooldownSeparation:
         mock_app_storage,
     ):
         """Test that exit cooldown prevents rapid OFF→ON→OFF cycles."""
-
-
         # Use app with on_exit actions
         mock_app_storage.get_app = MagicMock(return_value=autolight_app_with_exit)
 
@@ -1048,8 +1044,6 @@ class TestEnterExitCooldownSeparation:
         mock_app_storage,
     ):
         """Test that enter cooldown prevents rapid ON→OFF→ON cycles."""
-
-
         # Use app with on_exit actions
         mock_app_storage.get_app = MagicMock(return_value=autolight_app_with_exit)
 

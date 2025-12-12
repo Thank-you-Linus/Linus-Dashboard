@@ -8,7 +8,7 @@ Tests the new architecture:
 - State tracking and transitions
 """
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -372,7 +372,7 @@ class TestActivityTrackerGetDuration:
         """Test duration calculation for active area."""
         await activity_tracker.async_initialize()
 
-        start_time = datetime(2025, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
+        start_time = datetime(2025, 1, 1, 12, 0, 0, tzinfo=UTC)
 
         with freeze_time(start_time) as frozen_time:
             activity_tracker._area_states["kitchen"] = {

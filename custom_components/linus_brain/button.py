@@ -31,6 +31,7 @@ async def async_setup_entry(
         hass: Home Assistant instance
         entry: Config entry
         async_add_entities: Callback to add entities
+
     """
     try:
         # Verify domain data exists

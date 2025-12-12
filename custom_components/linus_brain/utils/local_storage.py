@@ -35,6 +35,7 @@ class LocalStorage:
 
         Args:
             hass: Home Assistant instance
+
         """
         self.hass = hass
         self._store: Store = Store(hass, STORAGE_VERSION, STORAGE_KEY)
@@ -47,6 +48,7 @@ class LocalStorage:
 
         Returns:
             Dictionary mapping area_id to rule data
+
         """
         async with self._lock:
             try:
@@ -76,6 +78,7 @@ class LocalStorage:
 
         Returns:
             True if save was successful, False otherwise
+
         """
         async with self._lock:
             try:
@@ -104,6 +107,7 @@ class LocalStorage:
 
         Returns:
             Rule data or None if not found
+
         """
         return self._rules.get(area_id)
 
@@ -117,6 +121,7 @@ class LocalStorage:
 
         Returns:
             True if saved successfully
+
         """
         self._rules[area_id] = rule_data
         return await self.async_save(self._rules)
@@ -130,6 +135,7 @@ class LocalStorage:
 
         Returns:
             True if deleted successfully
+
         """
         if area_id in self._rules:
             del self._rules[area_id]
@@ -143,6 +149,7 @@ class LocalStorage:
 
         Returns:
             Dictionary mapping area_id to rule data
+
         """
         return self._rules.copy()
 
@@ -152,6 +159,7 @@ class LocalStorage:
 
         Returns:
             True if cleared successfully
+
         """
         self._rules = {}
         return await self.async_save(self._rules)

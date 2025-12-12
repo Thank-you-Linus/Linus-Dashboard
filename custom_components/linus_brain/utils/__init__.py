@@ -15,10 +15,10 @@ from .feature_flag_manager import FeatureFlagManager, ValidationResult
 from .state_validator import INVALID_STATES, is_state_valid
 
 __all__ = [
+    "INVALID_STATES",
     "AppStorage",
     "EntityResolver",
     "FeatureFlagManager",
     "ValidationResult",
     "is_state_valid",
-    "INVALID_STATES",
 ]

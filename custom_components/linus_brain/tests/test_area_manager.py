@@ -1139,7 +1139,8 @@ class TestAreaManagerInvalidStates:
         device_registry_mock,
         monkeypatch,
     ):
-        """Test presence detection when some motion sensors are unavailable.
+        """
+        Test presence detection when some motion sensors are unavailable.
 
         Scenario: 3 motion sensors in garage
         - 2 sensors are unavailable
@@ -1201,7 +1202,8 @@ class TestAreaManagerInvalidStates:
         device_registry_mock,
         monkeypatch,
     ):
-        """Test presence detection when all motion sensors are unavailable.
+        """
+        Test presence detection when all motion sensors are unavailable.
 
         Scenario: 3 motion sensors in garage, all unavailable
         Expected: No presence detected (False)
@@ -1251,7 +1253,8 @@ class TestAreaManagerInvalidStates:
         device_registry_mock,
         monkeypatch,
     ):
-        """Test presence detection with various invalid states.
+        """
+        Test presence detection with various invalid states.
 
         Scenario: 4 motion sensors with different invalid states + 1 valid "off"
         - 1 sensor is unknown

@@ -43,6 +43,7 @@ class ActivityTracker:
             hass: Home Assistant instance
             app_storage: AppStorage instance for activity definitions
             condition_evaluator: ConditionEvaluator for evaluating detection_conditions
+
         """
         self.hass = hass
         self.app_storage = app_storage
@@ -66,6 +67,7 @@ class ActivityTracker:
 
         Args:
             force_reload: Force reload activities even if already initialized
+
         """
         if self._initialized and not force_reload:
             _LOGGER.debug("ActivityTracker already initialized")
@@ -113,6 +115,7 @@ class ActivityTracker:
 
         Returns:
             True if reload was successful, False otherwise
+
         """
         if not self.app_storage:
             _LOGGER.warning("No AppStorage available, cannot reload activities")
@@ -150,6 +153,7 @@ class ActivityTracker:
         Args:
             area_id: The area ID
             timeout_seconds: Timeout duration in seconds
+
         """
         # Cancel any existing timeout first
         if area_id in self._timeout_tasks:
@@ -173,6 +177,7 @@ class ActivityTracker:
 
         Args:
             area_id: The area ID
+
         """
         if area_id in self._timeout_tasks:
             task = self._timeout_tasks[area_id]
@@ -195,6 +200,7 @@ class ActivityTracker:
 
         Returns:
             Next activity ID from transition_to, or None if no transition
+
         """
         if current_activity_id not in self._activities:
             return None
@@ -212,6 +218,7 @@ class ActivityTracker:
         Args:
             area_id: The area ID
             timeout_seconds: Timeout duration in seconds
+
         """
         try:
             _LOGGER.debug(
@@ -304,6 +311,7 @@ class ActivityTracker:
 
         Returns:
             Current activity level (activity_id from definitions)
+
         """
         if not self._initialized:
             await self.async_initialize()
@@ -422,11 +430,10 @@ class ActivityTracker:
                                         del self._conditions_false_since[area_id]
                                     self._cancel_timeout(area_id)
                                     return activity_id
-                                else:
-                                    _LOGGER.debug(
-                                        f"[DETECT] {area_id}: {activity_id} in progress ({duration:.1f}s/{duration_threshold}s)"
-                                    )
-                                    # Continue to check for lower-threshold fallback activities
+                                _LOGGER.debug(
+                                    f"[DETECT] {area_id}: {activity_id} in progress ({duration:.1f}s/{duration_threshold}s)"
+                                )
+                                # Continue to check for lower-threshold fallback activities
                     else:
                         # Activity detected with no threshold - immediate activation
                         old_activity = None
@@ -584,6 +591,7 @@ class ActivityTracker:
 
         Returns:
             Current activity level
+
         """
         _LOGGER.warning(
             "update_presence() is deprecated. Use async_evaluate_activity() instead."
@@ -607,6 +615,7 @@ class ActivityTracker:
 
         Returns:
             Current activity level (empty, movement, occupied)
+
         """
         if area_id not in self._area_states:
             return ACTIVITY_EMPTY
@@ -621,6 +630,7 @@ class ActivityTracker:
 
         Returns:
             Current activity level (empty, movement, occupied)
+
         """
         return self.get_activity(area_id)
 
@@ -633,6 +643,7 @@ class ActivityTracker:
 
         Returns:
             Duration in seconds, or 0 if no activity
+
         """
         if area_id not in self._area_states:
             return 0.0
@@ -655,6 +666,7 @@ class ActivityTracker:
 
         Returns:
             Seconds remaining before timeout, or None if no timeout configured
+
         """
         if area_id not in self._area_states:
             return None
@@ -688,6 +700,7 @@ class ActivityTracker:
 
         Returns:
             Dictionary mapping area_id to activity state
+
         """
         result = {}
         for area_id, state in self._area_states.items():
@@ -704,6 +717,7 @@ class ActivityTracker:
         Returns:
             Dictionary mapping activity_id to timeout_seconds
             Example: {"movement": 1, "inactive": 60, "occupied": 0}
+
         """
         timeouts = {}
         for activity_id, activity_data in self._activities.items():
@@ -717,6 +731,7 @@ class ActivityTracker:
 
         Args:
             area_id: The area ID to reset
+
         """
         if area_id in self._area_states:
             del self._area_states[area_id]
@@ -736,6 +751,7 @@ class ActivityTracker:
             area_id: The area ID to simulate activity for
             activity: Activity ID from loaded activities
             duration: Optional duration in seconds before auto-reset (0 = no reset)
+
         """
         if activity not in self._activities:
             _LOGGER.error(

@@ -41,6 +41,7 @@ class EntityResolver:
 
         Args:
             hass: Home Assistant instance
+
         """
         self.hass = hass
         self._entity_registry = entity_registry.async_get(hass)
@@ -74,6 +75,7 @@ class EntityResolver:
             - str: Single entity_id (strategy="first")
             - list[str]: List of entity_ids (strategy="all")
             - None: No matching entities found
+
         """
         _LOGGER.debug(
             f"Resolving entity: domain={domain}, area_id={area_id}, device_class={device_class}, strategy={strategy}"
@@ -83,14 +85,14 @@ class EntityResolver:
         # This centralizes light control logic and enables smart filtering
         if domain == "light" and strategy == "all" and not device_class:
             light_group_entity = f"light.linus_brain_all_lights_{area_id}"
-            
+
             # Check if light group exists
             if self.hass.states.get(light_group_entity):
                 _LOGGER.debug(
                     f"✅ Resolved light domain to area light group: {light_group_entity}"
                 )
                 return light_group_entity
-            
+
             # Fallback to individual lights if group doesn't exist yet
             _LOGGER.debug(
                 f"⚠️ Light group {light_group_entity} not found, falling back to individual lights"
@@ -110,7 +112,7 @@ class EntityResolver:
             # This prevents returning obsolete/deleted entities
             if entity.disabled_by is not None:
                 continue
-            
+
             # Check if entity exists in hass.states (entity must be loaded and available)
             state = self.hass.states.get(entity.entity_id)
             if state is None:
@@ -149,17 +151,16 @@ class EntityResolver:
 
         if strategy == "first":
             return matching_entities[0]
-        elif strategy == "all":
+        if strategy == "all":
             return matching_entities
-        elif strategy == "any":
+        if strategy == "any":
             for entity_id in matching_entities:
                 state = self.hass.states.get(entity_id)
                 if state and state.state in ["on", "true", "active"]:
                     return entity_id
             return matching_entities[0] if matching_entities else None
-        else:
-            _LOGGER.warning(f"Unknown strategy: {strategy}, using 'first'")
-            return matching_entities[0]
+        _LOGGER.warning(f"Unknown strategy: {strategy}, using 'first'")
+        return matching_entities[0]
 
     def resolve_condition(
         self,
@@ -172,10 +173,10 @@ class EntityResolver:
         IMPORTANT: When multiple entities match a generic selector (domain + device_class + area),
         this method automatically expands to an OR condition with all matching entities.
         This ensures that "at least one" sensor being ON triggers the condition.
-        
+
         Example:
             Input:  {"condition": "state", "domain": "binary_sensor", "device_class": "occupancy", "state": "on"}
-            
+
             If 5 occupancy sensors exist in the area, output will be:
             {
                 "condition": "or",
@@ -187,7 +188,7 @@ class EntityResolver:
                     {"condition": "state", "entity_id": "binary_sensor.occupancy_5", "state": "on"}
                 ]
             }
-            
+
             This ensures ANY of the 5 sensors being ON will trigger the condition,
             instead of only checking the first one.
 
@@ -198,6 +199,7 @@ class EntityResolver:
         Returns:
             Resolved condition with entity_id, or OR condition with multiple entities,
             or None if resolution failed
+
         """
         condition_type = condition.get("condition")
 
@@ -250,16 +252,16 @@ class EntityResolver:
         if len(matching_entities) == 1:
             resolved_condition = condition.copy()
             resolved_condition["entity_id"] = matching_entities[0]
-            
+
             # Cleanup generic selectors
             for key in ["domain", "device_class", "area"]:
                 resolved_condition.pop(key, None)
-            
+
             _LOGGER.debug(
                 f"Resolved condition: domain={domain}, device_class={device_class} "
                 f"→ entity_id={matching_entities[0]}"
             )
-            
+
             return resolved_condition
 
         # Multiple entities found: expand to OR condition (at least one must match)
@@ -274,18 +276,15 @@ class EntityResolver:
         for entity_id in matching_entities:
             entity_condition = condition.copy()
             entity_condition["entity_id"] = entity_id
-            
+
             # Cleanup generic selectors
             for key in ["domain", "device_class", "area"]:
                 entity_condition.pop(key, None)
-            
+
             expanded_conditions.append(entity_condition)
 
         # Return OR condition wrapping all entity conditions
-        return {
-            "condition": "or",
-            "conditions": expanded_conditions
-        }
+        return {"condition": "or", "conditions": expanded_conditions}
 
     def resolve_nested_conditions(
         self,
@@ -301,6 +300,7 @@ class EntityResolver:
 
         Returns:
             List of resolved conditions (nested structure preserved)
+
         """
         resolved = []
 
@@ -314,12 +314,10 @@ class EntityResolver:
                 )
 
                 if resolved_nested:
-                    resolved.append(
-                        {
-                            "condition": condition_type,
-                            "conditions": resolved_nested,
-                        }
-                    )
+                    resolved.append({
+                        "condition": condition_type,
+                        "conditions": resolved_nested,
+                    })
             else:
                 resolved_condition = self.resolve_condition(condition, area_id)
                 if resolved_condition:
@@ -339,6 +337,7 @@ class EntityResolver:
 
         Returns:
             Area ID or None
+
         """
         if entity.area_id:
             return entity.area_id

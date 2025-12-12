@@ -26,6 +26,7 @@ def is_state_valid(state: State | None) -> TypeGuard[State]:
 
     Returns:
         True if state is valid and usable, False if invalid or None
+
     """
     if state is None:
         return False

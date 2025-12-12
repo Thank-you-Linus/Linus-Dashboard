@@ -23,15 +23,19 @@ def mock_hass():
 @pytest.fixture
 def mock_entity_resolver(mock_hass):
     """Mock EntityResolver."""
-    with patch.multiple(
-        "homeassistant.helpers.entity_registry",
-        async_get=MagicMock(return_value=MagicMock()),
-    ), patch.multiple(
-        "homeassistant.helpers.device_registry",
-        async_get=MagicMock(return_value=MagicMock()),
-    ), patch.multiple(
-        "homeassistant.helpers.area_registry",
-        async_get=MagicMock(return_value=MagicMock()),
+    with (
+        patch.multiple(
+            "homeassistant.helpers.entity_registry",
+            async_get=MagicMock(return_value=MagicMock()),
+        ),
+        patch.multiple(
+            "homeassistant.helpers.device_registry",
+            async_get=MagicMock(return_value=MagicMock()),
+        ),
+        patch.multiple(
+            "homeassistant.helpers.area_registry",
+            async_get=MagicMock(return_value=MagicMock()),
+        ),
     ):
         return EntityResolver(mock_hass)
 

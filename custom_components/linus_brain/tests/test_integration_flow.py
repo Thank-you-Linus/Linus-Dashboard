@@ -175,7 +175,7 @@ class TestIntegrationFullFlow:
         def get_state_side_effect(entity_id):
             if entity_id == "binary_sensor.motion_kitchen":
                 return mock_motion_state
-            elif entity_id == "sensor.lux":
+            if entity_id == "sensor.lux":
                 return mock_lux_state
             return None
 
@@ -297,7 +297,7 @@ class TestIntegrationConditionEvaluation:
         def get_state_side_effect(entity_id):
             if entity_id == "binary_sensor.motion_kitchen":
                 return mock_motion_state
-            elif entity_id == "sensor.lux":
+            if entity_id == "sensor.lux":
                 return mock_lux_state
             return None
 
@@ -328,7 +328,7 @@ class TestIntegrationConditionEvaluation:
         def get_state_side_effect(entity_id):
             if entity_id == "binary_sensor.motion_kitchen":
                 return mock_motion_state
-            elif entity_id == "sensor.lux":
+            if entity_id == "sensor.lux":
                 return mock_lux_state
             return None
 

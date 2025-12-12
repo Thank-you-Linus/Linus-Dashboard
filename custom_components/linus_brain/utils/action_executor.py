@@ -34,6 +34,7 @@ class ActionExecutor:
         Args:
             hass: Home Assistant instance
             entity_resolver: Entity resolver for generic selectors
+
         """
         self.hass = hass
         self.entity_resolver = entity_resolver
@@ -58,6 +59,7 @@ class ActionExecutor:
 
         Returns:
             True if all actions executed successfully
+
         """
         if not actions:
             _LOGGER.debug("No actions to execute")
@@ -98,6 +100,7 @@ class ActionExecutor:
 
         Raises:
             HomeAssistantError: If action execution fails
+
         """
         service = action.get("service")
 
@@ -121,13 +124,12 @@ class ActionExecutor:
         if "filter_entities_by_state" in action:
             required_state = action["filter_entities_by_state"]
             entity_id_val = service_data.get("entity_id", [])
-            
+
             # Check if this is a Linus Brain light group (single entity starting with light.linus_brain_all_lights_)
-            is_light_group = (
-                isinstance(entity_id_val, str) and 
-                entity_id_val.startswith("light.linus_brain_all_lights_")
-            )
-            
+            is_light_group = isinstance(
+                entity_id_val, str
+            ) and entity_id_val.startswith("light.linus_brain_all_lights_")
+
             if is_light_group:
                 # Light group handles smart filtering internally - don't apply external filter
                 _LOGGER.debug(
@@ -173,6 +175,7 @@ class ActionExecutor:
 
         Returns:
             Resolved action with entity_id
+
         """
         if "entity_id" in action or "target" in action:
             return action
@@ -224,6 +227,7 @@ class ActionExecutor:
 
         Raises:
             HomeAssistantError: If service format is invalid
+
         """
         parts = service.split(".", 1)
 
@@ -246,6 +250,7 @@ class ActionExecutor:
 
         Returns:
             List of entity_ids in the required state
+
         """
         if isinstance(entity_ids, str):
             entity_ids = [entity_ids]
@@ -271,6 +276,7 @@ class ActionExecutor:
 
         Returns:
             Set of entity IDs
+
         """
         entities = set()
 

@@ -325,13 +325,13 @@ async def test_inactive_transitions_to_empty_despite_continuous_reevaluation(
         current = activity_tracker_with_inactive.get_activity(area_id)
         # Should still be inactive until timeout expires
         if i < 2:
-            assert (
-                current == "inactive"
-            ), f"Iteration {i}: Expected inactive, got {current}"
+            assert current == "inactive", (
+                f"Iteration {i}: Expected inactive, got {current}"
+            )
 
     # After the 2-second timeout (plus our 1.5s of re-evaluations), should transition to empty
     await asyncio.sleep(1)
     final_activity = activity_tracker_with_inactive.get_activity(area_id)
-    assert (
-        final_activity == "empty"
-    ), f"Expected empty after timeout, got {final_activity}"
+    assert final_activity == "empty", (
+        f"Expected empty after timeout, got {final_activity}"
+    )

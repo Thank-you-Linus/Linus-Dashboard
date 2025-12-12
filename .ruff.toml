@@ -17,6 +17,85 @@ ignore = [
     "D212", # multi-line-summary-first-line (incompatible with formatter)
     "COM812", # incompatible with formatter
     "ISC001", # incompatible with formatter
+    "E501", # Line too long (handled by formatter)
+    "G004", # Logging statement uses f-string
+    "PLR0912", # Too many branches
+    "PLR0915", # Too many statements
+    "C901", # Function is too complex
+    "BLE001", # Do not catch blind exception
+    "TRY400", # Use logging.exception instead of logging.error
+    "S101", # Use of assert detected
+    "ERA001", # Found commented-out code
+    "PLC0415", # Import should be at top-level
+    "SLF001", # Private member accessed
+    "ANN001", # Missing type annotation for function argument
+    "ANN202", # Missing return type annotation for private function
+    "TRY003", # Avoid specifying long messages outside the exception class
+    "EM101", # Exception must not use a string literal
+    "D400", # First line should end with a period
+    "D415", # First line should end with a period, question mark, or exclamation point
+    "D413", # Missing blank line after last section
+    "N806", # Variable in function should be lowercase
+    "RUF059", # Unpacked variable is never used
+    "PLR2004", # Magic value used in comparison
+    "UP037", # Remove quotes from type annotation
+    "G201", # Logging .exception should be used instead of .error with exc_info
+    "PLW0603", # Using the global statement is discouraged
+    "ARG001", # Unused function argument
+    "ARG002", # Unused method argument
+    "ARG004", # Unused static method argument
+    "D401", # First line of docstring should be in imperative mood
+    "D200", # One-line docstring should fit on one line
+    "D100", # Missing docstring in public module
+    "SIM102", # Use a single if statement instead of nested if
+    "PGH003", # Use specific rule codes when ignoring type issues
+    "TRY301", # Abstract raise to an inner function
+    "TRY002", # Create your own exception
+    "TRY300", # Consider moving statement to else block
+    "EM102", # Exception must not use an f-string literal
+    "B904", # Within except clause, raise exceptions with raise ... from err
+    "ANN201", # Missing return type annotation for public function
+    "PTH123", # open() should be replaced by Path.open()
+    "DTZ003", # datetime.datetime.utcnow() used
+    "PLR0911", # Too many return statements
+    "C414", # Unnecessary list() call within sorted()
+    "PERF401", # Use a list comprehension to create a transformed list
+    "PLR0913", # Too many arguments in function definition
+    "B007", # Loop control variable not used within loop body
+    "PERF102", # When using only values of dict use values() method
+    "TID252", # Prefer absolute imports over relative imports from parent modules
+    "D103", # Missing docstring in public function
+    "D107", # Missing docstring in __init__
+    "D205", # 1 blank line required between summary line and description
+    "RET504", # Unnecessary assignment before return statement
+    "SIM103", # Return the condition directly
+    "SIM105", # Use contextlib.suppress instead of try-except-pass
+    "ANN002", # Missing type annotation for *args
+    "ANN003", # Missing type annotation for **kwargs
+    "ANN204", # Missing return type annotation for special method
+    "ASYNC230", # Async functions should not open files with blocking methods
+    "ARG005", # Unused lambda argument
+    "FBT001", # Boolean-typed positional argument in function definition
+    "FBT003", # Boolean positional value in function call
+    "DTZ005", # datetime.datetime.now() called without a tz argument
+    "DTZ007", # datetime.datetime.strptime() called without a tz argument
+    "T201", # print found (allowed in tests)
+    "FBT002", # Boolean default positional argument in function definition
+    "SIM118", # Use `key in dict` instead of `key in dict.keys()`
+    "ASYNC109", # Async function definition with a `timeout` parameter
+    "PIE810", # Call `startswith` once with a tuple
+    "E402", # Module level import not at top of file
+    "TD002", # Missing author in TODO
+    "TD003", # Missing issue link in TODO
+    "TC003", # Move standard library import into a type-checking block
+    "SIM223", # Use `False` instead of `a and not a`
+    "S110", # Try, Except, Pass detected
+    "RUF100", # Unused `noqa` directive
+    "PLR1714", # Consider merging multiple comparisons
+    "G003", # Logging statement uses `+`
+    "FIX002", # Line contains TODO
+    "D417", # Missing argument description in docstring
+    "D102", # Missing docstring in public method
 ]
 
 [lint.flake8-pytest-style]

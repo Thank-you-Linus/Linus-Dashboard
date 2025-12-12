@@ -43,43 +43,45 @@ async def async_setup_entry(
         hass: Home Assistant instance
         entry: Config entry
         async_add_entities: Callback to add entities
+
     """
     from .utils.dynamic_entity_manager import DynamicEntityManager
-    
+
     coordinator = hass.data[DOMAIN][entry.entry_id]["coordinator"]
     feature_flag_manager = coordinator.feature_flag_manager
-    
+
     # Get registries
     entity_reg = er.async_get(hass)
     device_reg = dr.async_get(hass)
     area_reg = ar.async_get(hass)
-    
+
     feature_definitions = feature_flag_manager.get_feature_definitions()
 
     def _get_entity_area_id(entity_entry: er.RegistryEntry) -> str | None:
         """Get area_id for an entity."""
         area_id = entity_entry.area_id
-        
+
         # If no direct area, check device
         if not area_id and entity_entry.device_id:
             device = device_reg.async_get(entity_entry.device_id)
             if device and device.area_id:
                 area_id = device.area_id
-        
+
         return area_id
 
     def _get_areas_with_domain(domain: str) -> set[str]:
         """
         Get set of area_ids that have entities in the specified domain.
-        
+
         Args:
             domain: Entity domain to search for (e.g., 'light', 'climate')
-            
+
         Returns:
             Set of area_ids that contain at least one entity of that domain
+
         """
         areas = set()
-        
+
         for entity_id, entity_entry in entity_reg.entities.items():
             # Check if matching domain
             if entity_entry.domain != domain:
@@ -97,47 +99,49 @@ async def async_setup_entry(
             area_id = _get_entity_area_id(entity_entry)
             if area_id:
                 areas.add(area_id)
-        
+
         return areas
 
     def _area_meets_requirements(area_id: str, feature_def: dict[str, Any]) -> bool:
         """
         Check if an area meets the requirements for a feature.
-        
+
         Args:
             area_id: Area ID to check
             feature_def: Feature definition with optional required_domains
-            
+
         Returns:
             True if area meets requirements, False otherwise
+
         """
         required_domains = feature_def.get("required_domains", [])
-        
+
         # If no requirements, area qualifies
         if not required_domains:
             return True
-        
+
         # Check if area has at least one entity from each required domain
         for domain in required_domains:
             areas_with_domain = _get_areas_with_domain(domain)
             if area_id not in areas_with_domain:
                 return False
-        
+
         return True
 
     def _get_qualifying_areas() -> dict[str, dict[str, set[str]]]:
         """
         Get all areas that qualify for each feature.
-        
+
         Returns:
             Dict mapping feature_id to dict of {area_id: set of entity_ids that caused qualification}
+
         """
         qualifying_areas: dict[str, dict[str, set[str]]] = {}
-        
+
         for feature_id, feature_def in feature_definitions.items():
             qualifying_areas[feature_id] = {}
             required_domains = feature_def.get("required_domains", [])
-            
+
             if not required_domains:
                 # No requirements - all areas qualify
                 for area in area_reg.async_list_areas():
@@ -146,24 +150,24 @@ async def async_setup_entry(
                 # Find areas with all required domains
                 # Start with areas that have the first required domain
                 candidate_areas = _get_areas_with_domain(required_domains[0])
-                
+
                 # Intersect with areas that have other required domains
                 for domain in required_domains[1:]:
                     candidate_areas &= _get_areas_with_domain(domain)
-                
+
                 # Add to qualifying areas
                 for area_id in candidate_areas:
                     qualifying_areas[feature_id][area_id] = set()
-        
+
         return qualifying_areas
 
     # Get initial qualifying areas
     qualifying_areas = _get_qualifying_areas()
-    
+
     # Create switches for qualifying areas
     switches = []
     switches_by_key = {}
-    
+
     for feature_id, areas in qualifying_areas.items():
         feature_def = feature_definitions[feature_id]
         for area_id in areas:
@@ -177,12 +181,12 @@ async def async_setup_entry(
     if switches:
         hass.data[DOMAIN][entry.entry_id]["feature_switches"] = switches_by_key
         async_add_entities(switches)
-        
+
         # Count switches per feature
         feature_counts = {}
         for feature_id in qualifying_areas:
             feature_counts[feature_id] = len(qualifying_areas[feature_id])
-        
+
         _LOGGER.info(
             f"Added {len(switches)} Linus Brain feature switches initially: "
             f"{', '.join(f'{count} {fid}' for fid, count in feature_counts.items())}"
@@ -195,11 +199,11 @@ async def async_setup_entry(
     for feature_def in feature_definitions.values():
         required_domains = feature_def.get("required_domains", [])
         all_required_domains.update(required_domains)
-    
+
     if all_required_domains:
         # Set up dynamic entity manager to monitor required domains
         monitored_domains = list(all_required_domains)
-        
+
         # Callback to check if area should have switches created
         def _should_create_for_area(area_id: str) -> bool:
             """Check if any feature qualifies for this area."""
@@ -210,7 +214,7 @@ async def async_setup_entry(
                 if _area_meets_requirements(area_id, feature_def):
                     return True
             return False
-        
+
         # Callback to create switches for an area
         def _create_entities_for_area(area_id: str, area_name: str) -> list[Any]:
             """Create all qualifying switches for an area."""
@@ -226,7 +230,7 @@ async def async_setup_entry(
                     new_switches.append(switch)
                     switches_by_key[switch_key] = switch
             return new_switches
-        
+
         dynamic_manager = DynamicEntityManager(
             hass=hass,
             entry=entry,
@@ -237,14 +241,16 @@ async def async_setup_entry(
             should_create_for_area_callback=_should_create_for_area,
             create_entities_callback=_create_entities_for_area,
         )
-        
+
         await dynamic_manager.async_setup()
         _LOGGER.info(
             f"Dynamic entity manager setup complete for feature switches (monitoring {monitored_domains})"
         )
-        
+
         # Store for cleanup
-        hass.data[DOMAIN][entry.entry_id]["feature_switch_dynamic_manager"] = dynamic_manager
+        hass.data[DOMAIN][entry.entry_id]["feature_switch_dynamic_manager"] = (
+            dynamic_manager
+        )
 
 
 class LinusBrainFeatureSwitch(RestoreEntity, SwitchEntity):
@@ -273,6 +279,7 @@ class LinusBrainFeatureSwitch(RestoreEntity, SwitchEntity):
             area_id: Area ID
             feature_id: Feature ID
             feature_def: Feature definition dictionary
+
         """
         self.hass = hass
         self._entry = entry
@@ -377,7 +384,7 @@ class LinusBrainFeatureSwitch(RestoreEntity, SwitchEntity):
     def extra_state_attributes(self) -> dict[str, Any]:
         """
         Return extra state attributes for the switch.
-        
+
         Provides useful information about the feature requirements and configuration.
         """
         attributes: dict[str, Any] = {
@@ -385,7 +392,7 @@ class LinusBrainFeatureSwitch(RestoreEntity, SwitchEntity):
             "area_id": self._area_id,
             "description": self._feature_def.get("description", ""),
         }
-        
+
         # Add required_domains if present
         required_domains = self._feature_def.get("required_domains", [])
         if required_domains:
@@ -394,11 +401,13 @@ class LinusBrainFeatureSwitch(RestoreEntity, SwitchEntity):
                 f"This feature requires entities from: {', '.join(required_domains)}"
             )
         else:
-            attributes["requirements_info"] = "No domain requirements (works in all areas)"
-        
+            attributes["requirements_info"] = (
+                "No domain requirements (works in all areas)"
+            )
+
         # Add app_id for reference
         app_id = self._feature_def.get("app_id")
         if app_id:
             attributes["app_id"] = app_id
-        
+
         return attributes

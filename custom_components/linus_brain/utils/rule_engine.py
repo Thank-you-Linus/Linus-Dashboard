@@ -64,6 +64,7 @@ class RuleEngine:
             activity_tracker: ActivityTracker instance for activity-based automation
             app_storage: AppStorage instance (shared from coordinator)
             area_manager: AreaManager instance for entity lookup
+
         """
         self.hass = hass
         self.entry_id = entry_id
@@ -263,6 +264,7 @@ class RuleEngine:
 
         Returns:
             Set of entity IDs
+
         """
         from .area_manager import get_presence_detection_domains
 
@@ -301,6 +303,7 @@ class RuleEngine:
 
         Returns:
             Set of entity IDs
+
         """
         entities: set[str] = set()
 
@@ -332,6 +335,7 @@ class RuleEngine:
 
         Returns:
             True if any area_state condition found
+
         """
         for condition in conditions:
             condition_type = condition.get("condition")
@@ -357,6 +361,7 @@ class RuleEngine:
 
         Returns:
             True if any is_dark area_state condition found
+
         """
         for condition in conditions:
             condition_type = condition.get("condition")
@@ -386,6 +391,7 @@ class RuleEngine:
 
         Returns:
             Dictionary with is_dark boolean value
+
         """
         if not self.area_manager:
             return {"is_dark": False}
@@ -411,6 +417,7 @@ class RuleEngine:
 
         Returns:
             Transition type string or None if no transition detected
+
         """
         previous_state = self._previous_env_state.get(area_id)
 
@@ -439,6 +446,7 @@ class RuleEngine:
 
         Args:
             area_id: Area ID
+
         """
         if area_id not in self._assignments:
             _LOGGER.warning(f"No assignment found for area: {area_id}")
@@ -532,6 +540,7 @@ class RuleEngine:
 
         Args:
             area_id: Area ID
+
         """
         for listener in self._listeners.get(area_id, []):
             listener()
@@ -553,6 +562,7 @@ class RuleEngine:
 
         Args:
             event: State change event
+
         """
         entity_id = event.data.get("entity_id")
         if not entity_id:
@@ -664,6 +674,7 @@ class RuleEngine:
             area_id: Area ID
             entity_id: Entity that changed
             is_environmental: True if triggered by environmental transition
+
         """
         await asyncio.sleep(DEBOUNCE_SECONDS)
 
@@ -690,6 +701,7 @@ class RuleEngine:
         Args:
             area_id: Area ID
             is_environmental: True if triggered by environmental transition
+
         """
         self._stats["total_triggers"] += 1
 
@@ -789,18 +801,17 @@ class RuleEngine:
                             f"Rule {area_id}:{current_activity} (environmental) enter actions in cooldown, skipping"
                         )
                         return
-                else:
-                    if not bypass_cooldown and not self._check_cooldown(
-                        area_id,
-                        current_activity,
-                        is_environmental=False,
-                        action_type="enter",
-                    ):
-                        self._stats["cooldown_blocks"] += 1
-                        _LOGGER.debug(
-                            f"Rule {area_id}:{current_activity} (activity) enter actions in cooldown, skipping"
-                        )
-                        return
+                elif not bypass_cooldown and not self._check_cooldown(
+                    area_id,
+                    current_activity,
+                    is_environmental=False,
+                    action_type="enter",
+                ):
+                    self._stats["cooldown_blocks"] += 1
+                    _LOGGER.debug(
+                        f"Rule {area_id}:{current_activity} (activity) enter actions in cooldown, skipping"
+                    )
+                    return
 
                 if bypass_cooldown:
                     _LOGGER.info(
@@ -961,6 +972,7 @@ class RuleEngine:
 
         Returns:
             True if not in cooldown, False if in cooldown
+
         """
         # Use separate cooldown keys for environmental enter/exit actions
         if is_environmental:
@@ -994,6 +1006,7 @@ class RuleEngine:
 
         Returns:
             True if not in cooldown, False if in cooldown
+
         """
         if area_id not in self._last_environmental_action:
             return True
@@ -1032,6 +1045,7 @@ class RuleEngine:
         Args:
             area_id: Area ID
             action_type: Type of action - "enter" for lights ON, "exit" for lights OFF
+
         """
         if area_id not in self._last_environmental_action:
             self._last_environmental_action[area_id] = {}
@@ -1044,6 +1058,7 @@ class RuleEngine:
 
         Args:
             area_id: The area ID
+
         """
         if area_id in self._exit_timeout_tasks:
             task = self._exit_timeout_tasks[area_id]
@@ -1078,6 +1093,7 @@ class RuleEngine:
             timeout_seconds: Timeout duration in seconds
             current_activity: Current activity state
             previous_activity: Previous activity state
+
         """
         # Cancel any existing exit timeout first
         self._cancel_exit_action_timeout(area_id)
@@ -1119,6 +1135,7 @@ class RuleEngine:
             timeout_seconds: Timeout duration in seconds
             current_activity: Current activity state
             previous_activity: Previous activity state
+
         """
         try:
             _LOGGER.debug(
@@ -1181,6 +1198,7 @@ class RuleEngine:
 
         Returns:
             Seconds remaining before exit timeout expires, or None if no timeout active
+
         """
         if area_id not in self._exit_timeout_metadata:
             return None
@@ -1209,6 +1227,7 @@ class RuleEngine:
             activity_type: Optional activity type for activity-based rules
             is_environmental: True if updating environmental trigger timestamp
             action_type: Type of action - "enter" for normal actions, "exit" for on_exit actions
+
         """
         # Use separate cooldown keys for environmental enter/exit actions
         if is_environmental:
@@ -1223,6 +1242,7 @@ class RuleEngine:
 
         Returns:
             Number of assignments reloaded
+
         """
         _LOGGER.info("Reloading assignments from storage")
 
@@ -1244,6 +1264,7 @@ class RuleEngine:
 
         Returns:
             Dictionary with statistics
+
         """
         return {
             "total_assignments": len(self._assignments),
@@ -1259,6 +1280,7 @@ class RuleEngine:
 
         Returns:
             Assignment data or None
+
         """
         return self._assignments.get(area_id)
 
@@ -1271,6 +1293,7 @@ class RuleEngine:
 
         Returns:
             True if deleted successfully
+
         """
         await self.disable_area(area_id)
 
@@ -1289,6 +1312,7 @@ class RuleEngine:
         Args:
             area_id: Area ID
             assignment_data: Assignment metadata to display in switch attributes
+
         """
         from ..const import DOMAIN
 
@@ -1308,6 +1332,7 @@ class RuleEngine:
 
         Args:
             area_id: Area ID
+
         """
         from ..const import DOMAIN
 

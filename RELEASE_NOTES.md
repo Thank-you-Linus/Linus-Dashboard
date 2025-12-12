@@ -1,14 +1,13 @@
-# 🎯 Embed Anything - Release v1.4.0
-
-> **Stable Release** - Unleash the full potential of your Home Assistant setup by seamlessly integrating any custom dashboard alongside Linus Dashboard's automatic organization.
-
----
+# 🚀 Linus Dashboard 1.4.1
 
 ## 🇬🇧 English
+
+### 📦 What's New
 
 ### ✨ New Features
 
 #### Manual Area & Floor Ordering (Home Assistant 2025.1+)
+
 - **Full support for manual reordering** of areas and floors introduced in Home Assistant 2025.1
 - **Drag & drop** your areas and floors in any order you prefer
 - **Backward compatible** - works seamlessly with older Home Assistant versions
@@ -16,6 +15,7 @@
 - **Smart sorting priority**: Manual order → Numeric level (floors) → Alphabetical fallback
 
 #### Enhanced Embedded Dashboards
+
 - Embedded dashboards feature now **prominently featured** in main documentation
 - **Comprehensive guides** added for embedding custom dashboards
 - Better positioning as a **core feature** accessible to all users
@@ -24,12 +24,14 @@
 ### 📚 Documentation Improvements
 
 #### Streamlined README
+
 - **Concise presentation** with "Key highlights" section
 - Embedded dashboards added to **main feature list** (no longer hidden in advanced section)
 - Removed redundant sections to improve readability
 - **Inclusive positioning** - features accessible to all users, not just "power users"
 
 #### Dedicated Feature Documentation
+
 - New **docs/EMBEDDED_DASHBOARDS.md** - Comprehensive 199-line guide with examples
 - New **docs/MANUAL_ORDERING.md** - Complete 211-line guide with backward compatibility details
 - Reorganized internal documentation to **docs/development/** folder
@@ -45,74 +47,100 @@
 
 _No bug fixes in this release_
 
+### 📥 Installation
+
+#### Via HACS (Recommended)
+
+1. Open HACS
+2. Go to "Integrations"
+3. Search for "Linus Dashboard"
+4. Click "Update"
+
+#### Manual Installation
+
+1. Download `linus-dashboard-1.4.1.zip` from the release
+2. Extract to `config/custom_components/linus_dashboard/`
+3. Restart Home Assistant
+
+### 🧪 For Beta Testers
+
+This is a maintenance release with code improvements and documentation updates.
+
+**What to test:**
+
+- Verify that manual area and floor ordering still works correctly
+- Check that embedded dashboards function properly
+- Ensure all existing features work as expected after the refactoring
+
+**Feedback:**
+Please report any issues on GitHub or Discord.
+
 ---
 
 ## 🇫🇷 Français
 
-### ✨ Nouvelles fonctionnalités
+### 📦 Nouveautés
 
-#### Réorganisation manuelle des zones et étages (Home Assistant 2025.1+)
-- **Support complet de la réorganisation manuelle** des zones et étages introduite dans Home Assistant 2025.1
-- **Glissez-déposez** vos zones et étages dans l'ordre de votre choix
-- **Rétrocompatible** - fonctionne parfaitement avec les anciennes versions de Home Assistant
-- **Détection automatique** - Linus Dashboard respecte immédiatement votre ordre personnalisé
-- **Priorité de tri intelligente** : Ordre manuel → Niveau numérique (étages) → Ordre alphabétique
+#### 🔧 Améliorations
 
-#### Tableaux de bord intégrés améliorés
-- La fonctionnalité de tableaux de bord intégrés est maintenant **mise en avant** dans la documentation principale
-- **Guides complets** ajoutés pour l'intégration de tableaux de bord personnalisés
-- Meilleur positionnement comme **fonctionnalité principale** accessible à tous les utilisateurs
-- Cas d'usage détaillés : Monitoring énergie, Caméras de sécurité, Contrôle média, Suivi climatique
+- **Refactorisation de la structure du code** pour une meilleure lisibilité et maintenabilité
+- Mise à jour des notes de version avec le titre "Intégrer n'importe quoi" et amélioration de l'accent sur les tableaux de bord personnalisés
+- Support amélioré de la réorganisation manuelle des zones et étages
 
-### 📚 Améliorations de la documentation
+### 📥 Installation
 
-#### README simplifié
-- **Présentation concise** avec section "Principaux avantages"
-- Tableaux de bord intégrés ajoutés à la **liste des fonctionnalités principales** (plus caché dans la section avancée)
-- Sections redondantes supprimées pour améliorer la lisibilité
-- **Positionnement inclusif** - fonctionnalités accessibles à tous les utilisateurs, pas seulement les "utilisateurs avancés"
+#### Via HACS (Recommandé)
 
-#### Documentation dédiée par fonctionnalité
-- Nouveau **docs/EMBEDDED_DASHBOARDS.md** - Guide complet de 199 lignes avec exemples
-- Nouveau **docs/MANUAL_ORDERING.md** - Guide complet de 211 lignes avec détails de compatibilité
-- Documentation interne réorganisée dans le dossier **docs/development/**
-- **Support bilingue** (Anglais + Français) pour toute la nouvelle documentation
+1. Ouvrez HACS
+2. Allez dans "Intégrations"
+3. Recherchez "Linus Dashboard"
+4. Cliquez sur "Mettre à jour"
 
-### ⚡ Améliorations
+#### Installation manuelle
 
-- **Meilleure découvrabilité** des fonctionnalités clés grâce à une structure de documentation améliorée
-- **Organisation du projet plus propre** avec documentation correctement catégorisée
-- **Maintenabilité améliorée** avec documentation modulaire (1 fonctionnalité = 1 fichier)
+1. Téléchargez `linus-dashboard-1.4.1.zip` depuis la release
+2. Extrayez dans `config/custom_components/linus_dashboard/`
+3. Redémarrez Home Assistant
 
-### 🐛 Corrections de bugs
+### 🧪 Pour les testeurs Beta
 
-_Aucune correction de bug dans cette version_
+Ceci est une version de maintenance avec des améliorations du code et des mises à jour de la documentation.
+
+**Ce qu'il faut tester :**
+
+- Vérifier que l'ordre manuel des zones et étages fonctionne toujours correctement
+- Vérifier que les tableaux de bord intégrés fonctionnent correctement
+- S'assurer que toutes les fonctionnalités existantes fonctionnent comme prévu après la refactorisation
+
+**Retours :**
+Merci de signaler tout problème sur GitHub ou Discord.
 
 ---
 
 ## 📊 Technical Details
 
 ### Version
-- **Current**: 1.4.0
-- **Previous**: 1.4.0-beta.1
+
+- **Current**: 1.4.1
+- **Previous**: 1.4.0
 
 ### Compatibility
+
 - **Home Assistant**: 2023.9+ (2025.1+ recommended for manual ordering)
 - **HACS**: Compatible
 - **Python**: 3.11+
 - **Node**: 18+
 
 ### Files Changed
-- 5 files modified
-- 427 lines added
-- 14 lines removed
-- 2 new documentation files
-- 1 file reorganized
+
+- 3 commits since 1.4.0
+- Code refactoring for better maintainability
+- Documentation improvements
 
 ### Migration Notes
-No breaking changes. This release is fully backward compatible with 1.4.0-beta.1.
 
-### What's Next
-- Continue improving documentation
-- Add more use case examples
-- Enhance embedded dashboard configuration UI
+No breaking changes. This release is fully backward compatible with 1.4.0.
+
+---
+
+**Full Changelog**: https://github.com/Thank-you-Linus/Linus-Dashboard/compare/v1.4.0...v1.4.1

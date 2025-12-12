@@ -67,6 +67,7 @@ env/
 
 # Linus Dashboard specific
 custom_components/hacs/*
+custom_components/linus_brain/*
 custom_components/magic_areas/*
 custom_components/media_player_template/*
 

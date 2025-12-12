@@ -4,6 +4,7 @@ import { Helper } from "../Helper";
 import { ControlChip } from "../chips/ControlChip";
 import { AggregateChip } from "../chips/AggregateChip";
 import { AreaStateChip } from "../chips/AreaStateChip";
+import { ActivityDetectionChip } from "../chips/ActivityDetectionChip";
 import { generic } from "../types/strategy/generic";
 import StrategyArea = generic.StrategyArea;
 import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
@@ -54,18 +55,24 @@ class HomeAreaCard {
     this.config = { ...this.config, ...options };
   }
 
-  getDefaultConfig(area: StrategyArea): TemplateCardConfig {
+  getDefaultConfig(): TemplateCardConfig {
 
-    const { all_lights } = this.magicDevice?.entities || {};
+    // Use EntityResolver to get all_lights entity (Linus Brain or Magic Areas)
+    const resolver = Helper.entityResolver;
+    const allLightsResolution = resolver.resolveAllLights(this.area.slug);
+    const all_lights_entity = allLightsResolution.entity_id;
 
     const cards = [
       this.getMainCard(),
     ];
 
-    cards.push(this.getChipsCard());
+    const chipsCard = this.getChipsCard();
+    if (chipsCard.chips.length > 0) {
+      cards.push(chipsCard);
+    }
 
-    if (all_lights && Helper.getEntityState(all_lights.entity_id).state !== UNAVAILABLE) {
-      cards.push(this.getLightCard(all_lights));
+    if (all_lights_entity && Helper.getEntityState(all_lights_entity).state !== UNAVAILABLE) {
+      cards.push(this.getLightCard(all_lights_entity));
     }
 
     return {
@@ -97,12 +104,49 @@ class HomeAreaCard {
 
   getMainCard(): any {
 
-    const { area_state } = this.magicDevice?.entities || {};
+    // Use EntityResolver for area state (Linus Brain or Magic Areas)
+    const resolver = Helper.entityResolver;
+    const areaStateResolution = resolver.resolveAreaState(this.area.slug);
+    const area_state_entity = areaStateResolution.entity_id;
+    const isLinusBrain = areaStateResolution.source === "linus_brain";
     const icon = this.area.icon || "mdi:home-outline";
 
-    const areaState = new AreaStateChip({ area: this.area, showClearState: false }).getChip() as TemplateChipConfig;
-    const badge_icon = areaState?.icon;
-    const badge_color = areaState?.icon_color;
+    // Badge: Use activity state for Linus Brain, or area state chip for Magic Areas
+    let badge_icon: string | undefined;
+    let badge_color: string | undefined;
+
+    if (isLinusBrain && area_state_entity) {
+      // Linus Brain: Show activity state in badge
+      badge_icon = `
+        {% set state = states('${area_state_entity}') %}
+        {% if state == 'occupied' %}
+          mdi:account
+        {% elif state == 'movement' %}
+          mdi:run
+        {% elif state == 'inactive' %}
+          mdi:account-clock
+        {% else %}
+          mdi:account-off
+        {% endif %}
+      `;
+      badge_color = `
+        {% set state = states('${area_state_entity}') %}
+        {% if state == 'occupied' %}
+          green
+        {% elif state == 'movement' %}
+          orange
+        {% elif state == 'inactive' %}
+          grey
+        {% else %}
+          grey
+        {% endif %}
+      `;
+    } else {
+      // Magic Areas: Use AreaStateChip for badge
+      const areaState = new AreaStateChip({ area: this.area, showClearState: false }).getChip() as TemplateChipConfig;
+      badge_icon = areaState?.icon;
+      badge_color = areaState?.icon_color;
+    }
 
     const secondarySensors = `${Helper.getSensorStateTemplate("temperature", this.area.slug)} ${Helper.getSensorStateTemplate("humidity", this.area.slug)}`
 
@@ -112,7 +156,7 @@ class HomeAreaCard {
       primary: getAreaName(this.area),
       secondary: secondarySensors,
       icon: icon,
-      icon_color: this.getIconColorTemplate(area_state),
+      icon_color: this.getIconColorTemplate(area_state_entity),
       fill_container: true,
       layout: "horizontal",
       badge_icon,
@@ -124,7 +168,19 @@ class HomeAreaCard {
 
   getChipsCard(): any {
 
-    const { light_control, aggregate_health, climate_group, aggregate_window, aggregate_door, aggregate_cover } = this.magicDevice?.entities || {};
+    // Use EntityResolver for Linus Brain / Magic Areas hybrid support
+    const resolver = Helper.entityResolver;
+    const lightControlResolution = resolver.resolveLightControlSwitch(this.area.slug);
+    const light_control_entity = lightControlResolution.entity_id;
+    const allLightsResolution = resolver.resolveAllLights(this.area.slug);
+    const all_lights_entity = allLightsResolution.entity_id;
+
+    // Check if Linus Brain presence detection is available
+    const presenceResolution = resolver.resolvePresenceSensor(this.area.slug);
+    const hasLinusBrainPresence = presenceResolution.source === "linus_brain";
+
+    // Keep other Magic Areas entities unchanged (aggregates, groups)
+    const { aggregate_health, climate_group, aggregate_window, aggregate_door, aggregate_cover } = this.magicDevice?.entities || {};
     const { health } = this.area.domains ?? {};
     const magicClimate = getMAEntity(this.magicDevice?.id, "climate") as EntityRegistryEntry;
     const magicFan = getMAEntity(this.magicDevice?.id, "fan") as EntityRegistryEntry;
@@ -143,7 +199,15 @@ class HomeAreaCard {
       type: "custom:mushroom-chips-card",
       alignment: "end",
       chips: [
-        (motion || occupancy || presence) && new AreaStateChip({ area: this.area }).getChip(),
+        // Show only ONE chip for activity/area state:
+        // - If Linus Brain presence is available: show ActivityDetectionChip
+        // - Otherwise if there are presence sensors: show AreaStateChip (Magic Areas fallback)
+        // - If neither, don't show anything
+        (hasLinusBrainPresence || motion?.length || occupancy?.length || presence?.length) && (
+          hasLinusBrainPresence
+            ? new ActivityDetectionChip({ area_slug: this.area.slug }).getChip()
+            : new AreaStateChip({ area: this.area }).getChip()
+        ),
         health?.length && new ConditionalChip(
           aggregate_health ? [{ entity: aggregate_health?.entity_id, state: "on" }] : health.map(entity => ({ entity, state: "on" })),
           new AggregateChip({ domain: "health", device_class: "health" }).getChip()
@@ -167,27 +231,28 @@ class HomeAreaCard {
         fan?.length && new FanChip({ magic_device_id: this.area.slug, area_slug: this.area.slug }, magicFan).getChip(),
         // Two conditional light chips: one for ON state (turns off), one for OFF state (turns on)
         ...(light?.length ? new ConditionalLightChip({ area_slug: this.area.slug, magic_device_id: this.area.slug }).getChip() : []),
-        this.magicDevice?.entities?.all_lights?.entity_id && light_control?.entity_id && new ConditionalChip(
-          [{ entity: this.magicDevice?.entities?.all_lights?.entity_id, state_not: UNAVAILABLE }],
-          new ControlChip("light", light_control?.entity_id).getChip()
+        // Light control switch - now supports Linus Brain or Magic Areas
+        all_lights_entity && light_control_entity && new ConditionalChip(
+          [{ entity: all_lights_entity, state_not: UNAVAILABLE }],
+          new ControlChip("light", light_control_entity).getChip()
         ).getChip()
       ].filter(Boolean),
       card_mod: { style: this.getChipsCardModStyle() }
     };
   }
 
-  getLightCard(all_lights: EntityRegistryEntry): any {
+  getLightCard(all_lights_entity_id: string): any {
     return {
       type: "tile",
       features: [{ type: "light-brightness" }],
       hide_state: true,
-      entity: all_lights.entity_id,
+      entity: all_lights_entity_id,
       card_mod: { style: this.getLightCardModStyle() }
     };
   }
 
-  getIconColorTemplate(area_state?: EntityRegistryEntry): string {
-    const condition = area_state?.entity_id ? `"dark" in state_attr('${area_state?.entity_id}', 'states')` : `not is_state("sun.sun", "below_horizon")`;
+  getIconColorTemplate(area_state_entity_id?: string | null): string {
+    const condition = area_state_entity_id ? `"dark" in state_attr('${area_state_entity_id}', 'states')` : `not is_state("sun.sun", "below_horizon")`;
     return `
       {{ "indigo" if ${condition} else "amber" }}
     `;
@@ -247,12 +312,17 @@ class HomeAreaCard {
    * @return {cards.AbstractCardConfig} A card object.
    */
   getCard(): cards.AbstractCardConfig {
-    const defaultConfig = this.area.slug === UNDISCLOSED ? this.getUndisclosedAreaConfig(this.area) : this.getDefaultConfig(this.area);
-    const magicAreasEntity: EntityRegistryEntry = getMAEntity(this.magicDevice?.id, "area_state") as EntityRegistryEntry;
+    const defaultConfig = this.area.slug === UNDISCLOSED ? this.getUndisclosedAreaConfig(this.area) : this.getDefaultConfig();
+
+    // Use EntityResolver to get area state entity (Linus Brain or Magic Areas)
+    const resolver = Helper.entityResolver;
+    const areaStateResolution = resolver.resolveAreaState(this.area.slug);
+    const areaStateEntity = areaStateResolution.entity_id ||
+      (getMAEntity(this.magicDevice?.id, "area_state") as EntityRegistryEntry)?.entity_id;
 
     return {
       ...defaultConfig,
-      entity: magicAreasEntity ? magicAreasEntity.entity_id : undefined,
+      entity: areaStateEntity,
     };
   }
 }

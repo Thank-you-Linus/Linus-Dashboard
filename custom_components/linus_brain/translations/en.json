@@ -1,0 +1,168 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configure Linus Brain",
+        "description": "Enter your Supabase credentials to connect your Home Assistant to the Linus Brain AI learning system.",
+        "data": {
+          "url": "Supabase URL",
+          "api_key": "Supabase API Key",
+          "use_sun_elevation": "Use Sun Elevation",
+          "dark_lux_threshold": "Dark Lux Threshold",
+          "inactive_timeout": "Inactive Timeout",
+          "occupied_threshold": "Occupied Threshold"
+        },
+        "data_description": {
+          "url": "Your Supabase project URL",
+          "api_key": "Your Supabase anon or service role API key",
+          "use_sun_elevation": "Use sun elevation in addition to illuminance for darkness detection (recommended)",
+          "dark_lux_threshold": "Lux threshold below which an area is considered dark (0-1000 lux, default: 20)",
+          "inactive_timeout": "Time in seconds before an area transitions from movement to inactive (1-3600s, default: 60)",
+          "occupied_threshold": "Time in seconds before an area transitions from movement to occupied (1-7200s, default: 300)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to Supabase. Please check your URL and API key.",
+      "invalid_auth": "Invalid authentication credentials.",
+      "unknown": "An unexpected error occurred."
+    },
+    "abort": {
+      "already_configured": "Linus Brain is already configured for this Supabase instance."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Linus Brain Options",
+        "description": "Configure advanced options for Linus Brain. These serve as local fallbacks when cloud values are unavailable.",
+        "data": {
+          "use_sun_elevation": "Use Sun Elevation",
+          "dark_lux_threshold": "Dark Lux Threshold",
+          "presence_detection_config": "Presence Detection Sensors",
+          "inactive_timeout": "Inactive Timeout",
+          "occupied_threshold": "Occupied Threshold",
+          "occupied_inactive_timeout": "Occupied Inactive Timeout",
+          "environmental_check_interval": "Environmental Check Interval"
+        },
+        "data_description": {
+          "use_sun_elevation": "Use sun elevation in addition to illuminance for darkness detection (recommended)",
+          "dark_lux_threshold": "Lux threshold below which an area is considered dark (0-1000 lux, default: 20). Acts as fallback for areas without AI insights.",
+          "presence_detection_config": "Select which sensor types should trigger presence detection. Motion sensors are recommended for most setups. At least one option must be selected.",
+          "inactive_timeout": "Time in seconds before an area transitions from movement to inactive (1-3600s, default: 60). Cloud values override this.",
+          "occupied_threshold": "Time in seconds before an area transitions from movement to occupied (1-7200s, default: 300). Cloud values override this.",
+          "occupied_inactive_timeout": "Time in seconds before an area transitions from occupied to inactive (1-7200s, default: 300). Allows longer timeouts for prolonged occupation.",
+          "environmental_check_interval": "Interval in seconds between environmental state checks (lux, temperature, humidity, etc.) to prevent rapid lighting changes when values fluctuate (5-600s, default: 30)."
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "presence_detection": {
+        "name": "Presence Detection {area_name}"
+      }
+    },
+    "light": {
+      "area_lights": {
+        "name": "All Lights - {area_name}"
+      }
+    },
+    "button": {
+      "sync": {
+        "name": "Sync Now"
+      }
+    },
+    "sensor": {
+      "last_sync": {
+        "name": "Last Sync"
+      },
+      "monitored_areas": {
+        "name": "Monitored Areas",
+        "unit_of_measurement": "areas"
+      },
+      "errors": {
+        "name": "Errors",
+        "unit_of_measurement": "errors"
+      },
+      "cloud_health": {
+        "name": "Cloud Health",
+        "state": {
+          "connected": "Connected",
+          "disconnected": "Disconnected",
+          "error": "Error"
+        }
+      },
+      "rule_engine": {
+        "name": "Rule Engine",
+        "unit_of_measurement": "triggers"
+      },
+      "activities": {
+        "name": "Activities",
+        "unit_of_measurement": "activities"
+      },
+      "app": {
+        "name": "App: {app_name}"
+      },
+      "activity": {
+        "name": "{area_name} Activity",
+        "state": {
+          "empty": "Empty",
+          "movement": "Movement",
+          "occupied": "Occupied",
+          "inactive": "Inactive"
+        }
+      },
+      "dark_threshold": {
+        "name": "Dark Threshold - {area_name}"
+      },
+      "bright_threshold": {
+        "name": "Bright Threshold - {area_name}"
+      },
+      "default_brightness": {
+        "name": "Default Brightness - {area_name}"
+      },
+      "insight": {
+        "name": "{insight_type} - {area_name}"
+      }
+    },
+    "switch": {
+      "feature_automatic_lighting": {
+        "name": "Automatic Lighting - {area_name}"
+      }
+    }
+  },
+  "rule_display": {
+    "conditions": {
+      "motion_detected": "motion detected",
+      "low_light": "light level below {value} lux",
+      "sun_below": "sun elevation below {value}°",
+      "state_on": "{entity} is on",
+      "state_off": "{entity} is off",
+      "time_after": "after {time}",
+      "time_before": "before {time}"
+    },
+    "actions": {
+      "turn_on_lights": "Turn on lights",
+      "turn_off_lights": "Turn off lights",
+      "with_brightness": "at {value}% brightness",
+      "with_transition": "with {value}s transition"
+    },
+    "connectors": {
+      "when": "when",
+      "and": "and",
+      "or": "or",
+      "if": "if"
+    },
+    "generic_selectors": {
+      "motion_sensor": "motion sensor",
+      "illuminance_sensor": "light sensor",
+      "in_area": "in area"
+    },
+    "activity_labels": {
+      "empty": "Empty",
+      "movement": "Movement",
+      "occupied": "Occupied"
+    }
+  }
+}

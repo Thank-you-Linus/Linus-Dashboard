@@ -153,6 +153,7 @@ export namespace generic {
   export interface MagicAreaRegistryEntry extends DeviceRegistryEntry {
     entities: Record<string, EntityRegistryEntry>;
     area_name: string;
+    slug: string;
   }
 
   /**

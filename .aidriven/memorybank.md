@@ -1,6 +1,6 @@
 # 🧠 Linus Dashboard - Memory Bank
 
-> **Last updated**: 2025-11-17  
+> **Last updated**: 2025-11-30  
 > **Project**: Home Assistant Custom Integration for Auto-Generated Smart Dashboards
 
 ---
@@ -93,6 +93,8 @@ Linus-Dashboard/
 │   ├── version-check.ts         # Version validation
 │   ├── embedLovelace.ts         # Embedded dashboard support
 │   ├── configurationDefaults.ts # Default configuration
+│   ├── utils/                   # Utility modules
+│   │   └── entityResolver.ts    # Linus Brain & Magic Areas entity resolution
 │   ├── views/                   # View generators
 │   │   ├── AbstractView.ts      # Base view class
 │   │   ├── AreaView.ts          # Room/area views
@@ -593,6 +595,51 @@ if (dashboardConfig.require_admin) {
 - Power user features
 
 **Security**: Access control is enforced at view loading time, checked against current user's role dynamically.
+
+### Linus Brain & Magic Areas Hybrid Support (v1.4.0+)
+
+**Automatic Entity Resolution**
+
+Starting in v1.4.0, Linus Dashboard supports BOTH Magic Areas AND Linus Brain integrations simultaneously through automatic entity resolution:
+
+**Supported Entity Mappings**:
+
+| Magic Areas Entity | Linus Brain Entity | Purpose |
+|-------------------|-------------------|---------|
+| `sensor.area_state_{area}` | `sensor.linus_brain_activity_{area}` | Area presence/activity state |
+| N/A (binary) | `binary_sensor.linus_brain_presence_detection_{area}` | Presence detection sensor |
+| `switch.magic_areas_light_control_{area}` | `switch.linus_brain_automatic_lighting_{area}` | Automatic lighting control |
+| `light.all_lights_{area}` | `light.linus_brain_all_lights_{area}` | All lights group for area |
+
+**Priority Resolution** (Linus Brain → Magic Areas → Native):
+```typescript
+// EntityResolver checks in order:
+1. Linus Brain entities (if present)
+2. Magic Areas entities (if present)  
+3. Native Home Assistant entities (fallback)
+```
+
+**Implementation**:
+- `src/utils/entityResolver.ts` - Core EntityResolver class with automatic detection
+- `src/Helper.ts` - EntityResolver initialization and access
+- `src/cards/HomeAreaCard.ts` - Area state and light control switch resolution
+- `src/chips/AreaStateChip.ts` - Dual-mode chip (Linus Brain vs Magic Areas states)
+- `src/chips/ConditionalLightChip.ts` - All lights entity resolution
+
+**Key Features**:
+- **Automatic Detection**: No user configuration required
+- **Hybrid Mode**: Can use Linus Brain for some areas, Magic Areas for others
+- **Zero Breaking Changes**: Existing Magic Areas installations work unchanged
+- **State Differences Handled**: 
+  - Linus Brain: `empty`, `inactive`, `movement`, `occupied`
+  - Magic Areas: `occupied`, `extended`, `clear`, `bright`, `dark`, `sleep`
+
+**Magic Areas Aggregates Preserved**:
+All Magic Areas aggregate entities remain unchanged (no Linus Brain equivalent):
+- `aggregate_health`, `aggregate_window`, `aggregate_door`, `aggregate_cover`
+- `aggregate_climate`, `aggregate_media_player`, etc.
+
+**Design Decision**: Hybrid approach prioritizes Linus Brain when available while maintaining full Magic Areas compatibility for features Linus Brain doesn't provide.
 
 ---
 

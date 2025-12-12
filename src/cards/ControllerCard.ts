@@ -125,8 +125,11 @@ class ControllerCard {
         });
       }
 
-      if (magic_device && this.#defaultConfig.extraControls?.length) {
-        badges.push(...this.#defaultConfig.extraControls(magic_device)?.map((chip: any) => {
+      if (this.#defaultConfig.extraControls?.length) {
+        // Create a device object with at least the slug for Linus Brain compatibility
+        // If magic_device exists, use it; otherwise create a minimal device object
+        const deviceForExtraControls = magic_device ?? { slug: this.#area_slug, entities: {} };
+        badges.push(...this.#defaultConfig.extraControls(deviceForExtraControls)?.map((chip: any) => {
           return {
             type: "custom:mushroom-chips-card",
             chips: [chip]

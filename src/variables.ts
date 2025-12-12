@@ -1,5 +1,6 @@
 export const MAGIC_AREAS_DOMAIN = "magic_areas";
 export const MAGIC_AREAS_NAME = "Magic Areas";
+export const LINUS_BRAIN_DOMAIN = "linus_brain";
 
 export const UNAVAILABLE = "unavailable";
 export const UNDISCLOSED = "undisclosed";
@@ -135,7 +136,21 @@ export const DOMAINS_VIEWS = [...AREA_CARDS_DOMAINS, ...DEVICE_CLASSES.binary_se
 export const HOME_EXPOSED_CHIPS = ["weather", "alarm", "spotify", LIGHT_DOMAIN, "climate", "fan", "media_player", "switch", "safety", ...DEVICE_CLASSES.cover.map(d => `cover:${d}`), "binary_sensor:motion", "binary_sensor:occupancy", "binary_sensor:door", "binary_sensor:window"];
 export const AREA_EXPOSED_CHIPS = [LIGHT_DOMAIN, ...GROUP_DOMAINS, ...DEVICE_CLASSES.cover.map(d => `cover:${d}`), "fan", "switch", "safety", ...DEVICE_CLASSES.binary_sensor.map(d => `binary_sensor:${d}`), ...DEVICE_CLASSES.sensor.map(d => `sensor:${d}`)];
 export const SECURITY_EXPOSED_DOMAINS = ["light", "alarm", "safety", ...DEVICE_CLASSES.cover.map(d => `cover:${d}`), "lock"];
-export const SECURITY_EXPOSED_SENSORS = ["binary_sensor:motion", "binary_sensor:occupancy", "binary_sensor:door", "binary_sensor:window"];
+export const SECURITY_EXPOSED_SENSORS = [
+  "binary_sensor:motion", 
+  "binary_sensor:occupancy", 
+  "binary_sensor:door", 
+  "binary_sensor:window", 
+  "binary_sensor:smoke",
+  "binary_sensor:gas",
+  "binary_sensor:carbon_monoxide",
+  "binary_sensor:garage_door",
+  "binary_sensor:tamper",
+  "binary_sensor:sound",
+  "binary_sensor:vibration",
+  "binary_sensor:lock",
+  "binary_sensor:moisture"
+];
 export const SECURITY_EXPOSED_CHIPS = ["light", "alarm", "safety", "lock", ...DEVICE_CLASSES.cover.map(d => `cover:${d}`), ...SECURITY_EXPOSED_SENSORS];
 
 export const DEVICE_ICONS = {

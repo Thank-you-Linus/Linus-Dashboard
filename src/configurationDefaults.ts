@@ -55,11 +55,30 @@ export const configurationDefaults: StrategyDefaults = {
       showControls: true,
       controlChip: ConditionalLightChip,
       extraControls: (device: MagicAreaRegistryEntry) => {
-        const { light_control, adaptive_lighting_range, minimum_brightness, maximum_brightness, maximum_lighting_level } = device?.entities ?? {}
+        const { adaptive_lighting_range, minimum_brightness, maximum_brightness, maximum_lighting_level } = device?.entities ?? {}
         const chips = [];
-        if (light_control?.entity_id) {
-          chips.push(new ControlChip("light", light_control?.entity_id).getChip());
+        
+        // Use EntityResolver to get light control switch (Linus Brain or Magic Areas)
+        // Helper is imported dynamically to avoid circular dependency
+        const Helper = require("./Helper").Helper;
+        if (Helper.isInitialized()) {
+          const resolver = Helper.entityResolver;
+          
+          // Add all lights chip (Linus Brain or Magic Areas)
+          const allLightsResolution = resolver.resolveAllLights(device.slug);
+          if (allLightsResolution.entity_id) {
+            chips.push(new LightChip({ area_slug: device.slug, magic_device_id: device.slug }).getChip());
+          }
+          
+          // Add light control switch (Linus Brain or Magic Areas)
+          const lightControlResolution = resolver.resolveLightControlSwitch(device.slug);
+          const lightControlEntity = lightControlResolution.entity_id;
+          
+          if (lightControlEntity) {
+            chips.push(new ControlChip("light", lightControlEntity).getChip());
+          }
         }
+        
         if (adaptive_lighting_range && minimum_brightness && maximum_brightness && maximum_lighting_level) {
           chips.push(new SettingsChip({ tap_action: new LightSettings(device).getPopup() }).getChip());
         }

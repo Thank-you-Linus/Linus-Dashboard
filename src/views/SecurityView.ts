@@ -8,7 +8,7 @@ import { views } from "../types/strategy/views";
 import { ChipsCardConfig } from "../types/lovelace-mushroom/cards/chips-card";
 import { TemplateCardConfig } from "../types/lovelace-mushroom/cards/template-card-config";
 import { LovelaceChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
-import { SECURITY_EXPOSED_CHIPS, SECURITY_EXPOSED_DOMAINS, SECURITY_EXPOSED_SENSORS } from "../variables";
+import { SECURITY_EXPOSED_CHIPS, SECURITY_EXPOSED_DOMAINS } from "../variables";
 
 /**
  * Security View Class.
@@ -155,16 +155,78 @@ class SecurityView {
       globalSection.cards.push(...securityCards);
     }
 
-    const sensorCards = await createCardsFromList(SECURITY_EXPOSED_SENSORS, {}, "global", "global");
-    if (sensorCards) {
-      globalSection.cards.push(
-        {
-          type: "heading",
-          heading: Helper.localize("component.sensor.entity_component._.name") + "s",
-          heading_style: "title",
-          icon: "mdi:motion-sensor",
-        });
-      globalSection.cards.push(...sensorCards);
+    // Organize sensors by category for better UX
+    const criticalSensors = [
+      "binary_sensor:smoke",
+      "binary_sensor:gas",
+      "binary_sensor:carbon_monoxide"
+    ];
+    
+    const accessSensors = [
+      "binary_sensor:door",
+      "binary_sensor:window",
+      "binary_sensor:garage_door",
+      "binary_sensor:lock"
+    ];
+    
+    const detectionSensors = [
+      "binary_sensor:motion",
+      "binary_sensor:occupancy",
+      "binary_sensor:sound",
+      "binary_sensor:vibration"
+    ];
+    
+    const otherSensors = [
+      "binary_sensor:tamper",
+      "binary_sensor:moisture"
+    ];
+
+    // Critical Safety Sensors (compact, always visible)
+    const criticalCards = await createCardsFromList(criticalSensors, {}, "global", "global");
+    if (criticalCards && criticalCards.length > 0) {
+      globalSection.cards.push({
+        type: "heading",
+        heading: "🔥 Critical Safety",
+        heading_style: "subtitle",
+        icon: "mdi:fire-alert",
+      });
+      globalSection.cards.push(...criticalCards);
+    }
+
+    // Access Control Sensors (compact)
+    const accessCards = await createCardsFromList(accessSensors, {}, "global", "global");
+    if (accessCards && accessCards.length > 0) {
+      globalSection.cards.push({
+        type: "heading",
+        heading: "🚪 Access Control",
+        heading_style: "subtitle",
+        icon: "mdi:door",
+      });
+      globalSection.cards.push(...accessCards);
+    }
+
+    // Detection Sensors (compact)
+    const detectionCards = await createCardsFromList(detectionSensors, {}, "global", "global");
+    if (detectionCards && detectionCards.length > 0) {
+      globalSection.cards.push({
+        type: "heading",
+        heading: "👁️ Detection",
+        heading_style: "subtitle",
+        icon: "mdi:motion-sensor",
+      });
+      globalSection.cards.push(...detectionCards);
+    }
+
+    // Other Security Sensors (compact)
+    const otherCards = await createCardsFromList(otherSensors, {}, "global", "global");
+    if (otherCards && otherCards.length > 0) {
+      globalSection.cards.push({
+        type: "heading",
+        heading: "🛡️ Other",
+        heading_style: "subtitle",
+        icon: "mdi:shield-alert",
+      });
+      globalSection.cards.push(...otherCards);
     }
 
     const sections = [globalSection]

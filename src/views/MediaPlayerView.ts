@@ -30,7 +30,7 @@ class MediaPlayerView extends AbstractView {
    * @private
    */
   #defaultConfig: views.ViewConfig = {
-    title: "MediaPlayers",
+    title: "Media Players",
     icon: "mdi:cast",
     subview: false,
   };
@@ -42,7 +42,7 @@ class MediaPlayerView extends AbstractView {
    * @private
    */
   #viewControllerCardConfig: cards.ControllerCardOptions = {
-    title: `${Helper.localize(`component.media_player.entity_component._.name`)}s`,
+    title: "Media Players",
     // subtitle: Helper.getCountTemplate(MediaPlayerView.#domain, "ne", "off") + " media players on",
   };
 

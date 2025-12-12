@@ -1,6 +1,6 @@
-# 🎉 Release Notes
+# 🎯 Embed Anything - Release v1.4.0
 
-> **Stable Release** - Version 1.4.0 brings enhanced customization and improved organization.
+> **Stable Release** - Unleash the full potential of your Home Assistant setup by seamlessly integrating any custom dashboard alongside Linus Dashboard's automatic organization.
 
 ---
 

@@ -1,81 +1,103 @@
-# 🎉 Stable Release
+# 🎯 Embed Anything
+
+Unleash the full potential of your Home Assistant setup by seamlessly integrating any custom dashboard alongside Linus Dashboard's automatic organization.
 
 ---
 
 ## ✨ What's New
 
-- **Full support for manual reordering** of areas and floors introduced in Home Assistant 2025.1
-- **Drag & drop** your areas and floors in any order you prefer
+### 🎨 Custom Dashboard Integration
+- **Embed ANY dashboard** alongside Linus Dashboard's automated views
+- **Comprehensive 199-line guide** with real-world examples and best practices
+- **Perfect for**: Energy monitoring, Security cameras, Media control, Climate tracking, and more
+- **Seamless integration** - your custom dashboards work perfectly with Linus's automatic organization
+- **Now prominently featured** in main documentation - accessible to all users
+
+### 📐 Manual Area & Floor Ordering (Home Assistant 2025.1+)
+- **Full support for manual reordering** with drag & drop
 - **Backward compatible** - works seamlessly with older Home Assistant versions
-- **Automatic detection** - Linus Dashboard respects your custom order immediately
 - **Smart sorting priority**: Manual order → Numeric level (floors) → Alphabetical fallback
-- **Comprehensive guides** added for embedding custom dashboards
+- **Automatic detection** - Linus Dashboard respects your custom order immediately
 
 <details>
 <summary>📖 <b>View detailed descriptions / Voir les descriptions détaillées</b></summary>
 
 ### 🇬🇧 English
 
+#### Custom Dashboard Integration
+The embedded dashboards feature allows you to combine Linus Dashboard's powerful automatic organization with your own custom dashboards. Whether you want dedicated views for energy monitoring, security cameras, media control, or climate tracking, you can now seamlessly integrate them.
 
-#### Manual Area & Floor Ordering (Home Assistant 2025.1+)
-- **Full support for manual reordering** of areas and floors introduced in Home Assistant 2025.1
-- **Drag & drop** your areas and floors in any order you prefer
-- **Backward compatible** - works seamlessly with older Home Assistant versions
-- **Automatic detection** - Linus Dashboard respects your custom order immediately
-- **Smart sorting priority**: Manual order → Numeric level (floors) → Alphabetical fallback
+**Key benefits:**
+- Keep Linus Dashboard's automatic room and device organization
+- Add specialized views that match your specific needs
+- Full documentation with step-by-step configuration examples
+- No compromise between automation and customization
 
-#### Enhanced Embedded Dashboards
-- Embedded dashboards feature now **prominently featured** in main documentation
-- **Comprehensive guides** added for embedding custom dashboards
-- Better positioning as a **core feature** accessible to all users
-- Detailed use cases: Energy monitoring, Security cameras, Media control, Climate tracking
+#### Manual Area & Floor Ordering
+Home Assistant 2025.1 introduced the ability to manually reorder areas and floors using drag & drop. Linus Dashboard now fully supports this feature while remaining backward compatible with older versions.
 
+**Smart sorting logic:**
+1. Manual order (if set in HA 2025.1+)
+2. Numeric level for floors (e.g., -1, 0, 1, 2)
+3. Alphabetical order as fallback
+
+---
 
 ### 🇫🇷 Français
 
+#### Intégration de tableaux de bord personnalisés
+La fonctionnalité de tableaux de bord intégrés vous permet de combiner l'organisation automatique puissante de Linus Dashboard avec vos propres tableaux de bord personnalisés. Que vous souhaitiez des vues dédiées pour le monitoring énergétique, les caméras de sécurité, le contrôle média ou le suivi climatique, vous pouvez désormais les intégrer de manière transparente.
 
-#### Réorganisation manuelle des zones et étages (Home Assistant 2025.1+)
-- **Support complet de la réorganisation manuelle** des zones et étages introduite dans Home Assistant 2025.1
-- **Glissez-déposez** vos zones et étages dans l'ordre de votre choix
-- **Rétrocompatible** - fonctionne parfaitement avec les anciennes versions de Home Assistant
-- **Détection automatique** - Linus Dashboard respecte immédiatement votre ordre personnalisé
-- **Priorité de tri intelligente** : Ordre manuel → Niveau numérique (étages) → Ordre alphabétique
+**Avantages clés :**
+- Conservez l'organisation automatique des pièces et appareils de Linus Dashboard
+- Ajoutez des vues spécialisées qui correspondent à vos besoins spécifiques
+- Documentation complète avec exemples de configuration pas à pas
+- Aucun compromis entre automatisation et personnalisation
 
-#### Tableaux de bord intégrés améliorés
-- La fonctionnalité de tableaux de bord intégrés est maintenant **mise en avant** dans la documentation principale
-- **Guides complets** ajoutés pour l'intégration de tableaux de bord personnalisés
-- Meilleur positionnement comme **fonctionnalité principale** accessible à tous les utilisateurs
-- Cas d'usage détaillés : Monitoring énergie, Caméras de sécurité, Contrôle média, Suivi climatique
+#### Réorganisation manuelle des zones et étages
+Home Assistant 2025.1 a introduit la possibilité de réorganiser manuellement les zones et étages par glisser-déposer. Linus Dashboard supporte maintenant pleinement cette fonctionnalité tout en restant rétrocompatible avec les anciennes versions.
 
-
-</details>
-
-## 🐛 Bug Fixes
-
-_No bug fixes in this release_
-
-## ⚡ Improvements
-
-- **Better discoverability** of key features through improved documentation structure
-- **Cleaner project organization** with documentation properly categorized
-- **Improved maintainability** with modular documentation (1 feature = 1 file)
-
-<details>
-<summary>🇫🇷 <b>Version française</b></summary>
-
-- **Meilleure découvrabilité** des fonctionnalités clés grâce à une structure de documentation améliorée
-- **Organisation du projet plus propre** avec documentation correctement catégorisée
-- **Maintenabilité améliorée** avec documentation modulaire (1 fonctionnalité = 1 fichier)
+**Logique de tri intelligente :**
+1. Ordre manuel (si défini dans HA 2025.1+)
+2. Niveau numérique pour les étages (ex: -1, 0, 1, 2)
+3. Ordre alphabétique comme solution de repli
 
 </details>
 
 ---
 
+## 📚 Documentation
+
+### New Guides
+- 📖 **[Embedded Dashboards Guide](https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/docs/EMBEDDED_DASHBOARDS.md)** - Complete guide with examples and use cases
+- 📐 **[Manual Ordering Guide](https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/docs/MANUAL_ORDERING.md)** - Understanding the new ordering system
+
+### Improvements
+- **Streamlined README** - Cleaner, more scannable main documentation
+- **Better feature discoverability** - Key features highlighted upfront
+- **Modular documentation** - One feature = One dedicated guide
+- **Fully bilingual** - Complete English + French support
+
+---
+
+## 🐛 Bug Fixes
+
+_No bug fixes in this release_
+
+---
+
+## ⚡ Other Improvements
+
+- **Better project organization** with documentation properly categorized
+- **Improved maintainability** with modular structure
+- **Enhanced user experience** through clearer documentation
+
 <details>
-<summary>📊 <b>Technical Details</b></summary>
+<summary>🇫🇷 <b>Autres améliorations</b></summary>
 
-
-### Version
+- **Meilleure organisation du projet** avec documentation correctement catégorisée
+- **Maintenabilité améliorée** avec structure modulaire
+- **Expérience utilisateur améliorée** grâce à une documentation plus claire
 
 </details>
 
@@ -97,11 +119,23 @@ _No bug fixes in this release_
 3. Restart Home Assistant
 4. Clear browser cache
 
+## ⚠️ Important Notes
+
+- **Manual ordering** requires Home Assistant 2025.1 or later
+- **Fully backward compatible** with older HA versions (falls back to smart sorting)
+- **Clear browser cache** after installation to see changes
+
 ---
 
 ## 🔗 Links
 
-- 📖 [Documentation](https://github.com/Thank-you-Linus/Linus-Dashboard)
+- 📖 [Full Documentation](https://github.com/Thank-you-Linus/Linus-Dashboard)
+- 🎨 [Embedded Dashboards Guide](https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/docs/EMBEDDED_DASHBOARDS.md)
+- 📐 [Manual Ordering Guide](https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/docs/MANUAL_ORDERING.md)
 - 🐛 [Report Issues](https://github.com/Thank-you-Linus/Linus-Dashboard/issues)
-- 💬 [Discord Community](https://discord.gg/your-discord-link)
+- 💬 [Discussions](https://github.com/Thank-you-Linus/Linus-Dashboard/discussions)
+
+---
+
+**Thanks to all contributors and users who helped shape this release!** 🙏
 

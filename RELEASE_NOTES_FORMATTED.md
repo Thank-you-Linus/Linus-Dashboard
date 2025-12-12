@@ -1,14 +1,15 @@
-# 🧪 Beta Release
-
-> **This is a pre-release version for testing.**  
-> Please report any issues on [GitHub Issues](https://github.com/Thank-you-Linus/Linus-Dashboard/issues)
+# 🎉 Stable Release
 
 ---
 
 ## ✨ What's New
 
-- **Full support for embedding external Lovelace dashboards** directly within Linus Dashboard
-- **Admin-restricted panel visibility** matching Home Assistant's native dashboard behavior
+- **Full support for manual reordering** of areas and floors introduced in Home Assistant 2025.1
+- **Drag & drop** your areas and floors in any order you prefer
+- **Backward compatible** - works seamlessly with older Home Assistant versions
+- **Automatic detection** - Linus Dashboard respects your custom order immediately
+- **Smart sorting priority**: Manual order → Numeric level (floors) → Alphabetical fallback
+- **Comprehensive guides** added for embedding custom dashboards
 
 <details>
 <summary>📖 <b>View detailed descriptions / Voir les descriptions détaillées</b></summary>
@@ -16,35 +17,35 @@
 ### 🇬🇧 English
 
 
-#### Embedded Dashboard Support
-- **Full support for embedding external Lovelace dashboards** directly within Linus Dashboard
-- Allows seamless integration of custom dashboards from other integrations
-- Provides a unified user experience by consolidating multiple dashboards into one interface
-- Compatible with all standard Home Assistant dashboard types
+#### Manual Area & Floor Ordering (Home Assistant 2025.1+)
+- **Full support for manual reordering** of areas and floors introduced in Home Assistant 2025.1
+- **Drag & drop** your areas and floors in any order you prefer
+- **Backward compatible** - works seamlessly with older Home Assistant versions
+- **Automatic detection** - Linus Dashboard respects your custom order immediately
+- **Smart sorting priority**: Manual order → Numeric level (floors) → Alphabetical fallback
 
-#### Admin-Only Panel Visibility
-- **Admin-restricted panel visibility** matching Home Assistant's native dashboard behavior
-- Configure panels to be visible only to administrator users
-- Uses Home Assistant's built-in user roles and permissions system
-- Perfect for debug information, system statistics, or administrative controls
-- Works exactly like Home Assistant's dashboard visibility configuration
+#### Enhanced Embedded Dashboards
+- Embedded dashboards feature now **prominently featured** in main documentation
+- **Comprehensive guides** added for embedding custom dashboards
+- Better positioning as a **core feature** accessible to all users
+- Detailed use cases: Energy monitoring, Security cameras, Media control, Climate tracking
 
 
 ### 🇫🇷 Français
 
 
-#### Support des Dashboards Embarqués
-- **Support complet pour l'intégration de dashboards Lovelace externes** directement dans Linus Dashboard
-- Permet l'intégration fluide de dashboards personnalisés provenant d'autres intégrations
-- Offre une expérience utilisateur unifiée en consolidant plusieurs dashboards en une seule interface
-- Compatible avec tous les types de dashboards standards de Home Assistant
+#### Réorganisation manuelle des zones et étages (Home Assistant 2025.1+)
+- **Support complet de la réorganisation manuelle** des zones et étages introduite dans Home Assistant 2025.1
+- **Glissez-déposez** vos zones et étages dans l'ordre de votre choix
+- **Rétrocompatible** - fonctionne parfaitement avec les anciennes versions de Home Assistant
+- **Détection automatique** - Linus Dashboard respecte immédiatement votre ordre personnalisé
+- **Priorité de tri intelligente** : Ordre manuel → Niveau numérique (étages) → Ordre alphabétique
 
-#### Visibilité des Panneaux Restreinte aux Admins
-- **Visibilité des panneaux réservée aux administrateurs** correspondant au comportement natif des dashboards Home Assistant
-- Configurez les panneaux pour qu'ils soient visibles uniquement par les utilisateurs administrateurs
-- Utilise le système de rôles et permissions intégré de Home Assistant
-- Parfait pour les informations de debug, statistiques système ou contrôles administratifs
-- Fonctionne exactement comme la configuration de visibilité des dashboards Home Assistant
+#### Tableaux de bord intégrés améliorés
+- La fonctionnalité de tableaux de bord intégrés est maintenant **mise en avant** dans la documentation principale
+- **Guides complets** ajoutés pour l'intégration de tableaux de bord personnalisés
+- Meilleur positionnement comme **fonctionnalité principale** accessible à tous les utilisateurs
+- Cas d'usage détaillés : Monitoring énergie, Caméras de sécurité, Contrôle média, Suivi climatique
 
 
 </details>
@@ -55,44 +56,18 @@ _No bug fixes in this release_
 
 ## ⚡ Improvements
 
-- Improved performance when loading embedded dashboards
-- Better error handling for missing or invalid dashboard configurations
-- Enhanced documentation for new features
+- **Better discoverability** of key features through improved documentation structure
+- **Cleaner project organization** with documentation properly categorized
+- **Improved maintainability** with modular documentation (1 feature = 1 file)
 
 <details>
 <summary>🇫🇷 <b>Version française</b></summary>
 
-- Performance améliorée lors du chargement des dashboards embarqués
-- Meilleure gestion des erreurs pour les configurations de dashboard manquantes ou invalides
-- Documentation enrichie pour les nouvelles fonctionnalités
+- **Meilleure découvrabilité** des fonctionnalités clés grâce à une structure de documentation améliorée
+- **Organisation du projet plus propre** avec documentation correctement catégorisée
+- **Maintenabilité améliorée** avec documentation modulaire (1 fonctionnalité = 1 fichier)
 
 </details>
-
----
-
-## 🧪 For Beta Testers
-
-**What to test:**
-- [ ] Test the embedded dashboard feature with different Lovelace dashboards
-- [ ] Verify that external dashboards load correctly and display properly
-- [ ] Test admin-only panel visibility with admin and non-admin users
-- [ ] Verify that panels configured as admin-only are hidden from regular users
-- [ ] Confirm that admin users can see all panels including admin-restricted ones
-
-<details>
-<summary>🇫🇷 <b>Quoi tester</b></summary>
-
-- [ ] Tester la fonctionnalité de dashboard embarqué avec différents dashboards Lovelace
-- [ ] Vérifier que les dashboards externes se chargent correctement et s'affichent proprement
-- [ ] Tester la visibilité des panneaux admin-only avec des utilisateurs admin et non-admin
-- [ ] Vérifier que les panneaux configurés comme admin-only sont cachés des utilisateurs réguliers
-- [ ] Confirmer que les utilisateurs admin peuvent voir tous les panneaux y compris ceux restreints
-
-</details>
-
-**Known Issues:**
-- Some custom cards in embedded dashboards may require page refresh
-- Admin-only visibility requires proper user role configuration in Home Assistant
 
 ---
 
@@ -100,7 +75,7 @@ _No bug fixes in this release_
 <summary>📊 <b>Technical Details</b></summary>
 
 
-### All Commits
+### Version
 
 </details>
 

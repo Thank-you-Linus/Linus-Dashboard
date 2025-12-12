@@ -352,6 +352,7 @@ def get_insight_value(insight_data: dict, value_path: list[str] | None):
         >>> insight = {"value": {"threshold": 20}, "confidence": 0.85}
         >>> get_insight_value(insight, ["threshold"])
         20
+
     """
     if value_path is None:
         return insight_data.get("value")
@@ -375,6 +376,7 @@ def _load_manifest_data() -> dict[str, str]:
 
     Returns:
         Dictionary with manifest fields like version, documentation_url, etc.
+
     """
     import json
     from pathlib import Path
@@ -404,6 +406,7 @@ def _get_manifest_data() -> dict[str, str]:
 
     Returns:
         Dictionary with manifest fields like version, documentation_url, etc.
+
     """
     return _MANIFEST_DATA
 
@@ -423,6 +426,7 @@ def get_area_device_info(entry_id: str, area_id: str, area_name: str) -> dict:
 
     Returns:
         Device info dictionary for device registry
+
     """
     manifest = _get_manifest_data()
 
@@ -453,6 +457,7 @@ def get_integration_device_info(entry_id: str) -> dict:
 
     Returns:
         Device info dictionary for device registry
+
     """
     from homeassistant.helpers.device_registry import DeviceEntryType
 

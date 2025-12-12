@@ -81,6 +81,7 @@ class AppStorage:
         Args:
             hass: Home Assistant instance
             storage_dir: Optional custom storage directory (for testing)
+
         """
         self.hass = hass
 
@@ -106,6 +107,7 @@ class AppStorage:
 
         Returns:
             True if completely empty
+
         """
         return (
             not self._data.get("activities")
@@ -115,7 +117,7 @@ class AppStorage:
 
     def _load_file(self) -> dict[str, Any]:
         """Synchronous file load operation."""
-        with open(self.storage_file, "r") as f:
+        with open(self.storage_file) as f:
             return json.load(f)
 
     async def async_load(self) -> dict[str, Any]:
@@ -124,6 +126,7 @@ class AppStorage:
 
         Returns:
             Loaded data dictionary
+
         """
         try:
             if not self.storage_file.exists():
@@ -172,6 +175,7 @@ class AppStorage:
             occupied_threshold: Duration threshold in seconds for 'occupied' activity
             occupied_inactive_timeout: Timeout in seconds for 'inactive' from 'occupied'
             environmental_check_interval: Interval in seconds between environmental state checks
+
         """
         self.apply_config_overrides(
             inactive_timeout,
@@ -201,6 +205,7 @@ class AppStorage:
             occupied_threshold: Duration threshold in seconds for 'occupied' activity
             occupied_inactive_timeout: Timeout in seconds for 'inactive' from 'occupied'
             environmental_check_interval: Interval in seconds between environmental state checks
+
         """
         activities = self._data.get("activities", {})
 
@@ -258,6 +263,7 @@ class AppStorage:
 
         Returns:
             True if successful
+
         """
         try:
             await self.hass.async_add_executor_job(self._save_file)
@@ -283,6 +289,7 @@ class AppStorage:
 
         Returns:
             Fallback data dictionary
+
         """
         from ..const import DEFAULT_ACTIVITY_TYPES, DEFAULT_AUTOLIGHT_APP
 
@@ -330,6 +337,7 @@ class AppStorage:
 
         Returns:
             True if sync succeeded, False otherwise
+
         """
         try:
             _LOGGER.info("Attempting cloud sync (timeout 10s)")
@@ -337,13 +345,13 @@ class AppStorage:
             async with asyncio.timeout(CLOUD_SYNC_TIMEOUT):
                 # PRIORITY 1: Try to fetch activities from cloud
                 _LOGGER.debug("Fetching activity definitions from cloud")
-                
+
                 activities = None
                 activities_source = None
-                
+
                 try:
                     cloud_activities = await supabase_client.fetch_activity_types()
-                    
+
                     if cloud_activities:
                         activities = cloud_activities
                         activities_source = "cloud"
@@ -355,14 +363,19 @@ class AppStorage:
                             # PRIORITY 2: Use existing cache if cloud is empty
                             activities = cached_activities
                             activities_source = "cache (cloud empty)"
-                            _LOGGER.warning("Cloud has no activities, preserving existing cache")
+                            _LOGGER.warning(
+                                "Cloud has no activities, preserving existing cache"
+                            )
                         else:
                             # PRIORITY 3: No cloud, no cache - populate cache with const.py
-                            _LOGGER.warning("Cloud empty and no cache, populating from const.py")
+                            _LOGGER.warning(
+                                "Cloud empty and no cache, populating from const.py"
+                            )
                             from ..const import DEFAULT_ACTIVITY_TYPES
+
                             activities = DEFAULT_ACTIVITY_TYPES.copy()
                             activities_source = "const.py (populated cache)"
-                
+
                 except Exception as err:
                     # Cloud fetch failed - check if we have cached data
                     cached_activities = self._data.get("activities", {})
@@ -370,11 +383,16 @@ class AppStorage:
                         # PRIORITY 2: Use existing cache if cloud fails
                         activities = cached_activities
                         activities_source = "cache (cloud error)"
-                        _LOGGER.warning(f"Failed to fetch from cloud: {err}, preserving existing cache")
+                        _LOGGER.warning(
+                            f"Failed to fetch from cloud: {err}, preserving existing cache"
+                        )
                     else:
                         # PRIORITY 3: No cloud, no cache - populate cache with const.py
-                        _LOGGER.warning(f"Failed to fetch from cloud: {err} and no cache, populating from const.py")
+                        _LOGGER.warning(
+                            f"Failed to fetch from cloud: {err} and no cache, populating from const.py"
+                        )
                         from ..const import DEFAULT_ACTIVITY_TYPES
+
                         activities = DEFAULT_ACTIVITY_TYPES.copy()
                         activities_source = "const.py (populated cache)"
 
@@ -397,25 +415,35 @@ class AppStorage:
                         if cached_apps.get("automatic_lighting"):
                             apps = cached_apps
                             apps_source = "cache (cloud empty)"
-                            _LOGGER.warning("Cloud has no apps, preserving existing cache")
+                            _LOGGER.warning(
+                                "Cloud has no apps, preserving existing cache"
+                            )
                         else:
                             from ..const import DEFAULT_AUTOLIGHT_APP
+
                             apps["automatic_lighting"] = DEFAULT_AUTOLIGHT_APP
                             apps_source = "const.py (populated cache)"
-                            _LOGGER.warning("Cloud empty and no cached app, populating from const.py")
-                
+                            _LOGGER.warning(
+                                "Cloud empty and no cached app, populating from const.py"
+                            )
+
                 except Exception as err:
                     # Cloud failed - check cache
                     cached_apps = self._data.get("apps", {})
                     if cached_apps.get("automatic_lighting"):
                         apps = cached_apps
                         apps_source = "cache (cloud error)"
-                        _LOGGER.warning(f"Failed to fetch app: {err}, preserving existing cache")
+                        _LOGGER.warning(
+                            f"Failed to fetch app: {err}, preserving existing cache"
+                        )
                     else:
                         from ..const import DEFAULT_AUTOLIGHT_APP
+
                         apps["automatic_lighting"] = DEFAULT_AUTOLIGHT_APP
                         apps_source = "const.py (populated cache)"
-                        _LOGGER.warning(f"Failed to fetch app: {err} and no cache, populating from const.py")
+                        _LOGGER.warning(
+                            f"Failed to fetch app: {err} and no cache, populating from const.py"
+                        )
 
                 # NOTE: We do NOT fetch assignments from cloud anymore
                 # Assignments are managed by local Home Assistant switches
@@ -429,7 +457,8 @@ class AppStorage:
                     "apps": apps,
                     "assignments": {},  # Empty - managed by switches
                     "synced_at": sync_time,
-                    "is_fallback": activities_source.startswith("const") or apps_source.startswith("const"),
+                    "is_fallback": activities_source.startswith("const")
+                    or apps_source.startswith("const"),
                 }
 
                 # Cloud sync completed (may use cache or const.py as fallback)
@@ -442,7 +471,7 @@ class AppStorage:
 
                 return True
 
-        except asyncio.TimeoutError:
+        except TimeoutError:
             _LOGGER.warning("Cloud sync timeout (10s) - keeping existing local data")
 
             # Only load fallback if we have absolutely no local data
@@ -538,6 +567,7 @@ class AppStorage:
         Args:
             activity_id: Activity identifier
             activity_data: Activity configuration
+
         """
         if "activities" not in self._data:
             self._data["activities"] = {}
@@ -552,6 +582,7 @@ class AppStorage:
         Args:
             app_id: App identifier
             app_data: App configuration with activity_actions
+
         """
         if "apps" not in self._data:
             self._data["apps"] = {}
@@ -566,6 +597,7 @@ class AppStorage:
         Args:
             area_id: Area identifier
             assignment_data: Assignment configuration
+
         """
         if "assignments" not in self._data:
             self._data["assignments"] = {}
@@ -582,6 +614,7 @@ class AppStorage:
 
         Returns:
             True if removed, False if didn't exist
+
         """
         if area_id in self._data.get("assignments", {}):
             del self._data["assignments"][area_id]
@@ -617,6 +650,7 @@ class AppStorage:
 
         Returns:
             True (always succeeds with local data)
+
         """
         _LOGGER.debug("Refreshing activity configurations from local const.py")
 
@@ -650,6 +684,7 @@ class AppStorage:
 
         Returns:
             Loaded data dictionary
+
         """
         # Load from local cache first
         await self.async_load()

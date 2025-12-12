@@ -58,6 +58,7 @@ class LinusBrainCoordinator(DataUpdateCoordinator):
             supabase_url: Supabase project URL
             supabase_key: Supabase API key
             config_entry: Config entry for user preferences
+
         """
         super().__init__(
             hass,
@@ -129,12 +130,13 @@ class LinusBrainCoordinator(DataUpdateCoordinator):
 
         Raises:
             UpdateFailed: If data update fails
+
         """
         try:
             _LOGGER.debug(
                 "🔧 [COORDINATOR DEBUG] _async_update_data called. "
                 "Current self.data = %s",
-                "None" if self.data is None else f"dict with {len(self.data)} keys"
+                "None" if self.data is None else f"dict with {len(self.data)} keys",
             )
             _LOGGER.debug("Starting periodic data update (heartbeat)")
 
@@ -210,6 +212,7 @@ class LinusBrainCoordinator(DataUpdateCoordinator):
 
         Args:
             area: The area ID to update
+
         """
         try:
             _LOGGER.debug(f"Sending immediate update for area: {area}")
@@ -279,6 +282,7 @@ class LinusBrainCoordinator(DataUpdateCoordinator):
 
         Returns:
             List of automation rules
+
         """
         try:
             _LOGGER.debug("Fetching automation rules from Supabase")
@@ -341,6 +345,7 @@ class LinusBrainCoordinator(DataUpdateCoordinator):
 
         Returns:
             The current activity name, or None if not found
+
         """
         return self.last_rules.get(area_id, {}).get("activity")
 
@@ -356,6 +361,7 @@ class LinusBrainCoordinator(DataUpdateCoordinator):
 
         Raises:
             Exception: If instance creation/lookup fails
+
         """
         # Get HA installation ID from core.uuid
         if not self.ha_installation_id:

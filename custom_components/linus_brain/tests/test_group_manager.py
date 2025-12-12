@@ -1,7 +1,7 @@
 """Tests for GroupManager utility."""
 
 import asyncio
-from unittest.mock import AsyncMock, MagicMock, Mock, call, patch
+from unittest.mock import AsyncMock, MagicMock, Mock
 
 import pytest
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
@@ -12,7 +12,7 @@ from ..utils.group_manager import GroupManager, PlatformGroupManager
 
 class TestGroupManager:
     """Test the GroupManager class."""
-    
+
     @pytest.fixture
     def mock_hass(self):
         """Create a mock Home Assistant instance."""
@@ -23,12 +23,12 @@ class TestGroupManager:
         hass.bus.async_listen_once = MagicMock(return_value=lambda: None)
         hass.bus.async_listen = MagicMock(return_value=lambda: None)
         return hass
-    
+
     @pytest.fixture
     def mock_refresh_callback(self):
         """Create a mock refresh callback."""
         return AsyncMock()
-    
+
     @pytest.fixture
     def manager(self, mock_hass, mock_refresh_callback):
         """Create a GroupManager instance."""
@@ -39,18 +39,19 @@ class TestGroupManager:
             startup_delay=0.1,
             log_prefix="TestManager",
         )
-    
+
     def test_init(self):
         """Test GroupManager initialization."""
         from unittest.mock import Mock
+
         from ..utils.group_manager import GroupManager
-        
+
         hass = Mock()
         hass.is_running = False
         refresh_callback = Mock()
         removal_callback = Mock()
         check_empty_callback = Mock()
-        
+
         manager = GroupManager(
             hass=hass,
             refresh_callback=refresh_callback,
@@ -60,7 +61,7 @@ class TestGroupManager:
             removal_callback=removal_callback,
             check_empty_callback=check_empty_callback,
         )
-        
+
         assert manager.hass == hass
         assert manager._refresh_callback == refresh_callback
         assert manager._removal_callback == removal_callback
@@ -123,7 +124,7 @@ class TestGroupManager:
         mock_hass.bus.async_listen_once.assert_called_once()
         args = mock_hass.bus.async_listen_once.call_args[0]
         assert args[0] == EVENT_HOMEASSISTANT_STARTED
-        
+
         # Should register entity registry listener
         mock_hass.bus.async_listen.assert_called_once()
 
@@ -403,9 +404,7 @@ class TestPlatformGroupManager:
         registry_listener(event)
         await asyncio.sleep(0.1)
 
-        update_callback.assert_called_once_with(
-            "light.test", {"area_id": "new_area"}
-        )
+        update_callback.assert_called_once_with("light.test", {"area_id": "new_area"})
 
         # Cleanup
         for unsub in unsubs:
@@ -497,19 +496,20 @@ class TestPlatformGroupManager:
 
 class TestEmptyGroupHandling:
     """Test that groups handle becoming empty by being removed."""
-    
+
     def test_binary_sensor_has_refresh_method(self):
         """Test that binary_sensor has the refresh method for entity removal."""
         # This test verifies the logic exists
         # Actual behavior is tested in integration tests
         from ..binary_sensor import PresenceDetectionBinarySensor
+
         # Just verify the class exists and has the method
-        assert hasattr(PresenceDetectionBinarySensor, '_async_refresh_entity_list')
-    
+        assert hasattr(PresenceDetectionBinarySensor, "_async_refresh_entity_list")
+
     def test_light_group_initializes_with_members(self):
         """Test that AreaLightGroup initializes correctly with members."""
         from ..light import AreaLightGroup
-        
+
         # Create a group with members
         group = AreaLightGroup(
             entry_id="test",
@@ -517,16 +517,17 @@ class TestEmptyGroupHandling:
             area_name="Living Room",
             light_entity_ids=["light.test1", "light.test2"],
         )
-        
+
         # Should have members
         assert len(group._light_entity_ids) == 2
         # Note: availability is managed by update_members, not __init__
-    
+
     def test_light_group_update_members_updates_list(self):
         """Test that update_members correctly updates the member list."""
-        from ..light import AreaLightGroup
         from unittest.mock import Mock
-        
+
+        from ..light import AreaLightGroup
+
         # Create a group with members
         group = AreaLightGroup(
             entry_id="test",
@@ -534,22 +535,23 @@ class TestEmptyGroupHandling:
             area_name="Bedroom",
             light_entity_ids=["light.bed1"],
         )
-        
+
         # Mock the async_schedule_update_ha_state to avoid needing hass
         group.async_schedule_update_ha_state = Mock()
-        
+
         # Should have one member initially
         assert len(group._light_entity_ids) == 1
-        
+
         # Update to different members
         group.update_members(["light.bed1", "light.bed2"])
-        
+
         # Should have two members now
         assert len(group._light_entity_ids) == 2
-        
+
     def test_empty_group_removal_in_light_entity_listener(self):
-        """Test that entity registry listener removes groups when empty.
-        
+        """
+        Test that entity registry listener removes groups when empty.
+
         Note: Full removal behavior is tested in integration tests.
         This test verifies the code path exists.
         """
@@ -557,20 +559,21 @@ class TestEmptyGroupHandling:
         # The actual removal happens in async event handlers which
         # require full Home Assistant setup to test properly
         from ..light import async_setup_entry
-        assert async_setup_entry is not None
 
+        assert async_setup_entry is not None
 
     async def test_removal_callback_called_when_empty(self):
         """Test that removal callback is called when check_empty returns True."""
         from unittest.mock import AsyncMock, Mock
+
         from ..utils.group_manager import GroupManager
-        
+
         hass = Mock()
         hass.is_running = True
         refresh_callback = AsyncMock()
         removal_callback = AsyncMock()
         check_empty_callback = Mock(return_value=True)  # Group is empty
-        
+
         manager = GroupManager(
             hass=hass,
             refresh_callback=refresh_callback,
@@ -578,26 +581,27 @@ class TestEmptyGroupHandling:
             removal_callback=removal_callback,
             check_empty_callback=check_empty_callback,
         )
-        
+
         # Trigger refresh
         await manager._async_refresh()
-        
+
         # Verify both callbacks were called
         refresh_callback.assert_called_once()
         check_empty_callback.assert_called_once()
         removal_callback.assert_called_once()
-    
+
     async def test_removal_callback_not_called_when_not_empty(self):
         """Test that removal callback is NOT called when check_empty returns False."""
         from unittest.mock import AsyncMock, Mock
+
         from ..utils.group_manager import GroupManager
-        
+
         hass = Mock()
         hass.is_running = True
         refresh_callback = AsyncMock()
         removal_callback = AsyncMock()
         check_empty_callback = Mock(return_value=False)  # Group has members
-        
+
         manager = GroupManager(
             hass=hass,
             refresh_callback=refresh_callback,
@@ -605,32 +609,32 @@ class TestEmptyGroupHandling:
             removal_callback=removal_callback,
             check_empty_callback=check_empty_callback,
         )
-        
+
         # Trigger refresh
         await manager._async_refresh()
-        
+
         # Verify only refresh and check were called, NOT removal
         refresh_callback.assert_called_once()
         check_empty_callback.assert_called_once()
         removal_callback.assert_not_called()
-    
+
     async def test_removal_callback_optional(self):
         """Test that removal logic is skipped if callbacks not provided."""
         from unittest.mock import AsyncMock, Mock
+
         from ..utils.group_manager import GroupManager
-        
+
         hass = Mock()
         hass.is_running = True
         refresh_callback = AsyncMock()
-        
+
         # No removal or check callbacks
         manager = GroupManager(
             hass=hass,
             refresh_callback=refresh_callback,
             monitored_domains=["binary_sensor"],
         )
-        
+
         # Should not crash
         await manager._async_refresh()
         refresh_callback.assert_called_once()
-

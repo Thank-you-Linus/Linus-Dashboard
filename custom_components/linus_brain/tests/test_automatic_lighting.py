@@ -668,7 +668,8 @@ async def test_multiple_lights_all_turn_on(rule_engine, mock_hass):
 
 @pytest.mark.asyncio
 async def test_inactive_to_movement_retriggers_lights(rule_engine, mock_hass):
-    """Test that lights turn back on when transitioning from inactive to movement.
+    """
+    Test that lights turn back on when transitioning from inactive to movement.
 
     Scenario:
     1. Movement detected → lights ON

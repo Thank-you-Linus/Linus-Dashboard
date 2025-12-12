@@ -50,6 +50,7 @@ class ConditionEvaluator:
             entity_resolver: Entity resolver for generic selectors
             activity_tracker: Optional ActivityTracker instance for activity conditions
             area_manager: Optional AreaManager instance for environmental conditions
+
         """
         self.hass = hass
         self.entity_resolver = entity_resolver
@@ -70,6 +71,7 @@ class ConditionEvaluator:
 
         Returns:
             Dictionary mapping detection types to enabled state
+
         """
         # Default permissive config
         default_config: dict[str, bool] = {
@@ -122,6 +124,7 @@ class ConditionEvaluator:
 
         Returns:
             True if condition should be evaluated, False if it should be skipped
+
         """
         if not self.area_manager:
             # No area manager, evaluate all conditions
@@ -200,6 +203,7 @@ class ConditionEvaluator:
 
         Returns:
             True if conditions are met, False otherwise
+
         """
         if not conditions:
             return True
@@ -265,8 +269,7 @@ class ConditionEvaluator:
 
         if logic == "and":
             return all(results)
-        else:
-            return any(results)
+        return any(results)
 
     async def _evaluate_single_condition(
         self,
@@ -280,36 +283,36 @@ class ConditionEvaluator:
 
         Returns:
             True if condition is met, False otherwise
+
         """
         condition_type = condition.get("condition")
 
         if condition_type == "state":
             return await self._evaluate_state_condition(condition)
 
-        elif condition_type == "numeric_state":
+        if condition_type == "numeric_state":
             return await self._evaluate_numeric_state_condition(condition)
 
-        elif condition_type == "template":
+        if condition_type == "template":
             return await self._evaluate_template_condition(condition)
 
-        elif condition_type == "time":
+        if condition_type == "time":
             return await self._evaluate_time_condition(condition)
 
-        elif condition_type == "activity":
+        if condition_type == "activity":
             return await self._evaluate_activity_condition(condition)
 
-        elif condition_type == "area_state":
+        if condition_type == "area_state":
             return await self._evaluate_area_state_condition(condition)
 
-        elif condition_type == "and":
+        if condition_type == "and":
             return await self._evaluate_and_condition(condition)
 
-        elif condition_type == "or":
+        if condition_type == "or":
             return await self._evaluate_or_condition(condition)
 
-        else:
-            _LOGGER.warning(f"Unknown condition type: {condition_type}")
-            return False
+        _LOGGER.warning(f"Unknown condition type: {condition_type}")
+        return False
 
     # Nested condition evaluators - support arbitrary nesting depth via recursion
 
@@ -326,6 +329,7 @@ class ConditionEvaluator:
 
         Returns:
             True if all nested conditions are met, False otherwise
+
         """
         nested_conditions = condition.get("conditions", [])
 
@@ -344,7 +348,7 @@ class ConditionEvaluator:
             # Check if this presence-related condition should be evaluated
             if not self._should_evaluate_presence_condition(nested_condition):
                 _LOGGER.debug(
-                    f"AND condition {i+1}/{len(nested_conditions)}: skipped (disabled in config)"
+                    f"AND condition {i + 1}/{len(nested_conditions)}: skipped (disabled in config)"
                 )
                 continue
 
@@ -352,15 +356,17 @@ class ConditionEvaluator:
 
             try:
                 result = await self._evaluate_single_condition(nested_condition)
-                _LOGGER.debug(f"AND condition {i+1}/{len(nested_conditions)}: {result}")
+                _LOGGER.debug(
+                    f"AND condition {i + 1}/{len(nested_conditions)}: {result}"
+                )
 
                 # Short-circuit: if any condition is False, return False immediately
                 if not result:
-                    _LOGGER.debug(f"AND condition failed at condition {i+1}")
+                    _LOGGER.debug(f"AND condition failed at condition {i + 1}")
                     return False
 
             except Exception as err:
-                _LOGGER.error(f"Failed to evaluate nested AND condition {i+1}: {err}")
+                _LOGGER.error(f"Failed to evaluate nested AND condition {i + 1}: {err}")
                 # Treat errors as False for AND conditions
                 return False
 
@@ -385,6 +391,7 @@ class ConditionEvaluator:
 
         Returns:
             True if any nested condition is met, False if all fail
+
         """
         nested_conditions = condition.get("conditions", [])
 
@@ -405,23 +412,25 @@ class ConditionEvaluator:
             # Check if this presence-related condition should be evaluated
             if not self._should_evaluate_presence_condition(nested_condition):
                 _LOGGER.debug(
-                    f"OR condition {i+1}/{len(nested_conditions)}: skipped (disabled in config)"
+                    f"OR condition {i + 1}/{len(nested_conditions)}: skipped (disabled in config)"
                 )
                 skipped_count += 1
                 continue
 
             try:
                 result = await self._evaluate_single_condition(nested_condition)
-                _LOGGER.debug(f"OR condition {i+1}/{len(nested_conditions)}: {result}")
+                _LOGGER.debug(
+                    f"OR condition {i + 1}/{len(nested_conditions)}: {result}"
+                )
                 results.append(result)
 
                 # Short-circuit: if any condition is True, return True immediately
                 if result:
-                    _LOGGER.debug(f"OR condition passed at condition {i+1}")
+                    _LOGGER.debug(f"OR condition passed at condition {i + 1}")
                     return True
 
             except Exception as err:
-                _LOGGER.error(f"Failed to evaluate nested OR condition {i+1}: {err}")
+                _LOGGER.error(f"Failed to evaluate nested OR condition {i + 1}: {err}")
                 results.append(False)
                 # Continue evaluating other conditions (don't fail entire OR)
 
@@ -445,6 +454,7 @@ class ConditionEvaluator:
 
         Returns:
             True if entity state matches
+
         """
         entity_id = condition.get("entity_id")
         expected_state = condition.get("state")
@@ -483,6 +493,7 @@ class ConditionEvaluator:
 
         Returns:
             True if numeric condition is met
+
         """
         entity_id = condition.get("entity_id")
         above = condition.get("above")
@@ -524,6 +535,7 @@ class ConditionEvaluator:
 
         Returns:
             True if template evaluates to True
+
         """
         value_template = condition.get("value_template")
 
@@ -552,6 +564,7 @@ class ConditionEvaluator:
 
         Returns:
             True if current time is within range
+
         """
         after = condition.get("after")
         before = condition.get("before")
@@ -579,12 +592,13 @@ class ConditionEvaluator:
 
         Returns:
             time object or None
+
         """
         try:
             parts = time_str.split(":")
             if len(parts) == 2:
                 return datetime.strptime(time_str, "%H:%M").time()
-            elif len(parts) == 3:
+            if len(parts) == 3:
                 return datetime.strptime(time_str, "%H:%M:%S").time()
         except Exception as err:
             _LOGGER.error(f"Failed to parse time {time_str}: {err}")
@@ -607,6 +621,7 @@ class ConditionEvaluator:
 
         Returns:
             Set of entity IDs
+
         """
         entities = set()
 
@@ -665,6 +680,7 @@ class ConditionEvaluator:
 
         Returns:
             Set of entity IDs
+
         """
         entities = set()
 
@@ -692,6 +708,7 @@ class ConditionEvaluator:
 
         Returns:
             True if activity matches expected state
+
         """
         expected_activity = condition.get("activity")
         area_id = condition.get("area_id")
@@ -731,6 +748,7 @@ class ConditionEvaluator:
 
         Returns:
             True if area state matches expected value
+
         """
         state_attr = condition.get("state") or condition.get("attribute")
         area_id = condition.get("area_id")

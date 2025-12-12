@@ -113,8 +113,11 @@ async def test_migration_renames_french_entities(hass, mock_entity_registry):
     )
 
     # Patch both er.async_get and er.async_entries_for_config_entry
-    with patch("linus_brain.er.async_get", return_value=mock_entity_registry), patch(
-        "linus_brain.er.async_entries_for_config_entry", return_value=mock_entities
+    with (
+        patch("linus_brain.er.async_get", return_value=mock_entity_registry),
+        patch(
+            "linus_brain.er.async_entries_for_config_entry", return_value=mock_entities
+        ),
     ):
         await async_migrate_entity_ids(hass, mock_entry)
 
@@ -141,14 +144,14 @@ async def test_migration_renames_french_entities(hass, mock_entity_registry):
         to_id = migration["to"]
 
         assert from_id in expected_migrations, f"Unexpected migration from {from_id}"
-        assert (
-            expected_migrations[from_id] == to_id
-        ), f"Expected {from_id} → {expected_migrations[from_id]}, got {to_id}"
+        assert expected_migrations[from_id] == to_id, (
+            f"Expected {from_id} → {expected_migrations[from_id]}, got {to_id}"
+        )
 
     # Verify we got all expected migrations
-    assert len(migrations) == len(
-        expected_migrations
-    ), f"Expected {len(expected_migrations)} migrations, got {len(migrations)}"
+    assert len(migrations) == len(expected_migrations), (
+        f"Expected {len(expected_migrations)} migrations, got {len(migrations)}"
+    )
 
 
 @pytest.mark.asyncio

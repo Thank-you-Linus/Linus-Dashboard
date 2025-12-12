@@ -36,42 +36,40 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 # Configuration schema for user input
-CONFIG_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_URL, description="Supabase URL"): str,
-        vol.Required(CONF_API_KEY, description="Supabase API Key"): str,
-        vol.Optional(
-            CONF_USE_SUN_ELEVATION,
-            default=True,
-            description="Use sun elevation for darkness detection",
-        ): bool,
-        vol.Optional(
-            CONF_DARK_LUX_THRESHOLD,
-            default=DEFAULT_DARK_THRESHOLD_LUX,
-            description="Lux threshold below which area is considered dark",
-        ): vol.All(vol.Coerce(float), vol.Range(min=0, max=1000)),
-        vol.Optional(
-            CONF_INACTIVE_TIMEOUT,
-            default=60,
-            description="Timeout in seconds before area becomes inactive (from movement)",
-        ): vol.All(vol.Coerce(int), vol.Range(min=1, max=3600)),
-        vol.Optional(
-            CONF_OCCUPIED_THRESHOLD,
-            default=300,
-            description="Duration in seconds before area is considered occupied",
-        ): vol.All(vol.Coerce(int), vol.Range(min=1, max=7200)),
-        vol.Optional(
-            CONF_OCCUPIED_INACTIVE_TIMEOUT,
-            default=300,
-            description="Timeout in seconds before area becomes inactive (from occupied)",
-        ): vol.All(vol.Coerce(int), vol.Range(min=1, max=7200)),
-        vol.Optional(
-            CONF_ENVIRONMENTAL_CHECK_INTERVAL,
-            default=DEFAULT_ENVIRONMENTAL_CHECK_INTERVAL,
-            description="Interval in seconds between environmental state checks (lux, temperature, etc.)",
-        ): vol.All(vol.Coerce(int), vol.Range(min=5, max=600)),
-    }
-)
+CONFIG_SCHEMA = vol.Schema({
+    vol.Required(CONF_URL, description="Supabase URL"): str,
+    vol.Required(CONF_API_KEY, description="Supabase API Key"): str,
+    vol.Optional(
+        CONF_USE_SUN_ELEVATION,
+        default=True,
+        description="Use sun elevation for darkness detection",
+    ): bool,
+    vol.Optional(
+        CONF_DARK_LUX_THRESHOLD,
+        default=DEFAULT_DARK_THRESHOLD_LUX,
+        description="Lux threshold below which area is considered dark",
+    ): vol.All(vol.Coerce(float), vol.Range(min=0, max=1000)),
+    vol.Optional(
+        CONF_INACTIVE_TIMEOUT,
+        default=60,
+        description="Timeout in seconds before area becomes inactive (from movement)",
+    ): vol.All(vol.Coerce(int), vol.Range(min=1, max=3600)),
+    vol.Optional(
+        CONF_OCCUPIED_THRESHOLD,
+        default=300,
+        description="Duration in seconds before area is considered occupied",
+    ): vol.All(vol.Coerce(int), vol.Range(min=1, max=7200)),
+    vol.Optional(
+        CONF_OCCUPIED_INACTIVE_TIMEOUT,
+        default=300,
+        description="Timeout in seconds before area becomes inactive (from occupied)",
+    ): vol.All(vol.Coerce(int), vol.Range(min=1, max=7200)),
+    vol.Optional(
+        CONF_ENVIRONMENTAL_CHECK_INTERVAL,
+        default=DEFAULT_ENVIRONMENTAL_CHECK_INTERVAL,
+        description="Interval in seconds between environmental state checks (lux, temperature, etc.)",
+    ): vol.All(vol.Coerce(int), vol.Range(min=5, max=600)),
+})
 
 
 async def validate_supabase_connection(
@@ -93,6 +91,7 @@ async def validate_supabase_connection(
 
     Raises:
         Exception: If connection or authentication fails
+
     """
     session = async_get_clientsession(hass)
 
@@ -114,9 +113,8 @@ async def validate_supabase_connection(
                 # Either way, connection is established
                 _LOGGER.info("Supabase connection validated successfully")
                 return {"status": "ok"}
-            else:
-                _LOGGER.error(f"Supabase returned status {response.status}")
-                raise Exception(f"Unexpected status code: {response.status}")
+            _LOGGER.error(f"Supabase returned status {response.status}")
+            raise Exception(f"Unexpected status code: {response.status}")
 
     except aiohttp.ClientError as err:
         _LOGGER.error(f"Connection error to Supabase: {err}")
@@ -153,6 +151,7 @@ class LinusBrainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         Returns:
             FlowResult indicating next step or completion
+
         """
         errors: dict[str, str] = {}
 
@@ -234,6 +233,7 @@ class LinusBrainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         Returns:
             FlowResult for import
+
         """
         return await self.async_step_user(import_config)
 
@@ -257,6 +257,7 @@ class LinusBrainOptionsFlow(config_entries.OptionsFlow):
 
         Returns:
             FlowResult for options
+
         """
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
@@ -286,41 +287,39 @@ class LinusBrainOptionsFlow(config_entries.OptionsFlow):
         # Show options form
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(
-                        CONF_USE_SUN_ELEVATION,
-                        default=current_use_sun,
-                    ): bool,
-                    vol.Optional(
-                        CONF_DARK_LUX_THRESHOLD,
-                        default=current_dark_lux,
-                    ): vol.All(vol.Coerce(float), vol.Range(min=0, max=1000)),
-                    vol.Optional(
-                        CONF_PRESENCE_DETECTION_CONFIG,
-                        default=current_presence_detection,
-                    ): vol.All(
-                        cv.multi_select(PRESENCE_DETECTION_OPTIONS),
-                        vol.Length(min=1),
-                    ),
-                    vol.Optional(
-                        CONF_INACTIVE_TIMEOUT,
-                        default=current_inactive_timeout,
-                    ): vol.All(vol.Coerce(int), vol.Range(min=1, max=3600)),
-                    vol.Optional(
-                        CONF_OCCUPIED_THRESHOLD,
-                        default=current_occupied_threshold,
-                    ): vol.All(vol.Coerce(int), vol.Range(min=1, max=7200)),
-                    vol.Optional(
-                        CONF_OCCUPIED_INACTIVE_TIMEOUT,
-                        default=current_occupied_inactive_timeout,
-                    ): vol.All(vol.Coerce(int), vol.Range(min=1, max=7200)),
-                    vol.Optional(
-                        CONF_ENVIRONMENTAL_CHECK_INTERVAL,
-                        default=current_environmental_check_interval,
-                    ): vol.All(vol.Coerce(int), vol.Range(min=5, max=600)),
-                }
-            ),
+            data_schema=vol.Schema({
+                vol.Optional(
+                    CONF_USE_SUN_ELEVATION,
+                    default=current_use_sun,
+                ): bool,
+                vol.Optional(
+                    CONF_DARK_LUX_THRESHOLD,
+                    default=current_dark_lux,
+                ): vol.All(vol.Coerce(float), vol.Range(min=0, max=1000)),
+                vol.Optional(
+                    CONF_PRESENCE_DETECTION_CONFIG,
+                    default=current_presence_detection,
+                ): vol.All(
+                    cv.multi_select(PRESENCE_DETECTION_OPTIONS),
+                    vol.Length(min=1),
+                ),
+                vol.Optional(
+                    CONF_INACTIVE_TIMEOUT,
+                    default=current_inactive_timeout,
+                ): vol.All(vol.Coerce(int), vol.Range(min=1, max=3600)),
+                vol.Optional(
+                    CONF_OCCUPIED_THRESHOLD,
+                    default=current_occupied_threshold,
+                ): vol.All(vol.Coerce(int), vol.Range(min=1, max=7200)),
+                vol.Optional(
+                    CONF_OCCUPIED_INACTIVE_TIMEOUT,
+                    default=current_occupied_inactive_timeout,
+                ): vol.All(vol.Coerce(int), vol.Range(min=1, max=7200)),
+                vol.Optional(
+                    CONF_ENVIRONMENTAL_CHECK_INTERVAL,
+                    default=current_environmental_check_interval,
+                ): vol.All(vol.Coerce(int), vol.Range(min=5, max=600)),
+            }),
             description_placeholders={
                 "use_sun_elevation_desc": (
                     "When enabled, area darkness is determined by BOTH illuminance "

@@ -31,6 +31,7 @@ from homeassistant.helpers import area_registry, device_registry, entity_registr
 
 if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
+
     from ..utils.insights_manager import InsightsManager
 
 # Type alias for JSON-like dictionaries (API payloads, etc.)
@@ -61,6 +62,7 @@ def _extract_domains_from_conditions(conditions: list) -> dict[str, set[str]]:
 
     Returns:
         Dictionary mapping domain to set of device_classes
+
     """
     result: dict[str, set[str]] = {}
 
@@ -96,6 +98,7 @@ def get_monitored_domains() -> dict[str, list[str]]:
 
     Returns:
         Dictionary mapping domain to list of device_classes (empty list = monitor all)
+
     """
     domains: dict[str, set[str]] = {}
 
@@ -148,6 +151,7 @@ def get_presence_detection_domains() -> dict[str, list[str]]:
 
     Returns:
         Dictionary mapping domain to list of device_classes (empty list = monitor all)
+
     """
     domains: dict[str, set[str]] = {}
 
@@ -206,6 +210,7 @@ class AreaManager:
             hass: Home Assistant instance
             insights_manager: Optional InsightsManager for AI-learned thresholds
             config_entry: Optional config entry for user preferences
+
         """
         self.hass = hass
         self._entity_registry = entity_registry.async_get(hass)
@@ -219,6 +224,7 @@ class AreaManager:
 
         Returns:
             Dictionary mapping area_id to list of entity_ids
+
         """
         area_entities: dict[str, list[str]] = {}
 
@@ -242,7 +248,7 @@ class AreaManager:
             # This prevents including obsolete/deleted entities
             if entity.disabled_by is not None:
                 continue
-            
+
             # Check if entity exists in hass.states (entity must be loaded and available)
             state = self.hass.states.get(entity.entity_id)
             if state is None:
@@ -284,6 +290,7 @@ class AreaManager:
 
         Returns:
             State object or None if entity doesn't exist
+
         """
         return self.hass.states.get(entity_id)
 
@@ -301,6 +308,7 @@ class AreaManager:
 
         Returns:
             Device class string or None
+
         """
         return state.attributes.get("original_device_class") or state.attributes.get(
             "device_class"
@@ -318,6 +326,7 @@ class AreaManager:
 
         Returns:
             True if presence detected, False otherwise
+
         """
         # Get the current presence detection configuration
         config = self._get_presence_detection_config()
@@ -355,6 +364,7 @@ class AreaManager:
                 "occupancy": True/False,
                 "media_playing": True/False,
             }
+
         """
         # Priority 1: Config Flow (user's personal preference)
         if self._config_entry and self._config_entry.options:
@@ -385,10 +395,7 @@ class AreaManager:
         # Priority 3: Hardcoded Defaults
         _LOGGER.debug("Using hardcoded default presence detection config")
         default_config: dict[str, JsonDict] = DEFAULT_PRESENCE_DETECTION_CONFIG  # type: ignore[assignment]
-        return {
-            key: config["enabled"]
-            for key, config in default_config.items()
-        }
+        return {key: config["enabled"] for key, config in default_config.items()}
 
     async def get_area_state(self, area_id: str) -> JsonDict | None:
         """
@@ -399,6 +406,7 @@ class AreaManager:
 
         Returns:
             Dictionary containing area data, or None if no data
+
         """
         # Get area name
         area = self._area_registry.async_get_area(area_id)
@@ -478,6 +486,7 @@ class AreaManager:
 
         Returns:
             List of area state dictionaries
+
         """
         area_entities_map = self._get_monitored_entities()
         area_states = []
@@ -495,6 +504,7 @@ class AreaManager:
 
         Returns:
             Dictionary mapping area_id to area_name
+
         """
         area_entities_map = self._get_monitored_entities()
         areas = {}
@@ -524,6 +534,7 @@ class AreaManager:
                 "occupancy": [entity_ids...],
                 "media": [entity_ids...],
             }
+
         """
         result: dict[str, list[str]] = {
             "motion": [],
@@ -574,6 +585,7 @@ class AreaManager:
 
         Returns:
             Area ID or None if not found
+
         """
         if entity.area_id:
             return entity.area_id
@@ -599,6 +611,7 @@ class AreaManager:
 
         Returns:
             True if matching entities found in area
+
         """
         _LOGGER.debug(
             f"Checking for entities in area {area_id} with domain {domain} and device_class {device_class}"
@@ -649,6 +662,7 @@ class AreaManager:
 
         Returns:
             True if area has at least one presence detection entity
+
         """
         config = presence_config or get_presence_detection_domains()
 
@@ -673,6 +687,7 @@ class AreaManager:
 
         Returns:
             Dictionary mapping area_id to area_name for areas with presence detection
+
         """
         eligible_areas = {}
 
@@ -695,6 +710,7 @@ class AreaManager:
 
         Returns:
             Dictionary mapping area_id to area_name for eligible areas
+
         """
         eligible_areas = {}
 
@@ -722,6 +738,7 @@ class AreaManager:
 
         Returns:
             Area ID or None if not found
+
         """
         entity = self._entity_registry.async_get(entity_id)
         if not entity:
@@ -747,6 +764,7 @@ class AreaManager:
 
         Returns:
             List of entity IDs that can detect presence in the area
+
         """
         presence_sensors = []
         presence_config = get_presence_detection_domains()
@@ -803,6 +821,7 @@ class AreaManager:
                 "detection_reasons": ["binary_sensor.kitchen_motion", ...],
                 "timestamp": "2025-10-22T21:00:00Z"
             }
+
         """
         # If presence_sensors not provided, get them automatically
         if presence_sensors is None:
@@ -818,10 +837,9 @@ class AreaManager:
             domain = split_entity_id(entity_id)[0]
 
             # Check binary sensors in "on" state
-            if domain == "binary_sensor" and state.state == "on":
-                detection_reasons.append(entity_id)
-            # Check media players playing
-            elif domain == "media_player" and state.state == "playing":
+            if (domain == "binary_sensor" and state.state == "on") or (
+                domain == "media_player" and state.state == "playing"
+            ):
                 detection_reasons.append(entity_id)
 
         return {
@@ -855,6 +873,7 @@ class AreaManager:
 
         Returns:
             Average sensor value, or None if no sensors found
+
         """
         # Priority 1: Check user-configured sensor from area registry
         if registry_attr:
@@ -918,6 +937,7 @@ class AreaManager:
 
         Returns:
             Average lux value, or None if no illuminance sensors found
+
         """
         return self._get_area_sensor_average(area_id, "illuminance")
 
@@ -930,6 +950,7 @@ class AreaManager:
 
         Returns:
             Sun elevation in degrees above horizon, or None if sun.sun entity not available
+
         """
         sun_state = self._get_entity_state("sun.sun")
         if not sun_state:
@@ -966,6 +987,7 @@ class AreaManager:
 
         Returns:
             Dictionary with all environmental data
+
         """
         illuminance = self.get_area_illuminance(area_id)
         temperature = self.get_area_temperature(area_id)
@@ -1070,6 +1092,7 @@ class AreaManager:
 
         Returns:
             Temperature value, or None if no temperature sensors found
+
         """
         return self._get_area_sensor_average(
             area_id,
@@ -1091,6 +1114,7 @@ class AreaManager:
 
         Returns:
             Humidity value, or None if no humidity sensors found
+
         """
         return self._get_area_sensor_average(
             area_id, "humidity", registry_attr="humidity_entity_id", round_digits=1
@@ -1112,6 +1136,7 @@ class AreaManager:
 
         Returns:
             List of entity IDs matching the filters
+
         """
         matching_entities = []
 
@@ -1155,6 +1180,7 @@ class AreaManager:
 
         Returns:
             List of entity IDs used for tracking
+
         """
         area_entities_map = self._get_monitored_entities()
         return area_entities_map.get(area_id, [])

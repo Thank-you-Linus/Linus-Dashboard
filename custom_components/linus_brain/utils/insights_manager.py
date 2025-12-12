@@ -50,6 +50,7 @@ class InsightsManager:
 
         Args:
             supabase_client: SupabaseClient for API communication
+
         """
         self.supabase_client = supabase_client
 
@@ -83,6 +84,7 @@ class InsightsManager:
 
         Returns:
             True if successful, False otherwise
+
         """
         try:
             _LOGGER.debug(f"Loading insights for instance: {instance_id}")
@@ -142,13 +144,13 @@ class InsightsManager:
 
         Returns:
             Source type string
+
         """
         if instance_id and area_id:
             return "instance_area_specific"
-        elif area_id:
+        if area_id:
             return "global_area_specific"
-        else:
-            return "global_default"
+        return "global_default"
 
     def get_insight(
         self,
@@ -176,9 +178,12 @@ class InsightsManager:
             Insight data dictionary or default value
 
         Example:
-            >>> insight = manager.get_insight(instance_id, "salon", "dark_threshold_lux")
+            >>> insight = manager.get_insight(
+            ...     instance_id, "salon", "dark_threshold_lux"
+            ... )
             >>> threshold = insight["value"]["threshold"]  # 200
             >>> confidence = insight["confidence"]  # 0.85
+
         """
         # Priority 1: Instance-specific + area-specific
         cache_key: tuple[str | None, str | None, str] = (
@@ -234,6 +239,7 @@ class InsightsManager:
             ...     "dark_threshold_lux": {"value": {...}, "confidence": 0.85, ...},
             ...     "dark_mode_brightness_pct": {"value": {...}, "confidence": 0.30, ...}
             ... }
+
         """
         result: dict[str, dict[str, Any]] = {}
 
@@ -260,6 +266,7 @@ class InsightsManager:
         Example:
             >>> manager.get_all_insight_types()
             ['dark_threshold_lux', 'dark_mode_brightness_pct', ...]
+
         """
         insight_types = set()
         for _, _, insight_type in self._cache.keys():
@@ -283,6 +290,7 @@ class InsightsManager:
                 "insight_types": 6,
                 "last_loaded": "2025-10-27T23:30:00"
             }
+
         """
         instance_specific = 0
         global_area_specific = 0
@@ -319,6 +327,7 @@ class InsightsManager:
 
         Returns:
             True if successful, False otherwise
+
         """
         _LOGGER.info("Reloading insights from Supabase")
         return await self.async_load(instance_id)
@@ -329,6 +338,7 @@ class InsightsManager:
 
         Returns:
             True if insights have been loaded at least once
+
         """
         return self._last_loaded is not None
 
@@ -338,5 +348,6 @@ class InsightsManager:
 
         Returns:
             Datetime of last load, or None if never loaded
+
         """
         return self._last_loaded

@@ -38,10 +38,9 @@ class ValidationResult:
         """Get a human-readable summary of validation result."""
         if self.is_valid and not self.warnings:
             return "✅ Validation passed - No issues found"
-        elif self.is_valid and self.warnings:
+        if self.is_valid and self.warnings:
             return f"⚠️ Validation passed with {len(self.warnings)} warning(s)"
-        else:
-            return f"❌ Validation failed with {len(self.errors)} error(s)"
+        return f"❌ Validation failed with {len(self.errors)} error(s)"
 
 
 class FeatureFlagManager:
@@ -76,6 +75,7 @@ class FeatureFlagManager:
 
         Returns:
             Dictionary of feature definitions with metadata for each feature
+
         """
         return self._feature_definitions.copy()
 
@@ -88,6 +88,7 @@ class FeatureFlagManager:
 
         Returns:
             Feature definition dict or None if not found
+
         """
         return self._feature_definitions.get(feature_id)
 
@@ -100,6 +101,7 @@ class FeatureFlagManager:
 
         Returns:
             True if feature is defined, False otherwise
+
         """
         return feature_id in self._feature_definitions
 
@@ -114,6 +116,7 @@ class FeatureFlagManager:
 
         Returns:
             ValidationResult with detailed findings
+
         """
         errors: list[str] = []
         warnings: list[str] = []
@@ -143,6 +146,7 @@ class FeatureFlagManager:
 
         Returns:
             Dictionary with feature definitions and system health
+
         """
         overview: dict[str, Any] = {
             "feature_definitions": self._feature_definitions,
@@ -193,6 +197,7 @@ class FeatureFlagManager:
 
         Returns:
             Formatted debug data string
+
         """
         overview = self.get_system_overview()
 
@@ -201,7 +206,7 @@ class FeatureFlagManager:
 
             return json.dumps(overview, indent=2)
 
-        elif format_type == "txt":
+        if format_type == "txt":
             lines = [
                 "Feature Flag Debug Report",
                 "=" * 50,
@@ -213,17 +218,14 @@ class FeatureFlagManager:
             ]
 
             for feature_id, definition in overview["feature_definitions"].items():
-                lines.extend(
-                    [
-                        f"Feature: {feature_id}",
-                        f"  Name: {definition.get('name', 'Unknown')}",
-                        f"  Description: {definition.get('description', 'No description')}",
-                        f"  Default: {definition.get('default_enabled', False)}",
-                        "",
-                    ]
-                )
+                lines.extend([
+                    f"Feature: {feature_id}",
+                    f"  Name: {definition.get('name', 'Unknown')}",
+                    f"  Description: {definition.get('description', 'No description')}",
+                    f"  Default: {definition.get('default_enabled', False)}",
+                    "",
+                ])
 
             return "\n".join(lines)
 
-        else:
-            raise ValueError(f"Unsupported format: {format_type}")
+        raise ValueError(f"Unsupported format: {format_type}")

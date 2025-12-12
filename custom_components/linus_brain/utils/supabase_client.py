@@ -48,6 +48,7 @@ class SupabaseClient:
             hass: Home Assistant instance
             supabase_url: Supabase project URL (e.g., https://xxx.supabase.co)
             supabase_key: Supabase API key (anon or service key)
+
         """
         self.hass = hass
         self.supabase_url = supabase_url.rstrip("/")
@@ -93,6 +94,7 @@ class SupabaseClient:
         Raises:
             aiohttp.ClientError: On HTTP errors
             Exception: On unexpected errors
+
         """
         try:
             async with self.session.get(
@@ -105,10 +107,9 @@ class SupabaseClient:
                 if status == 200:
                     data = await response.json()
                     return (status, data)
-                else:
-                    text = await response.text()
-                    _LOGGER.error(f"Failed {operation} (status {status}): {text}")
-                    return (status, text)
+                text = await response.text()
+                _LOGGER.error(f"Failed {operation} (status {status}): {text}")
+                return (status, text)
 
         except aiohttp.ClientError as err:
             _LOGGER.error(f"HTTP error during {operation}: {err}")
@@ -141,6 +142,7 @@ class SupabaseClient:
         Raises:
             aiohttp.ClientError: On HTTP errors
             Exception: On unexpected errors
+
         """
         try:
             async with self.session.post(
@@ -157,10 +159,9 @@ class SupabaseClient:
                         return (status, {})
                     data = await response.json()
                     return (status, data)
-                else:
-                    text = await response.text()
-                    _LOGGER.error(f"Failed {operation} (status {status}): {text}")
-                    return (status, text)
+                text = await response.text()
+                _LOGGER.error(f"Failed {operation} (status {status}): {text}")
+                return (status, text)
 
         except aiohttp.ClientError as err:
             _LOGGER.error(f"HTTP error during {operation}: {err}")
@@ -193,6 +194,7 @@ class SupabaseClient:
         Raises:
             aiohttp.ClientError: On HTTP errors
             Exception: On unexpected errors
+
         """
         try:
             async with self.session.patch(
@@ -208,10 +210,9 @@ class SupabaseClient:
                         return (status, {})
                     data = await response.json()
                     return (status, data)
-                else:
-                    text = await response.text()
-                    _LOGGER.error(f"Failed {operation} (status {status}): {text}")
-                    return (status, text)
+                text = await response.text()
+                _LOGGER.error(f"Failed {operation} (status {status}): {text}")
+                return (status, text)
 
         except aiohttp.ClientError as err:
             _LOGGER.error(f"HTTP error during {operation}: {err}")
@@ -244,6 +245,7 @@ class SupabaseClient:
 
         Raises:
             Exception: If HTTP request fails
+
         """
         url = f"{self.rest_url}/{RULES_TABLE}"
 
@@ -260,8 +262,7 @@ class SupabaseClient:
         if status == 200:
             _LOGGER.debug(f"Fetched {len(data)} rules from Supabase")
             return data
-        else:
-            return []
+        return []
 
     async def test_connection(self) -> bool:
         """
@@ -271,6 +272,7 @@ class SupabaseClient:
 
         Returns:
             True if connection successful, False otherwise
+
         """
         url = f"{self.rest_url}/"
 
@@ -284,9 +286,8 @@ class SupabaseClient:
                 if response.status in (200, 401, 404):
                     _LOGGER.info("Supabase connection test successful")
                     return True
-                else:
-                    _LOGGER.error(f"Supabase connection test failed: {response.status}")
-                    return False
+                _LOGGER.error(f"Supabase connection test failed: {response.status}")
+                return False
 
         except Exception as err:
             _LOGGER.error(f"Supabase connection test failed: {err}")
@@ -308,6 +309,7 @@ class SupabaseClient:
 
         Raises:
             Exception: If HTTP request fails
+
         """
         url = f"{self.rest_url}/{INSTANCES_TABLE}"
 
@@ -327,13 +329,11 @@ class SupabaseClient:
                 instance = data[0]
                 _LOGGER.debug(f"Found instance: {instance['instance_id']}")
                 return instance
-            else:
-                _LOGGER.debug(
-                    f"No instance found for HA installation: {ha_installation_id}"
-                )
-                return None
-        else:
+            _LOGGER.debug(
+                f"No instance found for HA installation: {ha_installation_id}"
+            )
             return None
+        return None
 
     async def create_new_instance(
         self, ha_installation_id: str, instance_name: str = "Home Assistant"
@@ -352,6 +352,7 @@ class SupabaseClient:
 
         Raises:
             Exception: If HTTP request fails
+
         """
         # Use RPC to call the get_or_create_instance function
         url = f"{self.rest_url}/rpc/get_or_create_instance"
@@ -378,12 +379,11 @@ class SupabaseClient:
 
                     # Fetch the full instance data
                     return await self.get_instance_by_ha_id(ha_installation_id)
-                else:
-                    response_text = await response.text()
-                    _LOGGER.error(
-                        f"Failed to create instance (status {response.status}): {response_text}"
-                    )
-                    return None
+                response_text = await response.text()
+                _LOGGER.error(
+                    f"Failed to create instance (status {response.status}): {response_text}"
+                )
+                return None
 
         except aiohttp.ClientError as err:
             _LOGGER.error(f"HTTP error creating instance: {err}")
@@ -406,6 +406,7 @@ class SupabaseClient:
 
         Raises:
             Exception: If HTTP request fails
+
         """
         url = f"{self.rest_url}/{INSTANCES_TABLE}"
 
@@ -427,8 +428,7 @@ class SupabaseClient:
         if status in (200, 204):
             _LOGGER.debug(f"Successfully updated last_seen for instance: {instance_id}")
             return True
-        else:
-            return False
+        return False
 
     async def send_light_action(self, data: dict[str, Any]) -> bool:
         """
@@ -462,6 +462,7 @@ class SupabaseClient:
 
         Raises:
             Exception: If HTTP request fails
+
         """
         url = f"{self.rest_url}/{LIGHT_ACTIONS_TABLE}"
 
@@ -474,8 +475,7 @@ class SupabaseClient:
         if status in (200, 201, 204):
             _LOGGER.debug(f"Successfully sent light action for {data.get('entity_id')}")
             return True
-        else:
-            return False
+        return False
 
     def _transform_cloud_to_local(
         self, cloud_rows: list[dict[str, Any]]
@@ -498,6 +498,7 @@ class SupabaseClient:
                     }
                 }
             }
+
         """
         local_rules: dict[str, dict[str, Any]] = {}
 
@@ -534,6 +535,7 @@ class SupabaseClient:
 
         Returns:
             List of normalized rule dictionaries for Supabase
+
         """
         cloud_rows = []
         area_id = local_rule.get("area_id", "unknown")
@@ -541,17 +543,15 @@ class SupabaseClient:
         activity_rules = local_rule.get("activity_rules", {})
 
         for activity_type, rule_data in activity_rules.items():
-            cloud_rows.append(
-                {
-                    "rule_id": f"{area_id}_{activity_type}",
-                    "area_id": area_id,
-                    "area_name": area_name,
-                    "activity_type": activity_type,
-                    "instance_id": instance_id,
-                    "conditions": rule_data.get("conditions", []),
-                    "actions": rule_data.get("actions", []),
-                }
-            )
+            cloud_rows.append({
+                "rule_id": f"{area_id}_{activity_type}",
+                "area_id": area_id,
+                "area_name": area_name,
+                "activity_type": activity_type,
+                "instance_id": instance_id,
+                "conditions": rule_data.get("conditions", []),
+                "actions": rule_data.get("actions", []),
+            })
 
         return cloud_rows
 
@@ -581,6 +581,7 @@ class SupabaseClient:
 
         Raises:
             Exception: If HTTP request fails
+
         """
         url = f"{self.rest_url}/active_area_rules"
 
@@ -612,12 +613,11 @@ class SupabaseClient:
                     )
                     return local_rules
 
-                else:
-                    response_text = await response.text()
-                    _LOGGER.error(
-                        f"Failed to fetch rules (status {response.status}): {response_text}"
-                    )
-                    return {}
+                response_text = await response.text()
+                _LOGGER.error(
+                    f"Failed to fetch rules (status {response.status}): {response_text}"
+                )
+                return {}
 
         except aiohttp.ClientError as err:
             _LOGGER.error(f"HTTP error fetching rules: {err}")
@@ -644,6 +644,7 @@ class SupabaseClient:
 
         Raises:
             Exception: If HTTP request fails
+
         """
         if not rules:
             _LOGGER.debug("No rules to push")
@@ -690,9 +691,8 @@ class SupabaseClient:
                     f"Successfully pushed {success_count} rule versions to Supabase"
                 )
                 return True
-            else:
-                _LOGGER.error("Failed to push any rules")
-                return False
+            _LOGGER.error("Failed to push any rules")
+            return False
 
         except aiohttp.ClientError as err:
             _LOGGER.error(f"HTTP error pushing rules: {err}")
@@ -719,6 +719,7 @@ class SupabaseClient:
 
         Raises:
             Exception: If HTTP request fails
+
         """
         url = f"{self.rest_url}/{RULES_TABLE}"
 
@@ -745,15 +746,13 @@ class SupabaseClient:
                         rule = rules[0]
                         _LOGGER.debug(f"Found rule for area {area_id}")
                         return rule
-                    else:
-                        _LOGGER.debug(f"No rule found for area {area_id}")
-                        return None
-                else:
-                    response_text = await response.text()
-                    _LOGGER.error(
-                        f"Failed to fetch rule (status {response.status}): {response_text}"
-                    )
+                    _LOGGER.debug(f"No rule found for area {area_id}")
                     return None
+                response_text = await response.text()
+                _LOGGER.error(
+                    f"Failed to fetch rule (status {response.status}): {response_text}"
+                )
+                return None
 
         except aiohttp.ClientError as err:
             _LOGGER.error(f"HTTP error fetching rule for area: {err}")
@@ -788,6 +787,7 @@ class SupabaseClient:
 
         Raises:
             Exception: If HTTP request fails
+
         """
         url = f"{self.rest_url}/activity_types"
 
@@ -814,12 +814,11 @@ class SupabaseClient:
 
                     _LOGGER.debug(f"Fetched {len(activities_dict)} activity types")
                     return activities_dict
-                else:
-                    response_text = await response.text()
-                    _LOGGER.error(
-                        f"Failed to fetch activities (status {response.status}): {response_text}"
-                    )
-                    return {}
+                response_text = await response.text()
+                _LOGGER.error(
+                    f"Failed to fetch activities (status {response.status}): {response_text}"
+                )
+                return {}
 
         except aiohttp.ClientError as err:
             _LOGGER.error(f"HTTP error fetching activities: {err}")
@@ -863,6 +862,7 @@ class SupabaseClient:
 
         Raises:
             Exception: If HTTP request fails
+
         """
         try:
             if version:
@@ -996,6 +996,7 @@ class SupabaseClient:
 
         Raises:
             Exception: If HTTP request fails
+
         """
         url = f"{self.rest_url}/area_insights"
 
@@ -1020,12 +1021,11 @@ class SupabaseClient:
                         f"Fetched {len(insights)} insights for instance {instance_id}"
                     )
                     return insights
-                else:
-                    response_text = await response.text()
-                    _LOGGER.error(
-                        f"Failed to fetch insights (status {response.status}): {response_text}"
-                    )
-                    return []
+                response_text = await response.text()
+                _LOGGER.error(
+                    f"Failed to fetch insights (status {response.status}): {response_text}"
+                )
+                return []
 
         except aiohttp.ClientError as err:
             _LOGGER.error(f"HTTP error fetching insights: {err}")

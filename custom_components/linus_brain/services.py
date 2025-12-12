@@ -34,54 +34,40 @@ SERVICE_DEBUG_RESET_METRICS = "debug_reset_metrics"
 SERVICE_DEBUG_ACTIVITIES = "debug_activities"
 
 # Service schemas
-SERVICE_SEND_AREA_UPDATE_SCHEMA = vol.Schema(
-    {
-        vol.Required("area"): cv.string,
-    }
-)
+SERVICE_SEND_AREA_UPDATE_SCHEMA = vol.Schema({
+    vol.Required("area"): cv.string,
+})
 
-SERVICE_SIMULATE_ACTIVITY_SCHEMA = vol.Schema(
-    {
-        vol.Required("area_id"): cv.string,
-        vol.Required("activity"): vol.In(["empty", "inactive", "movement", "occupied"]),
-        vol.Optional("duration", default=0): vol.All(
-            vol.Coerce(int), vol.Range(min=0, max=3600)
-        ),
-    }
-)
+SERVICE_SIMULATE_ACTIVITY_SCHEMA = vol.Schema({
+    vol.Required("area_id"): cv.string,
+    vol.Required("activity"): vol.In(["empty", "inactive", "movement", "occupied"]),
+    vol.Optional("duration", default=0): vol.All(
+        vol.Coerce(int), vol.Range(min=0, max=3600)
+    ),
+})
 
-SERVICE_LOAD_RULE_FROM_CLOUD_SCHEMA = vol.Schema(
-    {
-        vol.Required("area_id"): cv.string,
-    }
-)
+SERVICE_LOAD_RULE_FROM_CLOUD_SCHEMA = vol.Schema({
+    vol.Required("area_id"): cv.string,
+})
 
 # Feature flag debugging service schemas
-SERVICE_DEBUG_AREA_STATUS_SCHEMA = vol.Schema(
-    {
-        vol.Required("area_id"): cv.string,
-    }
-)
+SERVICE_DEBUG_AREA_STATUS_SCHEMA = vol.Schema({
+    vol.Required("area_id"): cv.string,
+})
 
-SERVICE_DEBUG_VALIDATE_AREA_SCHEMA = vol.Schema(
-    {
-        vol.Required("area_id"): cv.string,
-    }
-)
+SERVICE_DEBUG_VALIDATE_AREA_SCHEMA = vol.Schema({
+    vol.Required("area_id"): cv.string,
+})
 
-SERVICE_DEBUG_EXPORT_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Optional("format", default="json"): vol.In(["json", "csv", "txt"]),
-        vol.Optional("area_id", default=None): cv.string,
-    }
-)
+SERVICE_DEBUG_EXPORT_DATA_SCHEMA = vol.Schema({
+    vol.Optional("format", default="json"): vol.In(["json", "csv", "txt"]),
+    vol.Optional("area_id", default=None): cv.string,
+})
 
-SERVICE_RESET_APP_PREFERENCES_SCHEMA = vol.Schema(
-    {
-        vol.Required("area_id"): cv.string,
-        vol.Optional("app_id"): cv.string,
-    }
-)
+SERVICE_RESET_APP_PREFERENCES_SCHEMA = vol.Schema({
+    vol.Required("area_id"): cv.string,
+    vol.Optional("app_id"): cv.string,
+})
 
 
 async def async_setup_services(hass: HomeAssistant) -> None:
@@ -90,6 +76,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
 
     Args:
         hass: Home Assistant instance
+
     """
 
     async def handle_sync_now(call: ServiceCall) -> None:
@@ -107,21 +94,28 @@ async def async_setup_services(hass: HomeAssistant) -> None:
             coordinator = entry_data.get("coordinator")
             if coordinator:
                 # First, sync activities/apps from cloud
-                from homeassistant.helpers.area_registry import async_get as async_get_area_registry
+                from homeassistant.helpers.area_registry import (
+                    async_get as async_get_area_registry,
+                )
+
                 area_registry = async_get_area_registry(hass)
                 area_ids = [area.id for area in area_registry.async_list_areas()]
                 instance_id = await coordinator.get_or_create_instance_id()
-                
-                _LOGGER.info(f"Syncing activities and apps from cloud for entry {entry_id}")
+
+                _LOGGER.info(
+                    f"Syncing activities and apps from cloud for entry {entry_id}"
+                )
                 sync_success = await coordinator.app_storage.async_sync_from_cloud(
                     coordinator.supabase_client, instance_id, area_ids
                 )
-                
+
                 if sync_success:
-                    _LOGGER.info(f"Activities/apps sync successful for entry {entry_id}")
+                    _LOGGER.info(
+                        f"Activities/apps sync successful for entry {entry_id}"
+                    )
                 else:
                     _LOGGER.warning(f"Activities/apps sync failed for entry {entry_id}")
-                
+
                 # Then refresh coordinator (updates sensors and sends area states)
                 await coordinator.async_refresh()
                 _LOGGER.info(f"Forced coordinator refresh for entry {entry_id}")
@@ -432,37 +426,44 @@ async def async_setup_services(hass: HomeAssistant) -> None:
             try:
                 activities = app_storage.get_activities()
 
-                _LOGGER.info("="*60)
+                _LOGGER.info("=" * 60)
                 _LOGGER.info("CURRENTLY LOADED ACTIVITIES")
-                _LOGGER.info("="*60)
+                _LOGGER.info("=" * 60)
 
                 for activity_id, activity_data in activities.items():
                     _LOGGER.info(f"\n🔹 Activity: {activity_id}")
-                    _LOGGER.info(f"   Name: {activity_data.get('activity_name', 'N/A')}")
-                    _LOGGER.info(f"   Description: {activity_data.get('description', 'N/A')}")
-                    
+                    _LOGGER.info(
+                        f"   Name: {activity_data.get('activity_name', 'N/A')}"
+                    )
+                    _LOGGER.info(
+                        f"   Description: {activity_data.get('description', 'N/A')}"
+                    )
+
                     # Show detection conditions
-                    conditions = activity_data.get('detection_conditions', [])
+                    conditions = activity_data.get("detection_conditions", [])
                     if conditions:
-                        _LOGGER.info(f"   Detection conditions:")
+                        _LOGGER.info("   Detection conditions:")
                         import json
+
                         _LOGGER.info(json.dumps(conditions, indent=6))
                     else:
-                        _LOGGER.info(f"   Detection conditions: (none)")
-                    
+                        _LOGGER.info("   Detection conditions: (none)")
+
                     # Show device classes being monitored
                     device_classes = []
                     for cond_group in conditions:
-                        for cond in cond_group.get('conditions', []):
-                            if cond.get('domain') == 'binary_sensor':
-                                dc = cond.get('device_class')
+                        for cond in cond_group.get("conditions", []):
+                            if cond.get("domain") == "binary_sensor":
+                                dc = cond.get("device_class")
                                 if dc:
                                     device_classes.append(dc)
-                    
-                    if device_classes:
-                        _LOGGER.info(f"   Binary sensor device classes: {device_classes}")
 
-                _LOGGER.info("="*60)
+                    if device_classes:
+                        _LOGGER.info(
+                            f"   Binary sensor device classes: {device_classes}"
+                        )
+
+                _LOGGER.info("=" * 60)
                 _LOGGER.info(f"Total activities loaded: {len(activities)}")
 
             except Exception as err:
@@ -635,6 +636,7 @@ async def async_unload_services(hass: HomeAssistant) -> None:
 
     Args:
         hass: Home Assistant instance
+
     """
     hass.services.async_remove(DOMAIN, SERVICE_SYNC_NOW)
     hass.services.async_remove(DOMAIN, SERVICE_FETCH_RULES)

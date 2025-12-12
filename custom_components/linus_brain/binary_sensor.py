@@ -64,11 +64,12 @@ async def async_setup_entry(
         hass: Home Assistant instance
         entry: Config entry
         async_add_entities: Callback to add entities
+
     """
     global _DYNAMIC_MANAGER
-    
+
     area_manager = hass.data[DOMAIN][entry.entry_id].get("area_manager")
-    
+
     if not area_manager:
         _LOGGER.error("area_manager not found, cannot create binary sensors")
         return
@@ -82,7 +83,7 @@ async def async_setup_entry(
         presence_entities = await _async_get_presence_entities(
             hass, entry, area_manager, area_id
         )
-        
+
         if not presence_entities:
             _LOGGER.debug(
                 f"No presence entities found for area {area_name}, skipping for now (may be created later)"
@@ -105,16 +106,20 @@ async def async_setup_entry(
             f"{[e._area_name for e in entities]}"
         )
     else:
-        _LOGGER.info("No presence sensors created initially (late-loading integrations may add them later)")
+        _LOGGER.info(
+            "No presence sensors created initially (late-loading integrations may add them later)"
+        )
 
     # Setup dynamic entity manager for late-loading integrations
     async def _create_entities_for_area(area_id: str, area_name: str) -> list[Any]:
         """Create presence sensor entities for an area."""
-        presence_entities = await _async_get_presence_entities(hass, entry, area_manager, area_id)
-        
+        presence_entities = await _async_get_presence_entities(
+            hass, entry, area_manager, area_id
+        )
+
         if not presence_entities:
             return []
-        
+
         sensor = PresenceDetectionBinarySensor(
             hass=hass,
             area_id=area_id,
@@ -123,7 +128,7 @@ async def async_setup_entry(
             entity_ids=presence_entities,
         )
         return [sensor]
-    
+
     _DYNAMIC_MANAGER = DynamicEntityManager(
         hass=hass,
         entry=entry,
@@ -131,20 +136,22 @@ async def async_setup_entry(
         platform_name="presence_detection",
         monitored_domains=["binary_sensor", "media_player"],
         monitored_device_classes=["motion", "presence", "occupancy"],
-        should_create_for_area_callback=lambda area_id: area_manager.has_presence_detection(area_id),
+        should_create_for_area_callback=lambda area_id: area_manager.has_presence_detection(
+            area_id
+        ),
         create_entities_callback=_create_entities_for_area,
         startup_delay=2.0,
     )
-    
+
     # Mark areas we already created as tracked
     for entity in entities:
         if _DYNAMIC_MANAGER:
             _DYNAMIC_MANAGER.mark_area_tracked(entity._area_id)
-    
+
     # Setup the dynamic manager (will listen for new entities and do post-startup refresh)
     if _DYNAMIC_MANAGER:
         await _DYNAMIC_MANAGER.async_setup()
-    
+
     _LOGGER.info("Dynamic entity manager setup complete for presence sensors")
 
 
@@ -167,10 +174,11 @@ async def _async_get_presence_entities(
 
     Returns:
         List of entity_id strings for presence detection
+
     """
     # Get presence detection config from options
     presence_config = area_manager._get_presence_detection_config()
-    
+
     # Get ALL presence entities for this area (not just active ones)
     entities_by_type = area_manager.get_presence_entities_for_area(area_id)
 
@@ -216,6 +224,7 @@ class PresenceDetectionBinarySensor(GroupEntity, BinarySensorEntity):
     Attributes:
         - entity_id: List of member entities (automatically managed by GroupEntity)
         - detection_config: Current presence detection configuration
+
     """
 
     _attr_device_class = BinarySensorDeviceClass.OCCUPANCY
@@ -241,6 +250,7 @@ class PresenceDetectionBinarySensor(GroupEntity, BinarySensorEntity):
             area_name: Human-readable area name
             entry_id: Config entry ID
             entity_ids: List of entity IDs to aggregate
+
         """
         super().__init__()
         self.hass = hass
@@ -248,17 +258,19 @@ class PresenceDetectionBinarySensor(GroupEntity, BinarySensorEntity):
         self._area_name = area_name
         self._entry_id = entry_id
         self._entity_ids = entity_ids
-        self._group_manager: "GroupManager | None" = None  # Will be set in async_added_to_hass
+        self._group_manager: GroupManager | None = (
+            None  # Will be set in async_added_to_hass
+        )
 
         # Unique ID format: linus_brain_presence_detection_{area_id}
         self._attr_unique_id = f"{DOMAIN}_presence_detection_{area_id}"
-        
+
         # Force English entity_id
         self._attr_suggested_object_id = f"{DOMAIN}_presence_detection_{area_id}"
 
         # Translation placeholders for area name
         self._attr_translation_placeholders = {"area_name": area_name}
-        
+
         # Device info - link to area device
         self._attr_device_info = get_area_device_info(  # type: ignore[assignment]
             entry_id, area_id, area_name
@@ -277,13 +289,13 @@ class PresenceDetectionBinarySensor(GroupEntity, BinarySensorEntity):
     async def async_added_to_hass(self) -> None:
         """
         Setup entity refresh triggers using GroupManager.
-        
+
         Delegates startup, area change detection, and automatic removal to GroupManager.
         """
         await super().async_added_to_hass()
-        
+
         from .utils.group_manager import GroupManager
-        
+
         # Create and setup group manager with removal support
         self._group_manager = GroupManager(
             hass=self.hass,
@@ -294,80 +306,78 @@ class PresenceDetectionBinarySensor(GroupEntity, BinarySensorEntity):
             removal_callback=self._async_remove_self,
             check_empty_callback=self._is_empty,
         )
-        
+
         assert self._group_manager is not None  # for type checker
         await self._group_manager.async_setup()
 
     async def async_will_remove_from_hass(self) -> None:
         """Called when entity is being removed from hass."""
         await super().async_will_remove_from_hass()
-        
+
         # Cleanup group manager
         if self._group_manager:
             self._group_manager.cleanup()
             self._group_manager = None
-    
+
     def _is_empty(self) -> bool:
         """Check if the group has no members."""
         return len(self._entity_ids) == 0
-    
+
     async def _async_remove_self(self) -> None:
         """Remove this entity from Home Assistant."""
         _LOGGER.info(
             f"No presence entities remaining for {self._area_name} - removing binary sensor entity"
         )
         await self.async_remove(force_remove=True)
-    
+
     async def _async_refresh_entity_list(self) -> None:
         """
         Refresh the list of presence entities for this area.
-        
+
         This is called when new entities are added to Home Assistant,
         ensuring MQTT and other late-loading entities are included.
-        
+
         GroupManager handles automatic removal if the list becomes empty.
         """
         try:
             area_manager = self.hass.data[DOMAIN][self._entry_id].get("area_manager")
             if not area_manager:
                 return
-            
-            from homeassistant.config_entries import ConfigEntry
-            
+
             # Get config entry to access presence detection config
             entry = None
             for config_entry in self.hass.config_entries.async_entries(DOMAIN):
                 if config_entry.entry_id == self._entry_id:
                     entry = config_entry
                     break
-            
+
             if not entry:
                 return
-            
+
             # Get updated list of presence entities
             new_entity_ids = await _async_get_presence_entities(
                 self.hass, entry, area_manager, self._area_id
             )
-            
+
             # Only update if the list has changed
             if set(new_entity_ids) != set(self._entity_ids):
                 old_count = len(self._entity_ids)
                 self._entity_ids = new_entity_ids
-                
+
                 _LOGGER.info(
                     f"Updated presence detection entities for {self._area_name}: "
                     f"{old_count} → {len(new_entity_ids)} entities"
                 )
-                
+
                 # Update the group state with new entity list
                 # Note: GroupManager will handle removal if list is now empty
                 self.async_update_group_state()
                 self.async_write_ha_state()
-        
+
         except Exception as err:
             _LOGGER.error(
                 f"Failed to refresh entity list for {self._area_name}: {err}",
-                exc_info=True
+                exc_info=True,
             )
 
     @callback
@@ -376,14 +386,14 @@ class PresenceDetectionBinarySensor(GroupEntity, BinarySensorEntity):
         Update the group state based on member entities.
 
         This is called automatically by GroupEntity when any member entity changes state.
-        
+
         Logic:
         - Group is ON if ANY member entity is ON
         - Group is OFF if ALL member entities are OFF
         - Group is UNAVAILABLE if ALL member entities are UNAVAILABLE
         """
         from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
-        
+
         # Get states of all member entities
         states = []
         active_entities = []
@@ -393,16 +403,16 @@ class PresenceDetectionBinarySensor(GroupEntity, BinarySensorEntity):
             "occupancy": False,
             "media": False,
         }
-        
+
         for entity_id in self._entity_ids:
             state = self.hass.states.get(entity_id)
             if state is not None:
                 states.append(state.state)
-                
+
                 # Track which entity is active
                 if state.state in (STATE_ON, "playing"):
                     active_entities.append(entity_id)
-                    
+
                     # Determine detection source type
                     device_class = state.attributes.get("device_class")
                     if device_class in ["motion", "presence", "occupancy"]:
@@ -418,7 +428,9 @@ class PresenceDetectionBinarySensor(GroupEntity, BinarySensorEntity):
             return
 
         # Group is available if at least one member is available
-        available_states = [s for s in states if s not in (STATE_UNAVAILABLE, STATE_UNKNOWN)]
+        available_states = [
+            s for s in states if s not in (STATE_UNAVAILABLE, STATE_UNKNOWN)
+        ]
         self._attr_available = len(available_states) > 0
 
         # Group is ON if ANY member is ON (any() logic)
@@ -435,16 +447,19 @@ class PresenceDetectionBinarySensor(GroupEntity, BinarySensorEntity):
         area_manager = self.hass.data[DOMAIN][self._entry_id].get("area_manager")
         detection_config = {}
         last_change_timestamp = None
-        
+
         if area_manager:
             detection_config = area_manager._get_presence_detection_config()
-            
+
             # Get last state change from most recent active entity
             if active_entities:
                 for entity_id in active_entities:
                     state = self.hass.states.get(entity_id)
                     if state and state.last_changed:
-                        if last_change_timestamp is None or state.last_changed > last_change_timestamp:
+                        if (
+                            last_change_timestamp is None
+                            or state.last_changed > last_change_timestamp
+                        ):
                             last_change_timestamp = state.last_changed
 
         # Build attributes with enhanced information
@@ -455,6 +470,7 @@ class PresenceDetectionBinarySensor(GroupEntity, BinarySensorEntity):
             "detection_config": detection_config,  # User configuration
             "entity_count": len(self._entity_ids),  # Total entities tracked
             "active_count": len(active_entities),  # Number of active entities
-            "last_detected": last_change_timestamp.isoformat() if last_change_timestamp else None,
+            "last_detected": last_change_timestamp.isoformat()
+            if last_change_timestamp
+            else None,
         }
-

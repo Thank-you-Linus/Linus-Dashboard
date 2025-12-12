@@ -24,15 +24,19 @@ def mock_hass():
 @pytest.fixture
 def mock_entity_resolver(mock_hass):
     """Mock EntityResolver."""
-    with patch.multiple(
-        "homeassistant.helpers.entity_registry",
-        async_get=MagicMock(return_value=MagicMock()),
-    ), patch.multiple(
-        "homeassistant.helpers.device_registry",
-        async_get=MagicMock(return_value=MagicMock()),
-    ), patch.multiple(
-        "homeassistant.helpers.area_registry",
-        async_get=MagicMock(return_value=MagicMock()),
+    with (
+        patch.multiple(
+            "homeassistant.helpers.entity_registry",
+            async_get=MagicMock(return_value=MagicMock()),
+        ),
+        patch.multiple(
+            "homeassistant.helpers.device_registry",
+            async_get=MagicMock(return_value=MagicMock()),
+        ),
+        patch.multiple(
+            "homeassistant.helpers.area_registry",
+            async_get=MagicMock(return_value=MagicMock()),
+        ),
     ):
         return EntityResolver(mock_hass)
 
@@ -183,7 +187,7 @@ class TestMonitoredDomainsCaching:
 
         # Should be cached
         assert area_manager._MONITORED_DOMAINS_CACHE is not None
-        assert area_manager._MONITORED_DOMAINS_CACHE == result
+        assert result == area_manager._MONITORED_DOMAINS_CACHE
 
     def test_cache_subsequent_calls(self):
         """Test that subsequent calls use cache."""
@@ -210,7 +214,7 @@ class TestMonitoredDomainsCaching:
 
         # Should be cached
         assert area_manager._PRESENCE_DETECTION_DOMAINS_CACHE is not None
-        assert area_manager._PRESENCE_DETECTION_DOMAINS_CACHE == result
+        assert result == area_manager._PRESENCE_DETECTION_DOMAINS_CACHE
 
     def test_presence_detection_domains_cache_subsequent_calls(self):
         """Test that subsequent calls use cache."""

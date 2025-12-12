@@ -13,7 +13,8 @@ Key features:
 
 import asyncio
 import logging
-from typing import Any, Awaitable, Callable
+from collections.abc import Awaitable, Callable
+from typing import Any
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,6 +56,7 @@ class TimeoutManager:
         Args:
             logger: Logger instance to use (defaults to module logger)
             logger_prefix: Prefix for log messages (e.g., "[TIMEOUT]", "[DEBOUNCE]")
+
         """
         self._logger = logger or _LOGGER
         self._logger_prefix = logger_prefix
@@ -83,6 +85,7 @@ class TimeoutManager:
 
         Returns:
             The created asyncio.Task
+
         """
         # Cancel existing task if present
         if key in self._tasks:
@@ -122,6 +125,7 @@ class TimeoutManager:
             callback: Async function to call
             *args: Positional arguments for callback
             **kwargs: Keyword arguments for callback
+
         """
         # Get current task for identity check during cleanup
         current_task = asyncio.current_task()
@@ -165,6 +169,7 @@ class TimeoutManager:
 
         Returns:
             True if task was cancelled, False if not found or already done
+
         """
         if key not in self._tasks:
             return False
@@ -187,6 +192,7 @@ class TimeoutManager:
 
         Returns:
             Number of tasks cancelled
+
         """
         cancelled_count = 0
 
@@ -212,6 +218,7 @@ class TimeoutManager:
 
         Returns:
             True if task exists and is not done
+
         """
         return key in self._tasks and not self._tasks[key].done()
 
@@ -221,6 +228,7 @@ class TimeoutManager:
 
         Returns:
             Number of tasks that are not done
+
         """
         return sum(1 for task in self._tasks.values() if not task.done())
 
@@ -230,5 +238,6 @@ class TimeoutManager:
 
         Returns:
             Set of all task identifiers (including completed tasks)
+
         """
         return set(self._tasks.keys())

@@ -40,6 +40,7 @@ class LightLearning:
         Args:
             hass: Home Assistant instance
             coordinator: LinusBrainCoordinator instance
+
         """
         self.hass = hass
         self.coordinator = coordinator
@@ -56,6 +57,7 @@ class LightLearning:
 
         Returns:
             True if manual action, False if automated
+
         """
         return context.user_id is not None
 
@@ -69,6 +71,7 @@ class LightLearning:
 
         Returns:
             Action type: turn_on, turn_off, brightness, color_temp, or color
+
         """
         if new_state.state == "off":
             return "turn_off"
@@ -111,6 +114,7 @@ class LightLearning:
 
         Returns:
             Dictionary with state information
+
         """
         state_dict = {
             "state": state.state,
@@ -153,6 +157,7 @@ class LightLearning:
             new_state: New state of the light
             old_state: Previous state of the light (may be None)
             context: Event context containing user_id and other metadata
+
         """
         try:
             # Check if this is a manual action

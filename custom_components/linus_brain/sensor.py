@@ -27,7 +27,6 @@ Area Context Sensors:
 - DynamicEntityManager ensures late-loading integrations (MQTT, Zigbee) are included
 """
 
-import json
 import logging
 from typing import Any
 
@@ -52,12 +51,12 @@ _INSIGHT_DYNAMIC_MANAGER: DynamicEntityManager | None = None
 def _format_activity_summary(activity_data: dict[str, Any]) -> str:
     """Create a readable text summary of an activity."""
     summary_parts = []
-    
+
     # Basic info
     name = activity_data.get("activity_name", "Unknown")
     desc = activity_data.get("description", "")
     summary_parts.append(f"📋 {name}: {desc}")
-    
+
     # Detection conditions
     conditions = activity_data.get("detection_conditions", [])
     if conditions:
@@ -72,10 +71,10 @@ def _format_activity_summary(activity_data: dict[str, Any]) -> str:
                             device_classes.add(f"{domain}.{dc}")
                         elif domain == "media_player":
                             device_classes.add("media_player")
-        
+
         if device_classes:
             summary_parts.append(f"🔍 Detects: {', '.join(sorted(device_classes))}")
-    
+
     # Timing
     threshold = activity_data.get("duration_threshold_seconds", 0)
     timeout = activity_data.get("timeout_seconds", 0)
@@ -83,7 +82,7 @@ def _format_activity_summary(activity_data: dict[str, Any]) -> str:
         summary_parts.append(f"⏱️  Duration: {threshold}s")
     if timeout > 0:
         summary_parts.append(f"⏰ Timeout: {timeout}s")
-    
+
     return "\n".join(summary_parts)
 
 
@@ -91,12 +90,14 @@ def _format_action_summary(actions: dict[str, Any]) -> str:
     """Create a readable text summary of actions."""
     if not actions:
         return "No actions"
-    
+
     summary_parts = []
     for activity_id, activity_actions in actions.items():
-        action_count = len(activity_actions) if isinstance(activity_actions, list) else 0
+        action_count = (
+            len(activity_actions) if isinstance(activity_actions, list) else 0
+        )
         summary_parts.append(f"  {activity_id}: {action_count} action(s)")
-    
+
     return "\n".join(summary_parts)
 
 
@@ -112,9 +113,10 @@ async def async_setup_entry(
         hass: Home Assistant instance
         entry: Config entry
         async_add_entities: Callback to add entities
+
     """
     global _ACTIVITY_DYNAMIC_MANAGER, _INSIGHT_DYNAMIC_MANAGER
-    
+
     coordinator = hass.data[DOMAIN][entry.entry_id]["coordinator"]
     area_manager = hass.data[DOMAIN][entry.entry_id].get("area_manager")
     activity_tracker = hass.data[DOMAIN][entry.entry_id].get("activity_tracker")
@@ -165,21 +167,23 @@ async def async_setup_entry(
             )
             area_context_sensors.append(sensor)
             sensors.append(sensor)
-        
+
         # Setup dynamic entity manager for area context sensors
         async def _create_activity_sensors(area_id: str, area_name: str) -> list[Any]:
             """Create area context sensor for an area."""
-            return [LinusAreaContextSensor(
-                coordinator,
-                area_manager,
-                activity_tracker,
-                insights_manager,
-                rule_engine,
-                area_id,
-                area_name,
-                entry,
-            )]
-        
+            return [
+                LinusAreaContextSensor(
+                    coordinator,
+                    area_manager,
+                    activity_tracker,
+                    insights_manager,
+                    rule_engine,
+                    area_id,
+                    area_name,
+                    entry,
+                )
+            ]
+
         _ACTIVITY_DYNAMIC_MANAGER = DynamicEntityManager(
             hass=hass,
             entry=entry,
@@ -187,11 +191,13 @@ async def async_setup_entry(
             platform_name="area_context_sensors",
             monitored_domains=["binary_sensor", "media_player"],
             monitored_device_classes=["motion", "presence", "occupancy"],
-            should_create_for_area_callback=lambda area_id: area_manager.has_presence_detection(area_id),
+            should_create_for_area_callback=lambda area_id: area_manager.has_presence_detection(
+                area_id
+            ),
             create_entities_callback=_create_activity_sensors,
             startup_delay=2.0,
         )
-        
+
         # Mark areas we already created as tracked
         for sensor in area_context_sensors:
             if _ACTIVITY_DYNAMIC_MANAGER:
@@ -230,22 +236,26 @@ async def async_setup_entry(
                     )
                     insight_sensors_by_area[area_id].append(sensor)
                     sensors.append(sensor)
-            
+
             # Setup dynamic entity manager for insight sensors
-            async def _create_insight_sensors(area_id: str, area_name: str) -> list[Any]:
+            async def _create_insight_sensors(
+                area_id: str, area_name: str
+            ) -> list[Any]:
                 """Create insight sensors for an area."""
                 result = []
                 for insight_type in enabled_types:
-                    result.append(LinusInsightSensor(
-                        coordinator,
-                        insights_manager,
-                        area_id,
-                        area_name,
-                        insight_type,
-                        entry,
-                    ))
+                    result.append(
+                        LinusInsightSensor(
+                            coordinator,
+                            insights_manager,
+                            area_id,
+                            area_name,
+                            insight_type,
+                            entry,
+                        )
+                    )
                 return result
-            
+
             _INSIGHT_DYNAMIC_MANAGER = DynamicEntityManager(
                 hass=hass,
                 entry=entry,
@@ -253,11 +263,13 @@ async def async_setup_entry(
                 platform_name="insight_sensors",
                 monitored_domains=["binary_sensor", "media_player"],
                 monitored_device_classes=["motion", "presence", "occupancy"],
-                should_create_for_area_callback=lambda area_id: area_manager.has_presence_detection(area_id),
+                should_create_for_area_callback=lambda area_id: area_manager.has_presence_detection(
+                    area_id
+                ),
                 create_entities_callback=_create_insight_sensors,
                 startup_delay=2.0,
             )
-            
+
             # Mark areas we already created as tracked
             for area_id in insight_sensors_by_area:
                 if _INSIGHT_DYNAMIC_MANAGER:
@@ -270,12 +282,12 @@ async def async_setup_entry(
 
     async_add_entities(sensors)
     _LOGGER.info(f"Added {len(sensors)} Linus Brain sensor entities initially")
-    
+
     # Setup dynamic entity managers for late-loading integrations
     if _ACTIVITY_DYNAMIC_MANAGER:
         await _ACTIVITY_DYNAMIC_MANAGER.async_setup()
         _LOGGER.info("Dynamic entity manager setup complete for area context sensors")
-    
+
     if _INSIGHT_DYNAMIC_MANAGER:
         await _INSIGHT_DYNAMIC_MANAGER.async_setup()
         _LOGGER.info("Dynamic entity manager setup complete for insight sensors")
@@ -303,11 +315,13 @@ class LinusBrainSyncSensor(CoordinatorEntity, SensorEntity):
         self._attr_icon = "mdi:cloud-sync"
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
         self._attr_device_info = get_integration_device_info(entry.entry_id)  # type: ignore[assignment]
-        
+
         _LOGGER.debug(
             "🔧 [ENTITY DEBUG] LinusBrainSyncSensor.__init__ called. "
             "coordinator.data = %s",
-            "None" if coordinator.data is None else f"dict with {len(coordinator.data)} keys"
+            "None"
+            if coordinator.data is None
+            else f"dict with {len(coordinator.data)} keys",
         )
         self._update_from_coordinator()
 
@@ -316,7 +330,9 @@ class LinusBrainSyncSensor(CoordinatorEntity, SensorEntity):
         _LOGGER.debug(
             "🔧 [ENTITY DEBUG] LinusBrainSyncSensor._handle_coordinator_update called. "
             "coordinator.data = %s",
-            "None" if self.coordinator.data is None else f"dict with {len(self.coordinator.data)} keys"
+            "None"
+            if self.coordinator.data is None
+            else f"dict with {len(self.coordinator.data)} keys",
         )
         self._update_from_coordinator()
         super()._handle_coordinator_update()
@@ -326,7 +342,9 @@ class LinusBrainSyncSensor(CoordinatorEntity, SensorEntity):
         _LOGGER.debug(
             "🔧 [ENTITY DEBUG] LinusBrainSyncSensor._update_from_coordinator called. "
             "coordinator.data = %s",
-            "None" if self.coordinator.data is None else f"dict with {len(self.coordinator.data)} keys"
+            "None"
+            if self.coordinator.data is None
+            else f"dict with {len(self.coordinator.data)} keys",
         )
         from .utils.area_manager import (
             get_monitored_domains,
@@ -549,7 +567,9 @@ class LinusAreaContextSensor(CoordinatorEntity, SensorEntity):
         configured_timeouts = self._activity_tracker.get_configured_timeouts()
 
         # Get active presence entities from coordinator (for backward compatibility)
-        active_presence_entities = self._coordinator.active_presence_entities.get(self._area_id, [])
+        active_presence_entities = self._coordinator.active_presence_entities.get(
+            self._area_id, []
+        )
 
         # Activity sensor focuses on contextual activity state and environmental conditions
         # Presence detection attributes (active entities, detection sources) are now in binary_sensor
@@ -557,20 +577,23 @@ class LinusAreaContextSensor(CoordinatorEntity, SensorEntity):
         self._attr_extra_state_attributes = {
             # Activity context
             "activity_level": activity_level or "empty",
-            "seconds_until_timeout": seconds_until_timeout if seconds_until_timeout is not None else 0,
+            "seconds_until_timeout": seconds_until_timeout
+            if seconds_until_timeout is not None
+            else 0,
             "timeout_type": timeout_type or "none",
             "configured_timeouts": configured_timeouts or {},
-            
             # Environmental conditions
             "illuminance": area_state.get("illuminance") or 0,
-            "temperature": area_state.get("temperature"),  # Can be None for areas without temperature sensor
-            "humidity": area_state.get("humidity"),  # Can be None for areas without humidity sensor
+            "temperature": area_state.get(
+                "temperature"
+            ),  # Can be None for areas without temperature sensor
+            "humidity": area_state.get(
+                "humidity"
+            ),  # Can be None for areas without humidity sensor
             "sun_elevation": area_state.get("sun_elevation") or 0,
             "is_dark": area_state.get("is_dark", False),
-            
             # Presence detection (backward compatibility - prefer binary_sensor for new templates)
             "active_presence_entities": active_presence_entities,
-            
             # Automation context
             "last_automation_rule": last_rule,
             "insights": insights or {},
@@ -757,13 +780,13 @@ class LinusBrainActivitiesSensor(CoordinatorEntity, SensorEntity):
             "is_fallback": is_fallback,
             "synced_at": sync_time.isoformat() if sync_time else None,
         }
-        
+
         # Add individual attributes per activity for easy reading
         for activity_id, activity_data in activities.items():
             prefix = f"{activity_id}_"
             attrs[f"{prefix}name"] = activity_data.get("activity_name", "Unknown")
             attrs[f"{prefix}description"] = activity_data.get("description", "")
-            
+
             # Extract device classes from detection conditions
             device_classes = []
             conditions = activity_data.get("detection_conditions", [])
@@ -777,9 +800,13 @@ class LinusBrainActivitiesSensor(CoordinatorEntity, SensorEntity):
                                 device_classes.append(f"{domain}.{dc}")
                             elif domain == "media_player":
                                 device_classes.append("media_player")
-            
-            attrs[f"{prefix}detects"] = ", ".join(sorted(set(device_classes))) if device_classes else "none"
-            attrs[f"{prefix}duration_threshold"] = activity_data.get("duration_threshold_seconds", 0)
+
+            attrs[f"{prefix}detects"] = (
+                ", ".join(sorted(set(device_classes))) if device_classes else "none"
+            )
+            attrs[f"{prefix}duration_threshold"] = activity_data.get(
+                "duration_threshold_seconds", 0
+            )
             attrs[f"{prefix}timeout"] = activity_data.get("timeout_seconds", 0)
             attrs[f"{prefix}is_system"] = activity_data.get("is_system", False)
 
@@ -857,14 +884,16 @@ class LinusBrainAppSensor(CoordinatorEntity, SensorEntity):
             "areas_assigned": ", ".join(areas_using_app) if areas_using_app else "none",
             "areas_count": len(areas_using_app),
         }
-        
+
         for activity_id, actions in activity_actions.items():
             action_count = len(actions) if isinstance(actions, list) else 0
             attrs[f"actions_{activity_id}"] = action_count
             if action_count > 0 and isinstance(actions, list):
                 first_action = actions[0]
                 if isinstance(first_action, dict):
-                    attrs[f"actions_{activity_id}_first"] = first_action.get("action", "unknown")
+                    attrs[f"actions_{activity_id}_first"] = first_action.get(
+                        "action", "unknown"
+                    )
 
         self._attr_extra_state_attributes = attrs
 
@@ -901,6 +930,7 @@ class LinusInsightSensor(CoordinatorEntity, SensorEntity):
             area_name: Human-readable area name
             insight_type: Type of insight (e.g., "dark_threshold_lux")
             entry: Config entry
+
         """
         super().__init__(coordinator)
         self._coordinator = coordinator

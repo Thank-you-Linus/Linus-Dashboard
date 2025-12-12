@@ -44,6 +44,6 @@ async def test_presence_detection_includes_key_domains():
     ]
 
     for domain in expected_domains:
-        assert (
-            domain in PRESENCE_DETECTION_DOMAINS
-        ), f"Domain {domain} should be in PRESENCE_DETECTION_DOMAINS"
+        assert domain in PRESENCE_DETECTION_DOMAINS, (
+            f"Domain {domain} should be in PRESENCE_DETECTION_DOMAINS"
+        )

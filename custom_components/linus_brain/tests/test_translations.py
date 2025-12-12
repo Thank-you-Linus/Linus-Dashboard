@@ -159,18 +159,18 @@ class TestSensorTranslations:
 
         # Check all sensors have translation_key and has_entity_name
         for entity in entities:
-            assert hasattr(
-                entity, "_attr_translation_key"
-            ), f"Sensor {entity.__class__.__name__} missing translation_key"
-            assert (
-                entity._attr_translation_key is not None
-            ), f"Sensor {entity.__class__.__name__} has None translation_key"
-            assert hasattr(
-                entity, "_attr_has_entity_name"
-            ), f"Sensor {entity.__class__.__name__} missing has_entity_name"
-            assert (
-                entity._attr_has_entity_name is True
-            ), f"Sensor {entity.__class__.__name__} has_entity_name = False"
+            assert hasattr(entity, "_attr_translation_key"), (
+                f"Sensor {entity.__class__.__name__} missing translation_key"
+            )
+            assert entity._attr_translation_key is not None, (
+                f"Sensor {entity.__class__.__name__} has None translation_key"
+            )
+            assert hasattr(entity, "_attr_has_entity_name"), (
+                f"Sensor {entity.__class__.__name__} missing has_entity_name"
+            )
+            assert entity._attr_has_entity_name is True, (
+                f"Sensor {entity.__class__.__name__} has_entity_name = False"
+            )
 
     @pytest.mark.asyncio
     async def test_sensors_do_not_hardcode_unit_of_measurement(
@@ -266,22 +266,22 @@ class TestSensorTranslations:
             # Check English
             assert "entity" in en_translations
             assert "sensor" in en_translations["entity"]
-            assert (
-                key in en_translations["entity"]["sensor"]
-            ), f"Sensor translation key '{key}' missing in en.json"
-            assert (
-                "name" in en_translations["entity"]["sensor"][key]
-            ), f"Sensor translation key '{key}' missing 'name' in en.json"
+            assert key in en_translations["entity"]["sensor"], (
+                f"Sensor translation key '{key}' missing in en.json"
+            )
+            assert "name" in en_translations["entity"]["sensor"][key], (
+                f"Sensor translation key '{key}' missing 'name' in en.json"
+            )
 
             # Check French
             assert "entity" in fr_translations
             assert "sensor" in fr_translations["entity"]
-            assert (
-                key in fr_translations["entity"]["sensor"]
-            ), f"Sensor translation key '{key}' missing in fr.json"
-            assert (
-                "name" in fr_translations["entity"]["sensor"][key]
-            ), f"Sensor translation key '{key}' missing 'name' in fr.json"
+            assert key in fr_translations["entity"]["sensor"], (
+                f"Sensor translation key '{key}' missing in fr.json"
+            )
+            assert "name" in fr_translations["entity"]["sensor"][key], (
+                f"Sensor translation key '{key}' missing 'name' in fr.json"
+            )
 
     def test_sensor_units_of_measurement_translated(
         self, en_translations: dict, fr_translations: dict
@@ -296,18 +296,18 @@ class TestSensorTranslations:
 
         for key, expected_units in sensors_with_units.items():
             # Check English
-            assert (
-                "unit_of_measurement" in en_translations["entity"]["sensor"][key]
-            ), f"Sensor '{key}' missing unit_of_measurement in en.json"
+            assert "unit_of_measurement" in en_translations["entity"]["sensor"][key], (
+                f"Sensor '{key}' missing unit_of_measurement in en.json"
+            )
             assert (
                 en_translations["entity"]["sensor"][key]["unit_of_measurement"]
                 == expected_units["en"]
             ), f"Sensor '{key}' has wrong English unit"
 
             # Check French
-            assert (
-                "unit_of_measurement" in fr_translations["entity"]["sensor"][key]
-            ), f"Sensor '{key}' missing unit_of_measurement in fr.json"
+            assert "unit_of_measurement" in fr_translations["entity"]["sensor"][key], (
+                f"Sensor '{key}' missing unit_of_measurement in fr.json"
+            )
             assert (
                 fr_translations["entity"]["sensor"][key]["unit_of_measurement"]
                 == expected_units["fr"]
@@ -322,37 +322,37 @@ class TestSensorTranslations:
 
         for state in activity_states:
             # Check English
-            assert (
-                "state" in en_translations["entity"]["sensor"]["activity"]
-            ), "Activity sensor missing 'state' translations in en.json"
-            assert (
-                state in en_translations["entity"]["sensor"]["activity"]["state"]
-            ), f"Activity state '{state}' missing in en.json"
+            assert "state" in en_translations["entity"]["sensor"]["activity"], (
+                "Activity sensor missing 'state' translations in en.json"
+            )
+            assert state in en_translations["entity"]["sensor"]["activity"]["state"], (
+                f"Activity state '{state}' missing in en.json"
+            )
 
             # Check French
-            assert (
-                "state" in fr_translations["entity"]["sensor"]["activity"]
-            ), "Activity sensor missing 'state' translations in fr.json"
-            assert (
-                state in fr_translations["entity"]["sensor"]["activity"]["state"]
-            ), f"Activity state '{state}' missing in fr.json"
+            assert "state" in fr_translations["entity"]["sensor"]["activity"], (
+                "Activity sensor missing 'state' translations in fr.json"
+            )
+            assert state in fr_translations["entity"]["sensor"]["activity"]["state"], (
+                f"Activity state '{state}' missing in fr.json"
+            )
 
         # Cloud health sensor states
         cloud_health_states = ["connected", "disconnected", "error"]
 
         for state in cloud_health_states:
             # Check English
-            assert (
-                "state" in en_translations["entity"]["sensor"]["cloud_health"]
-            ), "Cloud health sensor missing 'state' translations in en.json"
+            assert "state" in en_translations["entity"]["sensor"]["cloud_health"], (
+                "Cloud health sensor missing 'state' translations in en.json"
+            )
             assert (
                 state in en_translations["entity"]["sensor"]["cloud_health"]["state"]
             ), f"Cloud health state '{state}' missing in en.json"
 
             # Check French
-            assert (
-                "state" in fr_translations["entity"]["sensor"]["cloud_health"]
-            ), "Cloud health sensor missing 'state' translations in fr.json"
+            assert "state" in fr_translations["entity"]["sensor"]["cloud_health"], (
+                "Cloud health sensor missing 'state' translations in fr.json"
+            )
             assert (
                 state in fr_translations["entity"]["sensor"]["cloud_health"]["state"]
             ), f"Cloud health state '{state}' missing in fr.json"

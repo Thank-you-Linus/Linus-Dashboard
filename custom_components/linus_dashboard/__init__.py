@@ -37,8 +37,8 @@ _LOGGER = logging.getLogger(__name__)
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
-def get_version() -> str:
-    """Get the version from manifest.json."""
+def _read_manifest_sync() -> str:
+    """Read manifest.json synchronously (for executor)."""
     manifest_path = Path(__file__).parent / "manifest.json"
     try:
         with manifest_path.open(encoding="utf-8") as manifest_file:
@@ -47,6 +47,11 @@ def get_version() -> str:
     except (FileNotFoundError, json.JSONDecodeError, KeyError):
         _LOGGER.exception("Failed to read version from manifest")
         return "unknown"
+
+
+async def async_get_version(hass: HomeAssistant) -> str:
+    """Get the version from manifest.json asynchronously."""
+    return await hass.async_add_executor_job(_read_manifest_sync)
 
 
 async def async_setup(hass: HomeAssistant, _config: dict) -> bool:
@@ -124,8 +129,8 @@ async def register_static_paths_and_resources(
     js_url = f"/{DOMAIN}_files/www/{js_file}"
     js_path = Path(__file__).parent / f"www/{js_file}"
 
-    # Check if the file actually exists
-    if not js_path.exists():
+    # Check if the file actually exists (using executor to avoid blocking I/O)
+    if not await hass.async_add_executor_job(js_path.exists):
         _LOGGER.warning(
             "JavaScript file not found: %s - skipping registration", js_path
         )
@@ -137,7 +142,7 @@ async def register_static_paths_and_resources(
     ])
 
     # Get version from manifest for cache busting
-    manifest_version = get_version()
+    manifest_version = await async_get_version(hass)
 
     # Register as a Lovelace resource with version query param for cache busting
     # This ensures browsers fetch the new version after updates
@@ -174,7 +179,9 @@ async def websocket_get_entities(
         CONF_EMBEDDED_DASHBOARDS: config_entries[0].options.get(
             CONF_EMBEDDED_DASHBOARDS, []
         ),
-        "version": get_version(),  # Include version for frontend version check
+        "version": await async_get_version(
+            hass
+        ),  # Include version for frontend version check
     }
 
     _LOGGER.info(

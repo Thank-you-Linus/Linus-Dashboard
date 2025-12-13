@@ -267,7 +267,7 @@ class LinusStrategy extends HTMLTemplateElement {
 
 customElements.define("ll-strategy-linus-strategy", LinusStrategy);
 
-export const version = "1.3.0";
+export const version = "1.4.0-beta.2";
 console.info(
   "%c Linus Strategy %c ".concat(version, " "),
   "color: #F5F5DC; background: #004225; font-weight: 700;", "color: #004225; background: #F5F5DC; font-weight: 700;"

@@ -49,6 +49,7 @@ jobs:
         run: |
           npm run lint:check || echo "⚠️ Linting skipped (needs ESLint v9 migration)"
           npm run type-check || echo "⚠️ Type checking skipped (has errors)"
+          echo "✅ Lint and type check step completed (errors ignored)"
 
       # 6. Compiler le code
       - name: "Build the project"

@@ -6,6 +6,33 @@
 
 ---
 
+## ⚡ Quick Start | Démarrage Rapide
+
+**NEW: One-Command Release System! | NOUVEAU : Système de release en une commande !**
+
+Create releases easily with a single command:
+
+```bash
+# For pre-releases (beta testing)
+npm run create:beta
+
+# For stable releases
+npm run create:release
+```
+
+These scripts handle **everything automatically**:
+- ✅ Generate release notes from commits
+- ✅ Guide you through editing them
+- ✅ Run smoke tests
+- ✅ Bump version
+- ✅ Create git tags
+- ✅ Push to GitHub
+- ✅ Trigger automated CI/CD
+
+**Read below for detailed documentation.**
+
+---
+
 ## 📋 Table of Contents | Table des matières
 
 - [Overview | Vue d'ensemble](#overview--vue-densemble)
@@ -82,7 +109,36 @@ Where | Où:
 
 ## Pre-Release Process (Alpha/Beta)
 
-### Step 1: Generate Release Notes
+### 🚀 One-Command Release (Recommended)
+
+**The easiest way to create a pre-release:**
+
+```bash
+# For Beta releases (most common)
+npm run create:beta
+
+# For Alpha releases (early testing)
+npm run create:alpha
+```
+
+This single command will:
+1. ✅ Check git status is clean
+2. ✅ Generate `RELEASE_NOTES.md` from commits
+3. ✅ Prompt you to edit release notes
+4. ✅ Format release notes for GitHub
+5. ✅ Run smoke tests
+6. ✅ Bump version automatically
+7. ✅ Push to GitHub and trigger CI/CD
+
+**That's it!** GitHub Actions handles the rest automatically.
+
+---
+
+### 📝 Manual Step-by-Step Process (Advanced)
+
+If you prefer more control over each step:
+
+#### Step 1: Generate Release Notes
 
 Generate release notes from your commits:
 
@@ -101,9 +157,9 @@ This creates `RELEASE_NOTES.md` with:
 2. Translate to French
 3. Fill in "For Beta Testers" sections
 4. Remove any commits that shouldn't be public
-5. **Mark main features with bold** (`**text**`) - these will be highlighted in notifications
+5. **Mark main features with bold** (`**text**`) - these will be highlighted in Discord notifications
 
-### Step 1.5: Format Release Notes for GitHub
+#### Step 2: Format Release Notes for GitHub
 
 After editing `RELEASE_NOTES.md`, format it for GitHub with collapsible sections:
 
@@ -119,21 +175,22 @@ This creates `RELEASE_NOTES_FORMATTED.md` with:
 
 **This formatted version will be used automatically for GitHub releases.**
 
-### Step 2: Verify Changes
+#### Step 3: Run Smoke Tests (Optional)
 
-Review your changes before releasing:
+Validate the build before releasing:
 
 ```bash
-npm run release:check
+npm run test:smoke
 ```
 
 This validates:
-- Build succeeds
-- Tests pass (if any)
-- Version consistency
-- RELEASE_NOTES.md exists
+- Build output exists and is valid
+- Version consistency across files
+- Manifest.json and hacs.json syntax
+- Python file syntax
+- No sensitive data in build
 
-### Step 3: Bump Version
+#### Step 4: Bump Version
 
 Choose the appropriate bump command:
 
@@ -158,7 +215,7 @@ This will:
 3. Create a git tag
 4. Show you the next steps
 
-### Step 4: Push to GitHub
+#### Step 5: Push to GitHub
 
 Push your changes and tag:
 
@@ -166,7 +223,7 @@ Push your changes and tag:
 git push && git push --tags
 ```
 
-### Step 5: Automated CI/CD
+#### Step 6: Automated CI/CD
 
 GitHub Actions will automatically:
 1. ✅ Validate tag format
@@ -175,15 +232,16 @@ GitHub Actions will automatically:
 4. ✅ Run linting and type checking
 5. ✅ Build the project
 6. ✅ Verify build output
-7. ✅ Create ZIP archive
-8. ✅ **Format release notes** with collapsible sections
-9. ✅ Create GitHub pre-release with formatted notes
-10. ✅ Send Discord notification to beta testers (concise format)
-11. ✅ Clean up RELEASE_NOTES.md and RELEASE_NOTES_FORMATTED.md
+7. ✅ Run smoke tests
+8. ✅ Create ZIP archive
+9. ✅ **Format release notes** with collapsible sections
+10. ✅ Create GitHub pre-release with formatted notes
+11. ✅ Send Discord notification to beta testers (concise format)
+12. ✅ Clean up RELEASE_NOTES.md and RELEASE_NOTES_FORMATTED.md
 
 **View the workflow**: `.github/workflows/prerelease.yml`
 
-### Step 6: Monitor Release
+#### Step 7: Monitor Release
 
 1. Check GitHub Actions workflow status
 2. Verify the release was created on GitHub
@@ -194,7 +252,38 @@ GitHub Actions will automatically:
 
 ## Stable Release Process
 
-### Step 1: Ensure Beta Testing is Complete
+### 🚀 One-Command Release (Recommended)
+
+**The easiest way to create a stable release:**
+
+```bash
+npm run create:release
+```
+
+This single command will:
+1. ✅ Check git status is clean
+2. ✅ Verify you're up to date with remote
+3. ✅ Prompt to confirm beta testing is complete
+4. ✅ Generate/verify `RELEASE_NOTES.md`
+5. ✅ Prompt you to review release notes
+6. ✅ Format release notes for GitHub
+7. ✅ Run smoke tests
+8. ✅ Bump to stable version
+9. ✅ Push to GitHub
+10. ✅ Show instructions for creating GitHub release
+
+**Then manually:**
+- Create the GitHub release (instructions shown by script)
+- GitHub Actions will build and publish automatically
+- Announce on forums: `npm run forums:open`
+
+---
+
+### 📝 Manual Step-by-Step Process (Advanced)
+
+If you prefer more control over each step:
+
+#### Step 1: Ensure Beta Testing is Complete
 
 Before releasing stable:
 - ✅ Beta version has been tested
@@ -202,7 +291,7 @@ Before releasing stable:
 - ✅ All feedback addressed
 - ✅ Documentation updated
 
-### Step 2: Generate Final Release Notes
+#### Step 2: Generate Final Release Notes
 
 If you haven't already:
 
@@ -212,7 +301,21 @@ npm run release:notes
 
 Edit `RELEASE_NOTES.md` for the final stable version.
 
-### Step 3: Bump to Stable Version
+Remove or update the "For Beta Testers" sections.
+
+#### Step 3: Format Release Notes
+
+```bash
+npm run release:format
+```
+
+#### Step 4: Run Smoke Tests
+
+```bash
+npm run test:smoke
+```
+
+#### Step 5: Bump to Stable Version
 
 ```bash
 npm run bump:release
@@ -220,34 +323,36 @@ npm run bump:release
 
 This removes the pre-release suffix (e.g., `1.3.1-beta.1` → `1.3.1`).
 
-### Step 4: Push to GitHub
+#### Step 6: Push to GitHub
 
 ```bash
 git push && git push --tags
 ```
 
-### Step 5: Create GitHub Release
+#### Step 7: Create GitHub Release
 
-1. Go to: https://github.com/Thank-you-Linus/Linus-Dashboard/releases
+1. Go to: https://github.com/Thank-you-Linus/Linus-Dashboard/releases/new
 2. Click "Draft a new release"
-3. Select your tag (e.g., `1.3.1`)
-4. Copy content from `RELEASE_NOTES.md`
-5. Mark as "Latest release"
-6. Click "Publish release"
+3. Select your tag (e.g., `1.4.0`)
+4. Title: `v1.4.0`
+5. Copy content from `RELEASE_NOTES_FORMATTED.md`
+6. Mark as "Latest release" ✅
+7. Leave "Pre-release" unchecked ⬜
+8. Click "Publish release"
 
-### Step 6: Automated CI/CD
+#### Step 8: Automated CI/CD
 
 GitHub Actions will automatically:
 1. ✅ Validate it's not a pre-release
 2. ✅ Build the project
-3. ✅ Run quality checks
+3. ✅ Run smoke tests
 4. ✅ Create ZIP archive
 5. ✅ Upload to release
 6. ✅ Send Discord notification to public channel
 
 **View the workflow**: `.github/workflows/release.yml`
 
-### Step 7: Publish to Forums
+#### Step 9: Publish to Forums
 
 Open forum announcement pages:
 
@@ -264,14 +369,14 @@ Post your release announcement with:
 - Installation instructions
 - Link to GitHub release
 
-### Step 8: Update HACS (if needed)
+#### Step 10: Verify HACS Update
 
-For major releases, HACS should automatically detect the new version.
+HACS should automatically detect the new version.
 
 Verify in HACS:
 1. Open HACS
 2. Search "Linus Dashboard"
-3. Check version is updated
+3. Check version is updated (may take a few minutes)
 
 ---
 
@@ -386,7 +491,24 @@ git push && git push --tags
 
 ## Quick Reference | Référence Rapide
 
-### Full Release Cycle | Cycle complet de release
+### 🚀 One-Command Release (Easiest)
+
+```bash
+# Create a beta pre-release (most common)
+npm run create:beta
+
+# Create an alpha pre-release (early testing)
+npm run create:alpha
+
+# Create a stable release
+npm run create:release
+```
+
+**That's it!** The script handles everything and guides you through each step.
+
+---
+
+### 📝 Full Release Cycle (Manual Control)
 
 ```bash
 # 1. Generate release notes
@@ -398,7 +520,7 @@ vim RELEASE_NOTES.md
 # 3. Format release notes for GitHub (optional, done automatically by CI)
 npm run release:format
 
-# 4. Verify everything is ready
+# 4. Verify everything is ready (optional)
 npm run release:check
 
 # 5. Bump version (choose one)
@@ -411,30 +533,38 @@ git push && git push --tags
 
 # 7. Wait for GitHub Actions to complete
 
-# 8. For stable releases only: Publish to forums
+# 8. For stable releases: Create GitHub release manually
+#    Go to: https://github.com/Thank-you-Linus/Linus-Dashboard/releases/new
+
+# 9. For stable releases only: Publish to forums
 npm run forums:open
 ```
 
 ### Available NPM Scripts | Scripts NPM disponibles
 
 ```bash
-# Release Preparation
+# 🚀 One-Command Release (Easiest)
+npm run create:alpha       # Create complete alpha pre-release (one command)
+npm run create:beta        # Create complete beta pre-release (one command)
+npm run create:release     # Create complete stable release (one command)
+
+# 📝 Release Preparation (Manual Control)
 npm run release:notes      # Generate RELEASE_NOTES.md
 npm run release:format     # Format release notes for GitHub (with collapsible sections)
 npm run release:validate   # Validate RELEASE_NOTES.md
 npm run release:check      # Validate release is ready (17 checks)
 npm run release:changelog  # Generate CHANGELOG.md for HACS
 
-# Version Management
+# 📦 Version Management (Manual Control)
 npm run bump:alpha         # Bump to alpha version
 npm run bump:beta          # Bump to beta version
 npm run bump:release       # Bump to stable version
 npm run release:rollback   # Rollback a failed release
 
-# Testing
+# 🧪 Testing
 npm run test:smoke         # Run smoke tests on build
 
-# Publishing
+# 📢 Publishing
 npm run forums:open        # Open forum announcement pages
 ```
 
@@ -520,23 +650,26 @@ La commande `release:check` effectue maintenant 17 vérifications :
 
 ### ✅ DO | À FAIRE
 
-- Always generate release notes
-- **Mark main features with bold (`**text**`)** for better visibility
+- **Use the one-command scripts** (`npm run create:beta`) for easier releases
+- Always generate and review release notes
+- **Mark main features with bold (`**text**`)** in RELEASE_NOTES.md for Discord notifications
 - Format release notes for GitHub to keep them concise
 - Test beta versions before stable release
 - Use semantic versioning correctly
-- Write clear commit messages
+- Write clear commit messages (they become release notes!)
 - Update documentation
 - Respond to beta tester feedback
+- Run smoke tests before releasing
 
 ### ❌ DON'T | À NE PAS FAIRE
 
 - Skip beta testing for major changes
 - Push directly to stable without testing
-- Forget to update version in all files
+- Forget to update version in all files (scripts handle this)
 - Ignore build/lint errors
 - Release without release notes
 - Delete tags without good reason
+- Skip the release notes editing step
 
 ---
 

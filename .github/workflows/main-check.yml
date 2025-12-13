@@ -29,7 +29,7 @@ jobs:
       - name: "Check Ruff formatting"
         run: python3 -m ruff format . --check
 
-  # Job 2: TypeScript & ESLint (non-blocking)
+  # Job 2: TypeScript & ESLint (blocking)
   typescript-check:
     name: "TypeScript & ESLint"
     runs-on: "ubuntu-latest"
@@ -46,25 +46,11 @@ jobs:
       - name: "Install Node dependencies"
         run: npm ci
 
-      - name: "Run ESLint (non-blocking)"
-        continue-on-error: true
-        run: |
-          echo "::group::ESLint Results"
-          npm run lint:check || {
-            echo "::warning::ESLint found issues. Run 'npm run lint' to auto-fix."
-            exit 0
-          }
-          echo "::endgroup::"
+      - name: "Run ESLint"
+        run: npm run lint:check
 
-      - name: "Run TypeScript Check (non-blocking)"
-        continue-on-error: true
-        run: |
-          echo "::group::TypeScript Check Results"
-          npm run type-check || {
-            echo "::warning::TypeScript found type errors. Please review and fix."
-            exit 0
-          }
-          echo "::endgroup::"
+      - name: "Run TypeScript Check"
+        run: npm run type-check
 
   # Job 3: Build and Smoke Tests (blocking)
   build-and-test:

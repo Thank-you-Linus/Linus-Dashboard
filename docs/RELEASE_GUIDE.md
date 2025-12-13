@@ -13,8 +13,8 @@
 Create releases easily with a single command:
 
 ```bash
-# For pre-releases (beta testing)
-npm run create:beta
+# For pre-releases (interactive: choose alpha or beta)
+npm run create:prerelease
 
 # For stable releases
 npm run create:release
@@ -114,21 +114,19 @@ Where | Où:
 **The easiest way to create a pre-release:**
 
 ```bash
-# For Beta releases (most common)
-npm run create:beta
-
-# For Alpha releases (early testing)
-npm run create:alpha
+# For pre-releases (interactive prompt: alpha or beta)
+npm run create:prerelease
 ```
 
 This single command will:
-1. ✅ Check git status is clean
-2. ✅ Generate `RELEASE_NOTES.md` from commits
-3. ✅ Prompt you to edit release notes
-4. ✅ Format release notes for GitHub
-5. ✅ Run smoke tests
-6. ✅ Bump version automatically
-7. ✅ Push to GitHub and trigger CI/CD
+1. ✅ Ask you to choose: Alpha or Beta
+2. ✅ Check git status is clean
+3. ✅ Generate `RELEASE_NOTES.md` from commits
+4. ✅ Prompt you to edit release notes
+5. ✅ Format release notes for GitHub
+6. ✅ Run smoke tests
+7. ✅ Bump version automatically
+8. ✅ Push to GitHub and trigger CI/CD
 
 **That's it!** GitHub Actions handles the rest automatically.
 
@@ -494,11 +492,8 @@ git push && git push --tags
 ### 🚀 One-Command Release (Easiest)
 
 ```bash
-# Create a beta pre-release (most common)
-npm run create:beta
-
-# Create an alpha pre-release (early testing)
-npm run create:alpha
+# Create a pre-release (interactive: alpha or beta)
+npm run create:prerelease
 
 # Create a stable release
 npm run create:release
@@ -544,8 +539,7 @@ npm run forums:open
 
 ```bash
 # 🚀 One-Command Release (Easiest)
-npm run create:alpha       # Create complete alpha pre-release (one command)
-npm run create:beta        # Create complete beta pre-release (one command)
+npm run create:prerelease  # Create pre-release (interactive: alpha or beta)
 npm run create:release     # Create complete stable release (one command)
 
 # 📝 Release Preparation (Manual Control)

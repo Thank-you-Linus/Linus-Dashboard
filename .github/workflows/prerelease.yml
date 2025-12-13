@@ -48,12 +48,11 @@ jobs:
           bash scripts/generate-changelog.sh
           echo "✅ CHANGELOG.md generated"
 
-      # 5. Run linting and type checking (optional, can be disabled if needed)
+      # 5. Run linting and type checking (blocking)
       - name: "Lint and type check"
-        continue-on-error: true
         run: |
-          npm run lint:check || echo "⚠️ Linting skipped (needs ESLint v9 migration)"
-          npm run type-check || echo "⚠️ Type checking skipped (has errors)"
+          npm run lint:check
+          npm run type-check
 
       # 6. Compiler le code
       - name: "Build the project"

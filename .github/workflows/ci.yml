@@ -30,7 +30,7 @@ jobs:
       - name: "Check Ruff formatting"
         run: python3 -m ruff format . --check
 
-  # Job 2: TypeScript & ESLint (non-blocking)
+  # Job 2: TypeScript & ESLint (BLOCKING)
   typescript-check:
     name: "TypeScript & ESLint"
     runs-on: "ubuntu-latest"
@@ -47,53 +47,11 @@ jobs:
       - name: "Install Node dependencies"
         run: npm ci
 
-      - name: "Run ESLint (non-blocking)"
-        id: eslint
-        continue-on-error: true
-        run: |
-          echo "::group::ESLint Results"
-          npm run lint:check > eslint-report.txt 2>&1 || true
-          EXIT_CODE=$?
-          if [ $EXIT_CODE -eq 0 ]; then
-            echo "status=success" >> $GITHUB_OUTPUT
-            echo "✅ ESLint passed"
-          else
-            echo "status=warning" >> $GITHUB_OUTPUT
-            echo "⚠️ ESLint found issues"
-            cat eslint-report.txt || echo "Could not read report"
-          fi
-          echo "::endgroup::"
+      - name: "Run ESLint"
+        run: npm run lint:check
 
-      - name: "Run TypeScript Check (non-blocking)"
-        id: typecheck
-        continue-on-error: true
-        run: |
-          echo "::group::TypeScript Check Results"
-          npm run type-check > typecheck-report.txt 2>&1 || true
-          ERROR_COUNT=$(grep -c "error TS" typecheck-report.txt || echo 0)
-          echo "count=$ERROR_COUNT" >> $GITHUB_OUTPUT
-          if [ $ERROR_COUNT -eq 0 ]; then
-            echo "status=success" >> $GITHUB_OUTPUT
-            echo "✅ No TypeScript errors"
-          else
-            echo "status=warning" >> $GITHUB_OUTPUT
-            echo "⚠️ Found $ERROR_COUNT TypeScript errors"
-            head -30 typecheck-report.txt || echo "Could not read report"
-            if [ $ERROR_COUNT -gt 30 ]; then
-              echo "... and $(($ERROR_COUNT - 30)) more errors"
-            fi
-          fi
-          echo "::endgroup::"
-
-      - name: "Upload lint reports"
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: lint-reports
-          path: |
-            eslint-report.txt
-            typecheck-report.txt
-          retention-days: 7
+      - name: "Run TypeScript Check"
+        run: npm run type-check
 
   # Job 3: Build and Smoke Tests (blocking)
   build-and-test:

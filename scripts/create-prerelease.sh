@@ -2,8 +2,7 @@
 #
 # One-command script to create a pre-release (alpha or beta)
 # Usage: 
-#   npm run create:beta   # Create beta pre-release
-#   npm run create:alpha  # Create alpha pre-release
+#   npm run create:prerelease
 #
 
 set -e
@@ -20,15 +19,29 @@ BLUE='\033[0;34m'
 BOLD='\033[1m'
 NC='\033[0m' # No Color
 
-# Get the pre-release type from argument
+# Get the pre-release type from argument or ask interactively
 PRERELEASE_TYPE="${1:-}"
 
 if [ -z "$PRERELEASE_TYPE" ]; then
-    echo -e "${RED}❌ Error: Pre-release type is required${NC}"
-    echo -e "${YELLOW}Usage:${NC}"
-    echo -e "  npm run create:beta   # Create beta pre-release"
-    echo -e "  npm run create:alpha  # Create alpha pre-release"
-    exit 1
+    echo -e "${YELLOW}Select pre-release type:${NC}"
+    echo -e "  ${BOLD}1)${NC} Beta  (recommended for public testing)"
+    echo -e "  ${BOLD}2)${NC} Alpha (early/internal testing)"
+    echo ""
+    read -p "Choice (1 or 2): " -n 1 -r CHOICE
+    echo ""
+    
+    case $CHOICE in
+        1)
+            PRERELEASE_TYPE="beta"
+            ;;
+        2)
+            PRERELEASE_TYPE="alpha"
+            ;;
+        *)
+            echo -e "${RED}❌ Invalid choice${NC}"
+            exit 1
+            ;;
+    esac
 fi
 
 # Validate pre-release type

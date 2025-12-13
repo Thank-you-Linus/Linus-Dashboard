@@ -1,0 +1,105 @@
+name: "Main Branch Check"
+
+on:
+  push:
+    branches:
+      - "main"
+
+jobs:
+  # Job 1: Python Linting
+  python-lint:
+    name: "Python Lint (Ruff)"
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: "Checkout repository"
+        uses: "actions/checkout@v5"
+
+      - name: "Set up Python"
+        uses: "actions/setup-python@v6.1.0"
+        with:
+          python-version: "3.13"
+          cache: "pip"
+
+      - name: "Install Python dependencies"
+        run: python3 -m pip install -r requirements.txt
+
+      - name: "Run Ruff linting"
+        run: python3 -m ruff check .
+
+      - name: "Check Ruff formatting"
+        run: python3 -m ruff format . --check
+
+  # Job 2: TypeScript & ESLint (non-blocking)
+  typescript-check:
+    name: "TypeScript & ESLint"
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: "Checkout repository"
+        uses: "actions/checkout@v5"
+
+      - name: "Set up Node.js"
+        uses: "actions/setup-node@v5"
+        with:
+          node-version: 24
+          cache: "npm"
+
+      - name: "Install Node dependencies"
+        run: npm ci
+
+      - name: "Run ESLint (non-blocking)"
+        continue-on-error: true
+        run: |
+          echo "::group::ESLint Results"
+          npm run lint:check || {
+            echo "::warning::ESLint found issues. Run 'npm run lint' to auto-fix."
+            exit 0
+          }
+          echo "::endgroup::"
+
+      - name: "Run TypeScript Check (non-blocking)"
+        continue-on-error: true
+        run: |
+          echo "::group::TypeScript Check Results"
+          npm run type-check || {
+            echo "::warning::TypeScript found type errors. Please review and fix."
+            exit 0
+          }
+          echo "::endgroup::"
+
+  # Job 3: Build and Smoke Tests (blocking)
+  build-and-test:
+    name: "Build & Smoke Tests"
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: "Checkout repository"
+        uses: "actions/checkout@v5"
+
+      - name: "Set up Node.js"
+        uses: "actions/setup-node@v5"
+        with:
+          node-version: 24
+          cache: "npm"
+
+      - name: "Install Node dependencies"
+        run: npm ci
+
+      - name: "Build project"
+        run: npm run build
+
+      - name: "Verify build output"
+        run: |
+          if [ ! -f "custom_components/linus_dashboard/www/linus-strategy.js" ]; then
+            echo "❌ Build output not found"
+            exit 1
+          fi
+          FILE_SIZE=$(stat -c%s "custom_components/linus_dashboard/www/linus-strategy.js" 2>/dev/null || stat -f%z "custom_components/linus_dashboard/www/linus-strategy.js" 2>/dev/null)
+          echo "✅ Build output verified ($FILE_SIZE bytes)"
+
+      - name: "Run smoke tests"
+        run: npm run test:smoke
+
+      - name: "Notify on failure"
+        if: failure()
+        run: |
+          echo "::error::Build or smoke tests failed on main branch!"
+          echo "::error::Please investigate and fix immediately."

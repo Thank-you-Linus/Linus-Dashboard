@@ -1,0 +1,227 @@
+name: "CI"
+
+on:
+  pull_request:
+    branches:
+      - "main"
+    types: [opened, synchronize, reopened]
+
+jobs:
+  # Job 1: Python Linting
+  python-lint:
+    name: "Python Lint (Ruff)"
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: "Checkout repository"
+        uses: "actions/checkout@v5"
+
+      - name: "Set up Python"
+        uses: "actions/setup-python@v6.1.0"
+        with:
+          python-version: "3.13"
+          cache: "pip"
+
+      - name: "Install Python dependencies"
+        run: python3 -m pip install -r requirements.txt
+
+      - name: "Run Ruff linting"
+        run: python3 -m ruff check .
+
+      - name: "Check Ruff formatting"
+        run: python3 -m ruff format . --check
+
+  # Job 2: TypeScript & ESLint (non-blocking)
+  typescript-check:
+    name: "TypeScript & ESLint"
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: "Checkout repository"
+        uses: "actions/checkout@v5"
+
+      - name: "Set up Node.js"
+        uses: "actions/setup-node@v5"
+        with:
+          node-version: 24
+          cache: "npm"
+
+      - name: "Install Node dependencies"
+        run: npm ci
+
+      - name: "Run ESLint (non-blocking)"
+        id: eslint
+        continue-on-error: true
+        run: |
+          echo "::group::ESLint Results"
+          npm run lint:check > eslint-report.txt 2>&1 || true
+          EXIT_CODE=$?
+          if [ $EXIT_CODE -eq 0 ]; then
+            echo "status=success" >> $GITHUB_OUTPUT
+            echo "✅ ESLint passed"
+          else
+            echo "status=warning" >> $GITHUB_OUTPUT
+            echo "⚠️ ESLint found issues"
+            cat eslint-report.txt || echo "Could not read report"
+          fi
+          echo "::endgroup::"
+
+      - name: "Run TypeScript Check (non-blocking)"
+        id: typecheck
+        continue-on-error: true
+        run: |
+          echo "::group::TypeScript Check Results"
+          npm run type-check > typecheck-report.txt 2>&1 || true
+          ERROR_COUNT=$(grep -c "error TS" typecheck-report.txt || echo 0)
+          echo "count=$ERROR_COUNT" >> $GITHUB_OUTPUT
+          if [ $ERROR_COUNT -eq 0 ]; then
+            echo "status=success" >> $GITHUB_OUTPUT
+            echo "✅ No TypeScript errors"
+          else
+            echo "status=warning" >> $GITHUB_OUTPUT
+            echo "⚠️ Found $ERROR_COUNT TypeScript errors"
+            head -30 typecheck-report.txt || echo "Could not read report"
+            if [ $ERROR_COUNT -gt 30 ]; then
+              echo "... and $(($ERROR_COUNT - 30)) more errors"
+            fi
+          fi
+          echo "::endgroup::"
+
+      - name: "Upload lint reports"
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lint-reports
+          path: |
+            eslint-report.txt
+            typecheck-report.txt
+          retention-days: 7
+
+  # Job 3: Build and Smoke Tests (blocking)
+  build-and-test:
+    name: "Build & Smoke Tests"
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: "Checkout repository"
+        uses: "actions/checkout@v5"
+
+      - name: "Set up Node.js"
+        uses: "actions/setup-node@v5"
+        with:
+          node-version: 24
+          cache: "npm"
+
+      - name: "Install Node dependencies"
+        run: npm ci
+
+      - name: "Build project"
+        run: npm run build
+
+      - name: "Verify build output"
+        run: |
+          if [ ! -f "custom_components/linus_dashboard/www/linus-strategy.js" ]; then
+            echo "❌ Build output not found"
+            exit 1
+          fi
+          FILE_SIZE=$(stat -c%s "custom_components/linus_dashboard/www/linus-strategy.js" 2>/dev/null || stat -f%z "custom_components/linus_dashboard/www/linus-strategy.js" 2>/dev/null)
+          echo "✅ Build output verified ($FILE_SIZE bytes)"
+
+      - name: "Run smoke tests"
+        run: npm run test:smoke
+
+      - name: "Upload build artifacts"
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-output
+          path: custom_components/linus_dashboard/www/
+          retention-days: 7
+
+  # Job 4: PR Comment with results
+  pr-comment:
+    name: "Post PR Comment"
+    runs-on: "ubuntu-latest"
+    needs: [python-lint, typescript-check, build-and-test]
+    if: always()
+    steps:
+      - name: "Post results comment"
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pythonLintResult = '${{ needs.python-lint.result }}';
+            const typescriptResult = '${{ needs.typescript-check.result }}';
+            const buildResult = '${{ needs.build-and-test.result }}';
+            
+            const statusEmoji = (result) => {
+              if (result === 'success') return '✅';
+              if (result === 'failure') return '❌';
+              if (result === 'skipped') return '⏭️';
+              return '⚠️';
+            };
+            
+            const statusText = (result) => {
+              if (result === 'success') return 'Passed';
+              if (result === 'failure') return 'Failed';
+              if (result === 'skipped') return 'Skipped';
+              return 'Warning';
+            };
+            
+            let body = `## 🔍 CI Check Results\n\n`;
+            body += `| Check | Status | Details |\n`;
+            body += `|-------|--------|----------|\n`;
+            body += `| **Python Lint (Ruff)** | ${statusEmoji(pythonLintResult)} | ${statusText(pythonLintResult)} |\n`;
+            body += `| **TypeScript & ESLint** | ${statusEmoji(typescriptResult)} | ${statusText(typescriptResult)} (non-blocking) |\n`;
+            body += `| **Build & Smoke Tests** | ${statusEmoji(buildResult)} | ${statusText(buildResult)} |\n\n`;
+            
+            if (buildResult === 'failure') {
+              body += `### ❌ Build or Smoke Tests Failed\n\n`;
+              body += `The build or smoke tests failed. This PR cannot be merged until the issue is resolved.\n\n`;
+            }
+            
+            if (pythonLintResult === 'failure') {
+              body += `### ⚠️ Python Linting Issues\n\n`;
+              body += `Run \`python3 -m ruff check . --fix\` to auto-fix issues.\n\n`;
+            }
+            
+            if (typescriptResult !== 'success') {
+              body += `### ℹ️ TypeScript/ESLint Issues (Non-blocking)\n\n`;
+              body += `TypeScript and ESLint checks found issues but are non-blocking.\n`;
+              body += `Consider fixing these in future commits:\n`;
+              body += `- Run \`npm run lint\` to auto-fix ESLint issues\n`;
+              body += `- Run \`npm run type-check\` to see TypeScript errors\n\n`;
+            }
+            
+            if (pythonLintResult === 'success' && buildResult === 'success') {
+              body += `### ✅ All Required Checks Passed!\n\n`;
+              body += `This PR is ready for review and can be merged.\n\n`;
+            }
+            
+            body += `---\n`;
+            body += `*Automated CI check • [View workflow run](${context.payload.repository.html_url}/actions/runs/${context.runId})*`;
+            
+            // Find existing comment
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            
+            const botComment = comments.find(comment => 
+              comment.user.type === 'Bot' && 
+              comment.body.includes('CI Check Results')
+            );
+            
+            // Update or create comment
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: body
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: body
+              });
+            }

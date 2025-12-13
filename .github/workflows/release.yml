@@ -99,15 +99,16 @@ jobs:
             echo "⚠️ Discord webhook not configured, skipping notification"
           fi
 
-      # 12. Prepare forum notifications (manual posting required)
-      - name: "Prepare Forum Notifications"
+      # 12. Reminder to post on forums
+      - name: "Forum Posting Reminder"
         if: success()
-        continue-on-error: true
         run: |
-          TAG_NAME="${{ github.event.release.tag_name }}"
-          RELEASE_URL="${{ github.event.release.html_url }}"
-          bash scripts/notify-forums.sh release "$TAG_NAME" "$RELEASE_URL"
-          echo "📝 Forum notification templates generated (manual posting required)"
+          echo "📢 Release published successfully!"
+          echo "📝 Don't forget to announce on forums:"
+          echo "   - Run: npm run forums:open"
+          echo "   - Or visit manually:"
+          echo "     • Home Assistant: https://community.home-assistant.io/"
+          echo "     • HACF: https://forum.hacf.fr/"
 
       # 13. Notification d'échec (si la release a échoué)
       - name: "Notify on Failure"

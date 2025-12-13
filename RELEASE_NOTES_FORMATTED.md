@@ -8,11 +8,20 @@ _No new features in this release_
 
 ## 🐛 Bug Fixes
 
-_No bug fixes in this release_
+- **Fixed smoke tests script** - Resolved issue with arithmetic operations in bash causing CI/CD failures with `set -e`
 
 ## ⚡ Improvements
 
-_No improvements in this release_
+- **Code refactoring** - Improved code structure for better readability and maintainability
+- **Documentation updates** - Enhanced release notes formatting
+
+<details>
+<summary>🇫🇷 <b>Version française</b></summary>
+
+- **Refactorisation du code** - Amélioration de la structure du code pour une meilleure lisibilité et maintenabilité
+- **Mises à jour de la documentation** - Amélioration du formatage des notes de version
+
+</details>
 
 ---
 

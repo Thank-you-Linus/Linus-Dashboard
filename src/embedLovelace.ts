@@ -154,7 +154,7 @@ export async function loadEmbeddedDashboard(
         // Extract cards from the view
         const cards: LovelaceCardConfig[] = targetView.cards ? [...targetView.cards] : [];
 
-        console.info(`[Linus Dashboard] Successfully loaded ${cards.length} cards from "${dashboardId}"`);
+        // Successfully loaded cards
 
         return {
             cards,
@@ -229,7 +229,7 @@ export async function processEmbeddedViews(
                 Helper.logError(`Failed to embed dashboard "${embedConfig.dashboard}"`, new Error(result.error));
             } else {
                 processedCards.push(...result.cards);
-                console.info(`[Linus Dashboard] Embedded ${result.cards.length} cards from "${embedConfig.dashboard}"`);
+                // Embedded cards successfully
             }
         } else {
             processedCards.push(card);

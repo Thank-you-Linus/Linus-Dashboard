@@ -56,7 +56,7 @@ class LinusStrategy extends HTMLTemplateElement {
           const currentUser = info.hass?.user;
           if (!currentUser || !currentUser.is_admin) {
             // Skip this view if user is not admin
-            console.info(`[Linus Dashboard] Skipping view "${extraView.title}" (requires admin access)`);
+            // Skip view requiring admin access
             continue;
           }
         }
@@ -159,7 +159,7 @@ class LinusStrategy extends HTMLTemplateElement {
    * @param {LovelaceViewConfig[]} views Array of Lovelace view configurations.
    */
   private static createAreaSubviews(views: LovelaceViewConfig[]) {
-    for (let area of Helper.orderedAreas) {
+    for (const area of Helper.orderedAreas) {
       if (!area.hidden) {
         views.push({
           title: getAreaName(area),
@@ -180,7 +180,7 @@ class LinusStrategy extends HTMLTemplateElement {
    * @param {LovelaceViewConfig[]} views Array of Lovelace view configurations.
    */
   private static createFloorSubviews(views: LovelaceViewConfig[]) {
-    for (let floor of Helper.orderedFloors) {
+    for (const floor of Helper.orderedFloors) {
       if (!floor.hidden) {
         views.push({
           title: getFloorName(floor),
@@ -268,7 +268,4 @@ class LinusStrategy extends HTMLTemplateElement {
 customElements.define("ll-strategy-linus-strategy", LinusStrategy);
 
 export const version = "1.4.0-beta.2";
-console.info(
-  "%c Linus Strategy %c ".concat(version, " "),
-  "color: #F5F5DC; background: #004225; font-weight: 700;", "color: #004225; background: #F5F5DC; font-weight: 700;"
-);
+// Linus Strategy loaded

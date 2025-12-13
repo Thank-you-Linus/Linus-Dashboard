@@ -11,14 +11,14 @@ import { Info } from "../../info";
  * @property {ActionConfig} [hold_action] Home assistant action to perform on hold.
  * @property {ActionConfig} [double_tap_action] Home assistant action to perform on double_tap.
  */
-export type ActionChipConfig = {
+export interface ActionChipConfig {
   type: "action";
   icon?: string;
   icon_color?: string;
   tap_action?: ActionConfig;
   hold_action?: ActionConfig;
   double_tap_action?: ActionConfig;
-};
+}
 
 /**
  * Alarm Control Panel Chip Config
@@ -33,7 +33,7 @@ export type ActionChipConfig = {
  * @property {ActionConfig} [hold_action] Home assistant action to perform on hold.
  * @property {ActionConfig} [double_tap_action] Home assistant action to perform on double_tap.
  */
-export type AlarmControlPanelChipConfig = {
+export interface AlarmControlPanelChipConfig {
   type: "alarm-control-panel";
   entity?: string;
   name?: string;
@@ -43,7 +43,7 @@ export type AlarmControlPanelChipConfig = {
   tap_action?: ActionConfig;
   hold_action?: ActionConfig;
   double_tap_action?: ActionConfig;
-};
+}
 
 /**
  * Back Chip Config
@@ -51,10 +51,10 @@ export type AlarmControlPanelChipConfig = {
  * @property {"back"} type Type of the chip.
  * @property {string} [icon] Custom icon.
  */
-export type BackChipConfig = {
+export interface BackChipConfig {
   type: "back";
   icon?: string;
-};
+}
 
 /**
  * Entity Chip Config
@@ -70,7 +70,7 @@ export type BackChipConfig = {
  * @property {ActionConfig} [hold_action] Home assistant action to perform on hold.
  * @property {ActionConfig} [double_tap_action] Home assistant action to perform on double_tap.
  */
-export type EntityChipConfig = {
+export interface EntityChipConfig {
   type: "entity";
   entity?: string;
   name?: string;
@@ -82,7 +82,7 @@ export type EntityChipConfig = {
   hold_action?: ActionConfig;
   double_tap_action?: ActionConfig;
   card_mod?: any;
-};
+}
 
 /**
  * Menu Chip Config
@@ -90,18 +90,18 @@ export type EntityChipConfig = {
  * @property {"menu"} type Type of the chip.
  * @property {string} [icon] Custom icon.
  */
-export type MenuChipConfig = {
+export interface MenuChipConfig {
   type: "menu";
   icon?: string;
-};
+}
 
-export type AlarmChipConfig = {
+export interface AlarmChipConfig {
   type: "alarm-control-panel";
   entity?: string;
   tap_action?: ActionConfig;
   hold_action?: ActionConfig;
   double_tap_action?: ActionConfig;
-};
+}
 
 /**
  * Weather Chip Config
@@ -114,7 +114,7 @@ export type AlarmChipConfig = {
  * @property {boolean} [show_temperature] Show the temperature.
  * @property {boolean} [show_conditions] Show the conditions.
  */
-export type WeatherChipConfig = {
+export interface WeatherChipConfig {
   type: "weather";
   entity?: string;
   tap_action?: ActionConfig;
@@ -122,7 +122,7 @@ export type WeatherChipConfig = {
   double_tap_action?: ActionConfig;
   show_temperature?: boolean;
   show_conditions?: boolean;
-};
+}
 
 /**
  * Template Chip Config
@@ -138,7 +138,7 @@ export type WeatherChipConfig = {
  * @property {string} [picture]
  * @property {string | string[]} [entity_id]
  */
-export type TemplateChipConfig = {
+export interface TemplateChipConfig {
   type: "template";
   entity?: string;
   hold_action?: ActionConfig;
@@ -149,7 +149,7 @@ export type TemplateChipConfig = {
   icon_color?: string;
   picture?: string;
   entity_id?: string | string[];
-};
+}
 
 /**
  * Conditional Chip Config
@@ -200,7 +200,7 @@ export interface ConditionalChipConfig {
  * @property {ActionConfig} [hold_action] Home assistant action to perform on hold.
  * @property {ActionConfig} [double_tap_action] Home assistant action to perform on double_tap.
  */
-export type LightChipConfig = {
+export interface LightChipConfig {
   type: "light";
   entity?: string;
   name?: string;
@@ -210,16 +210,16 @@ export type LightChipConfig = {
   hold_action?: ActionConfig;
   tap_action?: ActionConfig;
   double_tap_action?: ActionConfig;
-};
+}
 
 /**
  * Spacer Chip Config
  *
  * @property {"spacer"} type Type of the chip.
  */
-export type SpacerChipConfig = {
+export interface SpacerChipConfig {
   type: "spacer";
-};
+}
 
 export type LovelaceChipConfig =
   | ActionChipConfig

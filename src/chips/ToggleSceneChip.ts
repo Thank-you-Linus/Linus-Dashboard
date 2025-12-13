@@ -1,7 +1,10 @@
 import { generic } from "../types/strategy/generic";
+
 import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
+
 import { TemplateChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
 import { MAGIC_AREAS_DOMAIN } from "../variables";
+
 import { AbstractChip } from "./AbstractChip";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.

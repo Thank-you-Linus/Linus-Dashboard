@@ -1,7 +1,8 @@
 import { Helper } from "../Helper";
 import { PopupActionConfig } from "../types/homeassistant/data/lovelace";
-import { AbstractPopup } from "./AbstractPopup";
 import { EntityRegistryEntry } from "../types/homeassistant/data/entity_registry";
+
+import { AbstractPopup } from "./AbstractPopup";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**

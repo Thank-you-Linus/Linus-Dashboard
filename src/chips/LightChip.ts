@@ -1,8 +1,9 @@
 import { Helper } from "../Helper";
 import { chips } from "../types/strategy/chips";
-import { AbstractChip } from "./AbstractChip";
 import { TemplateChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
 import { getMAEntity, navigateTo } from "../utils";
+
+import { AbstractChip } from "./AbstractChip";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**
@@ -42,7 +43,7 @@ class LightChip extends AbstractChip {
     });
 
     if (!entities.length) {
-      console.debug("No entities found for light chip");
+      if (Helper.debug) console.warn("No entities found for light chip");
       return;
     }
 

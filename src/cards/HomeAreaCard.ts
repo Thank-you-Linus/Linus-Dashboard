@@ -6,8 +6,6 @@ import { AggregateChip } from "../chips/AggregateChip";
 import { AreaStateChip } from "../chips/AreaStateChip";
 import { ActivityDetectionChip } from "../chips/ActivityDetectionChip";
 import { generic } from "../types/strategy/generic";
-import StrategyArea = generic.StrategyArea;
-import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
 import { getAreaName, getMAEntity } from "../utils";
 import { EntityRegistryEntry } from "../types/homeassistant/data/entity_registry";
 import { ClimateChip } from "../chips/ClimateChip";
@@ -17,6 +15,9 @@ import { EntityCardConfig } from "../types/lovelace-mushroom/cards/entity-card-c
 import { FanChip } from "../chips/FanChip";
 import { TemplateChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
 import { ConditionalLightChip } from "../chips/ConditionalLightChip";
+
+import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
+import StrategyArea = generic.StrategyArea;
 
 class HomeAreaCard {
   /**

@@ -1,6 +1,7 @@
-import { AbstractChip } from "./AbstractChip";
 import { TemplateChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
 import { AREA_CONTROL_ICONS } from "../variables";
+
+import { AbstractChip } from "./AbstractChip";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**

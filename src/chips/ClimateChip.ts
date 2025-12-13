@@ -1,9 +1,10 @@
 import { Helper } from "../Helper";
-import { AbstractChip } from "./AbstractChip";
 import { chips } from "../types/strategy/chips";
 import { TemplateChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
 import { getMAEntity, navigateTo } from "../utils";
 import { EntityRegistryEntry } from "../types/homeassistant/data/entity_registry";
+
+import { AbstractChip } from "./AbstractChip";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**
@@ -32,7 +33,7 @@ class ClimateChip extends AbstractChip {
    *
    * @param {chips.ChipOptions} options The chip options.
    */
-  constructor(options: chips.ChipOptions, entity?: EntityRegistryEntry) {
+  constructor(options: chips.ChipOptions, _entity?: EntityRegistryEntry) {
     super();
 
     const entities = Helper.getEntityIds({
@@ -41,7 +42,7 @@ class ClimateChip extends AbstractChip {
     });
 
     if (!entities.length) {
-      console.debug("No entities found for climate chip");
+      if (Helper.debug) console.warn("No entities found for climate chip");
       return;
     }
 

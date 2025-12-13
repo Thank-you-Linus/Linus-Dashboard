@@ -1,7 +1,9 @@
 
 import { navigateTo } from "../utils";
-import { LovelaceBadgeConfig } from "@/types/homeassistant/data/lovelace";
+import { LovelaceBadgeConfig } from "../types/homeassistant/data/lovelace";
+
 import { AbstractBadge } from "./AbstractBadge";
+
 
 // noinspection JSUnusedGlobalSymbols False positive.
 /**

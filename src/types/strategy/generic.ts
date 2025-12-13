@@ -1,3 +1,5 @@
+import { HassServiceTarget } from "home-assistant-js-websocket";
+
 import {
   CallServiceActionConfig,
   LovelaceCardConfig,
@@ -6,12 +8,12 @@ import {
 } from "../homeassistant/data/lovelace";
 import { HomeAssistant } from "../homeassistant/types";
 import { AreaRegistryEntry } from "../homeassistant/data/area_registry";
-import { cards } from "./cards";
 import { EntityRegistryEntry } from "../homeassistant/data/entity_registry";
 import { LovelaceChipConfig } from "../lovelace-mushroom/utils/lovelace/chip/types";
-import { HassServiceTarget } from "home-assistant-js-websocket";
 import { FloorRegistryEntry } from "../homeassistant/data/floor_registry";
 import { DeviceRegistryEntry } from "../homeassistant/data/device_registry";
+
+import { cards } from "./cards";
 
 export namespace generic {
   /**
@@ -101,19 +103,19 @@ export namespace generic {
    * @property {Object.<ViewConfig>} views List of views.
    */
   export interface StrategyConfig {
-    areas: { [k: string]: StrategyArea };
-    floors: { [k: string]: StrategyFloor };
-    card_options?: { [k: string]: CustomCardConfig };
+    areas: Record<string, StrategyArea>;
+    floors: Record<string, StrategyFloor>;
+    card_options?: Record<string, CustomCardConfig>;
     chips?: Chips;
     debug: boolean;
-    domains: { [k: string]: DomainConfig };
+    domains: Record<string, DomainConfig>;
     extra_cards?: LovelaceCardConfig[];
     extra_views?: ViewConfig[];
     home_view: {
       hidden: HiddenSectionType[]
     }
     quick_access_cards?: LovelaceCardConfig[];
-    views: { [k: string]: ViewConfig };
+    views: Record<string, ViewConfig>;
   }
 
   const hiddenSectionList = ["chips", "persons", "greeting", "areas", "areasTitle"] as const;

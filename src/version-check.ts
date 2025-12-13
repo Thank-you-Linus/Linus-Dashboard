@@ -78,7 +78,7 @@ export async function initVersionCheck(hass: any): Promise<void> {
         // Check version and show notification if mismatch
         await checkVersion(backendVersion, hass);
 
-        console.info(`[Linus Dashboard] Version check completed. Frontend: ${version}, Backend: ${backendVersion}`);
+        // Version check completed
     } catch (error) {
         console.error("[Linus Dashboard] Version check failed:", error);
     }
@@ -89,7 +89,7 @@ export async function initVersionCheck(hass: any): Promise<void> {
  */
 export function resetVersionNotification(): void {
     versionNotificationPending = false;
-    console.info("[Linus Dashboard] Version notification flag reset");
+    // Version notification flag reset
 }
 
 // Expose to window for debugging
@@ -101,7 +101,7 @@ if (typeof window !== "undefined") {
         checkVersion: (hass: any) => checkVersion("0.0.1", hass),
         resetVersionNotification,
         help: () => {
-            console.log(`
+            const helpText = `
 🔧 Linus Dashboard Version Check - Debug Commands
 
 Current version: ${version}
@@ -113,7 +113,8 @@ Commands:
 
 Version checking happens automatically when the dashboard loads.
 If versions don't match, you'll see a persistent notification with a Reload button.
-            `);
-        }
+            `;
+            console.warn(helpText);
+        },
     };
 }

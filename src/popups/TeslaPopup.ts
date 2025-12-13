@@ -1,4 +1,5 @@
 import { PopupActionConfig } from "../types/homeassistant/data/lovelace";
+
 import { AbstractPopup } from "./AbstractPopup";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.

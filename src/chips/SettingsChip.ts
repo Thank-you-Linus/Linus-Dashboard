@@ -1,7 +1,7 @@
-import {Helper} from "../Helper";
 import {chips} from "../types/strategy/chips";
-import {AbstractChip} from "./AbstractChip";
 import {TemplateChipConfig} from "../types/lovelace-mushroom/utils/lovelace/chip/types";
+
+import {AbstractChip} from "./AbstractChip";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**

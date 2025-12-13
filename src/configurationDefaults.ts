@@ -1,6 +1,7 @@
 import { generic } from "./types/strategy/generic";
+
 import StrategyDefaults = generic.StrategyDefaults;
-import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
+
 import { ControlChip } from "./chips/ControlChip";
 import { SettingsChip } from "./chips/SettingsChip";
 import { LightSettings } from "./popups/LightSettingsPopup";
@@ -15,6 +16,8 @@ import { CoverChip } from "./chips/CoverChip";
 import { FanChip } from "./chips/FanChip";
 import { SwitchChip } from "./chips/SwitchChip";
 import { ConditionalLightChip } from "./chips/ConditionalLightChip";
+
+import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
 
 /**
  * Default configuration for the mushroom strategy.

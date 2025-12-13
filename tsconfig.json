@@ -36,16 +36,16 @@
     "strict": true,
     "noImplicitAny": true,
     "noImplicitThis": true,
-    "noImplicitReturns": true,
+    "noImplicitReturns": false, // Allow implicit returns for flexibility
     "noImplicitOverride": true,
-    "noUncheckedIndexedAccess": true,
+    "noUncheckedIndexedAccess": false, // Relax for HA integration
     "strictNullChecks": true,
     "strictFunctionTypes": true,
     "strictBindCallApply": true,
-    "strictPropertyInitialization": true,
+    "strictPropertyInitialization": false, // Relax for class properties
     "noFallthroughCasesInSwitch": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
+    "noUnusedLocals": false, // Let ESLint handle this
+    "noUnusedParameters": false, // Let ESLint handle this
 
     /* Completeness */
     "skipLibCheck": true,

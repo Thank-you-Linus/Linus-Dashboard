@@ -1,9 +1,6 @@
 import { Helper } from "./Helper";
 import { EntityRegistryEntry } from "./types/homeassistant/data/entity_registry";
 import { generic } from "./types/strategy/generic";
-import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
-import StrategyFloor = generic.StrategyFloor;
-import StrategyArea = generic.StrategyArea;
 import { ActionConfig, LovelaceCardConfig } from "./types/homeassistant/data/lovelace";
 import {
     DEVICE_CLASSES,
@@ -24,6 +21,10 @@ import { EntityCardConfig } from "./types/lovelace-mushroom/cards/entity-card-co
 import { ImageAreaCard } from "./cards/ImageAreaCard";
 import { AggregateChip } from "./chips/AggregateChip";
 import { AggregateCard } from "./cards/AggregateCard";
+
+import StrategyArea = generic.StrategyArea;
+import StrategyFloor = generic.StrategyFloor;
+import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
 
 /**
  * Mémoïse une fonction pour éviter les calculs répétitifs.
@@ -66,7 +67,7 @@ export const groupBy = memoize(function groupBy<T, K extends string | number | s
  * @param {string} [separator="_"] - The separator to use.
  * @returns {string} - The slugified text.
  */
-export const slugify = memoize(function slugify(text: string | null, separator: string = "_"): string {
+export const slugify = memoize(function slugify(text: string | null, separator = "_"): string {
     if (text === "" || text === null) {
         return "";
     }
@@ -166,7 +167,7 @@ export const getEntityDomain = memoize(function getEntityDomain(entityId: string
  */
 export const groupEntitiesByDomain = memoize(function groupEntitiesByDomain(entity_ids: string[]): Record<string, string[]> {
     const grouped = entity_ids.reduce((acc: Record<string, string[]>, entity_id) => {
-        let domain = getEntityDomain(entity_id);
+        const domain = getEntityDomain(entity_id);
         let device_class
         if (Object.keys(DEVICE_CLASSES).includes(domain)) {
             const entityState = Helper.getEntityState(entity_id);
@@ -216,9 +217,9 @@ export const groupEntitiesByDomain = memoize(function groupEntitiesByDomain(enti
 async function createItemsFromList(
     itemList: string[],
     itemOptions?: Partial<chips.AggregateChipOptions> | Partial<generic.StrategyEntity>,
-    magic_device_id: string = "global",
+    magic_device_id = "global",
     area_slug?: string | string[],
-    isChip: boolean = true
+    isChip = true
 ): Promise<LovelaceChipConfig[] | LovelaceCardConfig[]> {
     const items: (LovelaceChipConfig | LovelaceCardConfig)[] = [];
     const area_slugs = area_slug ? Array.isArray(area_slug) ? area_slug : [area_slug] : [];
@@ -226,7 +227,7 @@ async function createItemsFromList(
         ? Object.keys(Helper.domains)
         : area_slugs.flatMap(area_slug => Object.keys(Helper.areas[area_slug]?.domains ?? {}));
 
-    for (let itemType of itemList) {
+    for (const itemType of itemList) {
         let domain = itemType;
         let device_class;
 
@@ -289,7 +290,7 @@ async function createItemsFromList(
 export async function createChipsFromList(
     chipsList: string[],
     chipOptions?: Partial<chips.AggregateChipOptions>,
-    magic_device_id: string = "global",
+    magic_device_id = "global",
     area_slug?: string | string[]
 ): Promise<LovelaceChipConfig[]> {
     return createItemsFromList(chipsList, chipOptions, magic_device_id, area_slug, true) as Promise<LovelaceChipConfig[]>;
@@ -306,7 +307,7 @@ export async function createChipsFromList(
 export async function createCardsFromList(
     cardsList: string[],
     cardOptions?: Partial<generic.StrategyEntity>,
-    magic_device_id: string = "global",
+    magic_device_id = "global",
     area_slug?: string | string[]
 ): Promise<LovelaceCardConfig[]> {
     return createItemsFromList(cardsList, cardOptions, magic_device_id, area_slug, false) as Promise<LovelaceCardConfig[]>;
@@ -343,7 +344,7 @@ export const getStateTranslationKey = memoize(function getStateTranslationKey(st
  * @returns {string} - The floor name.
  */
 export const getFloorName = memoize(function getFloorName(floor: StrategyFloor): string {
-    return floor.floor_id === UNDISCLOSED ? Helper.localize("ui.components.area-picker.unassigned_areas") : floor.name!
+    return floor.floor_id === UNDISCLOSED ? Helper.localize("ui.components.area-picker.unassigned_areas") : floor.name
 });
 
 /**
@@ -352,7 +353,7 @@ export const getFloorName = memoize(function getFloorName(floor: StrategyFloor):
  * @returns {string} - The area name.
  */
 export const getAreaName = memoize(function getAreaName(area: StrategyArea): string {
-    return area.area_id === UNDISCLOSED ? Helper.localize("ui.card.area.area_not_found") : area.name!
+    return area.area_id === UNDISCLOSED ? Helper.localize("ui.card.area.area_not_found") : area.name
 });
 
 /**
@@ -441,7 +442,7 @@ export async function processFloorsAndAreas(
                     subtitle: getAreaName(area),
                     subtitleIcon: area.area_id === UNDISCLOSED ? "mdi:help-circle" : area.icon ?? "mdi:floor-plan",
                     subtitleNavigate: area.slug
-                } as any;
+                };
                 if (domain) {
                     if (area.slug !== UNDISCLOSED && (!AGGREGATE_DOMAINS.includes(domain) || device_class)) {
                         titleCardOptions.showControls = Helper.strategyOptions.domains[domain]?.showControls;
@@ -532,7 +533,7 @@ export async function processEntitiesForAreaOrFloorView({
     const exposedDomainIds = Helper.getExposedDomainIds();
     const isFloorView = !!floor;
 
-    const areas = isFloorView ? floor!.areas_slug.map(slug => Helper.areas[slug]) : [area!];
+    const areas = isFloorView ? floor.areas_slug.map(slug => Helper.areas[slug]) : [area!];
 
     const domainCardsMap: Record<string, EntityCardConfig[]> = {};
     const miscellaneousEntities: string[] = [];
@@ -618,7 +619,8 @@ export async function processEntitiesForAreaOrFloorView({
                         // Regroupe par device_class
                         const byDeviceClass: Record<string, any[]> = {};
                         for (const entity of entities) {
-                            const deviceClass = entity.attributes?.device_class || "_";
+                            const entityState = Helper.getEntityState(entity.entity_id);
+                            const deviceClass = entityState?.attributes?.device_class || "_";
                             if (!byDeviceClass[deviceClass]) byDeviceClass[deviceClass] = [];
                             byDeviceClass[deviceClass].push(entity);
                         }
@@ -722,7 +724,7 @@ async function processEntities(entities: any[]): Promise<any[]> {
         if (entity.entity_category === "config" && configEntityHidden) continue;
 
         // Récupère le state pour avoir le vrai device_class et domain
-        const entityDeviceClass = state?.attributes?.device_class as string | undefined;
+        const entityDeviceClass = state?.attributes?.device_class;
         let className = Helper.sanitizeClassName((entityDeviceClass ? entityDeviceClass : entityDomain) + "Card");
         let cardModule: any;
         try {

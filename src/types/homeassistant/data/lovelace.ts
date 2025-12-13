@@ -1,10 +1,11 @@
 import { HassServiceTarget } from "home-assistant-js-websocket";
+
 import { LovelaceGridCardConfig } from "../lovelace/cards/types";
 
-export type LovelaceStrategyConfig = {
+export interface LovelaceStrategyConfig {
   type: string;
   [key: string]: any;
-};
+}
 
 export interface LovelaceConfig {
   title?: string;
@@ -23,7 +24,7 @@ export interface LovelaceViewConfig {
   title?: string;
   type?: string;
   strategy?: LovelaceStrategyConfig;
-  badges?: Array<string | LovelaceBadgeConfig>;
+  badges?: (string | LovelaceBadgeConfig)[];
   cards?: LovelaceCardConfig[];
   sections?: LovelaceCardConfig[];
   path?: string;

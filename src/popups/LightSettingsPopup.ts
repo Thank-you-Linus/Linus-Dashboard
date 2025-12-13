@@ -1,9 +1,12 @@
 import { Helper } from "../Helper";
 import { generic } from "../types/strategy/generic";
+
 import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
+
 import { PopupActionConfig } from "../types/homeassistant/data/lovelace";
 import { slugify } from "../utils";
 import { MAGIC_AREAS_DOMAIN } from "../variables";
+
 import { AbstractPopup } from "./AbstractPopup";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.

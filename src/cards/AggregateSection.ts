@@ -79,7 +79,7 @@ class AggregateSection {
     for (const floor of Helper.orderedFloors) {
       if (floor.areas_slug.length === 0) continue
 
-      let floorCards: (TemplateCardConfig)[] = [];
+      const floorCards: (TemplateCardConfig)[] = [];
       floorCards.push({
         type: "custom:mushroom-title-card",
         subtitle: getFloorName(floor),
@@ -92,7 +92,7 @@ class AggregateSection {
         }
       });
 
-      let areaCards: (TemplateCardConfig)[] = [];
+      const areaCards: (TemplateCardConfig)[] = [];
 
       for (const [i, area] of floor.areas_slug.map(area_slug => Helper.areas[area_slug]).entries()) {
 

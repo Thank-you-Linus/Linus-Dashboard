@@ -66,32 +66,22 @@ export enum ResourceKeys {
     wake_word = "wake_word"
 }
 
-interface StateAttributes {
-    [key: string]: {
+type StateAttributes = Record<string, {
         default: string;
-        state?: {
-            [key: string]: string;
-        };
-    };
-}
+        state?: Record<string, string>;
+    }>;
 
 interface Resource {
     default: string;
-    state?: {
-        [key: string]: string;
-    };
-    state_attributes?: {
-        [key: string]: StateAttributes;
-    };
+    state?: Record<string, string>;
+    state_attributes?: Record<string, StateAttributes>;
     service?: string;
 }
 
-export type IconResources = {
-    [key in ResourceKeys]: {
+export type IconResources = Record<ResourceKeys, {
         _: Resource;
         [key: string]: Resource | undefined;
-    };
-}
+    }>
 
 export interface FrontendEntityComponentIconResources {
     resources: IconResources;

@@ -1,7 +1,8 @@
 import {chips} from "../types/strategy/chips";
 import {WeatherChipConfig} from "../types/lovelace-mushroom/utils/lovelace/chip/types";
-import {AbstractChip} from "./AbstractChip";
 import { WeatherPopup } from "../popups/WeatherPopup";
+
+import {AbstractChip} from "./AbstractChip";
 
 // noinspection JSUnusedGlobalSymbols False positive.
 /**

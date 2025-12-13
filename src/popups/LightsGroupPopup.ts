@@ -1,5 +1,6 @@
 import { Helper } from "../Helper";
 import { PopupActionConfig } from "../types/homeassistant/data/lovelace";
+
 import { AbstractPopup } from "./AbstractPopup";
 
 /**

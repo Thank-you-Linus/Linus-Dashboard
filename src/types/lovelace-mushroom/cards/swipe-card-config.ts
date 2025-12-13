@@ -1,6 +1,7 @@
+import { SwiperOptions } from "swiper/types/swiper-options";
+
 import {ActionsSharedConfig} from "../shared/config/actions-config";
 import {LovelaceCardConfig} from "../../homeassistant/data/lovelace";
-import { SwiperOptions } from "swiper/types/swiper-options";
 
 
 /**

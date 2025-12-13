@@ -1,10 +1,9 @@
 import { Helper } from "../Helper";
 import { ControllerCard } from "../cards/ControllerCard";
-import { AbstractView } from "./AbstractView";
 import { views } from "../types/strategy/views";
 import { cards } from "../types/strategy/cards";
-import { ClimateCard } from "../cards/ClimateCard";
-import { ClimateChip } from "../chips/ClimateChip";
+
+import { AbstractView } from "./AbstractView";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**
@@ -23,7 +22,7 @@ class ClimateView extends AbstractView {
    * @static
    * @private
    */
-  static #domain: string = "climate";
+  static #domain = "climate";
 
   /**
    * Default configuration of the view.

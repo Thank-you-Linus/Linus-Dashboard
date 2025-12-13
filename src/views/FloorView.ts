@@ -5,12 +5,12 @@ import { LovelaceGridCardConfig, StackCardConfig } from "../types/homeassistant/
 import { TemplateCardConfig } from "../types/lovelace-mushroom/cards/template-card-config";
 import { LovelaceViewConfig } from "../types/homeassistant/data/lovelace";
 import { generic } from "../types/strategy/generic";
-import StrategyFloor = generic.StrategyFloor;
 import { AREA_EXPOSED_CHIPS } from "../variables";
 import { LovelaceChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
 import { AreaStateChip } from "../chips/AreaStateChip";
 import { createChipsFromList, processEntitiesForAreaOrFloorView } from "../utils";
-import { EntityCardConfig } from "../types/lovelace-mushroom/cards/entity-card-config";
+
+import StrategyFloor = generic.StrategyFloor;
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**

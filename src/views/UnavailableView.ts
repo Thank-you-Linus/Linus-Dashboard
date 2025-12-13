@@ -1,8 +1,9 @@
+import { HassServiceTarget } from "home-assistant-js-websocket";
+
 import { AREA_CARDS_DOMAINS, UNAVAILABLE, UNDISCLOSED } from '../variables';
 import { Helper } from "../Helper";
 import { LovelaceGridCardConfig } from "../types/homeassistant/lovelace/cards/types";
 import { LovelaceCardConfig, LovelaceSectionConfig, LovelaceViewConfig } from "../types/homeassistant/data/lovelace";
-import { HassServiceTarget } from "home-assistant-js-websocket";
 import { getAreaName, getEntityDomain, getFloorName, slugify } from '../utils';
 import { views } from '../types/strategy/views';
 import { GroupedCard } from '../cards/GroupedCard';
@@ -64,16 +65,13 @@ class UnavailableView {
       const floors = Array.from(floor.areas_slug.map(area_slug => Helper.areas[area_slug]).values());
 
       for (const area of floors) {
-        const entities = Helper.areas[area.slug].entities;
-        const unavailableEntities = entities?.filter(entity_id => AREA_CARDS_DOMAINS.includes(getEntityDomain(entity_id)) && Helper.getEntityState(entity_id)?.state === UNAVAILABLE).map(entity_id => Helper.entities[entity_id]);
+        if (!area) continue;
+        
+        const entities = Helper.areas[area.slug]?.entities;
+        const unavailableEntities = entities?.filter(entity_id => AREA_CARDS_DOMAINS.includes(getEntityDomain(entity_id)) && Helper.getEntityState(entity_id)?.state === UNAVAILABLE).map(entity_id => Helper.entities[entity_id])?.filter(entity => entity !== undefined);
         const cardModule = await import(`../cards/MiscellaneousCard`);
 
-        if (entities.length === 0 || !cardModule) continue;
-
-        let target: HassServiceTarget = { area_id: [area.slug] };
-        if (area.area_id === UNDISCLOSED) {
-          target = { entity_id: unavailableEntities.map(entity => entity.entity_id) };
-        }
+        if (!entities || entities.length === 0 || !cardModule || !unavailableEntities) continue;
 
         const entityCards = unavailableEntities
           .filter(entity => !Helper.strategyOptions.card_options?.[entity.entity_id]?.hidden

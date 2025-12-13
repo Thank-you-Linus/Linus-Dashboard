@@ -1,10 +1,9 @@
 import { cards } from "../types/strategy/cards";
-import { AbstractCard } from "./AbstractCard";
 import { Helper } from "../Helper";
 import { getDomainTranslationKey, getMAEntity } from "../utils";
-import { ResourceKeys } from "../types/homeassistant/data/frontend";
-import { TemplateChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
 import { TemplateCardConfig } from "../types/lovelace-mushroom/cards/template-card-config";
+
+import { AbstractCard } from "./AbstractCard";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**

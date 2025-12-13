@@ -1,8 +1,9 @@
-import { AbstractCard } from "./AbstractCard";
 import { cards } from "../types/strategy/cards";
 import { EntityRegistryEntry } from "../types/homeassistant/data/entity_registry";
 import { PersonCardConfig } from "../types/lovelace-mushroom/cards/person-card-config";
 import { PersonInformationsPopup } from "../popups/PersonInformationsPopup";
+
+import { AbstractCard } from "./AbstractCard";
 
 /**
  * Person Card Class

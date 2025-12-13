@@ -1,4 +1,5 @@
 import { ConditionalChipConfig, LovelaceChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
+
 import { AbstractChip } from "./AbstractChip";
 
 

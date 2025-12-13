@@ -1,7 +1,8 @@
 import { chips } from "../types/strategy/chips";
 import { AlarmChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
-import { AbstractChip } from "./AbstractChip";
 import { navigateTo } from "../utils";
+
+import { AbstractChip } from "./AbstractChip";
 
 // noinspection JSUnusedGlobalSymbols False positive.
 /**

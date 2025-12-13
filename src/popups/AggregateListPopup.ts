@@ -3,7 +3,8 @@ import { PopupActionConfig } from "../types/homeassistant/data/lovelace";
 import { StackCardConfig } from "../types/homeassistant/lovelace/cards/types";
 import { TemplateCardConfig } from "../types/lovelace-mushroom/cards/template-card-config";
 import { TitleCardConfig } from "../types/lovelace-mushroom/cards/title-card-config";
-import { getAreaName, getDomainTranslationKey } from "../utils";
+import { getDomainTranslationKey } from "../utils";
+
 import { AbstractPopup } from "./AbstractPopup";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
@@ -38,7 +39,7 @@ class AggregateListPopup extends AbstractPopup {
         }
       });
 
-      let areaCards: (TemplateCardConfig)[] = [];
+      const areaCards: (TemplateCardConfig)[] = [];
 
       for (const [i, area] of floor.areas_slug.map(area_slug => Helper.areas[area_slug]).entries()) {
 

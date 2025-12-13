@@ -1,4 +1,5 @@
 import {boolean, enums, Infer, object, optional} from "superstruct";
+
 import {layoutStruct} from "./utils/layout";
 import {ICON_TYPES, INFOS} from "./utils/info";
 

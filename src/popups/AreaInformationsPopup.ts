@@ -1,8 +1,11 @@
 import { Helper } from "../Helper";
 import { generic } from "../types/strategy/generic";
+
 import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
+
 import { PopupActionConfig } from "../types/homeassistant/data/lovelace";
 import { slugify } from "../utils";
+
 import { AbstractPopup } from "./AbstractPopup";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
@@ -234,7 +237,7 @@ class AreaInformations extends AbstractPopup {
      *
      * @param {chips.PopupActionConfig} options The chip options.
      */
-    constructor(device: MagicAreaRegistryEntry, minimalist: boolean = false) {
+    constructor(device: MagicAreaRegistryEntry, minimalist = false) {
         super();
 
         const defaultConfig = this.getDefaultConfig(device, minimalist)

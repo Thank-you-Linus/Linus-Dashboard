@@ -1,9 +1,10 @@
-import { AbstractChip } from "./AbstractChip";
 import { TemplateChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
 import { navigateTo } from "../utils";
 import { Helper } from "../Helper";
 import { chips } from "../types/strategy/chips";
 import { UNAVAILABLE } from "../variables";
+
+import { AbstractChip } from "./AbstractChip";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**

@@ -2,8 +2,9 @@ import { AreaInformations } from "../popups/AreaInformationsPopup";
 import { generic } from "../types/strategy/generic";
 import { TemplateChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
 import { AREA_STATE_ICONS, DEVICE_ICONS } from "../variables";
-import { AbstractChip } from "./AbstractChip";
 import { Helper } from "../Helper";
+
+import { AbstractChip } from "./AbstractChip";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**

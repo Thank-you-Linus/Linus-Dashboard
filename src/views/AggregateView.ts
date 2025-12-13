@@ -1,9 +1,10 @@
 import { Helper } from "../Helper";
 import { ControllerCard } from "../cards/ControllerCard";
-import { AbstractView } from "./AbstractView";
 import { views } from "../types/strategy/views";
 import { DEVICE_CLASSES } from "../variables";
 import { getDomainTranslationKey } from "../utils";
+
+import { AbstractView } from "./AbstractView";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**

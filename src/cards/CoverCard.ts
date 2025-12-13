@@ -1,8 +1,9 @@
-import { AbstractCard } from "./AbstractCard";
 import { cards } from "../types/strategy/cards";
 import { EntityRegistryEntry } from "../types/homeassistant/data/entity_registry";
 import { CoverCardConfig } from "../types/lovelace-mushroom/cards/cover-card-config";
-import { getMAEntity, navigateTo } from "../utils";
+import { navigateTo } from "../utils";
+
+import { AbstractCard } from "./AbstractCard";
 import { AggregateCard } from "./AggregateCard";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.

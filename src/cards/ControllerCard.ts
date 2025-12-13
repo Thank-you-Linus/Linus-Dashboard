@@ -45,7 +45,7 @@ class ControllerCard {
    *
    * @param {cards.ControllerCardOptions} options Controller Card options.
    */
-  constructor(options: cards.ControllerCardOptions = {}, domain: string, area_slug: string = "global") {
+  constructor(options: cards.ControllerCardOptions = {}, domain: string, area_slug = "global") {
     this.#domain = domain;
     this.#area_slug = area_slug;
     this.#defaultConfig = {

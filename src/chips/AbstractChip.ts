@@ -1,7 +1,9 @@
 import { HassServiceTarget } from "home-assistant-js-websocket";
+
 import { LovelaceChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
 import { Helper } from "../Helper";
 import { generic } from "../types/strategy/generic";
+
 import isCallServiceActionConfig = generic.isCallServiceActionConfig;
 
 /**

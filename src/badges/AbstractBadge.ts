@@ -2,8 +2,10 @@ import { HassServiceTarget } from "home-assistant-js-websocket";
 
 import { Helper } from "../Helper";
 import { generic } from "../types/strategy/generic";
+
 import isCallServiceActionConfig = generic.isCallServiceActionConfig;
-import { LovelaceBadgeConfig } from "@/types/homeassistant/data/lovelace";
+
+import { LovelaceBadgeConfig } from "../types/homeassistant/data/lovelace";
 
 /**
  * Abstract Badge class.

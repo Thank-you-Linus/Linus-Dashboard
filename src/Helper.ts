@@ -1,20 +1,18 @@
-import { configurationDefaults } from "./configurationDefaults";
 import { HassEntities, HassEntity } from "home-assistant-js-websocket";
 import merge from "lodash.merge";
-import { DeviceRegistryEntry } from "./types/homeassistant/data/device_registry";
-import { AreaRegistryEntry } from "./types/homeassistant/data/area_registry";
+
+import { configurationDefaults } from "./configurationDefaults";
 import { generic } from "./types/strategy/generic";
-import StrategyArea = generic.StrategyArea;
-import StrategyFloor = generic.StrategyFloor;
-import StrategyEntity = generic.StrategyEntity;
-import StrategyDevice = generic.StrategyDevice;
-import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
-import { FloorRegistryEntry } from "./types/homeassistant/data/floor_registry";
 import { DEVICE_CLASSES, MAGIC_AREAS_DOMAIN, MAGIC_AREAS_NAME, LINUS_BRAIN_DOMAIN, SENSOR_STATE_CLASS_TOTAL, SENSOR_STATE_CLASS_TOTAL_INCREASING, UNDISCLOSED, colorMapping, ALL_HOME_ASSISTANT_DOMAINS } from "./variables";
 import { getEntityDomain, getGlobalEntitiesExceptUndisclosed, getMAEntity, getMagicAreaSlug, groupEntitiesByDomain, slugify } from "./utils";
-import { EntityRegistryEntry } from "./types/homeassistant/data/entity_registry";
-import { FrontendEntityComponentIconResources, IconResources } from "./types/homeassistant/data/frontend";
+import { IconResources } from "./types/homeassistant/data/frontend";
 import { LinusDashboardConfig } from "./types/homeassistant/data/linus_dashboard";
+
+import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
+import StrategyDevice = generic.StrategyDevice;
+import StrategyEntity = generic.StrategyEntity;
+import StrategyFloor = generic.StrategyFloor;
+import StrategyArea = generic.StrategyArea;
 
 /**
  * Helper Class
@@ -84,7 +82,7 @@ class Helper {
    * @type {boolean} True if initialized.
    * @private
    */
-  static #initialized: boolean = false;
+  static #initialized = false;
 
   /**
    * The Custom strategy configuration.
@@ -339,33 +337,33 @@ class Helper {
     try {
       // Query the registries of Home Assistant.
       homeAssistantRegistries = await Promise.all([
-        info.hass.callWS({ type: "config/entity_registry/list" }) as Promise<EntityRegistryEntry[]>,
-        info.hass.callWS({ type: "config/device_registry/list" }) as Promise<DeviceRegistryEntry[]>,
-        info.hass.callWS({ type: "config/area_registry/list" }) as Promise<AreaRegistryEntry[]>,
-        info.hass.callWS({ type: "config/floor_registry/list" }) as Promise<FloorRegistryEntry[]>,
-        info.hass.callWS({ type: "frontend/get_icons", category: "entity_component" }) as Promise<FrontendEntityComponentIconResources>,
-        info.hass.callWS({ type: "frontend/get_icons", category: "services" }) as Promise<FrontendEntityComponentIconResources>,
-        info.hass.callWS({ type: "linus_dashboard/get_config" }) as Promise<LinusDashboardConfig>,
+        info.hass.callWS({ type: "config/entity_registry/list" }),
+        info.hass.callWS({ type: "config/device_registry/list" }),
+        info.hass.callWS({ type: "config/area_registry/list" }),
+        info.hass.callWS({ type: "config/floor_registry/list" }),
+        info.hass.callWS({ type: "frontend/get_icons", category: "entity_component" }),
+        info.hass.callWS({ type: "frontend/get_icons", category: "services" }),
+        info.hass.callWS({ type: "linus_dashboard/get_config" }),
       ]);
     } catch (e) {
       Helper.logError("An error occurred while querying Home assistant's registries!", e);
       throw 'Check the console for details';
     }
 
-    const [entities, devices, areas, floors, entity_component_icons, services_icons, linus_dashboard_config] = homeAssistantRegistries;
+    const [entities, devices, areas, floors, entity_component_icons, services_icons, linus_dashboard_config] = homeAssistantRegistries as [any[], any[], any[], any[], { resources: any }, { resources: any }, LinusDashboardConfig];
 
     this.#icons = merge(entity_component_icons.resources, services_icons.resources);
     this.#linus_dashboard_config = linus_dashboard_config;
 
     // Dictionaries for quick access
-    const areasById = Object.fromEntries(areas.map(a => [a.area_id, a]));
-    const floorsById = Object.fromEntries(floors.map(f => [f.floor_id, f]));
-    const devicesByAreaIdMap = Object.fromEntries(devices.map(device => [device.id, device.area_id]));
+    const areasById = Object.fromEntries(areas.map((a: any) => [a.area_id, a]));
+    const floorsById = Object.fromEntries(floors.map((f: any) => [f.floor_id, f]));
+    const devicesByAreaIdMap = Object.fromEntries(devices.map((device: any) => [device.id, device.area_id]));
     const entitiesByDeviceId: Record<string, StrategyEntity[]> = {};
     const entitiesByAreaId: Record<string, StrategyEntity[]> = {};
     const devicesByAreaId: Record<string, StrategyDevice[]> = {};
 
-    this.#entities = entities.reduce((acc, entity) => {
+    this.#entities = entities.reduce((acc: any, entity: any) => {
       // Exclusion par entité
       if (!(entity.entity_id in this.#hassStates) || entity.hidden_by) return acc;
       const targets = Helper.linus_dashboard_config?.excluded_targets;
@@ -373,7 +371,7 @@ class Helper {
       if (targets?.entity_id?.includes(entity.entity_id)) return acc;
       if (entity.device_id && targets?.device_id?.includes(entity.device_id)) return acc;
       if (targets?.label_id?.length && entity.labels?.length) {
-        const hasExcludedLabel = entity.labels.some(label => targets.label_id?.includes(label));
+        const hasExcludedLabel = entity.labels.some((label: any) => targets.label_id?.includes(label));
         if (hasExcludedLabel) {
           return acc;
         }
@@ -391,7 +389,7 @@ class Helper {
       //   return acc;
       // }
 
-      let domain = getEntityDomain(entity.entity_id);
+      const domain = getEntityDomain(entity.entity_id);
       let device_class;
 
       if (Object.keys(DEVICE_CLASSES).includes(domain)) {
@@ -539,10 +537,12 @@ class Helper {
     // Note: The actual view metadata (title, icon, type) will be populated
     // by the strategy when loading the embedded dashboards
     if (linus_dashboard_config.embedded_dashboards?.length) {
-      console.log(
-        "[Linus Dashboard] Found embedded_dashboards config:",
-        linus_dashboard_config.embedded_dashboards
-      );
+      if (this.#debug) {
+        console.warn(
+          "[Linus Dashboard] Found embedded_dashboards config:",
+          linus_dashboard_config.embedded_dashboards
+        );
+      }
 
       if (!this.#strategyOptions.extra_views) {
         this.#strategyOptions.extra_views = [];
@@ -571,10 +571,12 @@ class Helper {
         } as any);
       }
 
-      this.#debug && console.log(
-        "[Linus Dashboard] Generated extra views from embedded dashboards:",
-        this.#strategyOptions.extra_views
-      );
+      if (this.#debug) {
+        console.warn(
+          "[Linus Dashboard] Generated extra views from embedded dashboards:",
+          this.#strategyOptions.extra_views
+        );
+      }
     }
 
     // Initialize entity resolver for Linus Brain / Magic Areas hybrid support
@@ -678,7 +680,7 @@ class Helper {
     const areaSlugs = Array.isArray(area_slug) ? area_slug : [area_slug];
 
     for (const slug of areaSlugs) {
-      const magic_entity = getMAEntity(slug!, "sensor", device_class);
+      const magic_entity = getMAEntity(slug, "sensor", device_class);
 
       let entities: string[] | undefined;
 
@@ -837,7 +839,7 @@ class Helper {
    * @return {string[]} An array with keys.
    */
   static #getObjectKeysByPropertyValue(
-    object: { [k: string]: any },
+    object: Record<string, any>,
     property: string, value: any
   ): string[] {
     const keys: string[] = [];
@@ -893,7 +895,7 @@ class Helper {
    *
    * @return {StrategyEntity}
    */
-  static getValidEntity(entity: StrategyEntity): Boolean {
+  static getValidEntity(entity: StrategyEntity): boolean {
     return entity.disabled_by === null && entity.hidden_by === null
   }
 
@@ -962,7 +964,7 @@ class Helper {
 
     for (const slug of areaSlugs) {
       if (slug) {
-        const magic_entity = device_class ? getMAEntity(slug!, domain, device_class) : getMAEntity(slug!, domain);
+        const magic_entity = device_class ? getMAEntity(slug, domain, device_class) : getMAEntity(slug, domain);
 
         let entities: string[] | undefined;
 
@@ -1098,7 +1100,7 @@ class Helper {
     for (const slug of areaSlugs) {
       if (slug) {
         if (device_class) {
-          const magic_entity = getMAEntity(slug!, domain, device_class);
+          const magic_entity = getMAEntity(slug, domain, device_class);
 
           let entities: string[] | undefined;
 
@@ -1132,7 +1134,7 @@ class Helper {
           const domainTags = Object.keys(this.#domains).filter(tag => tag.startsWith(`${domain}:`));
           if (domainTags.length > 0) {
             for (const domainTag of domainTags) {
-              const magic_entity = getMAEntity(slug!, domain, domainTag.split(":")[1]);
+              const magic_entity = getMAEntity(slug, domain, domainTag.split(":")[1]);
               const entities = magic_entity ? [magic_entity.entity_id] : area_slug === "global" ? getGlobalEntitiesExceptUndisclosed(domain, domainTag.split(":")[1]) : this.#areas[slug]?.domains?.[domainTag];
               if (entities) entityIds.push(...entities);
             }
@@ -1202,7 +1204,7 @@ class Helper {
     }));
 
     const domainColors = colorMapping[domain] || {};
-    let defaultColor: string = "grey";
+    let defaultColor = "grey";
 
     if (device_class && domainColors[device_class] && typeof domainColors[device_class] === "object") {
       const thresholds = domainColors[device_class] as Record<number, string>;
@@ -1291,7 +1293,7 @@ class Helper {
    * @param {string[]} entity_ids - The list of entity IDs to evaluate.
    * @returns {string} - The color string (e.g., "red", "blue").
    */
-  static getIconColor(domain: string, device_class: string = '_', entity_ids: string[] = []): string {
+  static getIconColor(domain: string, device_class = '_', entity_ids: string[] = []): string {
     const states = entity_ids.length ? Helper.getStateStrings(entity_ids) : [];
     const domainColors = colorMapping[domain] || colorMapping.default;
     let defaultColor = "grey";
@@ -1353,7 +1355,7 @@ class Helper {
    * @param {string} entity_id - The entity ID.
    * @returns {string} - The content string.
    */
-  static getContent(domain: string, device_class?: string, entity_ids: string[] = [], as_icon: boolean = false): string {
+  static getContent(domain: string, device_class?: string, entity_ids: string[] = [], as_icon = false): string {
     const stateStrings = Helper.getStateStrings(entity_ids);
 
     // Define templates for each domain/device_class combination

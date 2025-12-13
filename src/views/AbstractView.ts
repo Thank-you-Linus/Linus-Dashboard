@@ -1,13 +1,13 @@
-import { AGGREGATE_DOMAINS, AREA_CARDS_DOMAINS, UNDISCLOSED } from './../variables';
+import { HassServiceTarget } from "home-assistant-js-websocket";
+
 import { Helper } from "../Helper";
-import { ControllerCard } from "../cards/ControllerCard";
 import { LovelaceGridCardConfig, StackCardConfig } from "../types/homeassistant/lovelace/cards/types";
 import { LovelaceCardConfig, LovelaceSectionConfig, LovelaceViewConfig } from "../types/homeassistant/data/lovelace";
-import { HassServiceTarget } from "home-assistant-js-websocket";
 import { TemplateCardConfig } from '../types/lovelace-mushroom/cards/template-card-config';
 import { ChipsCardConfig } from '../types/lovelace-mushroom/cards/chips-card';
 import { processEntitiesForView } from '../utils';
 import { views } from '../types/strategy/views';
+
 
 /**
  * Abstract View Class.

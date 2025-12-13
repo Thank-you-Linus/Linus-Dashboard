@@ -1,8 +1,10 @@
 
 import { Helper } from "../Helper";
 import { generic } from "../types/strategy/generic";
+
 import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
 import StrategyArea = generic.StrategyArea;
+
 import { LovelaceChipConfig, TemplateChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
 import { MAGIC_AREAS_DOMAIN, TOD_ORDER } from "../variables";
 import { slugify } from "../utils";
@@ -65,7 +67,7 @@ class AreaScenesChips {
           }
         })
       } else if (scene?.state !== "Adaptive lighting") {
-        const sceneEntity_id = Helper.getStateEntities(area, "scene").find(s => s.attributes.friendly_name === scene?.state)?.entity_id
+        const sceneEntityId = Helper.getStateEntities(area, "scene").find(s => s.attributes.friendly_name === scene?.state)?.entity_id
         chips.push({
           type: "template",
           entity: scene?.entity_id,
@@ -75,7 +77,7 @@ class AreaScenesChips {
             action: "call-service",
             service: "scene.turn_on",
             data: {
-              entity_id: sceneEntity_id,
+              entity_id: sceneEntityId,
             }
           },
           hold_action: {

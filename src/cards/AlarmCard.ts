@@ -1,6 +1,7 @@
-import { AbstractCard } from "./AbstractCard";
 import { EntityRegistryEntry } from "../types/homeassistant/data/entity_registry";
 import { TileCardConfig } from "../types/homeassistant/lovelace/cards/types";
+
+import { AbstractCard } from "./AbstractCard";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**

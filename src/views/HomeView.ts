@@ -179,7 +179,7 @@ class HomeView {
     for (const floor of floors) {
       if (floor.areas_slug.length === 0) continue;
 
-      let floorSection = {
+      const floorSection = {
         type: "grid",
         column_span: 1,
         cards: [],
@@ -282,7 +282,7 @@ class HomeView {
         type ModuleType = typeof import("../cards/HomeAreaCard");
 
         let module: ModuleType;
-        let moduleName = Helper.strategyOptions.areas[area.slug]?.type ?? Helper.strategyOptions.areas["_"]?.type ?? "default";
+        const moduleName = Helper.strategyOptions.areas[area.slug]?.type ?? Helper.strategyOptions.areas["_"]?.type ?? "default";
 
         // Load module by type in strategy options.
         try {
@@ -296,8 +296,8 @@ class HomeView {
         }
 
         // Get a card for the area.
-        if (!Helper.strategyOptions.areas[area.slug as string]?.hidden) {
-          let options = {
+        if (!Helper.strategyOptions.areas[area.slug]?.hidden) {
+          const options = {
             ...Helper.strategyOptions.areas["_"],
             ...Helper.strategyOptions.areas[area.slug],
             area_slug: area.slug,

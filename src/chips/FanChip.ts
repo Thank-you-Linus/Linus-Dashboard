@@ -1,9 +1,10 @@
 import { Helper } from "../Helper";
 import { chips } from "../types/strategy/chips";
-import { AbstractChip } from "./AbstractChip";
 import { TemplateChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
 import { EntityRegistryEntry } from "../types/homeassistant/data/entity_registry";
 import { getMAEntity, navigateTo } from "../utils";
+
+import { AbstractChip } from "./AbstractChip";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**
@@ -42,7 +43,7 @@ class FanChip extends AbstractChip {
     });
 
     if (!entities.length) {
-      console.debug("No entities found for fan chip");
+      if (Helper.debug) console.warn("No entities found for fan chip");
       return;
     }
 

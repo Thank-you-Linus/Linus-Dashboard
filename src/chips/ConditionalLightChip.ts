@@ -1,9 +1,9 @@
 
 
 import { LovelaceChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
+import { Helper } from "../Helper";
 
 import { LightChip } from "./LightChip";
-import { Helper } from "../Helper";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**

@@ -3,7 +3,8 @@ import { PopupActionConfig } from "../types/homeassistant/data/lovelace";
 import { StackCardConfig } from "../types/homeassistant/lovelace/cards/types";
 import { TemplateCardConfig } from "../types/lovelace-mushroom/cards/template-card-config";
 import { TitleCardConfig } from "../types/lovelace-mushroom/cards/title-card-config";
-import { getDomainTranslationKey, groupBy } from "../utils";
+import { getDomainTranslationKey } from "../utils";
+
 import { AbstractPopup } from "./AbstractPopup";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
@@ -23,7 +24,7 @@ class AggregateAreaListPopup extends AbstractPopup {
     const is_binary_sensor = ["motion", "window", "door", "health"].includes(device_class)
 
 
-    let areaCards: (TemplateCardConfig)[] = [];
+    const areaCards: (TemplateCardConfig)[] = [];
 
     for (const [i, entity_id] of magicEntity?.attributes.entity_id?.entries() ?? []) {
 

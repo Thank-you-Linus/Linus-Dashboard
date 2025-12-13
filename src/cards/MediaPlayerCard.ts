@@ -1,7 +1,8 @@
-import { AbstractCard } from "./AbstractCard";
 import { cards } from "../types/strategy/cards";
 import { EntityRegistryEntry } from "../types/homeassistant/data/entity_registry";
 import { MediaPlayerCardConfig } from "../types/lovelace-mushroom/cards/media-player-card-config";
+
+import { AbstractCard } from "./AbstractCard";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**

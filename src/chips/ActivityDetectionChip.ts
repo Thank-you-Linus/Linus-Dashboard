@@ -1,7 +1,8 @@
 import { Helper } from "../Helper";
 import { TemplateChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
-import { AbstractChip } from "./AbstractChip";
 import { ActivityDetectionPopup } from "../popups/ActivityDetectionPopup";
+
+import { AbstractChip } from "./AbstractChip";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**

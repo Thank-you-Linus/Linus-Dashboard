@@ -1,7 +1,8 @@
-import { AbstractCard } from "./AbstractCard";
 import { cards } from "../types/strategy/cards";
 import { EntityRegistryEntry } from "../types/homeassistant/data/entity_registry";
 import { SceneCardConfig } from "../types/lovelace-mushroom/cards/scene-card-config";
+
+import { AbstractCard } from "./AbstractCard";
 
 /**
  * Scene Card Class

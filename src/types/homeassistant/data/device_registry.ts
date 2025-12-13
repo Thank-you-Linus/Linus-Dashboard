@@ -21,8 +21,8 @@
 export interface DeviceRegistryEntry {
   id: string;
   config_entries: string[];
-  connections: Array<[string, string]>;
-  identifiers: Array<[string, string]>;
+  connections: [string, string][];
+  identifiers: [string, string][];
   manufacturer: string | null;
   model: string | null;
   name: string | null;

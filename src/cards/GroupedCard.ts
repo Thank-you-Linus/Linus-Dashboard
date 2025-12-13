@@ -1,7 +1,9 @@
-import { AbstractCard } from "./AbstractCard";
 import { EntityCardConfig } from "../types/lovelace-mushroom/cards/entity-card-config";
-import { SwipeCard } from "./SwipeCard";
 import { SwipeCardConfig } from "../types/lovelace-mushroom/cards/swipe-card-config";
+
+import { AbstractCard } from "./AbstractCard";
+import { SwipeCard } from "./SwipeCard";
+
 
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.

@@ -59,7 +59,7 @@ export interface LovelaceTileCardConfig extends LovelaceCardConfig {
   entity: string;
   hide_state?: boolean;
   vertical?: boolean;
-  features?: Array<{
+  features?: {
     type: string;
-  }>;
+  }[];
 }

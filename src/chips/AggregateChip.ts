@@ -1,8 +1,9 @@
 import { chips } from "../types/strategy/chips";
-import { AbstractChip } from "./AbstractChip";
 import { Helper } from "../Helper";
 import { getMAEntity, navigateTo } from "../utils";
 import { EntityChipConfig, TemplateChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
+
+import { AbstractChip } from "./AbstractChip";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**
@@ -21,7 +22,7 @@ class AggregateChip extends AbstractChip {
     const magicEntity = getMAEntity(magic_device_id, domain, device_class);
     const entity_id = Helper.getEntityIds({ domain, device_class, area_slug })
 
-    let config: TemplateChipConfig | EntityChipConfig = {
+    const config: TemplateChipConfig | EntityChipConfig = {
       type: "template",
       entity: entity_id.length == 1 ? entity_id[0] : undefined,
       entity_id: Helper.getEntityIds({ domain, device_class, area_slug }),

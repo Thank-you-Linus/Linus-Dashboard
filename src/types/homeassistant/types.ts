@@ -1,4 +1,5 @@
 import {Auth, Connection, HassConfig, HassEntities, HassServices, MessageBase,} from "home-assistant-js-websocket";
+
 import {AreaRegistryEntry} from "./data/area_registry";
 import {DeviceRegistryEntry} from "./data/device_registry";
 import {EntityRegistryDisplayEntry} from "./data/entity_registry";
@@ -32,9 +33,7 @@ export interface PanelInfo<T = Record<string, any> | null> {
   config_panel_domain?: string;
 }
 
-export interface Panels {
-  [name: string]: PanelInfo;
-}
+export type Panels = Record<string, PanelInfo>;
 
 
 export interface Translation {
@@ -45,27 +44,23 @@ export interface Translation {
 
 export interface TranslationMetadata {
   fragments: string[];
-  translations: {
-    [lang: string]: Translation;
-  };
+  translations: Record<string, Translation>;
 }
 
-export interface Resources {
-  [language: string]: Record<string, string>;
-}
+export type Resources = Record<string, Record<string, string>>;
 
 export interface HomeAssistant {
   auth: Auth & { external?: any };
   connection: Connection;
   connected: boolean;
   states: HassEntities;
-  entities: { [id: string]: EntityRegistryDisplayEntry };
-  devices: { [id: string]: DeviceRegistryEntry };
-  areas: { [id: string]: AreaRegistryEntry };
+  entities: Record<string, EntityRegistryDisplayEntry>;
+  devices: Record<string, DeviceRegistryEntry>;
+  areas: Record<string, AreaRegistryEntry>;
   services: HassServices;
   config: HassConfig;
-  themes: { [k: string]: any };
-  selectedTheme: { [k: string]: any } | null;
+  themes: Record<string, any>;
+  selectedTheme: Record<string, any> | null;
   panels: Panels;
   panelUrl: string;
   // i18n
@@ -77,7 +72,7 @@ export interface HomeAssistant {
   language: string;
   // local stored language, keep that name for backward compatibility
   selectedLanguage: string | null;
-  locale: { [k: string]: any };
+  locale: Record<string, any>;
   resources: Resources;
   localize: Function;
   translationMetadata: TranslationMetadata;
@@ -89,7 +84,7 @@ export interface HomeAssistant {
   defaultPanel: string;
   moreInfoEntityId: string | null;
   user?: CurrentUser;
-  userData?: { [k: string]: any } | null;
+  userData?: Record<string, any> | null;
 
   callWS<T>(msg: MessageBase): Promise<T>;
 }

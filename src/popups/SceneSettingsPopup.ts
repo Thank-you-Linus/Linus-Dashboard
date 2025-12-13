@@ -2,8 +2,10 @@
 import { PopupActionConfig } from "../types/homeassistant/data/lovelace";
 import { slugify } from "../utils";
 import { MAGIC_AREAS_DOMAIN, TOD_ORDER } from "../variables";
-import { AbstractPopup } from "./AbstractPopup";
 import { generic } from "../types/strategy/generic";
+
+import { AbstractPopup } from "./AbstractPopup";
+
 import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.

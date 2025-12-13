@@ -19,14 +19,16 @@ NC='\033[0m' # No Color
 
 echo -e "${BLUE}🔍 Generating release notes...${NC}\n"
 
-# Get the last release tag
-LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+# Get the last release tag (including pre-releases like beta/alpha)
+# First try to get the most recent tag of any kind
+LAST_TAG=$(git tag --sort=-version:refname | head -1)
 
+# If no tags found at all
 if [ -z "$LAST_TAG" ]; then
     echo -e "${YELLOW}⚠️  No previous tag found. Using all commits.${NC}"
     COMMIT_RANGE="HEAD"
 else
-    echo -e "${GREEN}📌 Last release: ${LAST_TAG}${NC}"
+    echo -e "${GREEN}📌 Last tag found: ${LAST_TAG}${NC}"
     COMMIT_RANGE="${LAST_TAG}..HEAD"
 fi
 

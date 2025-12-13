@@ -30,7 +30,7 @@ jobs:
           echo "✅ Tag format is valid"
       # 1. Checkout le code source
       - name: "Checkout the repository"
-        uses: "actions/checkout@v5"
+        uses: "actions/checkout@v6"
 
       # 2. Configurer Node.js
       - name: "Set up Node.js"

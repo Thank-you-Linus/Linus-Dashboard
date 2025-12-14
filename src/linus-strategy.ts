@@ -268,6 +268,7 @@ class LinusStrategy extends HTMLTemplateElement {
 customElements.define("ll-strategy-linus-strategy", LinusStrategy);
 
 // Version is injected at build time from package.json (single source of truth)
+// eslint-disable-next-line @typescript-eslint/naming-convention
 declare const __VERSION__: string;
 export const version = __VERSION__;
 // Linus Strategy loaded

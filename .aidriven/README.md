@@ -494,8 +494,64 @@ Before considering a bug fix or feature complete:
 - [ ] **Rules updated** - Patterns added to prevent similar issues
 - [ ] **Build succeeds** - `npm run build` passes without errors
 - [ ] **Type check passes** - `npm run type-check` succeeds
-- [ ] **Lint passes** - `npm run lint:check` succeeds
+- [ ] **Lint passes** - `npm run lint` succeeds (MUST fix errors before commit)
 - [ ] **Manual test** - Feature/fix verified in running HA instance
+
+#### 🚨 CRITICAL: Linting Before Commit
+
+**MANDATORY RULE:** You MUST run `npm run lint` before EVERY commit.
+
+**Why This Matters:**
+- ❌ Committing without linting introduces code quality issues
+- ❌ Linting errors can break CI/CD pipelines
+- ❌ Code style inconsistencies accumulate over time
+- ❌ Type safety issues may be missed
+
+**Process:**
+```bash
+# 1. ALWAYS run lint before staging files
+npm run lint
+
+# 2. If there are ERRORS (not just warnings), you MUST fix them
+# Do NOT commit with linting errors
+
+# 3. If lint fixes files automatically (--fix flag), review the changes
+git diff
+
+# 4. Only commit after lint succeeds (0 errors)
+git add .
+git commit -m "your message"
+```
+
+**Example - Correct Workflow:**
+```bash
+# Write code
+vim src/linus-strategy.ts
+
+# Run lint FIRST
+npm run lint
+# Output: ✖ 1 problem (1 error, 0 warnings)
+
+# Fix the error
+# Re-run lint
+npm run lint
+# Output: ✖ 0 problems (0 errors, 31 warnings)  ← Warnings are OK
+
+# NOW you can commit
+git add src/linus-strategy.ts
+git commit -m "feat: implement smart version management"
+```
+
+**Warnings vs Errors:**
+- **Errors (red ✖)**: MUST be fixed before commit
+- **Warnings (yellow ⚠)**: Should be addressed but won't block commit
+
+**AI Agent Rule:**
+When an AI agent (like me) is about to commit code:
+1. I MUST run `npm run lint` first
+2. I MUST fix any errors (not just warnings)
+3. I MUST verify 0 errors before proceeding with commit
+4. I MUST NOT commit code that fails linting
 
 #### Why This Matters
 
@@ -587,21 +643,28 @@ Update memorybank.md when architecture changes, document decisions
 ### 5. Review Before Commit
 
 ❌ **Bad:**
-Committing without AI review or manual testing
+Committing without linting, AI review, or manual testing
 
 ✅ **Good:**
-"Claude, review these changes using review.md" + manual test in HA
+```bash
+npm run lint          # MANDATORY - Fix all errors
+npm run type-check    # Verify types
+npm run build         # Ensure build works
+# Manual test in HA
+# Then: "Claude, review these changes using review.md"
+git commit
+```
 
 ### 6. Build and Test
 
 ❌ **Bad:**
-Committing TypeScript changes without building
+Committing TypeScript changes without linting and building
 
 ✅ **Good:**
 ```bash
-npm run build
-npm run type-check
-npm run lint:check
+npm run lint          # FIRST - Fix all errors before proceeding
+npm run type-check    # Verify types
+npm run build         # Build the project
 ./ha-env/bin/hass -c /config
 # Test in browser, clear cache
 ```
@@ -626,8 +689,8 @@ npm run lint:check
 # Update Rules
 "Claude, add this pattern to rules/homeassistant_integration.md"
 
-# Build and Test
-npm run build && npm run type-check && npm run lint:check
+# Lint, Build and Test (ALWAYS in this order before commit)
+npm run lint && npm run type-check && npm run build
 ```
 
 ---
@@ -739,10 +802,11 @@ You're using this system correctly when:
 1. ✅ **Every feature** starts with a plan
 2. ✅ **Every plan** loads memorybank + rules
 3. ✅ **Every implementation** follows the plan
-4. ✅ **Every change** builds successfully
-5. ✅ **Every commit** passes AI review
-6. ✅ **Every change** updates memory if needed
-7. ✅ **Every release** increments version correctly
+4. ✅ **Every change** is linted BEFORE commit (0 errors required)
+5. ✅ **Every change** builds successfully
+6. ✅ **Every commit** passes AI review
+7. ✅ **Every change** updates memory if needed
+8. ✅ **Every release** increments version correctly
 
 ---
 

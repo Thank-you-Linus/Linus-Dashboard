@@ -24,6 +24,7 @@ async function showVersionMismatchNotification(serverVersion: string, clientVers
     const browserText = Helper.localize("component.linus_dashboard.entity.text.version_check.state.browser");
     const backendText = Helper.localize("component.linus_dashboard.entity.text.version_check.state.backend");
     const instructions = Helper.localize("component.linus_dashboard.entity.text.version_check.state.instructions");
+    const troubleshooting = Helper.localize("component.linus_dashboard.entity.text.version_check.state.troubleshooting");
 
     // Build message with translations
     const message = `${mismatchText}\n${browserText}: ${clientVersion}\n${backendText}: ${serverVersion}`;
@@ -36,7 +37,7 @@ async function showVersionMismatchNotification(serverVersion: string, clientVers
         try {
             await hass.callService("persistent_notification", "create", {
                 title: title,
-                message: `${message}\n\n${instructions}`,
+                message: `${message}\n\n${instructions}\n\n${troubleshooting}`,
                 notification_id: "linus_dashboard_version_mismatch",
             });
         } catch (error) {

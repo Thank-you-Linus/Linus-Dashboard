@@ -121,11 +121,46 @@ async def register_static_paths_and_resources(
     """
     Register static paths and resources for a given JavaScript file.
 
-    Always registers the bundled resources to ensure compatibility with Linus Dashboard,
-    regardless of whether they are installed via HACS or other means.
+    Simple loading strategy: Always loads Linus Dashboard's bundled versions
+    of all dependencies to ensure compatibility and stability. This guarantees
+    that the dashboard works out-of-the-box with tested versions.
+
+    If users have installed dependencies separately via HACS, Linus Dashboard's
+    versions will be loaded alongside them. The browser handles this gracefully,
+    with the last-loaded version taking precedence for custom elements.
 
     Implements cache-busting by appending version query parameter to resource URLs.
     """
+    # Extract resource identifier from js_file
+    # (e.g., "mushroom" from "lovelace-mushroom/mushroom.js")
+    resource_name = js_file.split("/")[-1].replace(".js", "")
+
+    # Special handling for linus-strategy - always load (it's our main strategy)
+    is_core_strategy = resource_name == "linus-strategy"
+
+    # Check if WE already loaded this resource
+    # (prevent double-loading by Linus Dashboard itself)
+    if not is_core_strategy and await utils.is_resource_already_loaded_by_linus(
+        hass, resource_name, DOMAIN
+    ):
+        _LOGGER.debug(
+            "Resource '%s' already registered by Linus Dashboard - skipping duplicate",
+            resource_name,
+        )
+        return
+
+    # Check if user has an external version (e.g., from HACS) and log it
+    if not is_core_strategy and await utils.check_for_external_resource(
+        hass, resource_name, DOMAIN
+    ):
+        _LOGGER.info(
+            "[INFO] '%s' detected from external source (e.g., HACS). "
+            "Linus Dashboard will use its bundled version to ensure compatibility. "
+            "Both versions will coexist safely. "
+            "Troubleshooting: https://github.com/Thank-you-Linus/Linus-Dashboard#-troubleshooting",
+            resource_name,
+        )
+
     js_url = f"/{DOMAIN}_files/www/{js_file}"
     js_path = Path(__file__).parent / f"www/{js_file}"
 
@@ -150,8 +185,10 @@ async def register_static_paths_and_resources(
 
     await utils.init_resource(hass, versioned_url, str(manifest_version))
 
-    _LOGGER.debug(
-        "Registered resource: %s (version: %s)", versioned_url, manifest_version
+    _LOGGER.info(
+        "✓ Registered bundled resource: %s (version: %s)",
+        resource_name,
+        manifest_version,
     )
 
 

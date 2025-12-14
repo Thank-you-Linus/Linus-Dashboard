@@ -253,10 +253,18 @@ class HomeAreaCard {
   }
 
   getIconColorTemplate(area_state_entity_id?: string | null): string {
-    const condition = area_state_entity_id ? `"dark" in state_attr('${area_state_entity_id}', 'states')` : `not is_state("sun.sun", "below_horizon")`;
-    return `
-      {{ "indigo" if ${condition} else "amber" }}
-    `;
+    if (area_state_entity_id) {
+      // Protection against NoneType: check if attribute exists before testing 'in'
+      return `
+        {% set states_attr = state_attr('${area_state_entity_id}', 'states') or [] %}
+        {{ "indigo" if "dark" in states_attr else "amber" }}
+      `;
+    } else {
+      // Fallback: use sun position (indigo when dark/night, amber when bright/day)
+      return `
+        {{ "indigo" if is_state("sun.sun", "below_horizon") else "amber" }}
+      `;
+    }
   }
 
   getCardModStyle(): string {

@@ -109,7 +109,8 @@
                     "mismatch": "ℹ️ Version mismatch detected",
                     "browser": "💻 Frontend (Dashboard)",
                     "backend": "🔧 Backend (Custom Component)",
-                    "instructions": "🔄 Please refresh your browser (CTRL+F5 or SHIFT+F5) to load the latest version."
+                    "instructions": "🔄 Please refresh your browser (CTRL+F5 or SHIFT+F5) to load the latest version.",
+                    "troubleshooting": "📖 Need help? Check our troubleshooting guide: https://github.com/Thank-you-Linus/Linus-Dashboard#-troubleshooting"
                 }
             }
         }

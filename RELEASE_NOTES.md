@@ -1,4 +1,4 @@
-# 🎉 Release Notes - v1.4.0-beta.2
+# 🎉 Release Notes - v1.4.0-beta.3
 
 ---
 

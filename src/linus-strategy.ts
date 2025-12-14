@@ -267,5 +267,7 @@ class LinusStrategy extends HTMLTemplateElement {
 
 customElements.define("ll-strategy-linus-strategy", LinusStrategy);
 
-export const version = "1.4.0-beta.2";
+// Version is injected at build time from package.json (single source of truth)
+declare const __VERSION__: string;
+export const version = __VERSION__;
 // Linus Strategy loaded

@@ -193,16 +193,18 @@ printf "y\n" | bash scripts/bump-version.sh beta
 
 This will:
 - Calculate next beta version (e.g., 1.4.0-beta.2 → 1.4.0-beta.3)
-- Update version in:
-  - `package.json`
-  - `package-lock.json`
-  - `custom_components/linus_dashboard/manifest.json`
-  - `custom_components/linus_dashboard/const.py`
-  - `src/linus-strategy.ts`
+- Update version using the **Smart Version Management System**:
+  - `package.json` (single source of truth, updated via `npm version`)
+  - `package-lock.json` (auto-updated by npm)
+  - `custom_components/linus_dashboard/manifest.json` (synced by script)
+  - Build project to inject version into compiled files
+  - Verify all versions match
 - Commit changes with message: `chore: Bump version to X.Y.Z-beta.N`
 - Create git tag: `X.Y.Z-beta.N`
 
-**Expected output**: New version number (e.g., `1.4.0-beta.3`)
+**Note**: Python (`const.py`) and TypeScript (`linus-strategy.ts`) read the version dynamically from `package.json` at runtime/build-time. No manual updates needed! See `docs/SMART_VERSION_MANAGEMENT.md` for details.
+
+**Expected output**: New version number (e.g., `1.4.0-beta.3`) with checkmarks showing all files synced
 
 ---
 

@@ -71,7 +71,7 @@ run_test "manifest.json is valid JSON" "python3 -m json.tool custom_components/l
 print_step "Version Consistency Tests"
 PACKAGE_VERSION=$(node -p "require('./package.json').version" 2>/dev/null)
 MANIFEST_VERSION=$(python3 -c "import json; print(json.load(open('custom_components/linus_dashboard/manifest.json'))['version'])" 2>/dev/null)
-CONST_VERSION=$(grep -oP "VERSION = \"\K[^\"]+" custom_components/linus_dashboard/const.py 2>/dev/null || echo "")
+CONST_VERSION=$(python3 -c "import sys; sys.path.insert(0, 'custom_components/linus_dashboard'); from const import VERSION; print(VERSION)" 2>/dev/null || echo "")
 
 if [ "$PACKAGE_VERSION" = "$MANIFEST_VERSION" ] && [ "$PACKAGE_VERSION" = "$CONST_VERSION" ]; then
     print_success "Version consistency (all $PACKAGE_VERSION)"

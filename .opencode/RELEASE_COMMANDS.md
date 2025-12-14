@@ -90,6 +90,25 @@ For community testing before stable:
 
 **Example**: `2.1.0` → `2.1.0-beta.1`
 
+**🤖 NEW: Automated Beta Release**
+
+```bash
+/create-beta-release
+```
+
+**Fully automated** beta release with intelligent release notes editing:
+- ✅ Generates notes from git commits
+- ✅ Automatically removes noise (version bumps, merges, etc.)
+- ✅ Adds detailed descriptions in English
+- ✅ Full French translation with same quality
+- ✅ Specific beta testing instructions
+- ✅ Runs all validations and tests
+- ✅ Bumps version and pushes to GitHub
+
+**This is the recommended way to create beta releases!**
+
+See: `docs/AUTOMATED_BETA_RELEASE_PROCESS.md` for full details.
+
 ---
 
 ### 🔬 Alpha Pre-Release (X.Y.Z → X.Y.Z-alpha.N)

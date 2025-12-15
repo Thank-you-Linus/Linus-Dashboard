@@ -39,13 +39,9 @@ All notification issues have been resolved and the system has been improved for 
 ## 📝 New Files Created
 
 1. **`scripts/format-release-notes.sh`**
-   - Formats RELEASE_NOTES.md for GitHub with collapsible sections
-   - Creates RELEASE_NOTES_FORMATTED.md
+   - Formats RELEASE_NOTES.md in-place for GitHub with collapsible sections
+   - Transforms the file to be GitHub-compatible
    - Executable script
-
-2. **`RELEASE_NOTES_FORMATTED.md`** (generated)
-   - Formatted version for GitHub releases
-   - Automatically cleaned up after release
 
 ---
 
@@ -149,7 +145,7 @@ When creating a release:
 2. **Preview before releasing**:
    ```bash
    npm run release:format
-   cat RELEASE_NOTES_FORMATTED.md
+   cat RELEASE_NOTES.md
    ```
 
 3. **Test Discord message locally** (requires webhook):

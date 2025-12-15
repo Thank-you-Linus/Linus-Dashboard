@@ -143,10 +143,7 @@ if [ -f "RELEASE_NOTES.md" ]; then
     print_success "Removed RELEASE_NOTES.md"
 fi
 
-if [ -f "RELEASE_NOTES_FORMATTED.md" ]; then
-    git rm RELEASE_NOTES_FORMATTED.md 2>/dev/null || rm RELEASE_NOTES_FORMATTED.md
-    print_success "Removed RELEASE_NOTES_FORMATTED.md"
-fi
+# RELEASE_NOTES_FORMATTED.md is no longer used (now using single RELEASE_NOTES.md)
 
 # Step 7: Push changes
 print_step "Final Steps"

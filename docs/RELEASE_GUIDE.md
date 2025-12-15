@@ -165,11 +165,12 @@ After editing `RELEASE_NOTES.md`, format it for GitHub with collapsible sections
 npm run release:format
 ```
 
-This creates `RELEASE_NOTES_FORMATTED.md` with:
+This transforms `RELEASE_NOTES.md` in-place with:
 - Concise summary with main features visible
 - Detailed descriptions in collapsible sections
 - Compact bilingual format
 - Better visual organization for GitHub
+- Installation instructions automatically added
 
 **This formatted version will be used automatically for GitHub releases.**
 
@@ -235,7 +236,7 @@ GitHub Actions will automatically:
 9. ✅ **Format release notes** with collapsible sections
 10. ✅ Create GitHub pre-release with formatted notes
 11. ✅ Send Discord notification to beta testers (concise format)
-12. ✅ Clean up RELEASE_NOTES.md and RELEASE_NOTES_FORMATTED.md
+12. ✅ Clean up RELEASE_NOTES.md
 
 **View the workflow**: `.github/workflows/prerelease.yml`
 
@@ -333,7 +334,7 @@ git push && git push --tags
 2. Click "Draft a new release"
 3. Select your tag (e.g., `1.4.0`)
 4. Title: `v1.4.0`
-5. Copy content from `RELEASE_NOTES_FORMATTED.md`
+5. Copy content from `RELEASE_NOTES.md` (formatted)
 6. Mark as "Latest release" ✅
 7. Leave "Pre-release" unchecked ⬜
 8. Click "Publish release"

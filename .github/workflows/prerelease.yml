@@ -93,16 +93,11 @@ jobs:
           if [ -f "RELEASE_NOTES.md" ]; then
             echo "✅ Found RELEASE_NOTES.md"
             
-            # Format the release notes with collapsible sections
+            # Format the release notes with collapsible sections (modifies RELEASE_NOTES.md in-place)
             bash scripts/format-release-notes.sh
             
-            if [ -f "RELEASE_NOTES_FORMATTED.md" ]; then
-              echo "✅ Using formatted release notes"
-              NOTES=$(cat RELEASE_NOTES_FORMATTED.md)
-            else
-              echo "⚠️ Formatted file not found, using original"
-              NOTES=$(cat RELEASE_NOTES.md)
-            fi
+            echo "✅ Using formatted RELEASE_NOTES.md"
+            NOTES=$(cat RELEASE_NOTES.md)
           else
             echo "⚠️ No RELEASE_NOTES.md found, generating from commits"
             LAST_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
@@ -151,15 +146,15 @@ jobs:
             echo "⚠️ Discord webhook not configured, skipping notification"
           fi
 
-      # 14. Nettoyer les fichiers de release notes après publication
-      - name: "Clean up release notes files"
+      # 14. Nettoyer le fichier de release notes après publication
+      - name: "Clean up release notes file"
         if: success()
         continue-on-error: true
         run: |
-          if [ -f "RELEASE_NOTES.md" ] || [ -f "RELEASE_NOTES_FORMATTED.md" ]; then
+          if [ -f "RELEASE_NOTES.md" ]; then
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
-            git rm RELEASE_NOTES.md RELEASE_NOTES_FORMATTED.md || true
+            git rm RELEASE_NOTES.md || true
             git commit -m "chore: Clean up release notes after pre-release" || true
             git push origin HEAD:main || {
               echo "⚠️ Failed to push cleanup commit, but release succeeded"

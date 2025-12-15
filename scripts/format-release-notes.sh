@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
 #
-# Format RELEASE_NOTES.md for GitHub release with collapsible sections
+# Format RELEASE_NOTES.md in-place for GitHub release with collapsible sections
 # Usage: ./format-release-notes.sh
 #
-# This script takes RELEASE_NOTES.md and formats it for GitHub with:
+# This script transforms RELEASE_NOTES.md to be GitHub-compatible with:
 # - Main feature highlights visible
 # - Detailed descriptions in collapsible sections
 # - Compact bilingual format
+# - Installation instructions
 #
 
 set -e
@@ -28,11 +29,10 @@ if [ ! -f "RELEASE_NOTES.md" ]; then
     exit 1
 fi
 
-echo -e "${BLUE}📝 Formatting release notes for GitHub...${NC}\n"
+echo -e "${BLUE}📝 Formatting RELEASE_NOTES.md for GitHub...${NC}\n"
 
 # Create temporary file for formatted notes
 TEMP_FILE=$(mktemp)
-OUTPUT_FILE="$PROJECT_ROOT/RELEASE_NOTES_FORMATTED.md"
 
 # Extract version info
 VERSION=$(node -p "require('./package.json').version" 2>/dev/null || echo "")
@@ -248,9 +248,9 @@ cat >> "$TEMP_FILE" << 'EOF'
 
 EOF
 
-# Move temp file to output
-mv "$TEMP_FILE" "$OUTPUT_FILE"
+# Replace RELEASE_NOTES.md with formatted version
+mv "$TEMP_FILE" "$PROJECT_ROOT/RELEASE_NOTES.md"
 
-echo -e "${GREEN}✅ Formatted release notes created!${NC}"
-echo -e "${BLUE}📄 File: ${OUTPUT_FILE}${NC}\n"
-echo -e "${YELLOW}💡 This file will be used for GitHub release${NC}"
+echo -e "${GREEN}✅ RELEASE_NOTES.md formatted for GitHub!${NC}"
+echo -e "${BLUE}📄 File: RELEASE_NOTES.md (updated in-place)${NC}\n"
+echo -e "${YELLOW}💡 This file is now ready for GitHub release${NC}"

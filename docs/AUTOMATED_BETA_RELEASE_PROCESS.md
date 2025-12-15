@@ -82,7 +82,7 @@ printf "y\n" | bash scripts/bump-version.sh beta
 bash scripts/format-release-notes.sh
 
 # Amend commit with updated notes
-git add RELEASE_NOTES.md RELEASE_NOTES_FORMATTED.md
+git add RELEASE_NOTES.md
 git commit --amend --no-edit
 
 # Update tag

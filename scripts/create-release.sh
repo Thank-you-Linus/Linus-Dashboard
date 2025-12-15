@@ -156,7 +156,7 @@ echo -e "${BOLD}${BLUE}1. Go to: ${NC}https://github.com/Thank-you-Linus/Linus-D
 echo -e "${BOLD}${BLUE}2. Fill in the form:${NC}"
 echo -e "   • Tag: ${BOLD}${NEW_VERSION}${NC}"
 echo -e "   • Title: ${BOLD}v${NEW_VERSION}${NC}"
-echo -e "   • Description: Copy from ${BOLD}RELEASE_NOTES_FORMATTED.md${NC}"
+echo -e "   • Description: Copy from ${BOLD}RELEASE_NOTES.md${NC}"
 echo -e "   • ✅ Set as latest release"
 echo -e "   • ⬜ Pre-release (leave unchecked)\n"
 

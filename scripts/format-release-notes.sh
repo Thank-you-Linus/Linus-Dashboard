@@ -181,13 +181,15 @@ if [ "$IS_BETA" = "true" ]; then
         echo "" >> "$TEMP_FILE"
     fi
     
-    # Known issues
-    KNOWN_ISSUES=$(sed -n '/Known Issues:/,/How to Report/p' RELEASE_NOTES.md | grep -E '^[[:space:]]*-' || echo "")
+    # Known issues (English only - list items)
+    KNOWN_ISSUES=$(sed -n '/## 🇬🇧 English/,/## 🇫🇷 Français/p' RELEASE_NOTES.md | sed -n '/\*\*Known Issues:\*\*/,/\*\*How to report/p' | grep -E '^[[:space:]]*-[[:space:]]' | head -5 || echo "")
+    echo "**Known Issues:**" >> "$TEMP_FILE"
     if [ -n "$KNOWN_ISSUES" ]; then
-        echo "**Known Issues:**" >> "$TEMP_FILE"
         echo "$KNOWN_ISSUES" >> "$TEMP_FILE"
-        echo "" >> "$TEMP_FILE"
+    else
+        echo "- None currently" >> "$TEMP_FILE"
     fi
+    echo "" >> "$TEMP_FILE"
 fi
 
 # Add technical details in collapsible section
@@ -197,8 +199,20 @@ echo "<details>" >> "$TEMP_FILE"
 echo "<summary>📊 <b>Technical Details</b></summary>" >> "$TEMP_FILE"
 echo "" >> "$TEMP_FILE"
 
-# Extract commits
-sed -n '/## 📊 Technical Details/,/###/p' RELEASE_NOTES.md | tail -n +2 >> "$TEMP_FILE"
+# Extract Key Commits section only
+COMMITS=$(sed -n '/### Key Commits/,/### Contributors/p' RELEASE_NOTES.md | tail -n +3 | head -n -1 || echo "")
+if [ -n "$COMMITS" ]; then
+    echo "### Key Commits" >> "$TEMP_FILE"
+    echo "$COMMITS" >> "$TEMP_FILE"
+    echo "" >> "$TEMP_FILE"
+fi
+
+# Extract contributors (from ### Contributors to end of file or next section)
+CONTRIBUTORS=$(sed -n '/### Contributors/,$p' RELEASE_NOTES.md | grep -E '^[[:space:]]*-' || echo "")
+if [ -n "$CONTRIBUTORS" ]; then
+    echo "### Contributors" >> "$TEMP_FILE"
+    echo "$CONTRIBUTORS" >> "$TEMP_FILE"
+fi
 
 echo "" >> "$TEMP_FILE"
 echo "</details>" >> "$TEMP_FILE"

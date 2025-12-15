@@ -59,37 +59,20 @@ _No improvements in this release_
 
 **Known Issues:**
 - None currently
-   - Clear description of the problem
-   - Steps to reproduce
-   - Your Home Assistant version
-   - Browser console errors (if any)
----
-- **Gestion intelligente des versions avec package.json comme source unique de vérité**
-- **Correction de la vérification de cohérence des versions pour utiliser le mécanisme d'import Python approprié**
-- **Application de la règle de linting pour la convention de nommage __VERSION__**
-- [ ] **Cohérence des versions** - Vérifier que tous les numéros de version affichés dans l'interface du tableau de bord, les logs et le manifeste correspondent à la version beta
-- [ ] **Chargement du tableau de bord** - S'assurer que le tableau de bord se charge correctement sans erreurs liées aux versions dans la console du navigateur
-- [ ] **Processus de mise à jour** - Tester la mise à jour de la beta.3 vers la beta.4 via HACS ou installation manuelle
-- [ ] **Intégrité du build** - Vérifier que toutes les cartes personnalisées et composants se chargent correctement avec le nouveau système de version
-- Aucun actuellement
-   - Description claire du problème
-   - Étapes pour reproduire
-   - Votre version de Home Assistant
-   - Erreurs de la console du navigateur (le cas échéant)
----
-- feat: Implement smart version management with package.json as single source of truth (7b7b455)
-- fix: Update version consistency check to use Python import for CONST_VERSION (ad50dd6)
-- fix: Add eslint-disable for __VERSION__ naming convention and enforce linting rule (1b0e73c)
-- @github-actions[bot]
-- @Julien-Decoen
 
 ---
 
 <details>
 <summary>📊 <b>Technical Details</b></summary>
 
-
 ### Key Commits
+- feat: Implement smart version management with package.json as single source of truth (7b7b455)
+- fix: Update version consistency check to use Python import for CONST_VERSION (ad50dd6)
+- fix: Add eslint-disable for __VERSION__ naming convention and enforce linting rule (1b0e73c)
+
+### Contributors
+- @github-actions[bot]
+- @Julien-Decoen
 
 </details>
 

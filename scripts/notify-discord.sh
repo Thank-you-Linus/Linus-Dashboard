@@ -176,10 +176,10 @@ MESSAGE="${MESSAGE//\{\{TESTING_NOTES_FR\}\}/$TESTING_NOTES_FR}"
 
 # Truncate if too long (Discord limit is 2000 chars)
 if [ ${#MESSAGE} -gt 1900 ]; then
-    MESSAGE="${MESSAGE:0:1900}..."
-    MESSAGE="$MESSAGE
+    MESSAGE="${MESSAGE:0:1900}
 
-_Message truncated. See full release notes at: $RELEASE_URL_"
+_Message truncated. See full release notes at:_
+$RELEASE_URL"
 fi
 
 # Create JSON payload

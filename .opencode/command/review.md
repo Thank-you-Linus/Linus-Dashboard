@@ -1,3 +1,8 @@
+---
+description: Review code quality, security, and maintainability before committing
+agent: general
+---
+
 # 🔍 Code Review Prompt
 
 Use this prompt to review code before committing.

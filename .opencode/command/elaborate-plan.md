@@ -1,3 +1,8 @@
+---
+description: Create detailed technical plans before implementation
+agent: general
+---
+
 # 🧠 Elaborate Plan Prompt
 
 Use this prompt to create detailed technical plans before implementation.

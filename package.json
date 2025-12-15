@@ -68,8 +68,7 @@
     "type-check": "tsc --noEmit",
     "test:smoke": "bash scripts/smoke-tests.sh",
     "test:ci": "bash scripts/ci-local.sh",
-    "create:prerelease": "bash scripts/create-prerelease.sh",
-    "create:release": "bash scripts/create-release.sh",
+    "analyze:commits": "bash scripts/analyze-commits.sh",
     "release:rollback": "bash scripts/rollback-release.sh",
     "forums:open": "bash scripts/open-forums.sh",
     "update:ha": "bash scripts/update-ha-version.sh"

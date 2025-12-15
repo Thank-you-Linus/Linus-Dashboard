@@ -1,408 +1,750 @@
-# 🎮 OpenCode Release Commands
+# 🚀 Release Commands - Linus Dashboard
 
-Custom OpenCode commands for streamlined release management.
+Documentation complète des commandes de release intelligentes avec détection automatique de version.
 
 ---
 
-## 📋 Available Commands
+## 📋 Table des matières
 
-### 🔍 Pre-Release Validation
+- [Vue d'ensemble](#vue-densemble)
+- [Commandes disponibles](#commandes-disponibles)
+- [Workflow recommandé](#workflow-recommandé)
+- [Détection intelligente de version](#détection-intelligente-de-version)
+- [Exemples pratiques](#exemples-pratiques)
+- [Dépannage](#dépannage)
 
+---
+
+## Vue d'ensemble
+
+Le système de release de Linus Dashboard utilise l'IA pour analyser automatiquement les commits et suggérer le type de version approprié (patch/minor/major). Il s'adapte intelligemment selon le contexte :
+
+- **Release beta incrémentale** → Auto-incrémente (beta.2 → beta.3)
+- **Première beta après stable** → IA analyse les commits et suggère le type
+- **Finalisation beta → stable** → Automatique, pas de validation
+- **Release stable directe** → IA analyse + avertissement (recommande beta d'abord)
+
+---
+
+## Commandes disponibles
+
+### `/release-beta`
+
+Crée une pre-release beta pour les tests communautaires.
+
+**Détection automatique :**
+- Version actuelle stable (ex: `1.4.0`) → **Première beta** (IA analyse les commits)
+- Version actuelle beta (ex: `1.4.0-beta.2`) → **Beta incrémentale** (auto-incrémente)
+
+**Temps d'exécution :**
+- Première beta : 5-10 min (avec analyse IA)
+- Beta incrémentale : 3-5 min (pas d'analyse)
+
+**Fichiers modifiés :**
+- `package.json`, `package-lock.json`, `manifest.json`
+- `RELEASE_NOTES.md` (généré et édité par IA)
+- `custom_components/linus_dashboard/www/` (build)
+
+**Validations automatiques :**
+- Notes de release (format, sections, pas de TODO)
+- Qualité du code (17 checks)
+- Tests smoke (15 tests)
+
+**Voir la documentation complète :** `.opencode/command/release-beta.md`
+
+---
+
+### `/release-stable`
+
+Crée une release stable pour production.
+
+**Détection automatique :**
+- Version actuelle beta (ex: `1.5.0-beta.3`) → **Finalisation** (automatique)
+- Version actuelle stable (ex: `1.4.0`) → **Release directe** (IA analyse + avertissement)
+
+**Temps d'exécution :**
+- Finalisation : 3-5 min (rapide, déjà testée)
+- Release directe : 5-10 min (avec analyse IA et warning)
+
+**Avertissements :**
+- Release directe affiche un warning sur l'absence de tests beta
+- Option de créer une beta à la place (recommandé)
+
+**Validations automatiques :**
+- Notes de release (format, sections, pas de section beta)
+- Qualité du code (17 checks)
+- Tests smoke (15 tests)
+
+**Après publication :**
+- Ouvrir les forums : `npm run forums:open`
+- Poster les annonces (templates fournis)
+
+**Voir la documentation complète :** `.opencode/command/release-stable.md`
+
+---
+
+### `/release-check`
+
+Vérifie que tout est prêt pour une release (sans créer de release).
+
+**Exécute :**
+- 17 checks de qualité de code
+- 15 tests smoke
+- Validation des notes de release (si présentes)
+- Vérification de la cohérence des versions
+
+**Utilisation :**
 ```bash
 /release-check
 ```
 
-Runs comprehensive validation (17 checks) before any release:
-- Git status, branch, and sync
-- Dependencies and build
-- Linting and type checking
-- Version consistency
-- Required files validation
-- Security checks
-
-**When to use**: Before any release to ensure everything is ready.
+**Voir la documentation :** `.opencode/command/release-check.md`
 
 ---
 
-### 🔧 Patch Release (X.Y.Z → X.Y.Z+1)
+### `/release-rollback`
 
+Annule une release problématique et retourne à la version précédente.
+
+**Utilisation :**
 ```bash
-/release-patch
+/release-rollback 1.5.0
 ```
 
-For bug fixes and minor updates:
-- ✅ Bug fixes
-- ✅ Security patches
-- ✅ Documentation updates
-- ❌ No new features
-- ❌ No breaking changes
+**Actions effectuées :**
+- Supprime le tag git
+- Reset au commit précédent
+- Supprime la release GitHub
+- Nettoie les fichiers de release
 
-**Example**: `2.0.3` → `2.0.4`
+**⚠️ Attention :** À utiliser seulement en cas de problème critique
+
+**Voir la documentation :** `.opencode/command/release-rollback.md`
 
 ---
 
-### ✨ Minor Release (X.Y.Z → X.Y+1.0)
+## Workflow recommandé
 
-```bash
-/release-minor
+### Scénario 1 : Release normale (recommandé)
+
+```
+1.4.0 (stable)
+  ↓ Développement de nouvelles fonctionnalités
+  ↓
+  ↓ /release-beta
+  ↓ → IA analyse les commits
+  ↓ → Suggère MINOR (1.5.0-beta.1)
+  ↓ → Tu valides
+  ↓
+1.5.0-beta.1
+  ↓ Tests communautaires (2-7 jours)
+  ↓ Corrections de bugs trouvés
+  ↓
+  ↓ /release-beta
+  ↓ → Détecte beta incrémentale
+  ↓ → Auto-incrémente (pas de validation)
+  ↓
+1.5.0-beta.2
+  ↓ Plus de tests
+  ↓ Tout fonctionne bien
+  ↓
+  ↓ /release-stable
+  ↓ → Détecte finalisation
+  ↓ → Automatique (pas de validation)
+  ↓
+1.5.0 (stable)
+  ↓ npm run forums:open
+  ↓ Annonce publique
 ```
 
-For new features (backward compatible):
-- ✅ New features
-- ✅ New functionality
-- ✅ Improvements
-- ✅ Bug fixes
-- ✅ Backward compatible
-- ❌ No breaking changes
-
-**Example**: `2.0.4` → `2.1.0`
+**Temps total :** 2-7 jours (incluant tests communautaires)
 
 ---
 
-### 💥 Major Release (X.Y.Z → X+1.0.0)
+### Scénario 2 : Hotfix urgent
 
-```bash
-/release-major
+```
+1.5.0 (stable)
+  ↓ Bug critique découvert
+  ↓ Correction immédiate
+  ↓
+  ↓ /release-stable
+  ↓ → Détecte release directe
+  ↓ → ⚠️ Avertit de l'absence de tests beta
+  ↓ → IA suggère PATCH (1.5.1)
+  ↓ → Tu confirmes (option [1])
+  ↓
+1.5.1 (stable)
+  ↓ Déploiement immédiat
 ```
 
-For breaking changes:
-- ✅ Breaking changes
-- ✅ Major refactoring
-- ✅ API changes
-- ✅ Removed deprecated features
-- ⚠️ Requires user migration
-
-**Example**: `2.1.0` → `3.0.0`
+**⚠️ Note :** À utiliser seulement pour les correctifs critiques
 
 ---
 
-### 🧪 Beta Pre-Release (X.Y.Z → X.Y.Z-beta.N)
+## Détection intelligente de version
 
+### Règles d'analyse IA
+
+L'IA analyse les commits depuis le dernier tag et applique ces règles :
+
+#### MAJOR (X.0.0) - Breaking Changes
+
+**Déclencheurs :**
+- Commits avec `BREAKING CHANGE:` dans le footer
+- Type avec `!` après (ex: `feat!:`, `fix!:`)
+- Changements incompatibles avec l'API existante
+- Modifications du schéma de base de données
+- Refactoring architectural majeur
+
+**Exemple :**
+```
+feat!: Rewrite configuration system
+
+BREAKING CHANGE: Old config format no longer supported.
+Users must migrate to new YAML structure.
+```
+
+**Suggestion IA :** `2.0.0-beta.1` (MAJOR)
+
+---
+
+#### MINOR (X.Y.0) - Nouvelles fonctionnalités
+
+**Déclencheurs :**
+- Commits `feat:` (nouvelles fonctionnalités)
+- Ajouts rétrocompatibles
+- Nouveaux composants, vues, cartes
+- Améliorations significatives
+
+**Exemple :**
+```
+10 feat: Add climate view with HVAC controls
+2 fix: Correct version consistency
+0 BREAKING CHANGE
+```
+
+**Suggestion IA :** `1.5.0-beta.1` (MINOR)
+
+---
+
+#### PATCH (X.Y.Z) - Corrections seulement
+
+**Déclencheurs :**
+- Commits `fix:` uniquement
+- Mises à jour de documentation (`docs:`)
+- Petites améliorations/refactoring
+- Mises à jour de traductions
+- Mises à jour de dépendances
+
+**Exemple :**
+```
+0 feat:
+5 fix: Various bug fixes
+0 BREAKING CHANGE
+```
+
+**Suggestion IA :** `1.4.1-beta.1` (PATCH)
+
+---
+
+#### AMBIGUOUS - Signaux mixtes
+
+**Cas :**
+- Mélange de signaux (ex: 5 feat + 1 BREAKING)
+- Impact peu clair
+- Doutes sur la classification
+
+**Action :** L'IA demande à l'utilisateur de décider manuellement
+
+**Exemple de prompt :**
+```
+⚠️ AMBIGUOUS COMMITS DETECTED
+
+Analysis shows mixed signals:
+- 5 feat: New features detected
+- 1 BREAKING CHANGE: API modification
+- 2 fix: Bug fixes
+
+This could be either MINOR or MAJOR.
+
+Please decide manually:
+[1] MINOR - Breaking change is minor, keep 1.5.0
+[2] MAJOR - Breaking change is significant, use 2.0.0
+[3] CANCEL
+```
+
+---
+
+## Exemples pratiques
+
+### Exemple 1 : Première beta avec nouvelles fonctionnalités
+
+**Contexte :**
+- Version actuelle : `1.4.0`
+- Commits depuis dernier tag : 10 feat, 2 fix
+
+**Commande :**
 ```bash
 /release-beta
 ```
 
-For community testing before stable:
-- ✅ Feature-complete
-- ✅ Needs community feedback
-- ✅ May have minor bugs
-- ⚠️ Limited distribution
-
-**Example**: `2.1.0` → `2.1.0-beta.1`
-
-**🤖 NEW: Automated Beta Release**
-
-```bash
-/create-beta-release
-```
-
-**Fully automated** beta release with intelligent release notes editing:
-- ✅ Generates notes from git commits
-- ✅ Automatically removes noise (version bumps, merges, etc.)
-- ✅ Adds detailed descriptions in English
-- ✅ Full French translation with same quality
-- ✅ Specific beta testing instructions
-- ✅ Runs all validations and tests
-- ✅ Bumps version and pushes to GitHub
-
-**This is the recommended way to create beta releases!**
-
-See: `docs/AUTOMATED_BETA_RELEASE_PROCESS.md` for full details.
-
----
-
-### 🔬 Alpha Pre-Release (X.Y.Z → X.Y.Z-alpha.N)
-
-```bash
-/release-alpha
-```
-
-For very early testing:
-- ✅ Experimental features
-- ✅ Core team only
-- ⚠️ Expect bugs
-- ❌ NOT for production
-
-**Example**: `2.1.0` → `2.1.0-alpha.1`
-
----
-
-### ⏮️ Rollback Failed Release
-
-```bash
-/release-rollback <version>
-```
-
-Rollback a failed release:
-- Deletes local and remote tags
-- Deletes GitHub release
-- Reverts version changes
-- Cleans up release files
-
-**Example**: `/release-rollback 2.1.0-beta.3`
-
----
-
-## 🚀 Typical Workflows
-
-### Workflow 1: Bug Fix Release
-
-```bash
-# 1. Check if ready
-/release-check
-
-# 2. Create patch release
-/release-patch
-
-# Follow the guided steps
-```
-
-### Workflow 2: New Feature Release
-
-```bash
-# 1. Start with beta for testing
-/release-beta
-
-# Beta testers provide feedback...
-
-# 2. If all good, create stable minor release
-/release-minor
-
-# 3. Announce on forums (automatic)
-```
-
-### Workflow 3: Major Version with Breaking Changes
-
-```bash
-# 1. Alpha testing with core team
-/release-alpha
-
-# Fix critical issues...
-
-# 2. Beta testing with community
-/release-beta
-
-# Address feedback...
-
-# 3. Stable major release
-/release-major
-
-# 4. Monitor for issues, help users migrate
-```
-
-### Workflow 4: Release Failed
-
-```bash
-# If release fails during CI/CD
-
-# 1. Check what went wrong in GitHub Actions logs
-
-# 2. Rollback
-/release-rollback 2.1.0-beta.3
-
-# 3. Fix the issues
-npm run build
-npm run lint
-
-# 4. Validate fixes
-/release-check
-
-# 5. Try again
-/release-beta
-```
-
----
-
-## 📖 Command Details
-
-### What Each Command Does
-
-All commands follow this general pattern:
-
-1. **Show current version** (using shell output)
-2. **Guide through release steps**:
-   - Generate release notes
-   - Validate everything
-   - Format for GitHub
-   - Bump version
-   - Push to GitHub
-3. **Explain what happens next** (automated workflow)
-4. **Provide troubleshooting** if needed
-
-### Features
-
-- ✅ **Interactive**: Commands guide you through each step
-- ✅ **Safe**: Validation before any changes
-- ✅ **Automated**: GitHub Actions handle the rest
-- ✅ **Documented**: Each step explained
-- ✅ **Integrated**: Uses existing npm scripts
-
----
-
-## 🎯 Quick Reference
-
-| Release Type | Command | Version Change | Use Case |
-|-------------|---------|----------------|----------|
-| Patch | `/release-patch` | 2.0.3 → 2.0.4 | Bug fixes |
-| Minor | `/release-minor` | 2.0.4 → 2.1.0 | New features |
-| Major | `/release-major` | 2.1.0 → 3.0.0 | Breaking changes |
-| Beta | `/release-beta` | 2.1.0 → 2.1.0-beta.1 | Testing |
-| Alpha | `/release-alpha` | 2.1.0 → 2.1.0-alpha.1 | Early testing |
-| Rollback | `/release-rollback <ver>` | Reverts version | Failed release |
-| Check | `/release-check` | No change | Validation |
-
----
-
-## 💡 Tips
-
-### Before Any Release
-
-1. Always run `/release-check` first
-2. Make sure all changes are committed
-3. Be on the `main` branch
-4. Pull latest changes from remote
-
-### Writing Release Notes
-
-When editing `RELEASE_NOTES.md`:
-
-1. **Mark main features with bold** (`**text**`)
-   - These appear in Discord notifications
-   - These appear prominently in GitHub
+**Processus :**
+1. Détecte : Première beta après stable
+2. Exécute : `npm run analyze:commits`
+3. Analyse : 10 feat → Suggère MINOR
+4. Présente :
+   ```
+   🎯 RELEASE PROPOSAL
+   Current: 1.4.0
+   Proposed: 1.5.0-beta.1
+   Type: MINOR
    
-2. **Be specific and clear**
-   - Users should understand what changed
-   - Include "why" not just "what"
+   REASONING:
+   ✓ 10 new features detected
+   ✓ Backward compatible
+   ✓ No breaking changes
    
-3. **Include screenshots if relevant**
-   - Visual changes benefit from images
-   
-4. **Add beta testing instructions** (for beta/alpha)
-   - What to test
-   - How to report issues
-   - Known limitations
-
-### Version Numbering
-
-Follow [Semantic Versioning](https://semver.org/):
-
-- **MAJOR** (X.0.0): Breaking changes
-- **MINOR** (X.Y.0): New features, backward compatible
-- **PATCH** (X.Y.Z): Bug fixes
-- **PRE-RELEASE**: `-alpha.N` or `-beta.N`
-
-### When to Use Each Type
-
-**Patch** (`/release-patch`):
-- Fixed a bug
-- Typo corrections
-- Performance improvements (no API changes)
-- Documentation updates
-
-**Minor** (`/release-minor`):
-- Added new feature
-- New component or view
-- Enhanced existing feature
-- Backward compatible improvements
-
-**Major** (`/release-major`):
-- Changed configuration format
-- Removed deprecated features
-- Changed Home Assistant requirements
-- Incompatible API changes
-
-**Beta** (`/release-beta`):
-- Feature is ready but needs testing
-- Want community feedback
-- Before stable release of minor/major
-
-**Alpha** (`/release-alpha`):
-- Very experimental feature
-- Core team testing only
-- Proof of concept
-- Frequent changes expected
+   [1] APPROVE MINOR
+   [2] DOWNGRADE TO PATCH
+   [3] UPGRADE TO MAJOR
+   [4] CANCEL
+   ```
+5. Tu choisis [1]
+6. Crée `1.5.0-beta.1`
 
 ---
 
-## 🆘 Troubleshooting
+### Exemple 2 : Beta incrémentale (fixes)
 
-### Command Not Found
+**Contexte :**
+- Version actuelle : `1.5.0-beta.1`
+- Des bugs ont été trouvés et corrigés
 
-If `/release-*` commands don't work:
-
-1. Check `.opencode/command/` directory exists
-2. Verify markdown files are present
-3. Restart OpenCode TUI
-4. Try typing `/` to see available commands
-
-### Validation Fails
-
-If `/release-check` shows errors:
-
+**Commande :**
 ```bash
-# For build errors
-npm run build
+/release-beta
+```
 
-# For lint errors
-npm run lint
+**Processus :**
+1. Détecte : Beta incrémentale
+2. Auto-incrémente : `1.5.0-beta.2`
+3. Pas d'analyse, pas de validation
+4. Génère notes, valide, publie
+5. Temps : 3-5 min
 
-# For type errors
+---
+
+### Exemple 3 : Finalisation beta → stable
+
+**Contexte :**
+- Version actuelle : `1.5.0-beta.3`
+- Tests beta réussis, prêt pour production
+
+**Commande :**
+```bash
+/release-stable
+```
+
+**Processus :**
+1. Détecte : Finalisation beta
+2. Retire `-beta.3` : `1.5.0`
+3. Pas d'analyse, pas de validation
+4. Message :
+   ```
+   🎉 FINALIZE BETA → STABLE
+   Current: 1.5.0-beta.3
+   Target: 1.5.0
+   
+   ✅ Proceeding automatically
+   ```
+5. Génère notes, valide, publie
+6. Temps : 3-5 min
+
+---
+
+### Exemple 4 : Hotfix direct (non recommandé)
+
+**Contexte :**
+- Version actuelle : `1.5.0`
+- Bug critique trouvé, besoin de correctif immédiat
+
+**Commande :**
+```bash
+/release-stable
+```
+
+**Processus :**
+1. Détecte : Release directe
+2. **Avertissement :**
+   ```
+   ⚠️ DIRECT STABLE RELEASE
+   
+   You are creating a stable release without beta testing.
+   
+   RISKS:
+   - No community feedback
+   - Untested in real environments
+   - Potential bugs reach production
+   
+   [1] YES - Continue (risky)
+   [2] CREATE BETA INSTEAD - Safer
+   [3] CANCEL
+   ```
+3. Tu choisis [1]
+4. Exécute : `npm run analyze:commits`
+5. Analyse : 5 fix → Suggère PATCH
+6. Présente :
+   ```
+   🎯 RELEASE PROPOSAL
+   Current: 1.5.0
+   Proposed: 1.5.1
+   Type: PATCH
+   
+   ⚠️ DIRECT RELEASE (SKIPPING BETA)
+   
+   [1] APPROVE PATCH
+   [2] CREATE BETA INSTEAD
+   [3] CANCEL
+   ```
+7. Tu choisis [1]
+8. Crée `1.5.1` (stable)
+
+---
+
+## Dépannage
+
+### Problème : "No commits found since last tag"
+
+**Cause :** Aucun commit depuis le dernier tag
+
+**Solution :**
+```bash
+# Vérifier les commits
+git log $(git describe --tags --abbrev=0)..HEAD --oneline
+
+# Si vide, créer des commits d'abord
+```
+
+---
+
+### Problème : "Ambiguous commits detected"
+
+**Cause :** Mélange de feat/fix/breaking, IA ne peut pas décider
+
+**Solution :** L'IA te demande de choisir manuellement :
+- Option [1] : PATCH
+- Option [2] : MINOR  
+- Option [3] : MAJOR
+- Option [4] : CANCEL
+
+---
+
+### Problème : "Validation failed"
+
+**Cause :** Les checks de qualité ont échoué
+
+**Solutions :**
+```bash
+# Vérifier les erreurs
+npm run lint:check
 npm run type-check
+npm run build
 
-# For version mismatch
-# Re-run the appropriate bump command
-```
+# Corriger les erreurs
+npm run lint  # Auto-fix
+npm run build
 
-### Release Fails on GitHub
-
-If GitHub Actions workflow fails:
-
-1. Check the workflow logs for errors
-2. Use `/release-rollback <version>` to clean up
-3. Fix the reported issues
-4. Run `/release-check` to validate
-5. Try the release again
-
-### Need to Undo a Release
-
-If you need to undo a published release:
-
-```bash
-# Rollback the version and tags
-/release-rollback 2.1.0-beta.3
-
-# Fix issues
-# Then create new release
-```
-
----
-
-## 📚 Related Documentation
-
-- **Detailed Improvements**: `ADVANCED_IMPROVEMENTS.md`
-- **Release Guide**: `docs/RELEASE_GUIDE.md`
-- **npm Scripts**: `package.json`
-- **Workflows**: `.github/workflows/`
-
----
-
-## ✅ Testing the Commands
-
-Before using in production, test the commands:
-
-```bash
-# 1. Test validation
-/release-check
-
-# 2. Test with a fake beta
+# Réessayer
 /release-beta
-# (Create RELEASE_NOTES.md, but DON'T push)
-
-# 3. Test rollback with a dummy tag
-git tag 999.999.999-test
-/release-rollback 999.999.999-test
 ```
 
 ---
 
-**These commands integrate seamlessly with the existing release system while providing a more intuitive, guided experience!** 🎉
+### Problème : "Smoke tests failed"
+
+**Cause :** Les tests smoke n'ont pas passé
+
+**Solution :**
+```bash
+# Exécuter les tests manuellement
+npm run test:smoke
+
+# Corriger les tests qui échouent
+# Réessayer
+/release-beta
+```
+
+---
+
+### Problème : Release créée par erreur
+
+**Solution :**
+```bash
+# Annuler la release
+/release-rollback 1.5.0
+
+# Cela va :
+# - Supprimer le tag
+# - Reset au commit précédent  
+# - Supprimer la release GitHub
+```
+
+---
+
+## Scripts utilisés
+
+### `scripts/analyze-commits.sh`
+
+Analyse les commits depuis le dernier tag et retourne un JSON :
+
+```bash
+npm run analyze:commits
+```
+
+**Output :**
+```json
+{
+  "status": "ok",
+  "commits": {
+    "total": 12,
+    "breaking": 0,
+    "feat": 10,
+    "fix": 2,
+    "refactor": 0,
+    "chore": 0,
+    "docs": 0
+  },
+  "commits_list": ["commit 1", "commit 2", ...],
+  "last_tag": "1.4.0"
+}
+```
+
+---
+
+### `scripts/bump-version.sh`
+
+Bumpe la version dans tous les fichiers avec support explicite des types :
+
+**Usage :**
+```bash
+# Auto mode (incrémente selon la version actuelle)
+bash scripts/bump-version.sh beta        # 1.4.0-beta.2 → 1.4.0-beta.3
+bash scripts/bump-version.sh release     # 1.4.0-beta.3 → 1.4.0
+
+# Explicit mode (pour IA)
+bash scripts/bump-version.sh beta patch   # 1.4.0 → 1.4.1-beta.1
+bash scripts/bump-version.sh beta minor   # 1.4.0 → 1.5.0-beta.1
+bash scripts/bump-version.sh beta major   # 1.4.0 → 2.0.0-beta.1
+
+bash scripts/bump-version.sh release patch # 1.4.0 → 1.4.1
+bash scripts/bump-version.sh release minor # 1.4.0 → 1.5.0
+bash scripts/bump-version.sh release major # 1.4.0 → 2.0.0
+```
+
+---
+
+### `scripts/generate-release-notes.sh`
+
+Génère les notes de release basées sur les commits :
+
+```bash
+bash scripts/generate-release-notes.sh
+```
+
+**Output :** `RELEASE_NOTES.md` (brouillon)
+
+---
+
+### `scripts/format-release-notes.sh`
+
+Formate les notes de release (édite en place) :
+
+```bash
+bash scripts/format-release-notes.sh
+```
+
+**Modifications :** `RELEASE_NOTES.md` (formaté)
+
+---
+
+### `scripts/validate-release-notes.sh`
+
+Valide le format des notes de release :
+
+```bash
+bash scripts/validate-release-notes.sh
+```
+
+**Checks :**
+- Sections requises EN/FR présentes
+- Pas de TODO
+- Section beta testing remplie (pour beta)
+- Format correct
+
+---
+
+### `scripts/check-release-ready.sh`
+
+Exécute 17 checks de qualité :
+
+```bash
+bash scripts/check-release-ready.sh
+```
+
+**Checks :**
+1. Git clean
+2. Branch main
+3. Up-to-date
+4. Deps installed
+5. Lint
+6. Type-check
+7. Build
+8. Version consistency
+9. No FIXME
+10. CHANGELOG
+11. manifest.json
+12. hacs.json
+13. No secrets
+14. Python syntax
+15. README
+16. LICENSE
+17. Smoke tests ready
+
+---
+
+## Logs
+
+Chaque release est loggée dans :
+
+```
+.opencode/logs/release-beta-{timestamp}.log
+.opencode/logs/release-stable-{timestamp}.log
+```
+
+**Contenu :**
+- Timestamps
+- Analyse de commits (si applicable)
+- Raisonnement IA
+- Décisions utilisateur
+- Hashs git
+- URLs
+- Durée
+
+---
+
+## Commandes de développement
+
+En bonus, tous les prompts de développement sont maintenant accessibles via `/` commands :
+
+- `/debug` - Déboguer des erreurs systématiquement
+- `/elaborate-plan` - Créer des plans techniques détaillés
+- `/implement` - Implémenter des plans approuvés
+- `/review` - Revue de code avant commit
+
+**Documentation :** Voir les fichiers dans `.opencode/command/`
+
+---
+
+## Résumé des changements
+
+### Avant (7 commandes)
+
+```
+/release-alpha      → Créer alpha
+/release-beta       → Créer beta (simple)
+/release-patch      → Créer patch
+/release-minor      → Créer minor
+/release-major      → Créer major
+/release-check      → Vérifier
+/release-rollback   → Annuler
+```
+
+**Problème :** Tu devais choisir le type manuellement (patch/minor/major)
+
+---
+
+### Après (4 commandes)
+
+```
+/release-beta       → Créer beta (IA détecte automatiquement)
+/release-stable     → Créer stable (IA détecte automatiquement)
+/release-check      → Vérifier
+/release-rollback   → Annuler
+```
+
+**Avantages :**
+- ✅ IA décide du type (patch/minor/major)
+- ✅ Détection automatique du contexte
+- ✅ Validation seulement quand nécessaire
+- ✅ Workflow plus rapide
+- ✅ Moins d'erreurs humaines
+
+---
+
+## Questions fréquentes
+
+### Q : L'IA peut-elle se tromper ?
+
+**R :** Oui, c'est pourquoi :
+1. L'IA présente un raisonnement détaillé
+2. Tu as toujours le choix final (approve/downgrade/upgrade/cancel)
+3. En cas de doute, l'IA demande explicitement
+
+---
+
+### Q : Puis-je skip la validation IA ?
+
+**R :** Non pour les décisions de version (première beta, release directe).  
+Oui pour l'approbation finale avec `--skip-approval` (⚠️ risqué).
+
+---
+
+### Q : Combien de temps prend une release ?
+
+**R :**
+- Beta incrémentale : 3-5 min (rapide)
+- Première beta : 5-10 min (avec analyse)
+- Finalisation stable : 3-5 min (rapide)
+- Release directe : 5-10 min (avec analyse + warning)
+
+---
+
+### Q : Que faire si je ne suis pas d'accord avec l'IA ?
+
+**R :** Tu peux :
+- Option [2] : Downgrade (MINOR → PATCH)
+- Option [3] : Upgrade (MINOR → MAJOR)
+- Option [4] : Cancel et ajuster les commits
+
+---
+
+### Q : Beta testing est-il vraiment nécessaire ?
+
+**R :** Oui, fortement recommandé :
+- ✅ Feedback communautaire
+- ✅ Tests en environnements réels
+- ✅ Découverte de bugs avant production
+- ❌ Release directe = risque élevé
+
+---
+
+## Support
+
+Pour plus d'aide :
+
+1. Lire la documentation détaillée :
+   - `.opencode/command/release-beta.md`
+   - `.opencode/command/release-stable.md`
+
+2. Vérifier les logs :
+   - `.opencode/logs/release-*.log`
+
+3. Demander à l'IA :
+   - "Explique-moi le workflow de release"
+   - "Pourquoi l'IA a suggéré MINOR ?"
+   - "Comment annuler une release ?"
+
+---
+
+**Le système intelligent de release rend les releases plus rapides, plus sûres, et moins sujettes aux erreurs humaines. 🚀**

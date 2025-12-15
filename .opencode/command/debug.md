@@ -1,3 +1,8 @@
+---
+description: Debug errors, bugs, and unexpected behavior systematically
+agent: general
+---
+
 # 🐛 Debug Prompt
 
 Use this prompt when investigating errors, bugs, or unexpected behavior.

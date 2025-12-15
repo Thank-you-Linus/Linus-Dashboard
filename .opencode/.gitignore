@@ -1,0 +1,8 @@
+# OpenCode artifacts
+node_modules/
+logs/
+*.log
+
+# Temporary files
+*.tmp
+*.bak

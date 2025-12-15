@@ -10,6 +10,14 @@
 #   npm run bump:alpha   -> 1.3.0 -> 1.3.1-alpha.1
 #   npm run bump:release -> 1.3.0-beta.1 -> 1.3.0
 #
+# Explicit version types (for AI-driven releases):
+#   scripts/bump-version.sh beta patch  -> 1.3.0 -> 1.3.1-beta.1
+#   scripts/bump-version.sh beta minor  -> 1.3.0 -> 1.4.0-beta.1
+#   scripts/bump-version.sh beta major  -> 1.3.0 -> 2.0.0-beta.1
+#   scripts/bump-version.sh release patch -> 1.3.0 -> 1.3.1
+#   scripts/bump-version.sh release minor -> 1.3.0 -> 1.4.0
+#   scripts/bump-version.sh release major -> 1.3.0 -> 2.0.0
+#
 
 set -e
 
@@ -26,6 +34,7 @@ NC='\033[0m' # No Color
 
 # Get the bump type from argument
 BUMP_TYPE="${1:-}"
+VERSION_TYPE="${2:-auto}"  # Optional: patch, minor, major, or auto (default)
 
 if [ -z "$BUMP_TYPE" ]; then
     echo -e "${RED}❌ Error: Bump type is required${NC}"
@@ -33,6 +42,10 @@ if [ -z "$BUMP_TYPE" ]; then
     echo -e "  npm run bump:beta     # Bump to next beta version"
     echo -e "  npm run bump:alpha    # Bump to next alpha version"
     echo -e "  npm run bump:release  # Bump to stable release"
+    echo -e ""
+    echo -e "  scripts/bump-version.sh beta patch   # Explicit patch beta"
+    echo -e "  scripts/bump-version.sh beta minor   # Explicit minor beta"
+    echo -e "  scripts/bump-version.sh beta major   # Explicit major beta"
     exit 1
 fi
 
@@ -43,48 +56,83 @@ if [[ ! "$BUMP_TYPE" =~ ^(beta|alpha|release)$ ]]; then
     exit 1
 fi
 
+# Validate version type
+if [[ ! "$VERSION_TYPE" =~ ^(auto|patch|minor|major)$ ]]; then
+    echo -e "${RED}❌ Error: Invalid version type '$VERSION_TYPE'${NC}"
+    echo -e "${YELLOW}Valid types: auto, patch, minor, major${NC}"
+    exit 1
+fi
+
 # Get current version from package.json (single source of truth)
 CURRENT_VERSION=$(node -p "require('./package.json').version")
 echo -e "${BLUE}📦 Current version: ${CURRENT_VERSION}${NC}"
 
+# Parse current version components
+BASE_VERSION=$(echo "$CURRENT_VERSION" | sed 's/-.*$//')
+IFS='.' read -ra VERSION_PARTS <<< "$BASE_VERSION"
+MAJOR="${VERSION_PARTS[0]}"
+MINOR="${VERSION_PARTS[1]}"
+PATCH="${VERSION_PARTS[2]}"
+
+# Calculate new base version based on explicit version type
+if [ "$VERSION_TYPE" != "auto" ]; then
+    echo -e "${BLUE}🎯 Explicit version type: ${VERSION_TYPE}${NC}"
+    
+    case "$VERSION_TYPE" in
+        patch)
+            PATCH=$((PATCH + 1))
+            NEW_BASE_VERSION="${MAJOR}.${MINOR}.${PATCH}"
+            ;;
+        minor)
+            MINOR=$((MINOR + 1))
+            NEW_BASE_VERSION="${MAJOR}.${MINOR}.0"
+            ;;
+        major)
+            MAJOR=$((MAJOR + 1))
+            NEW_BASE_VERSION="${MAJOR}.0.0"
+            ;;
+    esac
+else
+    # Auto mode: use existing logic
+    NEW_BASE_VERSION=""
+fi
+
 # Calculate new version based on bump type
 if [ "$BUMP_TYPE" = "release" ]; then
-    # Remove any pre-release suffix (e.g., 1.3.1-beta.1 -> 1.3.1)
-    NEW_VERSION=$(echo "$CURRENT_VERSION" | sed 's/-.*$//')
-    
-    # If already a release version, bump patch
-    if [[ ! "$CURRENT_VERSION" =~ (alpha|beta) ]]; then
-        # Use npm version to bump patch
-        NEW_VERSION=$(npm version patch --no-git-tag-version | sed 's/^v//')
-        npm version "$CURRENT_VERSION" --no-git-tag-version > /dev/null 2>&1 # Reset
-        IFS='.' read -ra VERSION_PARTS <<< "$CURRENT_VERSION"
-        MAJOR="${VERSION_PARTS[0]}"
-        MINOR="${VERSION_PARTS[1]}"
-        PATCH="${VERSION_PARTS[2]}"
-        PATCH=$((PATCH + 1))
-        NEW_VERSION="${MAJOR}.${MINOR}.${PATCH}"
+    if [ "$VERSION_TYPE" != "auto" ]; then
+        # Explicit version type for release
+        NEW_VERSION="$NEW_BASE_VERSION"
+    else
+        # Remove any pre-release suffix (e.g., 1.3.1-beta.1 -> 1.3.1)
+        NEW_VERSION=$(echo "$CURRENT_VERSION" | sed 's/-.*$//')
+        
+        # If already a release version, bump patch
+        if [[ ! "$CURRENT_VERSION" =~ (alpha|beta) ]]; then
+            PATCH=$((PATCH + 1))
+            NEW_VERSION="${MAJOR}.${MINOR}.${PATCH}"
+        fi
     fi
 else
-    # For beta/alpha, bump patch and add/increment pre-release
-    BASE_VERSION=$(echo "$CURRENT_VERSION" | sed 's/-.*$//')
-    
-    # If current version has no pre-release, bump patch
-    if [[ ! "$CURRENT_VERSION" =~ (alpha|beta) ]]; then
-        IFS='.' read -ra VERSION_PARTS <<< "$BASE_VERSION"
-        MAJOR="${VERSION_PARTS[0]}"
-        MINOR="${VERSION_PARTS[1]}"
-        PATCH="${VERSION_PARTS[2]}"
-        PATCH=$((PATCH + 1))
-        NEW_VERSION="${MAJOR}.${MINOR}.${PATCH}-${BUMP_TYPE}.1"
+    # For beta/alpha
+    if [ "$VERSION_TYPE" != "auto" ]; then
+        # Explicit version type: use new base version
+        NEW_VERSION="${NEW_BASE_VERSION}-${BUMP_TYPE}.1"
     else
-        # If same pre-release type, increment counter
-        if [[ "$CURRENT_VERSION" =~ ${BUMP_TYPE}\.([0-9]+)$ ]]; then
-            PRERELEASE_NUM="${BASH_REMATCH[1]}"
-            PRERELEASE_NUM=$((PRERELEASE_NUM + 1))
-            NEW_VERSION="${BASE_VERSION}-${BUMP_TYPE}.${PRERELEASE_NUM}"
+        # Auto mode: existing logic
+        # If current version has no pre-release, bump patch
+        if [[ ! "$CURRENT_VERSION" =~ (alpha|beta) ]]; then
+            PATCH=$((PATCH + 1))
+            NEW_VERSION="${MAJOR}.${MINOR}.${PATCH}-${BUMP_TYPE}.1"
         else
-            # Different pre-release type, start at .1
-            NEW_VERSION="${BASE_VERSION}-${BUMP_TYPE}.1"
+            # If same pre-release type, increment counter
+            if [[ "$CURRENT_VERSION" =~ ${BUMP_TYPE}\.([0-9]+)$ ]]; then
+                PRERELEASE_NUM="${BASH_REMATCH[1]}"
+                PRERELEASE_NUM=$((PRERELEASE_NUM + 1))
+                NEW_VERSION="${BASE_VERSION}-${BUMP_TYPE}.${PRERELEASE_NUM}"
+            else
+                # Different pre-release type, start at .1
+                NEW_VERSION="${BASE_VERSION}-${BUMP_TYPE}.1"
+            fi
         fi
     fi
 fi

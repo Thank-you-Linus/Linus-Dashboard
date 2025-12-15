@@ -1,3 +1,8 @@
+---
+description: Implement approved plans with precision and quality
+agent: general
+---
+
 # ⚙️ Implementation Prompt - Linus Dashboard
 
 > **Use this prompt when**: Implementing an approved plan  

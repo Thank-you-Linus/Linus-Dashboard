@@ -333,7 +333,7 @@ git push && git push --tags
 1. Go to: https://github.com/Thank-you-Linus/Linus-Dashboard/releases/new
 2. Click "Draft a new release"
 3. Select your tag (e.g., `1.4.0`)
-4. Title: `v1.4.0`
+4. Title: `1.4.0` (no 'v' prefix)
 5. Copy content from `RELEASE_NOTES.md` (formatted)
 6. Mark as "Latest release" ✅
 7. Leave "Pre-release" unchecked ⬜

@@ -87,7 +87,7 @@ jobs:
 
       - name: "Upload build artifacts"
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: build-output
           path: custom_components/linus_dashboard/www/

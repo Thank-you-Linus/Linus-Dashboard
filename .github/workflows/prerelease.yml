@@ -20,9 +20,9 @@ jobs:
           TAG_NAME="${GITHUB_REF#refs/tags/}"
           echo "Tag: $TAG_NAME"
           
-          # Check if tag matches semantic version with pre-release
-          if ! [[ "$TAG_NAME" =~ ^[0-9]+\.[0-9]+\.[0-9]+-(alpha|beta)\.[0-9]+$ ]]; then
-            echo "❌ Error: Invalid tag format. Expected: X.Y.Z-alpha.N or X.Y.Z-beta.N"
+          # Check if tag matches semantic version with pre-release (with optional 'v' prefix)
+          if ! [[ "$TAG_NAME" =~ ^v?[0-9]+\.[0-9]+\.[0-9]+-(alpha|beta)\.[0-9]+$ ]]; then
+            echo "❌ Error: Invalid tag format. Expected: [v]X.Y.Z-alpha.N or [v]X.Y.Z-beta.N"
             echo "   Got: $TAG_NAME"
             exit 1
           fi

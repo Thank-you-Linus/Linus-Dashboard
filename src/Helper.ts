@@ -597,6 +597,45 @@ class Helper {
   }
 
   /**
+   * Refresh all registries and reinitialize Helper data.
+   * 
+   * This method resets the Helper and reloads all entity, device, area, and floor registries
+   * from Home Assistant. Useful when configuration changes occur (e.g., adding a room to a device).
+   * 
+   * @param {generic.DashBoardInfo} info Dashboard info containing hass instance and configuration.
+   * @returns {Promise<void>}
+   * @static
+   */
+  static async refresh(info: generic.DashBoardInfo): Promise<void> {
+    if (this.#debug) {
+      console.warn('[Linus Dashboard] Refreshing registries...');
+    }
+    
+    try {
+      // Reset initialized flag to allow re-initialization
+      this.#initialized = false;
+      
+      // Re-initialize with fresh data from Home Assistant
+      await this.initialize(info);
+      
+      if (this.#debug) {
+        console.warn('[Linus Dashboard] Registries refreshed successfully');
+      }
+      
+      // Fire custom event to notify dashboard components
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('linus-dashboard-refreshed', {
+          detail: { timestamp: Date.now() }
+        }));
+      }
+      
+    } catch (error) {
+      this.logError('Failed to refresh registries', error);
+      throw error;
+    }
+  }
+
+  /**
    * Get a template string to define the number of a given domain's entities with a certain state.
    *
    * @param {object} options The options object containing the parameters.
@@ -1470,3 +1509,59 @@ class Helper {
 }
 
 export { Helper };
+
+// Expose refresh function globally for browser_mod navigation and console access
+declare global {
+  interface Window {
+    refreshLinusDashboard?: () => Promise<void>;
+  }
+}
+
+// Make refresh callable from browser console or browser_mod
+if (typeof window !== 'undefined') {
+  window.refreshLinusDashboard = async (): Promise<void> => {
+    try {
+      // Get current hass instance from home-assistant element
+      const homeAssistant = document.querySelector('home-assistant') as any;
+      const hass = homeAssistant?.hass;
+      
+      if (!hass) {
+        console.error('[Linus Dashboard] Cannot refresh: hass instance not found');
+        return;
+      }
+      
+      // Build info object needed for refresh
+      // We pass the existing config or an empty one - it will be refetched anyway
+      const info: generic.DashBoardInfo = {
+        hass,
+        config: {
+          views: [],
+          strategy: {}
+        } as any,
+      };
+      
+      // Refresh registries
+      await Helper.refresh(info);
+      
+      // Reload dashboard to apply changes
+      window.location.reload();
+      
+    } catch (error) {
+      console.error('[Linus Dashboard] Refresh failed:', error);
+      
+      // Try to show error in Home Assistant logs
+      const homeAssistant = document.querySelector('home-assistant') as any;
+      const hass = homeAssistant?.hass;
+      if (hass) {
+        try {
+          await hass.callService('system_log', 'write', {
+            message: `[Linus Dashboard] Refresh failed: ${error}`,
+            level: 'error',
+          });
+        } catch (_) {
+          // Ignore if logging fails
+        }
+      }
+    }
+  };
+}

@@ -688,6 +688,56 @@ Starting in v1.4.0, Linus Dashboard fully supports Home Assistant 2025.1+'s new 
 
 **Compatibility**: Works seamlessly with all Home Assistant versions. No user configuration required.
 
+### Manual Registry Refresh (v1.4.1+)
+
+**Manual Refresh Button**
+
+Starting in v1.4.1, Linus Dashboard includes a manual refresh button that allows users to reload registry data (entities, devices, areas, floors) without clearing browser cache.
+
+**Features**:
+- Blue refresh chip displayed in HomeView chip bar (before settings chip)
+- Click triggers immediate refresh of all Home Assistant registries
+- Dashboard automatically reloads to apply changes
+- No automatic subscriptions (manual-only to avoid performance issues)
+
+**Implementation**:
+- `src/chips/RefreshChip.ts` - Refresh button chip with mdi:refresh icon
+- `src/Helper.ts` - `refresh()` method to reload registries
+- `window.refreshLinusDashboard()` - Global function callable from JavaScript/browser_mod
+- `linus-dashboard-refreshed` event - Custom event emitted after successful refresh
+
+**Use Cases**:
+- User adds a room to a device in Home Assistant
+- User renames an area
+- User adds new entities
+- Configuration changes need to be reflected immediately without Ctrl+Shift+R
+
+**Technical Details**:
+- Resets `Helper.#initialized` flag to allow re-initialization
+- Re-fetches all registries via WebSocket (`config/entity_registry/list`, etc.)
+- Emits custom event `linus-dashboard-refreshed`
+- Triggers `window.location.reload()` to regenerate all views
+- Uses `fire-dom-event` action with `browser_mod.javascript` service
+- Bilingual notifications (EN/FR) via `hass.language` detection
+- Success notification: 2s duration
+- Error notification: 3s duration
+- No backend browser_mod integration required (frontend-only)
+
+**Design Decision**: Manual refresh (not automatic) to avoid performance issues with large installations and maintain user control over when data is reloaded.
+
+**Browser Mod Integration**:
+```typescript
+tap_action: {
+  action: "fire-dom-event",
+  browser_mod: {
+    service: "javascript",
+    data: {
+      code: "window.refreshLinusDashboard && window.refreshLinusDashboard()"
+    }
+  }
+}
+```
+
 ---
 
 ## 🚀 Future Enhancements

@@ -9,6 +9,13 @@ import { ResourceKeys } from "./types/homeassistant/data/frontend";
 import { initVersionCheck } from "./version-check";
 import { processEmbeddedViews, loadEmbeddedDashboard, applyEmbeddedViewMetadata } from "./embedLovelace";
 
+// Extend Window interface for refresh listener flag
+declare global {
+  interface Window {
+    _linusDashboardRefreshListener?: boolean;
+  }
+}
+
 /**
  * Linus Dashboard Strategy.<br>
  * <br>
@@ -38,6 +45,16 @@ class LinusStrategy extends HTMLTemplateElement {
     initVersionCheck(info.hass).catch((error) => {
       console.error("[Linus Dashboard] Version check initialization failed:", error);
     });
+
+    // Setup refresh listener (only once)
+    if (!window._linusDashboardRefreshListener) {
+      window._linusDashboardRefreshListener = true;
+      
+      window.addEventListener('linus-dashboard-refreshed', () => {
+        // The refresh function in Helper.ts will handle the reload
+        // No logging needed here as Helper already logs
+      });
+    }
 
     const views: LovelaceViewConfig[] = info.config?.views ?? [];
 

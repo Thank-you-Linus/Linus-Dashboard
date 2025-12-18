@@ -12,6 +12,7 @@ import { DEVICE_CLASSES, HOME_EXPOSED_CHIPS, UNDISCLOSED } from "../variables";
 import { createChipsFromList, getFloorName, navigateTo, slugify } from "../utils";
 import { WeatherChip } from "../chips/WeatherChip";
 import { UnavailableChip } from "../chips/UnavailableChip";
+import { RefreshChip } from "../chips/RefreshChip";
 import { PersonCard } from "../cards/PersonCard";
 import { AggregateChip } from "../chips/AggregateChip";
 import { ClimateChip } from "../chips/ClimateChip";
@@ -148,6 +149,10 @@ class HomeView {
     } catch (e) {
       Helper.logError("An error occurred while creating the Magic Areas chip!", e);
     }
+
+    // Refresh chip - allows manual refresh of registries
+    const refreshChip = new RefreshChip();
+    chips.push(refreshChip.getChip());
 
     // Settings chip.
     const linusSettings = new SettingsChip({ tap_action: new SettingsPopup().getPopup() });

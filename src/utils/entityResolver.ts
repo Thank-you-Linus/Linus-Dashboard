@@ -37,8 +37,8 @@ export class EntityResolver {
   private hasMagicAreas: boolean;
 
   constructor(private hass: HomeAssistant) {
+    this.hasMagicAreas = this.detectMagicAreas();
     this.hasLinusBrain = this.detectLinusBrain();
-    this.hasMagicAreas = Object.keys(Helper.magicAreasDevices).length > 0;
   }
 
   /**
@@ -212,19 +212,71 @@ export class EntityResolver {
   }
 
   /**
-   * Detects if Linus Brain integration is installed
+   * Detects if Magic Areas integration is installed and enabled
    * 
-   * Checks for presence of Linus Brain devices by looking for devices with
-   * manufacturer="Linus Brain" and model="Area Intelligence"
+   * Checks if Magic Areas devices exist AND verifies that at least one entity
+   * is actually available (not disabled).
    * 
-   * @returns true if Linus Brain is detected
+   * @returns true if Magic Areas is detected and has at least one enabled entity
+   */
+  private detectMagicAreas(): boolean {
+    // If no Magic Areas devices found, integration is not installed
+    if (Object.keys(Helper.magicAreasDevices).length === 0) {
+      return false;
+    }
+
+    // Check if at least one Magic Areas entity is available
+    // We check for area_state entities from any Magic Areas device
+    for (const magicDevice of Object.values(Helper.magicAreasDevices)) {
+      const areaStateEntity = magicDevice.entities?.area_state?.entity_id;
+      if (areaStateEntity) {
+        const state = this.hass.states[areaStateEntity];
+        if (state && state.state !== "unavailable") {
+          return true;
+        }
+      }
+    }
+
+    // If no area_state entities are available, the integration is likely disabled
+    return false;
+  }
+
+  /**
+   * Detects if Linus Brain integration is installed and enabled
+   * 
+   * Checks for presence of Linus Brain devices AND verifies that at least one entity
+   * is actually available (not disabled). An integration is considered disabled if
+   * all its entities are disabled or unavailable.
+   * 
+   * @returns true if Linus Brain is detected and has at least one enabled entity
    */
   private detectLinusBrain(): boolean {
     const devices = Object.values(Helper.devices);
     const linusBrainDevices = devices.filter(
       device => device.manufacturer === "Linus Brain" && device.model === "Area Intelligence"
     );
-    return linusBrainDevices.length > 0;
+    
+    // If no devices found, integration is not installed
+    if (linusBrainDevices.length === 0) {
+      return false;
+    }
+
+    // Check if at least one Linus Brain entity is enabled and available
+    // We check for the main sensor (sensor.linus_brain_rooms) or any area activity sensor
+    const linusBrainMainSensor = this.hass.states["sensor.linus_brain_rooms"];
+    if (linusBrainMainSensor && linusBrainMainSensor.state !== "unavailable") {
+      return true;
+    }
+
+    // Fallback: check if any linus_brain entity exists and is available
+    const linusBrainEntities = Object.keys(this.hass.states).filter(
+      entity_id => entity_id.includes("linus_brain")
+    );
+    
+    // If we have at least one entity that is not unavailable, the integration is enabled
+    return linusBrainEntities.some(
+      entity_id => this.hass.states[entity_id]?.state !== "unavailable"
+    );
   }
 
   /**

@@ -43,13 +43,13 @@ class AreaStateChip extends AbstractChip {
       icon: `
         {% set state = states('${entity_id}') %}
         {% if state == 'occupied' %}
-          mdi:account
+          mdi:account-check
         {% elif state == 'movement' %}
-          mdi:run
+          mdi:walk
         {% elif state == 'inactive' %}
-          mdi:account-clock
+          mdi:sleep
         {% else %}
-          ${showClearState ? 'mdi:account-off' : ''}
+          ${showClearState ? 'mdi:home-outline' : ''}
         {% endif %}
       `,
       content: showContent ? `

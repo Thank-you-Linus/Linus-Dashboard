@@ -112,6 +112,37 @@
                     "instructions": "🔄 Please refresh your browser (CTRL+F5 or SHIFT+F5) to load the latest version.",
                     "troubleshooting": "📖 Need help? Check our troubleshooting guide: https://github.com/Thank-you-Linus/Linus-Dashboard#-troubleshooting"
                 }
+            },
+            "activity_detection_popup": {
+                "name": "Activity Detection",
+                "state": {
+                    "brightness": "Brightness",
+                    "dark": "Dark",
+                    "bright": "Bright",
+                    "activity": "Activity",
+                    "presence": "Presence",
+                    "duration": "Duration",
+                    "config": "Config",
+                    "history_title": "Last 24h",
+                    "history_subtitle": "Activity graphs",
+                    "advanced_history": "Advanced Activity History",
+                    "coming_soon": "Coming Soon",
+                    "sensors_title": "Activity Detectors",
+                    "active": "active",
+                    "popup_title": "Activity Detection",
+                    "no_sensors_title": "No detectors found",
+                    "no_sensors_message": "Add motion, occupancy, or presence sensors to this area to track activity.",
+                    "add_more_sensors": "Add more sensors to improve detection accuracy",
+                    "add_sensor_explanation": "Click to assign sensors to this area",
+                    "add_entity_button": "Add Entity"
+                }
+            },
+            "lights_group_popup": {
+                "name": "Lights Group",
+                "state": {
+                    "title": "Lights",
+                    "individual_controls": "Individual Controls"
+                }
             }
         }
     }

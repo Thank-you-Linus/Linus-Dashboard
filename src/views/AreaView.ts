@@ -7,7 +7,6 @@ import { LovelaceViewConfig } from "../types/homeassistant/data/lovelace";
 import { generic } from "../types/strategy/generic";
 import { AREA_EXPOSED_CHIPS } from "../variables";
 import { LovelaceChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
-import { AreaStateChip } from "../chips/AreaStateChip";
 import { createChipsFromList, processEntitiesForAreaOrFloorView } from "../utils";
 import { UnavailableChip } from "../chips/UnavailableChip";
 
@@ -70,26 +69,17 @@ class AreaView {
     const resolver = Helper.entityResolver;
     const activityResolution = resolver.resolveAreaState(this.area.slug);
     const hasLinusBrain = activityResolution.source === "linus_brain";
-    const hasAreaStateEntity = activityResolution.entity_id !== undefined && activityResolution.entity_id !== null;
 
-    // FIRST: Activity Detection chip (only if Linus Brain is available and entity exists)
-    if (hasLinusBrain && hasAreaStateEntity) {
-      try {
-        const ActivityDetectionChipModule = await import("../chips/ActivityDetectionChip");
-        const activityDetectionChip = new ActivityDetectionChipModule.ActivityDetectionChip({ area_slug: this.area.slug });
-        const chip = activityDetectionChip.getChip();
-        if (chip) {
-          chips.push(chip);
-        }
-      } catch (e) {
-        Helper.logError("An error occurred while creating the Activity Detection chip!", e);
+    // FIRST: Activity Detection chip (ALWAYS show, with or without Linus Brain)
+    try {
+      const ActivityDetectionChipModule = await import("../chips/ActivityDetectionChip");
+      const activityDetectionChip = new ActivityDetectionChipModule.ActivityDetectionChip({ area_slug: this.area.slug });
+      const chip = activityDetectionChip.getChip();
+      if (chip) {
+        chips.push(chip);
       }
-    } else if (!hasLinusBrain && hasAreaStateEntity) {
-      // Show AreaStateChip only if Linus Brain is NOT available but area state entity exists
-      const areaStateChip = new AreaStateChip({ area: this.area, showContent: true }).getChip();
-      if (areaStateChip) {
-        chips.push(areaStateChip);
-      }
+    } catch (e) {
+      Helper.logError("An error occurred while creating the Activity Detection chip!", e);
     }
 
     const areaChips = await createChipsFromList(AREA_EXPOSED_CHIPS, { show_content: true }, this.area.slug, this.area.slug);

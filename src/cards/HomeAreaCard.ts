@@ -3,7 +3,6 @@ import { TemplateCardConfig } from "../types/lovelace-mushroom/cards/template-ca
 import { Helper } from "../Helper";
 import { ControlChip } from "../chips/ControlChip";
 import { AggregateChip } from "../chips/AggregateChip";
-import { AreaStateChip } from "../chips/AreaStateChip";
 import { ActivityDetectionChip } from "../chips/ActivityDetectionChip";
 import { generic } from "../types/strategy/generic";
 import { getAreaName, getMAEntity } from "../utils";
@@ -13,7 +12,6 @@ import { ConditionalChip } from "../chips/ConditionalChip";
 import { UNAVAILABLE, UNDISCLOSED } from "../variables";
 import { EntityCardConfig } from "../types/lovelace-mushroom/cards/entity-card-config";
 import { FanChip } from "../chips/FanChip";
-import { TemplateChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
 import { ConditionalLightChip } from "../chips/ConditionalLightChip";
 
 import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
@@ -109,45 +107,51 @@ class HomeAreaCard {
     const resolver = Helper.entityResolver;
     const areaStateResolution = resolver.resolveAreaState(this.area.slug);
     const area_state_entity = areaStateResolution.entity_id;
-    const isLinusBrain = areaStateResolution.source === "linus_brain";
     const icon = this.area.icon || "mdi:home-outline";
 
-    // Badge: Use activity state for Linus Brain, or area state chip for Magic Areas
-    let badge_icon: string | undefined;
-    let badge_color: string | undefined;
+    // Badge: Always show sensor icons based on active sensors (consistent behavior)
+    const motion_entities = Helper.getEntityIds({
+      domain: "binary_sensor",
+      device_class: "motion",
+      area_slug: this.area.slug
+    });
+    const occupancy_entities = Helper.getEntityIds({
+      domain: "binary_sensor",
+      device_class: "occupancy",
+      area_slug: this.area.slug
+    });
+    const media_entities = Helper.getEntityIds({
+      domain: "media_player",
+      area_slug: this.area.slug
+    });
 
-    if (isLinusBrain && area_state_entity) {
-      // Linus Brain: Show activity state in badge
-      badge_icon = `
-        {% set state = states('${area_state_entity}') %}
-        {% if state == 'occupied' %}
-          mdi:account
-        {% elif state == 'movement' %}
-          mdi:run
-        {% elif state == 'inactive' %}
-          mdi:account-clock
-        {% else %}
-          mdi:account-off
-        {% endif %}
-      `;
-      badge_color = `
-        {% set state = states('${area_state_entity}') %}
-        {% if state == 'occupied' %}
-          green
-        {% elif state == 'movement' %}
-          orange
-        {% elif state == 'inactive' %}
-          grey
-        {% else %}
-          grey
-        {% endif %}
-      `;
-    } else {
-      // Magic Areas: Use AreaStateChip for badge
-      const areaState = new AreaStateChip({ area: this.area, showClearState: false }).getChip() as TemplateChipConfig;
-      badge_icon = areaState?.icon;
-      badge_color = areaState?.icon_color;
-    }
+    const isOn = '| selectattr("state","eq", "on") | list | count > 0';
+    const isMotion = motion_entities.length > 0 ? `[${motion_entities.map(e => `states['${e}']`).join(', ')}] ${isOn}` : 'false';
+    const isOccupancy = occupancy_entities.length > 0 ? `[${occupancy_entities.map(e => `states['${e}']`).join(', ')}] ${isOn}` : 'false';
+    const isMediaPlaying = media_entities.length > 0 ? `[${media_entities.map(e => `states['${e}']`).join(', ')}] | selectattr("state","eq", "playing") | list | count > 0` : 'false';
+
+    // Priority: motion > occupancy > media_player
+    const badge_icon = `
+      {% if ${isMotion} %}
+        mdi:motion-sensor
+      {% elif ${isOccupancy} %}
+        mdi:home-account
+      {% elif ${isMediaPlaying} %}
+        mdi:play-circle
+      {% else %}
+        
+      {% endif %}
+    `;
+
+    const badge_color = `
+      {% if ${isMotion} or ${isOccupancy} %}
+        red
+      {% elif ${isMediaPlaying} %}
+        blue
+      {% else %}
+        grey
+      {% endif %}
+    `;
 
     const secondarySensors = `${Helper.getSensorStateTemplate("temperature", this.area.slug)} ${Helper.getSensorStateTemplate("humidity", this.area.slug)}`
 
@@ -176,19 +180,12 @@ class HomeAreaCard {
     const allLightsResolution = resolver.resolveAllLights(this.area.slug);
     const all_lights_entity = allLightsResolution.entity_id;
 
-    // Check if Linus Brain presence detection is available
-    const presenceResolution = resolver.resolvePresenceSensor(this.area.slug);
-    const hasLinusBrainPresence = presenceResolution.source === "linus_brain";
-
     // Keep other Magic Areas entities unchanged (aggregates, groups)
     const { aggregate_health, climate_group, aggregate_window, aggregate_door, aggregate_cover } = this.magicDevice?.entities || {};
     const { health } = this.area.domains ?? {};
     const magicClimate = getMAEntity(this.magicDevice?.id, "climate") as EntityRegistryEntry;
     const magicFan = getMAEntity(this.magicDevice?.id, "fan") as EntityRegistryEntry;
 
-    const motion = Helper.getEntityIds({ domain: "binary_sensor", device_class: "motion", area_slug: this.area.slug });
-    const occupancy = Helper.getEntityIds({ domain: "binary_sensor", device_class: "occupancy", area_slug: this.area.slug });
-    const presence = Helper.getEntityIds({ domain: "binary_sensor", device_class: "presence", area_slug: this.area.slug });
     const climate = Helper.getEntityIds({ domain: "climate", area_slug: this.area.slug });
     const fan = Helper.getEntityIds({ domain: "fan", area_slug: this.area.slug });
     const door = Helper.getEntityIds({ domain: "binary_sensor", device_class: "door", area_slug: this.area.slug });
@@ -200,15 +197,8 @@ class HomeAreaCard {
       type: "custom:mushroom-chips-card",
       alignment: "end",
       chips: [
-        // Show only ONE chip for activity/area state:
-        // - If Linus Brain presence is available: show ActivityDetectionChip
-        // - Otherwise if there are presence sensors: show AreaStateChip (Magic Areas fallback)
-        // - If neither, don't show anything
-        (hasLinusBrainPresence || motion?.length || occupancy?.length || presence?.length) && (
-          hasLinusBrainPresence
-            ? new ActivityDetectionChip({ area_slug: this.area.slug }).getChip()
-            : new AreaStateChip({ area: this.area }).getChip()
-        ),
+        // Show ActivityDetectionChip for all areas (will handle its own display logic)
+        new ActivityDetectionChip({ area_slug: this.area.slug }).getChip(),
         health?.length && new ConditionalChip(
           aggregate_health ? [{ entity: aggregate_health?.entity_id, state: "on" }] : health.map(entity => ({ entity, state: "on" })),
           new AggregateChip({ domain: "health", device_class: "health" }).getChip()

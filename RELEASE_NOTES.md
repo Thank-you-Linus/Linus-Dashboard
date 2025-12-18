@@ -7,7 +7,7 @@
 
 ## ✨ What's New
 
-- **AI-Powered Intelligent Release System** - Introduces an automated release workflow that analyzes git commits semantically, determines appropriate version bumps (major/minor/patch), and generates comprehensive release notes with AI assistance. The system adapts automatically between first beta releases (requiring analysis) and incremental betas (auto-increment), streamlining the entire release process from version detection to publication.
+- **AI-Powered Intelligent Release System** - Introduced a comprehensive AI-driven release workflow that automates version analysis, semantic commit evaluation, and release note generation. The system intelligently determines version bump types (major/minor/patch) based on commit history analysis and provides detailed reasoning for version decisions. Includes automated validation checks, quality gates, and streamlined beta release processes.
 
 <details>
 <summary>📖 <b>View detailed descriptions / Voir les descriptions détaillées</b></summary>
@@ -15,33 +15,34 @@
 ### 🇬🇧 English
 
 
-- **AI-Powered Intelligent Release System** - Introduces an automated release workflow that analyzes git commits semantically, determines appropriate version bumps (major/minor/patch), and generates comprehensive release notes with AI assistance. The system adapts automatically between first beta releases (requiring analysis) and incremental betas (auto-increment), streamlining the entire release process from version detection to publication.
+- **AI-Powered Intelligent Release System** - Introduced a comprehensive AI-driven release workflow that automates version analysis, semantic commit evaluation, and release note generation. The system intelligently determines version bump types (major/minor/patch) based on commit history analysis and provides detailed reasoning for version decisions. Includes automated validation checks, quality gates, and streamlined beta release processes.
 
 
 ### 🇫🇷 Français
 
 
-- **Système de Release Intelligent avec IA** - Introduction d'un workflow de release automatisé qui analyse les commits git de manière sémantique, détermine les augmentations de version appropriées (majeure/mineure/patch) et génère des notes de version complètes avec l'assistance de l'IA. Le système s'adapte automatiquement entre les premières versions beta (nécessitant une analyse) et les betas incrémentielles (auto-incrémentation), rationalisant l'ensemble du processus de release de la détection de version à la publication.
+- **Système de Release Intelligent Propulsé par IA** - Introduction d'un workflow de release complet piloté par IA qui automatise l'analyse de version, l'évaluation sémantique des commits et la génération des notes de version. Le système détermine intelligemment le type de bump de version (majeur/mineur/patch) basé sur l'analyse de l'historique des commits et fournit un raisonnement détaillé pour les décisions de version. Inclut des vérifications de validation automatisées, des points de contrôle qualité et des processus de release beta simplifiés.
 
 
 </details>
 
 ## 🐛 Bug Fixes
 
-- **Release Notifications Formatting** - Improved Discord notification formatting and URL display for better readability and clickability in release announcements. URLs are now properly formatted and displayed in notification messages sent to the beta testing community.
+- **Git Tag Validation Consistency** - Fixed tag validation to properly handle version prefixes in both stable and pre-release scenarios, ensuring consistent tagging behavior across the release pipeline.
+- **Release Notification Formatting** - Improved Discord notification formatting with better URL display and structured release information for clearer communication with beta testers.
 
 ## ⚡ Improvements
 
-- **Activity Detection Simplification** - Clarified the distinction between standard activity detection and Linus Brain-powered detection, making it easier for users to understand which detection method is being used and how they differ in functionality
-- **Unified Release Notes System** - Simplified the release notes workflow to use a single RELEASE_NOTES.md file instead of multiple separate files, reducing complexity and making it easier to maintain consistent release documentation
-- **Unified Beta Release Commands** - Consolidated multiple beta release commands into a single `/release-beta` command that intelligently adapts to the release context, providing a more streamlined and intuitive release workflow
+- **Simplified Activity Detection Logic** - Streamlined activity detection code with clearer distinction between standard sensors and Linus Brain-powered detection, improving code maintainability and reducing complexity.
+- **Unified Release Notes System** - Consolidated release notes into a single file system, eliminating redundancy and simplifying the release workflow. The new system automatically cleans up after releases.
+- **Consolidated Beta Release Commands** - Unified all beta release commands into a single `/release-beta` command with intelligent workflow adaptation based on version context.
 
 <details>
 <summary>🇫🇷 <b>Version française</b></summary>
 
-- **Simplification de la Détection d'Activité** - Clarification de la distinction entre la détection d'activité standard et la détection alimentée par Linus Brain, facilitant la compréhension par les utilisateurs de la méthode de détection utilisée et de leurs différences fonctionnelles
-- **Système de Notes de Version Unifié** - Simplification du workflow des notes de version pour utiliser un seul fichier RELEASE_NOTES.md au lieu de plusieurs fichiers séparés, réduisant la complexité et facilitant le maintien d'une documentation de release cohérente
-- **Commandes de Release Beta Unifiées** - Consolidation de plusieurs commandes de release beta en une seule commande `/release-beta` qui s'adapte intelligemment au contexte de release, offrant un workflow de release plus rationalisé et intuitif
+- **Logique de Détection d'Activité Simplifiée** - Rationalisation du code de détection d'activité avec une distinction plus claire entre les capteurs standards et la détection propulsée par Linus Brain, améliorant la maintenabilité du code et réduisant la complexité.
+- **Système de Notes de Release Unifié** - Consolidation des notes de release dans un système à fichier unique, éliminant la redondance et simplifiant le workflow de release. Le nouveau système nettoie automatiquement après les releases.
+- **Commandes de Release Beta Consolidées** - Unification de toutes les commandes de release beta en une seule commande `/release-beta` avec adaptation intelligente du workflow basée sur le contexte de version.
 
 </details>
 
@@ -50,20 +51,20 @@
 ## 🧪 For Beta Testers
 
 **What to test:**
-- [ ] Test the new AI-powered release workflow by reviewing the generated release notes quality and accuracy
-- [ ] Verify that Discord notifications are properly formatted with working URLs when releases are published
-- [ ] Check that activity detection labels clearly distinguish between standard and Linus Brain-powered detection
-- [ ] Confirm that the simplified release notes system is easier to understand and navigate
-- [ ] Test the unified `/release-beta` command workflow for ease of use
+- [ ] Test the new `/release-beta` command workflow and verify it correctly detects incremental vs first beta scenarios
+- [ ] Verify activity detection sensors display correctly in area views and work with Linus Brain integration
+- [ ] Check that release notifications appear properly in Discord with correct formatting
+- [ ] Confirm git tagging works correctly without 'v' prefix issues
+- [ ] Test the automated release notes generation and validation process
 
 <details>
 <summary>🇫🇷 <b>Quoi tester</b></summary>
 
-- [ ] Tester le nouveau workflow de release avec IA en vérifiant la qualité et la précision des notes de version générées
-- [ ] Vérifier que les notifications Discord sont correctement formatées avec des URLs fonctionnelles lors de la publication des releases
-- [ ] Vérifier que les labels de détection d'activité distinguent clairement la détection standard de celle alimentée par Linus Brain
-- [ ] Confirmer que le système de notes de version simplifié est plus facile à comprendre et à naviguer
-- [ ] Tester le workflow de la commande unifiée `/release-beta` pour la facilité d'utilisation
+- [ ] Tester le workflow de la nouvelle commande `/release-beta` et vérifier qu'elle détecte correctement les scénarios incrémentaux vs première beta
+- [ ] Vérifier que les capteurs de détection d'activité s'affichent correctement dans les vues de zone et fonctionnent avec l'intégration Linus Brain
+- [ ] Vérifier que les notifications de release apparaissent correctement dans Discord avec le bon formatage
+- [ ] Confirmer que le tagging git fonctionne correctement sans problèmes de préfixe 'v'
+- [ ] Tester le processus de génération et validation automatisée des notes de release
 
 </details>
 

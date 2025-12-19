@@ -2,8 +2,8 @@ import { views } from "../types/strategy/views";
 import { ChipsCardConfig } from "../types/lovelace-mushroom/cards/chips-card";
 import { StackCardConfig } from "../types/homeassistant/lovelace/cards/types";
 import { TemplateCardConfig } from "../types/lovelace-mushroom/cards/template-card-config";
-import { LovelaceChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
 import { RefreshChip } from "../chips/RefreshChip";
+import { createSmartControlChip } from "../utils/smartControlChip";
 
 import { AbstractView } from "./AbstractView";
 
@@ -58,17 +58,34 @@ class FanView extends AbstractView {
    * @override
    */
   override async createSectionBadges(): Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig)[]> {
-    const chips: LovelaceChipConfig[] = [];
+    const badges: (StackCardConfig | TemplateCardConfig | ChipsCardConfig)[] = [];
 
-    // Refresh chip - allows manual refresh of registries
+    // 1. Smart control chip (if no global entity exists)
+    const smartChip = createSmartControlChip({
+      domain: "fan",
+      serviceOn: "turn_on",
+      serviceOff: "turn_off",
+      activeStates: ["on"],
+      translationKey: "fan",
+    });
+
+    if (smartChip) {
+      badges.push({
+        type: "custom:mushroom-chips-card",
+        chips: [smartChip],
+        alignment: "start",
+      });
+    }
+
+    // 2. Refresh chip (centered)
     const refreshChip = new RefreshChip();
-    chips.push(refreshChip.getChip());
-
-    return chips.map(chip => ({
+    badges.push({
       type: "custom:mushroom-chips-card",
       alignment: "center",
-      chips: [chip],
-    }));
+      chips: [refreshChip.getChip()],
+    });
+
+    return badges;
   }
 }
 

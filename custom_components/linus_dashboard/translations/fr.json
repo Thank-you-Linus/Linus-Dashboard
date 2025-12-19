@@ -143,6 +143,21 @@
                     "title": "Lumières",
                     "individual_controls": "Contrôles individuels"
                 }
+            },
+            "smart_control": {
+                "name": "Contrôle intelligent",
+                "state": {
+                    "turn_all_on": "Tout allumer",
+                    "turn_all_off": "Tout éteindre",
+                    "confirmation_title": "Confirmation",
+                    "confirm": "Confirmer",
+                    "confirm_turn_on_switch": "Voulez-vous allumer tous les {count} interrupteurs ?",
+                    "confirm_turn_off_switch": "Voulez-vous éteindre tous les {count} interrupteurs ?",
+                    "confirm_turn_on_fan": "Voulez-vous allumer tous les {count} ventilateurs ?",
+                    "confirm_turn_off_fan": "Voulez-vous éteindre tous les {count} ventilateurs ?",
+                    "confirm_turn_on_media_player": "Voulez-vous allumer tous les {count} lecteurs multimédia ?",
+                    "confirm_turn_off_media_player": "Voulez-vous éteindre tous les {count} lecteurs multimédia ?"
+                }
             }
         }
     }

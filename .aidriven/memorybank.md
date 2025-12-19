@@ -789,6 +789,86 @@ tap_action: {
 
 **Code Preserved**: All Floor/Area chip generation in `utils.ts` remains unchanged - only the global title heading was removed.
 
+### Smart Control Chips (December 2024)
+
+**Problem**: Views without global control entities (Switch, Fan, MediaPlayer) had no way to control all entities at once. Users had to manually turn on/off each entity individually.
+
+**Solution**: Added smart conditional control chips that show current state and suggest appropriate actions with confirmation.
+
+**Features**:
+- **Automatic Display**: Only shows when NO global entity exists (no Magic Areas group)
+- **Current State Display**: Shows count of active entities (e.g., "Turn All Off (3)")
+- **Smart Suggestions**:
+  - If all entities OFF → suggests "Turn All On"
+  - If any entities ON → suggests "Turn All Off (X on)"
+- **Confirmation Popup**: Simple confirmation before executing action
+- **Entity Filtering**: Only controls entities assigned to areas/devices (excludes global/undisclosed)
+- **Translations**: Full EN/FR support
+
+**Implementation**:
+
+1. **Utility Module**: `src/utils/smartControlChip.ts`
+   ```typescript
+   export function createSmartControlChip(config: SmartControlChipConfig): TemplateChipConfig | null
+   ```
+   - Accepts domain, services, active states, translation key
+   - Returns template chip with Jinja2 logic or null if no entities
+   - Uses browser_mod popup for confirmation
+
+2. **Views Modified**:
+   - `SwitchView.ts` - Active states: `["on"]`
+   - `FanView.ts` - Active states: `["on"]`
+   - `MediaPlayerView.ts` - Active states: `["playing", "paused"]` (special case!)
+
+3. **Translations Added**:
+   - `turn_all_on` / `turn_all_off` - Chip content text
+   - `confirmation_title` - Popup title
+   - `confirm` - Confirm button text
+   - `confirm_turn_on_{domain}` / `confirm_turn_off_{domain}` - Popup messages
+
+**Chip Structure**:
+```typescript
+{
+  type: "template",
+  icon: "mdi:power",
+  icon_color: "red" (active) | "green" (inactive),
+  content: "Turn All Off (3)" | "Turn All On",
+  tap_action: {
+    action: "fire-dom-event",
+    browser_mod: {
+      service: "browser_mod.popup",
+      data: {
+        title: "Confirmation",
+        content: [markdown message, confirm button]
+      }
+    }
+  }
+}
+```
+
+**Badge Layout**:
+- Smart control chip: LEFT (alignment: "start")
+- Refresh chip: CENTER (alignment: "center")
+
+**Why Not LightView?**: LightView already has sophisticated global control via `ConditionalLightChip` that checks for Linus Brain/Magic Areas entities.
+
+**Why Not ClimateView, CoverView, etc.?**: These domains don't have simple on/off semantics:
+- Climate: Thermostats with setpoints, modes
+- Cover: Open/close, not on/off
+- Vacuum: Start/stop commands
+- Camera: No control actions
+- Scene: Activate scenes (different pattern)
+
+**Files Modified**:
+- `src/utils/smartControlChip.ts` (NEW)
+- `src/views/SwitchView.ts`
+- `src/views/FanView.ts`
+- `src/views/MediaPlayerView.ts`
+- `custom_components/linus_dashboard/translations/en.json`
+- `custom_components/linus_dashboard/translations/fr.json`
+
+**Result**: Users can now quickly control all switches/fans/media players with a single tap + confirmation, improving UX for scenarios like "turn off all switches before leaving home".
+
 ---
 
 ## 🚀 Future Enhancements

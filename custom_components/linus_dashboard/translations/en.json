@@ -147,16 +147,23 @@
             "smart_control": {
                 "name": "Smart Control",
                 "state": {
-                    "turn_all_on": "Turn All On",
-                    "turn_all_off": "Turn All Off",
-                    "confirmation_title": "Confirmation",
-                    "confirm": "Confirm",
-                    "confirm_turn_on_switch": "Do you want to turn on all {count} switches?",
-                    "confirm_turn_off_switch": "Do you want to turn off all {count} switches?",
-                    "confirm_turn_on_fan": "Do you want to turn on all {count} fans?",
-                    "confirm_turn_off_fan": "Do you want to turn off all {count} fans?",
-                    "confirm_turn_on_media_player": "Do you want to turn on all {count} media players?",
-                    "confirm_turn_off_media_player": "Do you want to turn off all {count} media players?"
+                    "state_on": "on",
+                    "state_off": "off",
+                    "title_light": "All Lights",
+                    "title_switch": "All Switches",
+                    "title_fan": "All Fans",
+                    "title_media_player": "All Media Players",
+                    "title_cover": "All Covers",
+                    "action_on_light": "Turn All On",
+                    "action_on_switch": "Turn All On",
+                    "action_on_fan": "Turn All On",
+                    "action_on_media_player": "Turn All On",
+                    "action_on_cover": "Open All",
+                    "action_off_light": "Turn All Off",
+                    "action_off_switch": "Turn All Off",
+                    "action_off_fan": "Turn All Off",
+                    "action_off_media_player": "Turn All Off",
+                    "action_off_cover": "Close All"
                 }
             }
         }

@@ -147,16 +147,23 @@
             "smart_control": {
                 "name": "Contrôle intelligent",
                 "state": {
-                    "turn_all_on": "Tout allumer",
-                    "turn_all_off": "Tout éteindre",
-                    "confirmation_title": "Confirmation",
-                    "confirm": "Confirmer",
-                    "confirm_turn_on_switch": "Voulez-vous allumer tous les {count} interrupteurs ?",
-                    "confirm_turn_off_switch": "Voulez-vous éteindre tous les {count} interrupteurs ?",
-                    "confirm_turn_on_fan": "Voulez-vous allumer tous les {count} ventilateurs ?",
-                    "confirm_turn_off_fan": "Voulez-vous éteindre tous les {count} ventilateurs ?",
-                    "confirm_turn_on_media_player": "Voulez-vous allumer tous les {count} lecteurs multimédia ?",
-                    "confirm_turn_off_media_player": "Voulez-vous éteindre tous les {count} lecteurs multimédia ?"
+                    "state_on": "allumé(s)",
+                    "state_off": "éteint(s)",
+                    "title_light": "Toutes les lumières",
+                    "title_switch": "Tous les interrupteurs",
+                    "title_fan": "Tous les ventilateurs",
+                    "title_media_player": "Tous les lecteurs multimédia",
+                    "title_cover": "Tous les volets",
+                    "action_on_light": "Tout allumer",
+                    "action_on_switch": "Tout allumer",
+                    "action_on_fan": "Tout allumer",
+                    "action_on_media_player": "Tout allumer",
+                    "action_on_cover": "Tout ouvrir",
+                    "action_off_light": "Tout éteindre",
+                    "action_off_switch": "Tout éteindre",
+                    "action_off_fan": "Tout éteindre",
+                    "action_off_media_player": "Tout éteindre",
+                    "action_off_cover": "Tout fermer"
                 }
             }
         }

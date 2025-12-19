@@ -4,6 +4,7 @@ import { ChipsCardConfig } from "../types/lovelace-mushroom/cards/chips-card";
 import { StackCardConfig } from "../types/homeassistant/lovelace/cards/types";
 import { TemplateCardConfig } from "../types/lovelace-mushroom/cards/template-card-config";
 import { RefreshChip } from "../chips/RefreshChip";
+import { createSmartControlChip } from "../utils/smartControlChip";
 import { DEVICE_CLASSES } from "../variables";
 
 import { AbstractView } from "./AbstractView";
@@ -63,7 +64,24 @@ class LightView extends AbstractView {
   override async createSectionBadges(): Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig)[]> {
     const badges: (StackCardConfig | TemplateCardConfig | ChipsCardConfig)[] = [];
 
-    // 1. Control chips for all lights (global)
+    // 1. Smart control chip (if no global entity exists)
+    const smartChip = createSmartControlChip({
+      domain: "light",
+      serviceOn: "turn_on",
+      serviceOff: "turn_off",
+      activeStates: ["on"],
+      translationKey: "light",
+    });
+
+    if (smartChip) {
+      badges.push({
+        type: "custom:mushroom-chips-card",
+        chips: [smartChip],
+        alignment: "start",
+      });
+    }
+
+    // 2. Control chips for all lights (global)
     const chipModule = Helper.strategyOptions.domains[LightView.#domain]?.controlChip;
     if (chipModule && typeof chipModule === 'function') {
       const chipOptions = {
@@ -91,7 +109,7 @@ class LightView extends AbstractView {
       }
     }
 
-    // 2. Refresh chip (centered)
+    // 3. Refresh chip (centered)
     const refreshChip = new RefreshChip();
     badges.push({
       type: "custom:mushroom-chips-card",

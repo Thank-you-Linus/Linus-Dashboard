@@ -2,6 +2,11 @@ import { ControllerCard } from "../cards/ControllerCard";
 import { views } from "../types/strategy/views";
 import { cards } from "../types/strategy/cards";
 import { Helper } from "../Helper";
+import { ChipsCardConfig } from "../types/lovelace-mushroom/cards/chips-card";
+import { StackCardConfig } from "../types/homeassistant/lovelace/cards/types";
+import { TemplateCardConfig } from "../types/lovelace-mushroom/cards/template-card-config";
+import { LovelaceChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
+import { RefreshChip } from "../chips/RefreshChip";
 
 import { AbstractView } from "./AbstractView";
 
@@ -63,6 +68,26 @@ class CameraView extends AbstractView {
         ...this.#viewControllerCardConfig,
         ...Helper.strategyOptions.domains.camera?.controllerCardOptions,
       }, CameraView.#domain).createCard();
+  }
+
+  /**
+   * Create the badges to include in the view.
+   *
+   * @return {Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig)[]>}
+   * @override
+   */
+  override async createSectionBadges(): Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig)[]> {
+    const chips: LovelaceChipConfig[] = [];
+
+    // Refresh chip - allows manual refresh of registries
+    const refreshChip = new RefreshChip();
+    chips.push(refreshChip.getChip());
+
+    return chips.map(chip => ({
+      type: "custom:mushroom-chips-card",
+      alignment: "center",
+      chips: [chip],
+    }));
   }
 }
 

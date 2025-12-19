@@ -695,9 +695,10 @@ Starting in v1.4.0, Linus Dashboard fully supports Home Assistant 2025.1+'s new 
 Starting in v1.4.1, Linus Dashboard includes a manual refresh button that allows users to reload registry data (entities, devices, areas, floors) without clearing browser cache.
 
 **Features**:
-- Blue refresh chip displayed in HomeView chip bar (before settings chip)
+- Blue refresh chip displayed in ALL views (HomeView, AreaView, FloorView, SecurityView, and all device views)
 - Click triggers immediate refresh of all Home Assistant registries
-- Dashboard automatically reloads to apply changes
+- User feedback: bilingual notification (2.8s delay before reload to let user see notification)
+- Dashboard automatically reloads to apply changes after delay
 - No automatic subscriptions (manual-only to avoid performance issues)
 
 **Implementation**:
@@ -716,12 +717,28 @@ Starting in v1.4.1, Linus Dashboard includes a manual refresh button that allows
 - Resets `Helper.#initialized` flag to allow re-initialization
 - Re-fetches all registries via WebSocket (`config/entity_registry/list`, etc.)
 - Emits custom event `linus-dashboard-refreshed`
-- Triggers `window.location.reload()` to regenerate all views
+- Shows notification (2.5s duration) → waits 2.8s → triggers `window.location.reload()`
 - Uses `fire-dom-event` action with `browser_mod.javascript` service
 - Bilingual notifications (EN/FR) via `hass.language` detection
-- Success notification: 2s duration
-- Error notification: 3s duration
+- Success notification: 2.5s duration with 2.8s delay before reload (user can see notification)
+- Error notification: 3s duration (no reload on error)
 - No backend browser_mod integration required (frontend-only)
+
+**Views with RefreshChip**:
+- HomeView (main dashboard)
+- AreaView (all room/area pages)
+- FloorView (all floor pages)
+- SecurityView (security page)
+- ClimateView (thermostats page)
+- LightView (lights page)
+- CoverView (covers/blinds page)
+- FanView (fans page)
+- SwitchView (switches page)
+- MediaPlayerView (media players page)
+- VacuumView (vacuums page)
+- CameraView (cameras page)
+- SceneView (scenes page)
+- AggregateView (aggregate views)
 
 **Design Decision**: Manual refresh (not automatic) to avoid performance issues with large installations and maintain user control over when data is reloaded.
 

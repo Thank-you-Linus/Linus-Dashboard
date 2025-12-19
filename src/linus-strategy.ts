@@ -49,7 +49,7 @@ class LinusStrategy extends HTMLTemplateElement {
     // Setup refresh listener (only once)
     if (!window._linusDashboardRefreshListener) {
       window._linusDashboardRefreshListener = true;
-      
+
       window.addEventListener('linus-dashboard-refreshed', () => {
         // The refresh function in Helper.ts will handle the reload
         // No logging needed here as Helper already logs
@@ -289,3 +289,8 @@ customElements.define("ll-strategy-linus-strategy", LinusStrategy);
 declare const __VERSION__: string;
 export const version = __VERSION__;
 // Linus Strategy loaded
+// eslint-disable-next-line no-console
+console.info(
+  "%c Linus Strategy %c ".concat(version, " "),
+  "color: #F5F5DC; background: #004225; font-weight: 700;", "color: #004225; background: #F5F5DC; font-weight: 700;"
+);

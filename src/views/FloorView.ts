@@ -8,6 +8,7 @@ import { generic } from "../types/strategy/generic";
 import { AREA_EXPOSED_CHIPS } from "../variables";
 import { LovelaceChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
 import { AreaStateChip } from "../chips/AreaStateChip";
+import { RefreshChip } from "../chips/RefreshChip";
 import { createChipsFromList, processEntitiesForAreaOrFloorView } from "../utils";
 
 import StrategyFloor = generic.StrategyFloor;
@@ -73,6 +74,10 @@ class FloorView {
     if (areaChips) {
       chips.push(...areaChips);
     }
+
+    // Refresh chip - allows manual refresh of registries
+    const refreshChip = new RefreshChip();
+    chips.push(refreshChip.getChip());
 
     return chips.map(chip => ({
       type: "custom:mushroom-chips-card",

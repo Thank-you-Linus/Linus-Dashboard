@@ -52,8 +52,11 @@ class RefreshChip extends AbstractChip {
                   await window.refreshLinusDashboard();
                   service('notification', {
                     message: t.success,
-                    duration: 2000
+                    duration: 2500
                   });
+                  // Wait 2.8s to let user see notification before reload
+                  await new Promise(resolve => setTimeout(resolve, 2800));
+                  window.location.reload();
                 } else {
                   console.error('[Linus Dashboard] Refresh function not available');
                   service('notification', {

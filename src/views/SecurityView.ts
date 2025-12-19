@@ -8,6 +8,7 @@ import { views } from "../types/strategy/views";
 import { ChipsCardConfig } from "../types/lovelace-mushroom/cards/chips-card";
 import { TemplateCardConfig } from "../types/lovelace-mushroom/cards/template-card-config";
 import { LovelaceChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
+import { RefreshChip } from "../chips/RefreshChip";
 import { SECURITY_EXPOSED_CHIPS, SECURITY_EXPOSED_DOMAINS } from "../variables";
 
 /**
@@ -86,6 +87,10 @@ class SecurityView {
     if (homeChips) {
       chips.push(...homeChips);
     }
+
+    // Refresh chip - allows manual refresh of registries
+    const refreshChip = new RefreshChip();
+    chips.push(refreshChip.getChip());
 
     return chips.map(chip => ({
       type: "custom:mushroom-chips-card",

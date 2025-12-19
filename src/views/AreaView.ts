@@ -9,6 +9,7 @@ import { AREA_EXPOSED_CHIPS } from "../variables";
 import { LovelaceChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
 import { createChipsFromList, processEntitiesForAreaOrFloorView } from "../utils";
 import { UnavailableChip } from "../chips/UnavailableChip";
+import { RefreshChip } from "../chips/RefreshChip";
 
 import StrategyArea = generic.StrategyArea;
 
@@ -89,6 +90,10 @@ class AreaView {
 
     const unavailableChip = new UnavailableChip({ area_slug: this.area.slug }).getChip();
     if (unavailableChip) chips.push(unavailableChip);
+
+    // Refresh chip - allows manual refresh of registries
+    const refreshChip = new RefreshChip();
+    chips.push(refreshChip.getChip());
 
     // LinusBrain area-specific chip.
     try {

@@ -1,7 +1,4 @@
-import { Helper } from "../Helper";
-import { ControllerCard } from "../cards/ControllerCard";
 import { views } from "../types/strategy/views";
-import { cards } from "../types/strategy/cards";
 import { ChipsCardConfig } from "../types/lovelace-mushroom/cards/chips-card";
 import { StackCardConfig } from "../types/homeassistant/lovelace/cards/types";
 import { TemplateCardConfig } from "../types/lovelace-mushroom/cards/template-card-config";
@@ -36,20 +33,8 @@ class CoverView extends AbstractView {
    * @private
    */
   #defaultConfig: views.ViewConfig = {
-    title: "Covers",
     icon: "mdi:window-open",
     subview: false,
-  };
-
-  /**
-   * Default configuration of the view's Controller card.
-   *
-   * @type {cards.ControllerCardOptions}
-   * @private
-   */
-  #viewControllerCardConfig: cards.ControllerCardOptions = {
-    title: `${Helper.localize(`component.cover.entity_component._.name`)}`,
-    // subtitle: Helper.getCountTemplate(CoverView.#domain, "eq", "open") + ` ${Helper.localize(`component.cover.entity_component._.state.open`)}`,
   };
 
   /**
@@ -62,12 +47,8 @@ class CoverView extends AbstractView {
 
     this.config = Object.assign(this.config, this.#defaultConfig, options);
 
-    // Create a Controller card to switch all entities of the domain.
-    this.viewControllerCard = new ControllerCard(
-      {
-        ...this.#viewControllerCardConfig,
-        ...Helper.strategyOptions.domains.cover?.controllerCardOptions,
-      }, CoverView.#domain).createCard();
+    // Empty viewControllerCard - no global chips for this domain
+    this.viewControllerCard = [];
   }
 
   /**

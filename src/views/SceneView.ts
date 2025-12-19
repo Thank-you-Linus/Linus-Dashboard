@@ -1,7 +1,4 @@
-import { Helper } from "../Helper";
-import { ControllerCard } from "../cards/ControllerCard";
 import { views } from "../types/strategy/views";
-import { cards } from "../types/strategy/cards";
 import { ChipsCardConfig } from "../types/lovelace-mushroom/cards/chips-card";
 import { StackCardConfig } from "../types/homeassistant/lovelace/cards/types";
 import { TemplateCardConfig } from "../types/lovelace-mushroom/cards/template-card-config";
@@ -36,20 +33,8 @@ class SceneView extends AbstractView {
    * @private
    */
   #defaultConfig: views.ViewConfig = {
-    title: "Scenes",
     icon: "mdi:palette",
     subview: false,
-  };
-
-  /**
-   * Default configuration of the view's Controller card.
-   *
-   * @type {cards.ControllerCardOptions}
-   * @private
-   */
-  #viewControllerCardConfig: cards.ControllerCardOptions = {
-    title: `${Helper.localize(`ui.dialogs.quick-bar.commands.navigation.scene`)}`,
-    // subtitle: Helper.getCountTemplate(SceneView.#domain, "ne", "on") + ` ${Helper.localize(`ui.dialogs.quick-bar.commands.navigation.scene`)}`,
   };
 
   /**
@@ -62,12 +47,8 @@ class SceneView extends AbstractView {
 
     this.config = Object.assign(this.config, this.#defaultConfig, options);
 
-    // Create a Controller card to scene all entities of the domain.
-    this.viewControllerCard = new ControllerCard(
-      {
-        ...this.#viewControllerCardConfig,
-        ...Helper.strategyOptions.domains.scene?.controllerCardOptions,
-      }, SceneView.#domain).createCard();
+    // Empty viewControllerCard - no global chips for this domain
+    this.viewControllerCard = [];
   }
 
   /**

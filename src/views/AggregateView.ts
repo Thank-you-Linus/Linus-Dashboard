@@ -1,12 +1,9 @@
 import { Helper } from "../Helper";
-import { ControllerCard } from "../cards/ControllerCard";
 import { views } from "../types/strategy/views";
 import { DEVICE_CLASSES } from "../variables";
-import { getDomainTranslationKey } from "../utils";
 import { ChipsCardConfig } from "../types/lovelace-mushroom/cards/chips-card";
 import { StackCardConfig } from "../types/homeassistant/lovelace/cards/types";
 import { TemplateCardConfig } from "../types/lovelace-mushroom/cards/template-card-config";
-import { LovelaceChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
 import { RefreshChip } from "../chips/RefreshChip";
 
 import { AbstractView } from "./AbstractView";
@@ -21,6 +18,21 @@ import { AbstractView } from "./AbstractView";
  * @extends AbstractView
  */
 class AggregateView extends AbstractView {
+  /**
+   * Domain of the view's entities.
+   *
+   * @type {string}
+   * @private
+   */
+  #domain: string;
+
+  /**
+   * Device class for chip generation.
+   *
+   * @type {string}
+   * @private
+   */
+  #device_class?: string;
 
   /**
    * Class constructor.
@@ -31,13 +43,12 @@ class AggregateView extends AbstractView {
     const domain = options?.device_class ? DEVICE_CLASSES.sensor.includes(options?.device_class) ? "sensor" : "binary_sensor" : options?.domain;
     super(domain, options?.device_class);
 
-    // Create a Controller card to switch all entities of the domain.
-    this.viewControllerCard = new ControllerCard(
-      {
-        title: Helper.localize(getDomainTranslationKey(domain, options?.device_class)),
-        showControls: domain !== "sensor",
-        controlChipOptions: { device_class: options?.device_class },
-      }, domain, "global").createCard();
+    // Save domain and device_class for createSectionBadges()
+    this.#domain = domain;
+    this.#device_class = options?.device_class;
+
+    // Empty viewControllerCard - global chips moved to badges
+    this.viewControllerCard = [];
   }
 
   /**
@@ -47,17 +58,52 @@ class AggregateView extends AbstractView {
    * @override
    */
   override async createSectionBadges(): Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig)[]> {
-    const chips: LovelaceChipConfig[] = [];
+    const badges: (StackCardConfig | TemplateCardConfig | ChipsCardConfig)[] = [];
 
-    // Refresh chip - allows manual refresh of registries
+    // 1. Control chips for all entities (global - if applicable)
+    const shouldShowControls = this.#domain !== "sensor";
+
+    if (shouldShowControls) {
+      const chipModule = Helper.strategyOptions.domains[this.#domain]?.controlChip;
+      if (chipModule && typeof chipModule === 'function') {
+        const chipOptions = {
+          show_content: true,
+          magic_device_id: "global",
+          area_slug: "global",
+          domain: this.#domain,
+          device_class: this.#device_class,
+        };
+
+        const magic_device = Helper.magicAreasDevices["global"];
+        const deviceClasses = this.#device_class
+          ? [this.#device_class]
+          : DEVICE_CLASSES[this.#domain as keyof typeof DEVICE_CLASSES] ?? [];
+
+        const chips = deviceClasses
+          .flatMap((device_class: string) =>
+            new chipModule({ ...chipOptions, device_class }, magic_device).getChip()
+          )
+          .filter((chip: any) => chip?.icon !== undefined || chip.chip?.icon !== undefined);
+
+        if (chips.length > 0) {
+          badges.push({
+            type: "custom:mushroom-chips-card",
+            chips,
+            alignment: "end",
+          });
+        }
+      }
+    }
+
+    // 2. Refresh chip (centered)
     const refreshChip = new RefreshChip();
-    chips.push(refreshChip.getChip());
-
-    return chips.map(chip => ({
+    badges.push({
       type: "custom:mushroom-chips-card",
       alignment: "center",
-      chips: [chip],
-    }));
+      chips: [refreshChip.getChip()],
+    });
+
+    return badges;
   }
 }
 

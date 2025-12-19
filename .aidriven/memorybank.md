@@ -757,6 +757,40 @@ tap_action: {
 
 ---
 
+## 🏗️ Recent Architectural Changes
+
+### Domain View Refactoring (December 2024)
+
+**Problem**: Domain views (Light, Climate, Cover, etc.) had redundant main titles that duplicated Floor/Area section titles, making the interface cluttered.
+
+**Solution**: Removed global `viewControllerCard` titles from domain views and moved global control chips to view badges.
+
+**Changes Made**:
+
+1. **LightView & AggregateView** (Complex - with global chips):
+   - Removed `#viewControllerCardConfig` property
+   - Emptied `viewControllerCard` in constructor
+   - Moved global control chips to `createSectionBadges()`
+   - Global chips now appear in view badges (right-aligned)
+   - RefreshChip remains centered
+
+2. **8 Simple Views** (ClimateView, CoverView, FanView, SwitchView, MediaPlayerView, VacuumView, CameraView, SceneView):
+   - Removed `#viewControllerCardConfig` property
+   - Emptied `viewControllerCard` in constructor
+   - Removed `title` from `#defaultConfig` (titles now from navigation only)
+   - RefreshChip remains in `createSectionBadges()`
+
+**Result**: Clean 3-level control hierarchy:
+1. **Global controls**: In view badges (top right) - control all entities of domain
+2. **Floor controls**: Next to floor titles - control all entities on that floor
+3. **Area controls**: Next to area titles - control all entities in that area
+
+**Files Modified**: LightView.ts, AggregateView.ts, ClimateView.ts, CoverView.ts, FanView.ts, SwitchView.ts, MediaPlayerView.ts, VacuumView.ts, CameraView.ts, SceneView.ts
+
+**Code Preserved**: All Floor/Area chip generation in `utils.ts` remains unchanged - only the global title heading was removed.
+
+---
+
 ## 🚀 Future Enhancements
 
 1. **Auto-Update**: Check for new versions, notify users

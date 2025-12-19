@@ -1,7 +1,4 @@
-import { ControllerCard } from "../cards/ControllerCard";
 import { views } from "../types/strategy/views";
-import { cards } from "../types/strategy/cards";
-import { Helper } from "../Helper";
 import { ChipsCardConfig } from "../types/lovelace-mushroom/cards/chips-card";
 import { StackCardConfig } from "../types/homeassistant/lovelace/cards/types";
 import { TemplateCardConfig } from "../types/lovelace-mushroom/cards/template-card-config";
@@ -36,20 +33,8 @@ class CameraView extends AbstractView {
    * @private
    */
   #defaultConfig: views.ViewConfig = {
-    title: "Cameras",
     icon: "mdi:cctv",
     subview: false,
-  };
-
-  /**
-   * Default configuration of the view's Controller card.
-   *
-   * @type {cards.ControllerCardOptions}
-   * @private
-   */
-  #viewControllerCardConfig: cards.ControllerCardOptions = {
-    title: `${Helper.localize(`component.camera.entity_component._.name`)}s`,
-    // subtitle: Helper.getCountTemplate(CameraView.#domain, "ne", "off") + ` ${Helper.localize("component.light.entity_component._.state.on")}`,
   };
 
   /**
@@ -62,12 +47,8 @@ class CameraView extends AbstractView {
 
     this.config = Object.assign(this.config, this.#defaultConfig, options);
 
-    // Create a Controller card to switch all entities of the domain.
-    this.viewControllerCard = new ControllerCard(
-      {
-        ...this.#viewControllerCardConfig,
-        ...Helper.strategyOptions.domains.camera?.controllerCardOptions,
-      }, CameraView.#domain).createCard();
+    // Empty viewControllerCard - no global chips for this domain
+    this.viewControllerCard = [];
   }
 
   /**

@@ -101,6 +101,13 @@ export const configurationDefaults: StrategyDefaults = {
       order: 2,
       extraControls: (device: MagicAreaRegistryEntry) => {
         const chips = [];
+        // Add aggregate chip for climate controls
+        chips.push(new AggregateChip({
+          domain: "climate",
+          area_slug: device.slug,
+          magic_device_id: device.slug
+        }).getChip());
+        // Add control switch if available
         if (device?.entities.climate_control?.entity_id) {
           chips.push(new ControlChip("climate", device?.entities.climate_control?.entity_id).getChip());
         }
@@ -119,6 +126,13 @@ export const configurationDefaults: StrategyDefaults = {
       order: 3,
       extraControls: (device: MagicAreaRegistryEntry) => {
         const chips = [];
+        // Add aggregate chip for media player controls
+        chips.push(new AggregateChip({
+          domain: "media_player",
+          area_slug: device.slug,
+          magic_device_id: device.slug
+        }).getChip());
+        // Add control switch if available
         if (device?.entities.media_player_control?.entity_id) {
           chips.push(new ControlChip("media_player", device?.entities.media_player_control?.entity_id).getChip());
         }
@@ -134,7 +148,38 @@ export const configurationDefaults: StrategyDefaults = {
         toggleService: "cover.toggle",
       },
       hidden: false,
-      order: 4
+      order: 4,
+      extraControls: (device: MagicAreaRegistryEntry) => {
+        const chips = [];
+        // Get all cover entities for this area and group by device_class
+        const Helper = require("./Helper").Helper;
+        if (Helper.isInitialized()) {
+          const coverEntities = Helper.getAreaEntities(device, "cover");
+          const deviceClassMap: Record<string, any[]> = {};
+          
+          // Group covers by device_class
+          for (const entity of coverEntities) {
+            const entityState = Helper.getEntityState(entity.entity_id);
+            const deviceClass = entityState?.attributes?.device_class || "_";
+            if (!deviceClassMap[deviceClass]) deviceClassMap[deviceClass] = [];
+            deviceClassMap[deviceClass].push(entity);
+          }
+          
+          // Create a chip for each device_class that has entities
+          const sortedDeviceClasses = Object.keys(deviceClassMap).sort();
+          for (const deviceClass of sortedDeviceClasses) {
+            if (deviceClassMap[deviceClass].length > 0) {
+              chips.push(new AggregateChip({
+                domain: "cover",
+                device_class: deviceClass === "_" ? undefined : deviceClass,
+                area_slug: device.slug,
+                magic_device_id: device.slug
+              }).getChip());
+            }
+          }
+        }
+        return chips
+      },
     },
     scene: {
       showControls: false,
@@ -160,7 +205,17 @@ export const configurationDefaults: StrategyDefaults = {
         toggleService: "fan.toggle",
       },
       hidden: false,
-      order: 6
+      order: 6,
+      extraControls: (device: MagicAreaRegistryEntry) => {
+        const chips = [];
+        // Add aggregate chip for fan controls
+        chips.push(new AggregateChip({
+          domain: "fan",
+          area_slug: device.slug,
+          magic_device_id: device.slug
+        }).getChip());
+        return chips
+      },
     },
     switch: {
       showControls: true,
@@ -171,7 +226,17 @@ export const configurationDefaults: StrategyDefaults = {
         toggleService: "switch.toggle",
       },
       hidden: false,
-      order: 7
+      order: 7,
+      extraControls: (device: MagicAreaRegistryEntry) => {
+        const chips = [];
+        // Add aggregate chip for switch controls
+        chips.push(new AggregateChip({
+          domain: "switch",
+          area_slug: device.slug,
+          magic_device_id: device.slug
+        }).getChip());
+        return chips
+      },
     },
     camera: {
       showControls: false,

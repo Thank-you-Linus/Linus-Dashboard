@@ -229,7 +229,7 @@ async function createItemsFromList(
 
     for (const itemType of itemList) {
         let domain = itemType;
-        let device_class;
+        let device_class: string | undefined;
 
         if (itemType.includes(":")) {
             [domain, device_class] = itemType.split(":");
@@ -240,6 +240,28 @@ async function createItemsFromList(
         if (!domains.includes(domain)) continue;
 
         if (getGlobalEntitiesExceptUndisclosed(domain, device_class).length === 0) continue;
+        
+        // For area-specific chips, check if the area has entities for this domain/device_class
+        if (area_slug && magic_device_id !== "global") {
+            const hasAreaEntities = area_slugs.some(slug => {
+                const area = Helper.areas[slug];
+                if (!area) return false;
+                const entities = Helper.getAreaEntities(area, domain, device_class);
+                return entities && entities.length > 0;
+            });
+            if (!hasAreaEntities) continue;
+        }
+        
+        // For area-specific chips, check if the area has entities for this domain/device_class
+        if (area_slug && magic_device_id !== "global") {
+            const hasAreaEntities = area_slugs.some(slug => {
+                const area = Helper.areas[slug];
+                if (!area) return false;
+                const entities = Helper.getAreaEntities(area, domain, device_class);
+                return entities && entities.length > 0;
+            });
+            if (!hasAreaEntities) continue;
+        }
         const magicAreasEntity = getMAEntity(magic_device_id, domain, device_class);
         const className = Helper.sanitizeClassName(device_class ?? domain + (isChip ? "Chip" : "Card"));
 

@@ -144,6 +144,41 @@
                     "individual_controls": "Individual Controls"
                 }
             },
+            "covers_group_popup": {
+                "name": "Covers Group",
+                "state": {
+                    "title": "Covers",
+                    "individual_controls": "Individual Controls"
+                }
+            },
+            "fans_group_popup": {
+                "name": "Fans Group",
+                "state": {
+                    "title": "Fans",
+                    "individual_controls": "Individual Controls"
+                }
+            },
+            "switches_group_popup": {
+                "name": "Switches Group",
+                "state": {
+                    "title": "Switches",
+                    "individual_controls": "Individual Controls"
+                }
+            },
+            "climates_group_popup": {
+                "name": "Climates Group",
+                "state": {
+                    "title": "Climate Control",
+                    "individual_controls": "Individual Controls"
+                }
+            },
+            "media_players_group_popup": {
+                "name": "Media Players Group",
+                "state": {
+                    "title": "Media Players",
+                    "individual_controls": "Individual Controls"
+                }
+            },
             "smart_control": {
                 "name": "Smart Control",
                 "state": {
@@ -154,16 +189,45 @@
                     "title_fan": "All Fans",
                     "title_media_player": "All Media Players",
                     "title_cover": "All Covers",
+                    "title_climate": "All Climate Devices",
                     "action_on_light": "Turn All On",
                     "action_on_switch": "Turn All On",
                     "action_on_fan": "Turn All On",
-                    "action_on_media_player": "Turn All On",
+                    "action_on_media_player": "Play All",
                     "action_on_cover": "Open All",
+                    "action_on_climate": "Turn All On",
                     "action_off_light": "Turn All Off",
                     "action_off_switch": "Turn All Off",
                     "action_off_fan": "Turn All Off",
-                    "action_off_media_player": "Turn All Off",
-                    "action_off_cover": "Close All"
+                    "action_off_media_player": "Pause All",
+                    "action_off_cover": "Close All",
+                    "action_off_climate": "Turn All Off"
+                }
+            },
+            "aggregate_popup": {
+                "name": "Aggregate Control",
+                "state": {
+                    "state_on": "on",
+                    "state_off": "off",
+                    "title_light": "Lights",
+                    "title_switch": "Switches",
+                    "title_fan": "Fans",
+                    "title_media_player": "Media Players",
+                    "title_cover": "Covers",
+                    "title_climate": "Climate Devices",
+                    "action_on_light": "Turn All On",
+                    "action_on_switch": "Turn All On",
+                    "action_on_fan": "Turn All On",
+                    "action_on_media_player": "Play All",
+                    "action_on_cover": "Open All",
+                    "action_on_climate": "Turn All On",
+                    "action_off_light": "Turn All Off",
+                    "action_off_switch": "Turn All Off",
+                    "action_off_fan": "Turn All Off",
+                    "action_off_media_player": "Pause All",
+                    "action_off_cover": "Close All",
+                    "action_off_climate": "Turn All Off",
+                    "individual_controls": "Individual Controls"
                 }
             }
         }

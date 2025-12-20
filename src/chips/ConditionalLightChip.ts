@@ -26,29 +26,15 @@ class ConditionalLightChip {
    */
   constructor({ area_slug, magic_device_id }: { area_slug: string | string[], magic_device_id?: string }) {
 
-    // Use EntityResolver to get all_lights entity (Linus Brain or Magic Areas)
-    const allLightsResolution = magic_device_id
-      ? Helper.entityResolver.resolveAllLights(magic_device_id)
-      : { entity_id: null, source: "native" as const };
+    // LightChip handles all resolution logic internally (Linus Brain, Magic Areas, or native)
+    // Only create the chip if light entities exist in the area
+    const entity_ids = Helper.getEntityIds({
+      domain: "light",
+      area_slug,
+    });
 
-    const allLightsEntity = allLightsResolution.entity_id;
-
-    if (allLightsEntity) {
-      // Let LightChip decide the tap_action based on source (Linus Brain or Magic Areas)
+    if (entity_ids?.length) {
       this.config.push(new LightChip({ area_slug, magic_device_id }).getChip());
-
-    } else {
-      const entity_ids = Helper.getEntityIds({
-        domain: "light",
-        area_slug,
-      });
-
-      if (entity_ids?.length) {
-        // Let LightChip handle tap_action (will use popup for native case)
-        this.config.push(new LightChip({ area_slug, magic_device_id }).getChip());
-      }
-
-
     }
 
   }

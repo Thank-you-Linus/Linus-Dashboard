@@ -155,6 +155,28 @@ export class EntityResolver {
   }
 
   /**
+   * Resolves the climate group entity
+   * 
+   * Note: Linus Brain doesn't provide climate groups yet, so this always returns Magic Areas.
+   * Priority: Linus Brain (future) > Magic Areas > null
+   * 
+   * @param area_slug - The area slug
+   * @returns EntityResolution with the resolved entity
+   */
+  resolveClimateGroup(area_slug: string): EntityResolution {
+    // TODO: Add Linus Brain support when available
+    // if (this.hasLinusBrain) {
+    //   const linusEntity = `climate.linus_brain_climate_group_${area_slug}`;
+    //   if (this.hass.states[linusEntity]) {
+    //     return { entity_id: linusEntity, source: "linus_brain" };
+    //   }
+    // }
+    
+    // Fallback to Magic Areas
+    return this.resolveMagicAreasEntity(area_slug, "climate_group");
+  }
+
+  /**
    * Resolves Magic Areas entities that don't have Linus Brain equivalents
    * 
    * This includes: aggregates, groups (climate, fan, media_player, cover), etc.

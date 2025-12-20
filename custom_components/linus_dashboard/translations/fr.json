@@ -144,6 +144,41 @@
                     "individual_controls": "Contrôles individuels"
                 }
             },
+            "covers_group_popup": {
+                "name": "Groupe de volets",
+                "state": {
+                    "title": "Volets",
+                    "individual_controls": "Contrôles individuels"
+                }
+            },
+            "fans_group_popup": {
+                "name": "Groupe de ventilateurs",
+                "state": {
+                    "title": "Ventilateurs",
+                    "individual_controls": "Contrôles individuels"
+                }
+            },
+            "switches_group_popup": {
+                "name": "Groupe d'interrupteurs",
+                "state": {
+                    "title": "Interrupteurs",
+                    "individual_controls": "Contrôles individuels"
+                }
+            },
+            "climates_group_popup": {
+                "name": "Groupe de climatisation",
+                "state": {
+                    "title": "Contrôle climatique",
+                    "individual_controls": "Contrôles individuels"
+                }
+            },
+            "media_players_group_popup": {
+                "name": "Groupe de lecteurs multimédia",
+                "state": {
+                    "title": "Lecteurs multimédia",
+                    "individual_controls": "Contrôles individuels"
+                }
+            },
             "smart_control": {
                 "name": "Contrôle intelligent",
                 "state": {
@@ -154,16 +189,45 @@
                     "title_fan": "Tous les ventilateurs",
                     "title_media_player": "Tous les lecteurs multimédia",
                     "title_cover": "Tous les volets",
+                    "title_climate": "Tous les appareils climatiques",
                     "action_on_light": "Tout allumer",
                     "action_on_switch": "Tout allumer",
                     "action_on_fan": "Tout allumer",
-                    "action_on_media_player": "Tout allumer",
+                    "action_on_media_player": "Tout lire",
                     "action_on_cover": "Tout ouvrir",
+                    "action_on_climate": "Tout allumer",
                     "action_off_light": "Tout éteindre",
                     "action_off_switch": "Tout éteindre",
                     "action_off_fan": "Tout éteindre",
-                    "action_off_media_player": "Tout éteindre",
-                    "action_off_cover": "Tout fermer"
+                    "action_off_media_player": "Tout mettre en pause",
+                    "action_off_cover": "Tout fermer",
+                    "action_off_climate": "Tout éteindre"
+                }
+            },
+            "aggregate_popup": {
+                "name": "Contrôle Agrégé",
+                "state": {
+                    "state_on": "allumé(s)",
+                    "state_off": "éteint(s)",
+                    "title_light": "Lumières",
+                    "title_switch": "Interrupteurs",
+                    "title_fan": "Ventilateurs",
+                    "title_media_player": "Lecteurs Multimédias",
+                    "title_cover": "Volets",
+                    "title_climate": "Climatisations",
+                    "action_on_light": "Tout Allumer",
+                    "action_on_switch": "Tout Allumer",
+                    "action_on_fan": "Tout Allumer",
+                    "action_on_media_player": "Tout Lire",
+                    "action_on_cover": "Tout Ouvrir",
+                    "action_on_climate": "Tout Allumer",
+                    "action_off_light": "Tout Éteindre",
+                    "action_off_switch": "Tout Éteindre",
+                    "action_off_fan": "Tout Éteindre",
+                    "action_off_media_player": "Tout Mettre en Pause",
+                    "action_off_cover": "Tout Fermer",
+                    "action_off_climate": "Tout Éteindre",
+                    "individual_controls": "Contrôles Individuels"
                 }
             }
         }

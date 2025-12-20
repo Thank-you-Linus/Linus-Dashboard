@@ -15,8 +15,6 @@ import { UnavailableChip } from "../chips/UnavailableChip";
 import { RefreshChip } from "../chips/RefreshChip";
 import { PersonCard } from "../cards/PersonCard";
 import { AggregateChip } from "../chips/AggregateChip";
-import { ClimateChip } from "../chips/ClimateChip";
-import { FanChip } from "../chips/FanChip";
 import { WelcomeCard } from "../cards/WelcomeCard";
 import { ConditionalLightChip } from "../chips/ConditionalLightChip";
 
@@ -231,11 +229,15 @@ class HomeView {
 
       const chips = floor.floor_id === UNDISCLOSED ? [] : [
         ...(lightEntities.length > 0 ? new ConditionalLightChip({ area_slug: floor.areas_slug, magic_device_id: floor.floor_id }).getChip() : []),
-        climateEntities.length > 0 && new ClimateChip({
+        climateEntities.length > 0 && new AggregateChip({
+          domain: "climate",
+          show_content: true,
           magic_device_id: floor.floor_id,
           area_slug: floor.areas_slug,
         }).getChip(),
-        fanEntities.length > 0 && new FanChip({
+        fanEntities.length > 0 && new AggregateChip({
+          domain: "fan",
+          show_content: true,
           magic_device_id: floor.floor_id,
           area_slug: floor.areas_slug,
         }).getChip(),

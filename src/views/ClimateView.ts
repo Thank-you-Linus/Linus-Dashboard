@@ -1,9 +1,10 @@
+import { Helper } from "../Helper";
 import { views } from "../types/strategy/views";
 import { ChipsCardConfig } from "../types/lovelace-mushroom/cards/chips-card";
 import { StackCardConfig } from "../types/homeassistant/lovelace/cards/types";
 import { TemplateCardConfig } from "../types/lovelace-mushroom/cards/template-card-config";
-import { LovelaceChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
 import { RefreshChip } from "../chips/RefreshChip";
+import { AggregateChip } from "../chips/AggregateChip";
 
 import { AbstractView } from "./AbstractView";
 
@@ -58,17 +59,37 @@ class ClimateView extends AbstractView {
    * @override
    */
   override async createSectionBadges(): Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig)[]> {
-    const chips: LovelaceChipConfig[] = [];
+    const badges: (StackCardConfig | TemplateCardConfig | ChipsCardConfig)[] = [];
 
-    // Refresh chip - allows manual refresh of registries
+    // Create aggregate chip for global climate control
+    const aggregateChip = new AggregateChip({
+      domain: "climate",
+      scope: "global",
+      scopeName: Helper.localize("component.linus_dashboard.entity.text.aggregate_popup.state.title_climate"),
+      serviceOn: "turn_on",
+      serviceOff: "turn_off",
+      activeStates: ["heat", "cool", "heat_cool", "auto", "dry", "fan_only"],
+      translationKey: "climate",
+      features: [{ type: "climate-hvac-modes" }],
+    });
+
+    if (aggregateChip.getChip()) {
+      badges.push({
+        type: "custom:mushroom-chips-card",
+        chips: [aggregateChip.getChip()],
+        alignment: "center",
+      });
+    }
+
+    // Refresh chip (centered)
     const refreshChip = new RefreshChip();
-    chips.push(refreshChip.getChip());
-
-    return chips.map(chip => ({
+    badges.push({
       type: "custom:mushroom-chips-card",
       alignment: "center",
-      chips: [chip],
-    }));
+      chips: [refreshChip.getChip()],
+    });
+
+    return badges;
   }
 }
 

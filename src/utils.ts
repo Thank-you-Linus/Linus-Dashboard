@@ -237,7 +237,7 @@ async function createItemsFromList(
 
         if (Helper.linus_dashboard_config?.excluded_domains?.includes(domain)) continue;
         if (device_class && Helper.linus_dashboard_config?.excluded_device_classes?.includes(device_class)) continue;
-        if (!domains.includes(itemType)) continue;
+        if (!domains.includes(domain)) continue;
 
         if (getGlobalEntitiesExceptUndisclosed(domain, device_class).length === 0) continue;
         const magicAreasEntity = getMAEntity(magic_device_id, domain, device_class);
@@ -251,14 +251,16 @@ async function createItemsFromList(
                 item = new itemModule[className]({ ...itemOptions, device_class, magic_device_id, area_slug }, magicAreasEntity);
             } catch {
                 if (isChip) {
+                    // Filter out icon property to let AggregateChip calculate it
+                    const chipOptions: any = { ...itemOptions };
+                    delete chipOptions.icon;
+                    
                     item = new AggregateChip({
-                        ...itemOptions,
+                        ...chipOptions,
                         domain,
                         device_class,
-                        icon: undefined,
                         area_slug,
-                        magic_device_id,
-                        tap_action: navigateTo(domain === "binary_sensor" || domain === "sensor" ? device_class ?? domain : domain)
+                        magic_device_id
                     });
                 } else {
                     item = new AggregateCard({

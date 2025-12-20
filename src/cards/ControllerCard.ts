@@ -90,12 +90,12 @@ class ControllerCard {
 
     if (this.#defaultConfig.showControls || this.#defaultConfig.extraControls?.length) {
 
-      const magic_device = Helper.magicAreasDevices[this.#area_slug ?? ""]
       const badges: LovelaceBadgeConfig[] = [];
 
       if (this.#defaultConfig.showControls) {
 
         const chipModule = Helper.strategyOptions.domains[this.#domain]?.controlChip;
+        
         const chipOptions = {
           show_content: true,
           magic_device_id: this.#area_slug,
@@ -104,12 +104,18 @@ class ControllerCard {
           domain: this.#domain,
         };
 
-        const chips = chipModule && typeof chipModule === 'function'
-          ? (
-            chipOptions.device_class
-              ? [chipOptions.device_class]
-              : DEVICE_CLASSES[this.#domain as keyof typeof DEVICE_CLASSES] ?? []).flatMap((device_class) => new chipModule({ ...chipOptions, device_class }, magic_device).getChip())?.filter((chip) => chip?.icon !== undefined || chip.chip?.icon !== undefined)
+        const deviceClasses = chipOptions.device_class
+          ? [chipOptions.device_class]
+          : DEVICE_CLASSES[this.#domain as keyof typeof DEVICE_CLASSES] ?? [];
+
+        const allChips = chipModule && typeof chipModule === 'function'
+          ? deviceClasses.flatMap((device_class) => {
+              const chip = new chipModule({ ...chipOptions, device_class }).getChip();
+              return chip;
+            })
           : [];
+
+        const chips = allChips.filter((chip) => chip?.icon !== undefined || chip.chip?.icon !== undefined);
 
         badges.push({
           type: "custom:mushroom-chips-card",
@@ -126,9 +132,8 @@ class ControllerCard {
       }
 
       if (this.#defaultConfig.extraControls?.length) {
-        // Create a device object with at least the slug for Linus Brain compatibility
-        // If magic_device exists, use it; otherwise create a minimal device object
-        const deviceForExtraControls = magic_device ?? { slug: this.#area_slug, entities: {} };
+        // Create a minimal device object for backward compatibility
+        const deviceForExtraControls = { slug: this.#area_slug, entities: {} };
         badges.push(...this.#defaultConfig.extraControls(deviceForExtraControls)?.map((chip: any) => {
           return {
             type: "custom:mushroom-chips-card",

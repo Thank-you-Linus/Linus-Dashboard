@@ -7,11 +7,9 @@ import { ActivityDetectionChip } from "../chips/ActivityDetectionChip";
 import { generic } from "../types/strategy/generic";
 import { getAreaName, getMAEntity } from "../utils";
 import { EntityRegistryEntry } from "../types/homeassistant/data/entity_registry";
-import { ClimateChip } from "../chips/ClimateChip";
 import { ConditionalChip } from "../chips/ConditionalChip";
 import { UNAVAILABLE, UNDISCLOSED } from "../variables";
 import { EntityCardConfig } from "../types/lovelace-mushroom/cards/entity-card-config";
-import { FanChip } from "../chips/FanChip";
 import { ConditionalLightChip } from "../chips/ConditionalLightChip";
 
 import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
@@ -183,8 +181,6 @@ class HomeAreaCard {
     // Keep other Magic Areas entities unchanged (aggregates, groups)
     const { aggregate_health, climate_group, aggregate_window, aggregate_door, aggregate_cover } = this.magicDevice?.entities || {};
     const { health } = this.area.domains ?? {};
-    const magicClimate = getMAEntity(this.magicDevice?.id, "climate") as EntityRegistryEntry;
-    const magicFan = getMAEntity(this.magicDevice?.id, "fan") as EntityRegistryEntry;
 
     const climate = Helper.getEntityIds({ domain: "climate", area_slug: this.area.slug });
     const fan = Helper.getEntityIds({ domain: "fan", area_slug: this.area.slug });
@@ -213,13 +209,16 @@ class HomeAreaCard {
         ).getChip(),
         cover?.length && new ConditionalChip(
           aggregate_cover ? [{ entity: aggregate_cover?.entity_id, state: "on" }] : cover.map(entity => ({ entity, state: "on" })),
-          new AggregateChip({ domain: "cover", magic_device_id: this.area.slug, area_slug: this.area.slug, device_class: "cover", show_content: false }).getChip()
+          new AggregateChip({ domain: "cover", magic_device_id: this.area.slug, area_slug: this.area.slug, show_content: false }).getChip()
         ).getChip(),
         climate?.length && new ConditionalChip(
-          climate_group ? [{ entity: climate_group?.entity_id, state: "on" }] : cover.map(entity => ({ entity, state: "on" })),
-          new ClimateChip({ magic_device_id: this.area.slug, area_slug: this.area.slug }, magicClimate,).getChip(),
+          climate_group ? [{ entity: climate_group?.entity_id, state: "on" }] : climate.map(entity => ({ entity, state: "on" })),
+          new AggregateChip({ domain: "climate", magic_device_id: this.area.slug, area_slug: this.area.slug, show_content: false }).getChip(),
         ).getChip(),
-        fan?.length && new FanChip({ magic_device_id: this.area.slug, area_slug: this.area.slug }, magicFan).getChip(),
+        fan?.length && new ConditionalChip(
+          fan.map(entity => ({ entity, state: "on" })),
+          new AggregateChip({ domain: "fan", magic_device_id: this.area.slug, area_slug: this.area.slug, show_content: false }).getChip()
+        ).getChip(),
         // Two conditional light chips: one for ON state (turns off), one for OFF state (turns on)
         ...(light?.length ? new ConditionalLightChip({ area_slug: this.area.slug, magic_device_id: this.area.slug }).getChip() : []),
         // Light control switch - now supports Linus Brain or Magic Areas

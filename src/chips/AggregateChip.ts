@@ -1,61 +1,391 @@
-import { chips } from "../types/strategy/chips";
 import { Helper } from "../Helper";
-import { getMAEntity, navigateTo } from "../utils";
-import { EntityChipConfig, TemplateChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
+import { chips } from "../types/strategy/chips";
+import { TemplateChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
+import { navigateTo } from "../utils";
 
 import { AbstractChip } from "./AbstractChip";
 
+/**
+ * Aggregate Chip Options
+ * 
+ * Configuration interface for creating aggregate control chips across all domains.
+ */
+export interface AggregateChipOptions extends chips.ChipOptions {
+  /** Domain to control (light, climate, cover, etc.) */
+  domain: string;
+  /** Scope of control: global (all areas), floor (one floor), area (one area). Defaults to "area" if area_slug provided, else "global" */
+  scope?: "global" | "floor" | "area";
+  /** Display name for the scope (e.g., "Living Room", "Ground Floor"). Auto-generated if not provided */
+  scopeName?: string;
+  /** Service name for turning on (e.g., "turn_on", "open_cover"). Auto-detected from domain if not provided */
+  serviceOn?: string;
+  /** Service name for turning off (e.g., "turn_off", "close_cover"). Auto-detected from domain if not provided */
+  serviceOff?: string;
+  /** States considered "active" for this domain. Auto-detected from domain if not provided */
+  activeStates?: string[];
+  /** Translation key for domain-specific text. Defaults to domain if not provided */
+  translationKey?: string;
+  /** Optional features for tile cards in popup */
+  features?: any[];
+  /** Optional device class (for covers, sensors, binary_sensors) */
+  device_class?: string;
+  /** Optional floor ID for floor scope */
+  floor_id?: string | null;
+  /** DEPRECATED: Use area_slug from ChipOptions base */
+  magic_device_id?: string;
+}
+
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**
- * Climate Chip class.
+ * Aggregate Chip Class
  *
- * Used to create a chip to indicate climate level.
+ * Universal chip for controlling groups of entities across all domains and views.
+ * Supports device_class for binary_sensor, sensor, and cover domains.
+ * 
+ * **Features**:
+ * - Automatic Linus Brain detection (uses more-info when LB group available)
+ * - Scope-aware (adapts behavior for global/floor/area)
+ * - EntityResolver integration (consistent entity resolution)
+ * - Centralized color management (uses colorMapping from variables.ts)
+ * - Home Assistant translations (reuses HA's native translations)
+ * - Device class support (for binary_sensor, sensor, cover)
+ * 
+ * **Behavior**:
+ * - tap_action: Opens AggregatePopup (or more-info if Linus Brain group exists)
+ * - hold_action: Navigates to domain/device_class view
  */
 class AggregateChip extends AbstractChip {
   /**
    * Default configuration of the chip.
    *
-   * @param {chips.AggregateChipOptions} options The options object containing the parameters.
-   * @returns {TemplateChipConfig} The default configuration.
+   * @type {TemplateChipConfig}
+   * @readonly
+   * @private
    */
-  getDefaultConfig({ domain, device_class, show_content = true, magic_device_id = "global", area_slug, tap_action, hold_action }: chips.AggregateChipOptions): TemplateChipConfig | EntityChipConfig {
-    const magicEntity = getMAEntity(magic_device_id, domain, device_class);
-    const entity_id = Helper.getEntityIds({ domain, device_class, area_slug })
-
-    const config: TemplateChipConfig | EntityChipConfig = {
-      type: "template",
-      entity: entity_id.length == 1 ? entity_id[0] : undefined,
-      entity_id: Helper.getEntityIds({ domain, device_class, area_slug }),
-      icon_color: Helper.getIconColor(domain, device_class, entity_id),
-      icon: Helper.getIcon(domain, device_class, entity_id),
-      content: show_content ? Helper.getContent(domain, device_class, entity_id) : "",
-      tap_action: tap_action ?? navigateTo(domain === "cover" ? domain : device_class ?? domain),
-      hold_action: hold_action ?? navigateTo(domain === "cover" ? domain : device_class ?? domain),
-    }
-
-    if (magicEntity) {
-      config.type = "template";
-      config.entity = magicEntity.entity_id;
-    }
-
-    if (config.entity_id?.length == 1) {
-      config.tap_action = { action: "more-info" };
-    }
-
-    return config;
-  }
+  readonly #defaultConfig: TemplateChipConfig = {
+    type: "template",
+    icon_color: "grey",
+    content: "",
+    tap_action: { action: "none" },
+    hold_action: { action: "none" },
+  };
 
   /**
    * Class Constructor.
    *
-   * @param {chips.AggregateChipOptions} options The chip options.
+   * @param {AggregateChipOptions} options - The chip options
    */
-  constructor(options: chips.AggregateChipOptions) {
+  constructor(options: AggregateChipOptions) {
     super();
 
-    const defaultConfig = this.getDefaultConfig(options);
+    // BACKWARD COMPATIBILITY: Support old magic_device_id parameter
+    if (options.magic_device_id && !options.area_slug) {
+      options.area_slug = options.magic_device_id;
+    }
 
-    this.config = Object.assign(this.config, defaultConfig);
+    // AUTO-DETECT DEFAULTS based on domain
+    const defaults = this.getDefaultsForDomain(options.domain);
+
+    // Auto-detect scope if not provided
+    const scope = options.scope ?? (options.area_slug ? "area" : "global");
+
+    // Apply defaults for missing parameters
+    const config: Required<Omit<AggregateChipOptions, 'features' | 'device_class' | 'floor_id' | 'magic_device_id' | keyof chips.ChipOptions>> & AggregateChipOptions = {
+      ...options,
+      scope,
+      scopeName: options.scopeName ?? this.generateScopeName(options, scope),
+      serviceOn: options.serviceOn ?? defaults.serviceOn,
+      serviceOff: options.serviceOff ?? defaults.serviceOff,
+      activeStates: options.activeStates ?? defaults.activeStates,
+      translationKey: options.translationKey ?? defaults.translationKey,
+      features: options.features ?? defaults.features,
+    };
+
+    // 1. Get entities for this scope
+    const allEntities = this.getEntitiesForScope(config);
+
+
+    if (!allEntities.length) {
+      return;
+    }
+
+    // 2. Check for Linus Brain group entity (only for area scope)
+    const linusBrainEntity = this.getLinusBrainEntity(config);
+
+    // 3. Configure chip appearance
+    this.#defaultConfig.icon = Helper.getIcon(config.domain, config.device_class, allEntities);
+    this.#defaultConfig.icon_color = Helper.getIconColor(config.domain, config.device_class, allEntities);
+    
+
+    if (config.show_content) {
+      this.#defaultConfig.content = Helper.getContent(config.domain, config.device_class, allEntities);
+    }
+
+    // 4. Configure tap/hold actions
+    // If Linus Brain group exists: tap = more-info on LB group
+    // Otherwise: tap = appropriate popup (specialized popups for media_player/cover, AggregatePopup for others)
+    if (linusBrainEntity) {
+      // Linus Brain group detected: open more-info
+      this.#defaultConfig.tap_action = { action: "more-info", entity: linusBrainEntity } as any;
+      this.#defaultConfig.hold_action = navigateTo(config.device_class ?? config.domain);
+    } else {
+      // No Linus Brain: create appropriate popup based on domain
+      if (config.domain === "media_player") {
+        // Use MediaPlayerPopup for media players (extends AggregatePopup with play/pause/volume controls)
+        const { MediaPlayerPopup } = require("../popups/MediaPlayerPopup");
+        const popup = new MediaPlayerPopup({
+          domain: config.domain,
+          scope: config.scope,
+          scopeName: config.scopeName,
+          entity_ids: allEntities,
+          serviceOn: config.serviceOn,
+          serviceOff: config.serviceOff,
+          activeStates: config.activeStates,
+          translationKey: config.translationKey,
+          linusBrainEntity: null,
+          features: config.features,
+          device_class: config.device_class
+        });
+        this.#defaultConfig.tap_action = popup.getPopup();
+      } else if (config.domain === "cover") {
+        // Use CoverPopup for covers (extends AggregatePopup with device_class-specific icons and translations)
+        const { CoverPopup } = require("../popups/CoverPopup");
+        const popup = new CoverPopup({
+          domain: config.domain,
+          scope: config.scope,
+          scopeName: config.scopeName,
+          entity_ids: allEntities,
+          serviceOn: config.serviceOn,
+          serviceOff: config.serviceOff,
+          activeStates: config.activeStates,
+          translationKey: config.translationKey,
+          linusBrainEntity: null,
+          features: config.features,
+          device_class: config.device_class
+        });
+        this.#defaultConfig.tap_action = popup.getPopup();
+      } else {
+        // Use AggregatePopup for all other domains (climate, fan, switch, light, etc.)
+        const { AggregatePopup } = require("../popups/AggregatePopup");
+        const popup = new AggregatePopup({
+          domain: config.domain,
+          scope: config.scope,
+          scopeName: config.scopeName,
+          entity_ids: allEntities,
+          serviceOn: config.serviceOn,
+          serviceOff: config.serviceOff,
+          activeStates: config.activeStates,
+          translationKey: config.translationKey,
+          linusBrainEntity: null,
+          features: config.features,
+          device_class: config.device_class
+        });
+
+        this.#defaultConfig.tap_action = popup.getPopup();
+      }
+      this.#defaultConfig.hold_action = navigateTo(config.device_class ?? config.domain);
+    }
+
+    // 5. Apply configuration
+    this.config = Object.assign(this.config, this.#defaultConfig, options);
+    
+  }
+
+  /**
+   * Get default configuration for a domain
+   * 
+   * @param domain - Domain name
+   * @returns Default configuration
+   * @private
+   */
+  private getDefaultsForDomain(domain: string): {
+    serviceOn: string;
+    serviceOff: string;
+    activeStates: string[];
+    translationKey: string;
+    features: any[];
+  } {
+    const defaults: Record<string, any> = {
+      light: {
+        serviceOn: "turn_on",
+        serviceOff: "turn_off",
+        activeStates: ["on"],
+        translationKey: "light",
+        features: [{ type: "light-brightness" }],
+      },
+      climate: {
+        serviceOn: "turn_on",
+        serviceOff: "turn_off",
+        activeStates: ["heat", "cool", "heat_cool", "auto", "dry", "fan_only"],
+        translationKey: "climate",
+        features: [{ type: "climate-hvac-modes" }],
+      },
+      cover: {
+        serviceOn: "open_cover",
+        serviceOff: "close_cover",
+        activeStates: ["open", "opening"],
+        translationKey: "cover",
+        features: [],
+      },
+      fan: {
+        serviceOn: "turn_on",
+        serviceOff: "turn_off",
+        activeStates: ["on"],
+        translationKey: "fan",
+        features: [{ type: "fan-speed" }],
+      },
+      switch: {
+        serviceOn: "turn_on",
+        serviceOff: "turn_off",
+        activeStates: ["on"],
+        translationKey: "switch",
+        features: [],
+      },
+      media_player: {
+        serviceOn: "media_play",
+        serviceOff: "media_pause",
+        activeStates: ["playing", "paused"],
+        translationKey: "media_player",
+        features: [],
+      },
+      binary_sensor: {
+        serviceOn: "turn_on",
+        serviceOff: "turn_off",
+        activeStates: ["on"],
+        translationKey: "binary_sensor",
+        features: [],
+      },
+      sensor: {
+        serviceOn: "turn_on",
+        serviceOff: "turn_off",
+        activeStates: ["on"],
+        translationKey: "sensor",
+        features: [],
+      },
+    };
+
+    return defaults[domain] ?? {
+      serviceOn: "turn_on",
+      serviceOff: "turn_off",
+      activeStates: ["on"],
+      translationKey: domain,
+      features: [],
+    };
+  }
+
+  /**
+   * Generate scope name from options
+   * 
+   * @param options - Chip options
+   * @param scope - Detected scope
+   * @returns Generated scope name
+   * @private
+   */
+  private generateScopeName(options: AggregateChipOptions, scope: string): string {
+    if (scope === "area" && options.area_slug && typeof options.area_slug === 'string') {
+      const area = Helper.areas[options.area_slug];
+      return area?.name ?? options.area_slug;
+    }
+
+    if (scope === "floor" && options.floor_id) {
+      const floor = Helper.floors[options.floor_id];
+      return floor?.name ?? options.floor_id;
+    }
+
+    // Global scope - use domain name
+    const domainTitle = Helper.strategyOptions.domains[options.domain]?.title;
+    if (domainTitle) return domainTitle;
+
+    // Fallback: capitalize domain name
+    return options.domain.charAt(0).toUpperCase() + options.domain.slice(1);
+  }
+
+  /**
+   * Get entities for the specified scope
+   * 
+   * @param options - Chip options
+   * @returns Array of entity IDs
+   * @private
+   */
+  private getEntitiesForScope(options: AggregateChipOptions): string[] {
+    const getOptions: any = {
+      domain: options.domain,
+      device_class: options.device_class
+    };
+
+    switch (options.scope) {
+      case "global":
+        // All entities assigned to areas (excludes global/undisclosed)
+        getOptions.area_slug = undefined;
+        break;
+
+      case "floor":
+        // Entities on this floor
+        if (!options.floor_id) {
+          if (Helper.debug) {
+            console.warn("[AggregateChip] floor_id required for floor scope");
+          }
+          return [];
+        }
+        getOptions.floor_id = options.floor_id;
+        break;
+
+      case "area":
+        // Entities in this area
+        if (!options.area_slug) {
+          if (Helper.debug) {
+            console.warn("[AggregateChip] area_slug required for area scope");
+          }
+          return [];
+        }
+        getOptions.area_slug = options.area_slug;
+        break;
+    }
+
+    return Helper.getEntityIds(getOptions);
+  }
+
+  /**
+   * Get Linus Brain group entity if available (only for area scope)
+   * 
+   * @param options - Chip options
+   * @returns Entity ID or null
+   * @private
+   */
+  private getLinusBrainEntity(options: AggregateChipOptions): string | null {
+    // Only check for Linus Brain in area scope
+    if (options.scope !== "area") {
+      return null;
+    }
+
+    // Area slug must be a string (not array)
+    if (Array.isArray(options.area_slug) || !options.area_slug) {
+      return null;
+    }
+
+    const resolver = Helper.entityResolver;
+
+    // Check by domain
+    switch (options.domain) {
+      case "light": {
+        const lightResolution = resolver.resolveAllLights(options.area_slug);
+        return lightResolution.source === "linus_brain" ? lightResolution.entity_id : null;
+      }
+
+      case "climate":
+        // Linus Brain doesn't provide climate groups yet
+        return null;
+
+      case "cover":
+      case "fan":
+      case "media_player":
+      case "switch":
+        // Linus Brain doesn't have these domain groups yet
+        return null;
+
+      default:
+        return null;
+    }
   }
 }
 

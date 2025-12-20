@@ -8,14 +8,8 @@ import { LightSettings } from "./popups/LightSettingsPopup";
 import { ToggleSceneChip } from "./chips/ToggleSceneChip";
 import { SceneSettings } from "./popups/SceneSettingsPopup";
 import { UNDISCLOSED } from "./variables";
-import { ClimateChip } from "./chips/ClimateChip";
 import { AggregateChip } from "./chips/AggregateChip";
 import { LightChip } from "./chips/LightChip";
-import { MediaPlayerChip } from "./chips/MediaPlayerChip";
-import { CoverChip } from "./chips/CoverChip";
-import { FanChip } from "./chips/FanChip";
-import { SwitchChip } from "./chips/SwitchChip";
-import { ConditionalLightChip } from "./chips/ConditionalLightChip";
 
 import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
 
@@ -56,7 +50,7 @@ export const configurationDefaults: StrategyDefaults = {
     },
     light: {
       showControls: true,
-      controlChip: ConditionalLightChip,
+      controlChip: AggregateChip,
       extraControls: (device: MagicAreaRegistryEntry) => {
         const { adaptive_lighting_range, minimum_brightness, maximum_brightness, maximum_lighting_level } = device?.entities ?? {}
         const chips = [];
@@ -97,7 +91,7 @@ export const configurationDefaults: StrategyDefaults = {
     },
     climate: {
       showControls: true,
-      controlChip: ClimateChip,
+      controlChip: AggregateChip,
       controllerCardOptions: {
         onService: "climate.turn_on",
         offService: "climate.turn_off",
@@ -115,7 +109,7 @@ export const configurationDefaults: StrategyDefaults = {
     },
     media_player: {
       showControls: true,
-      controlChip: MediaPlayerChip,
+      controlChip: AggregateChip,
       controllerCardOptions: {
         onService: "media_player.turn_on",
         offService: "media_player.turn_off",
@@ -133,7 +127,7 @@ export const configurationDefaults: StrategyDefaults = {
     },
     cover: {
       showControls: true,
-      controlChip: CoverChip,
+      controlChip: AggregateChip,
       controllerCardOptions: {
         onService: "cover.open_cover",
         offService: "cover.close_cover",
@@ -159,7 +153,7 @@ export const configurationDefaults: StrategyDefaults = {
     },
     fan: {
       showControls: true,
-      controlChip: FanChip,
+      controlChip: AggregateChip,
       controllerCardOptions: {
         onService: "fan.turn_on",
         offService: "fan.turn_off",
@@ -170,7 +164,7 @@ export const configurationDefaults: StrategyDefaults = {
     },
     switch: {
       showControls: true,
-      controlChip: SwitchChip,
+      controlChip: AggregateChip,
       controllerCardOptions: {
         onService: "switch.turn_on",
         offService: "switch.turn_off",

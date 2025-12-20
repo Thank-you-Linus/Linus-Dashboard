@@ -1,9 +1,10 @@
+import { Helper } from "../Helper";
 import { views } from "../types/strategy/views";
 import { ChipsCardConfig } from "../types/lovelace-mushroom/cards/chips-card";
 import { StackCardConfig } from "../types/homeassistant/lovelace/cards/types";
 import { TemplateCardConfig } from "../types/lovelace-mushroom/cards/template-card-config";
 import { RefreshChip } from "../chips/RefreshChip";
-import { createSmartControlChip } from "../utils/smartControlChip";
+import { AggregateChip } from "../chips/AggregateChip";
 
 import { AbstractView } from "./AbstractView";
 
@@ -60,24 +61,27 @@ class FanView extends AbstractView {
   override async createSectionBadges(): Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig)[]> {
     const badges: (StackCardConfig | TemplateCardConfig | ChipsCardConfig)[] = [];
 
-    // 1. Smart control chip (if no global entity exists)
-    const smartChip = createSmartControlChip({
+    // Create aggregate chip for global fan control
+    const aggregateChip = new AggregateChip({
       domain: "fan",
+      scope: "global",
+      scopeName: Helper.localize("component.linus_dashboard.entity.text.aggregate_popup.state.title_fan"),
       serviceOn: "turn_on",
       serviceOff: "turn_off",
       activeStates: ["on"],
       translationKey: "fan",
+      features: [{ type: "fan-speed" }],
     });
 
-    if (smartChip) {
+    if (aggregateChip.getChip()) {
       badges.push({
         type: "custom:mushroom-chips-card",
-        chips: [smartChip],
-        alignment: "start",
+        chips: [aggregateChip.getChip()],
+        alignment: "center",
       });
     }
 
-    // 2. Refresh chip (centered)
+    // Refresh chip (centered)
     const refreshChip = new RefreshChip();
     badges.push({
       type: "custom:mushroom-chips-card",

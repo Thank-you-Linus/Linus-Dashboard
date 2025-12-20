@@ -4,8 +4,7 @@ import { ChipsCardConfig } from "../types/lovelace-mushroom/cards/chips-card";
 import { StackCardConfig } from "../types/homeassistant/lovelace/cards/types";
 import { TemplateCardConfig } from "../types/lovelace-mushroom/cards/template-card-config";
 import { RefreshChip } from "../chips/RefreshChip";
-import { createSmartControlChip } from "../utils/smartControlChip";
-import { DEVICE_CLASSES } from "../variables";
+import { AggregateChip } from "../chips/AggregateChip";
 
 import { AbstractView } from "./AbstractView";
 
@@ -64,52 +63,27 @@ class LightView extends AbstractView {
   override async createSectionBadges(): Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig)[]> {
     const badges: (StackCardConfig | TemplateCardConfig | ChipsCardConfig)[] = [];
 
-    // 1. Smart control chip (if no global entity exists)
-    const smartChip = createSmartControlChip({
+    // Create aggregate chip for global light control
+    const aggregateChip = new AggregateChip({
       domain: "light",
+      scope: "global",
+      scopeName: Helper.localize("component.linus_dashboard.entity.text.aggregate_popup.state.title_light"),
       serviceOn: "turn_on",
       serviceOff: "turn_off",
       activeStates: ["on"],
       translationKey: "light",
+      features: [{ type: "light-brightness" }],
     });
 
-    if (smartChip) {
+    if (aggregateChip.getChip()) {
       badges.push({
         type: "custom:mushroom-chips-card",
-        chips: [smartChip],
-        alignment: "start",
+        chips: [aggregateChip.getChip()],
+        alignment: "center",
       });
     }
 
-    // 2. Control chips for all lights (global)
-    const chipModule = Helper.strategyOptions.domains[LightView.#domain]?.controlChip;
-    if (chipModule && typeof chipModule === 'function') {
-      const chipOptions = {
-        show_content: true,
-        magic_device_id: "global",
-        area_slug: "global",
-        domain: LightView.#domain,
-        ...Helper.strategyOptions.domains.light?.controllerCardOptions?.controlChipOptions,
-      };
-
-      const magic_device = Helper.magicAreasDevices["global"];
-      const deviceClasses = DEVICE_CLASSES[LightView.#domain as keyof typeof DEVICE_CLASSES] ?? [];
-      const chips = deviceClasses
-        .flatMap((device_class: string) =>
-          new chipModule({ ...chipOptions, device_class }, magic_device).getChip()
-        )
-        .filter((chip: any) => chip?.icon !== undefined || chip.chip?.icon !== undefined);
-
-      if (chips.length > 0) {
-        badges.push({
-          type: "custom:mushroom-chips-card",
-          chips,
-          alignment: "end",
-        });
-      }
-    }
-
-    // 3. Refresh chip (centered)
+    // Refresh chip (centered)
     const refreshChip = new RefreshChip();
     badges.push({
       type: "custom:mushroom-chips-card",

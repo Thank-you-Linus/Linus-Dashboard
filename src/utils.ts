@@ -496,7 +496,8 @@ export async function processFloorsAndAreas(
                     titleSectionOptions.extraControls = Helper.strategyOptions.domains[domain]?.extraControls;
                     titleSectionOptions.controlChipOptions = {
                         device_class,
-                        area_slug: floor.areas_slug
+                        scope: "floor",
+                        floor_id: floor.floor_id
                     }
                 } else {
                     titleSectionOptions.showControls = false;

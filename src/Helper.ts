@@ -1035,7 +1035,8 @@ class Helper {
       
       console.log(
         `[Helper.getEntityIds] Found ${entities.length} entities for floor "${floor_id}"` +
-        ` (domain: "${domain}", device_class: "${device_class || 'N/A'}")`
+        ` (domain: "${domain}", device_class: "${device_class || 'N/A'}")`,
+        entities.slice(0, 5)  // Log first 5 entities
       );
       return entities;
     }

@@ -154,19 +154,22 @@ export const configurationDefaults: StrategyDefaults = {
         // Get all cover entities for this area and group by device_class
         const Helper = require("./Helper").Helper;
         if (Helper.isInitialized()) {
-          // Get the actual area object from Helper.areas using the slug
-          const area = Helper.areas[device.slug];
-          if (!area) return chips;
+          // Get all covers for this area (all device_classes)
+          const allCoverIds = Helper.getEntityIds({
+            domain: "cover",
+            area_slug: device.slug
+          });
           
-          const coverEntities = Helper.getAreaEntities(area, "cover");
-          const deviceClassMap: Record<string, any[]> = {};
+          if (allCoverIds.length === 0) return chips;
           
-          // Group covers by device_class
-          for (const entity of coverEntities) {
-            const entityState = Helper.getEntityState(entity.entity_id);
+          // Group cover entity IDs by device_class
+          const deviceClassMap: Record<string, string[]> = {};
+          
+          for (const entityId of allCoverIds) {
+            const entityState = Helper.getEntityState(entityId);
             const deviceClass = entityState?.attributes?.device_class || "_";
             if (!deviceClassMap[deviceClass]) deviceClassMap[deviceClass] = [];
-            deviceClassMap[deviceClass].push(entity);
+            deviceClassMap[deviceClass].push(entityId);
           }
           
           // Create a chip for each device_class that has entities

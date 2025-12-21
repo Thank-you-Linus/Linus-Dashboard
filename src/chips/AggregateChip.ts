@@ -115,7 +115,7 @@ class AggregateChip extends AbstractChip {
     // 3. Configure chip appearance
     this.#defaultConfig.icon = Helper.getIcon(config.domain, config.device_class, allEntities);
     this.#defaultConfig.icon_color = Helper.getIconColor(config.domain, config.device_class, allEntities);
-    
+
 
     if (config.show_content) {
       this.#defaultConfig.content = Helper.getContent(config.domain, config.device_class, allEntities);
@@ -127,7 +127,6 @@ class AggregateChip extends AbstractChip {
     if (linusBrainEntity) {
       // Linus Brain group detected: open more-info
       this.#defaultConfig.tap_action = { action: "more-info", entity: linusBrainEntity } as any;
-      this.#defaultConfig.hold_action = navigateTo(config.device_class ?? config.domain);
     } else {
       // No Linus Brain: create appropriate popup based on domain
       if (config.domain === "media_player") {
@@ -183,12 +182,12 @@ class AggregateChip extends AbstractChip {
 
         this.#defaultConfig.tap_action = popup.getPopup();
       }
-      this.#defaultConfig.hold_action = navigateTo(config.device_class ?? config.domain);
     }
 
+    this.#defaultConfig.hold_action = navigateTo(config.domain === 'sensor' || config.domain === "binary_sensor" ? config.device_class ?? config.domain : config.domain);
     // 5. Apply configuration
     this.config = Object.assign(this.config, this.#defaultConfig, options);
-    
+
   }
 
   /**

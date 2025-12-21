@@ -150,11 +150,15 @@ export const configurationDefaults: StrategyDefaults = {
       hidden: false,
       order: 4,
       extraControls: (device: MagicAreaRegistryEntry) => {
-        const chips = [];
+        const chips: any[] = [];
         // Get all cover entities for this area and group by device_class
         const Helper = require("./Helper").Helper;
         if (Helper.isInitialized()) {
-          const coverEntities = Helper.getAreaEntities(device, "cover");
+          // Get the actual area object from Helper.areas using the slug
+          const area = Helper.areas[device.slug];
+          if (!area) return chips;
+          
+          const coverEntities = Helper.getAreaEntities(area, "cover");
           const deviceClassMap: Record<string, any[]> = {};
           
           // Group covers by device_class

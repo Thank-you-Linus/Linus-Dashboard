@@ -131,7 +131,7 @@ class ControllerCard {
         });
       }
 
-      if (this.#defaultConfig.extraControls?.length) {
+      if (typeof this.#defaultConfig.extraControls === 'function') {
         // Create a minimal device object for backward compatibility
         const deviceForExtraControls = { slug: this.#area_slug, entities: {} };
         badges.push(...this.#defaultConfig.extraControls(deviceForExtraControls)?.map((chip: any) => {

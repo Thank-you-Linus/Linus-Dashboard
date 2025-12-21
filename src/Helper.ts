@@ -317,6 +317,38 @@ class Helper {
   }
 
   /**
+   * Convert floor_id to area_slugs array.
+   * Used by getEntityIds(), getStates(), and other methods that support floor filtering.
+   * 
+   * @param {string} floor_id - The floor ID to resolve
+   * @param {string} methodName - The calling method name (for logging)
+   * @returns {string[] | null} Array of area slugs, or null if floor has no areas
+   * @private
+   * @static
+   */
+  static #resolveFloorToAreas(
+    floor_id: string, 
+    methodName: string
+  ): string[] | null {
+    const floor = this.#floors[floor_id];
+    
+    if (!floor) {
+      console.warn(`[Helper.${methodName}] Floor "${floor_id}" not found`);
+      return null;
+    }
+    
+    if (floor.areas_slug && floor.areas_slug.length > 0) {
+      console.log(
+        `[Helper.${methodName}] Floor "${floor_id}" (${floor.name}) → Areas: ${floor.areas_slug.join(", ")}`
+      );
+      return floor.areas_slug;
+    } else {
+      console.warn(`[Helper.${methodName}] Floor "${floor_id}" (${floor.name}) has no areas`);
+      return null;
+    }
+  }
+
+  /**
    * Initialize this module.
    *
    * @param {generic.DashBoardInfo} info Strategy information object.
@@ -930,130 +962,50 @@ class Helper {
   }
 
   /**
-   * Get valid entity.
-   *
-   * @return {StrategyEntity}
-   */
-  static getValidEntity(entity: StrategyEntity): boolean {
-    return entity.disabled_by === null && entity.hidden_by === null
-  }
-
-  /**
-   * Get valid entity.
-   *
-   * @return {StrategyEntity}
-   */
-  static getStates({ domain, device_class, area_slug }: { domain: string, device_class?: string, area_slug?: string | string[] }): string[] {
-    const states: string[] = [];
-
-    if (!this.isInitialized()) {
-      console.warn("Helper class should be initialized before calling this method!");
-    }
-
-    // Si le domaine est "all", on traite tous les domaines directement pour optimiser les performances
-    if (domain === "all") {
-      const areaSlugs = Array.isArray(area_slug) ? area_slug : [area_slug];
-
-      for (const slug of areaSlugs) {
-        if (slug) {
-          // Pour chaque area, récupérer toutes les entités de tous les domaines
-          if (slug === "global") {
-            // Mode global : récupérer toutes les entités sauf undisclosed
-            for (const cardDomain of ALL_HOME_ASSISTANT_DOMAINS) {
-              const entities = getGlobalEntitiesExceptUndisclosed(cardDomain);
-              const newStates = entities?.map((entity_id) => `states['${entity_id}']`);
-              if (newStates) states.push(...newStates);
-            }
-          } else {
-            // Mode area spécifique : récupérer toutes les entités de l'area pour tous les domaines
-            const area = this.#areas[slug];
-            if (area?.domains) {
-              for (const domainKey of Object.keys(area.domains)) {
-                // Filtrer par device_class si spécifié
-                if (!device_class || domainKey === device_class || domainKey.endsWith(`:${device_class}`)) {
-                  const entities = area.domains[domainKey];
-                  const newStates = entities?.map((entity_id) => `states['${entity_id}']`);
-                  if (newStates) states.push(...newStates);
-                }
-              }
-            }
-          }
-        } else {
-          // Mode toutes les areas : récupérer toutes les entités de toutes les areas pour tous les domaines
-          for (const area of Object.values(this.#areas)) {
-            if (area.area_id === UNDISCLOSED) continue;
-
-            if (area.domains) {
-              for (const domainKey of Object.keys(area.domains)) {
-                // Filtrer par device_class si spécifié
-                if (!device_class || domainKey === device_class || domainKey.endsWith(`:${device_class}`)) {
-                  const entities = area.domains[domainKey];
-                  const newStates = entities?.map((entity_id) => `states['${entity_id}']`);
-                  if (newStates) states.push(...newStates);
-                }
-              }
-            }
-          }
-        }
-      }
-      return states;
-    }
-
-    const areaSlugs = Array.isArray(area_slug) ? area_slug : [area_slug];
-
-    for (const slug of areaSlugs) {
-      if (slug) {
-        const magic_entity = device_class ? getMAEntity(slug, domain, device_class) : getMAEntity(slug, domain);
-
-        let entities: string[] | undefined;
-
-        if (magic_entity) {
-          // Si on a une magic area, on utilise son entité
-          entities = [magic_entity.entity_id];
-        } else if (slug === "global") {
-          // Mode global : récupérer toutes les entités sauf undisclosed
-          entities = getGlobalEntitiesExceptUndisclosed(domain, device_class);
-        } else {
-          // Vérifier si on a une entité spécifique pour cette area
-          const area = this.#areas[slug];
-          if (area && domain === 'sensor') {
-            if (device_class === 'temperature' && area.temperature_entity_id) {
-              entities = [area.temperature_entity_id];
-            } else if (device_class === 'humidity' && area.humidity_entity_id) {
-              entities = [area.humidity_entity_id];
-            } else {
-              // Fallback vers toutes les entités du device_class dans l'area
-              entities = area.domains?.[device_class ? `${domain}:${device_class}` : domain];
-            }
-          } else {
-            // Pour les autres domaines, utiliser la logique normale
-            entities = this.#areas[slug]?.domains?.[device_class ? `${domain}:${device_class}` : domain];
-          }
-        }
-
-        const newStates = entities?.map((entity_id) => `states['${entity_id}']`);
-        if (newStates) states.push(...newStates);
-      } else {
-        // Get the ID of the devices which are linked to the given area.
-        for (const area of Object.values(this.#areas)) {
-          if (area.area_id === UNDISCLOSED) continue;
-
-          const newStates = this.#areas[area.slug]?.domains?.[device_class ? `${domain}:${device_class}` : domain]?.map((entity_id) => `states['${entity_id}']`);
-          if (newStates) states.push(...newStates);
-        }
-      }
-    }
-
-    return states
-  }
-
-  /**
-   * Get the entity IDs from the entity registry, filtered by domain, device class, and area slug.
+   * Get state strings (Jinja2 templates) for entities.
    *
    * @param {object} options The options object containing the parameters.
    * @param {string} options.domain The domain of the entities.
    * @param {string} [options.device_class] The device class of the entities.
    * @param {string | string[]} [options.area_slug] The area slug(s) to filter entities by.
+   * @param {string} [options.floor_id] The floor ID to filter entities by (gets all areas on that floor).
+   *
+   * @return {string[]} An array of Jinja2 state template strings.
+   * @static
+   */
+  static getStates({ domain, device_class, area_slug, floor_id }: { domain: string, device_class?: string, area_slug?: string | string[], floor_id?: string }): string[] {
+    // Handle floor_id resolution
+    if (floor_id) {
+      const areaSlugs = this.#resolveFloorToAreas(floor_id, 'getStates');
+      if (areaSlugs === null) return [];
+      
+      const stateStrings = this.getStates({
+        domain,
+        device_class,
+        area_slug: areaSlugs
+      });
+      
+      console.log(`[Helper.getStates] Found ${stateStrings.length} state strings for floor "${floor_id}"`);
+      return stateStrings;
+    }
+    
+    // Delegate to core logic with Jinja template transformer
+    return this.#getEntitiesCore({
+      domain,
+      device_class,
+      area_slug,
+      transformer: (id) => `states['${id}']`  // Jinja wrapper
+    });
+  }
+
+  /**
+   * Get the entity IDs from the entity registry, filtered by domain, device class, area slug, or floor ID.
+   *
+   * @param {object} options The options object containing the parameters.
+   * @param {string} options.domain The domain of the entities.
+   * @param {string} [options.device_class] The device class of the entities.
+   * @param {string | string[]} [options.area_slug] The area slug(s) to filter entities by.
+   * @param {string} [options.floor_id] The floor ID to filter entities by (gets all areas on that floor).
    *
    * @return {string[]} An array of entity IDs.
    * @static
@@ -1061,14 +1013,68 @@ class Helper {
   static getEntityIds({
     domain,
     device_class,
-    area_slug = "global"
+    area_slug = "global",
+    floor_id
   }: {
     domain: string;
     device_class?: string;
     area_slug?: string | string[];
+    floor_id?: string;
   }): string[] {
+    
+    // Handle floor_id resolution
+    if (floor_id) {
+      const areaSlugs = this.#resolveFloorToAreas(floor_id, 'getEntityIds');
+      if (areaSlugs === null) return [];
+      
+      const entities = this.getEntityIds({
+        domain,
+        device_class,
+        area_slug: areaSlugs
+      });
+      
+      console.log(
+        `[Helper.getEntityIds] Found ${entities.length} entities for floor "${floor_id}"` +
+        ` (domain: "${domain}", device_class: "${device_class || 'N/A'}")`
+      );
+      return entities;
+    }
+    
+    // Delegate to core logic with identity transformer
+    return this.#getEntitiesCore({
+      domain,
+      device_class,
+      area_slug,
+      transformer: (id) => id  // Identity function
+    });
+  }
 
-    const entityIds: string[] = [];
+  /**
+   * Core logic for retrieving entities with optional transformation.
+   * This method is used by getEntityIds(), getStates(), and potentially other methods.
+   * 
+   * @param {object} options - Query options
+   * @param {string} options.domain - Domain to filter by
+   * @param {string} [options.device_class] - Device class to filter by
+   * @param {string | string[]} [options.area_slug] - Area slug(s) to filter by
+   * @param {function} options.transformer - Function to transform each entity_id
+   * @returns {T[]} Array of transformed results
+   * @private
+   * @static
+   * @template T
+   */
+  static #getEntitiesCore<T>({
+    domain,
+    device_class,
+    area_slug = "global",
+    transformer
+  }: {
+    domain: string;
+    device_class?: string;
+    area_slug?: string | string[];
+    transformer: (entityId: string) => T;
+  }): T[] {
+    const results: T[] = [];
 
     if (!this.isInitialized()) {
       console.warn("Helper class should be initialized before calling this method!");
@@ -1086,18 +1092,18 @@ class Helper {
             for (const cardDomain of ALL_HOME_ASSISTANT_DOMAINS) {
               if (device_class) {
                 const entities = getGlobalEntitiesExceptUndisclosed(cardDomain, device_class);
-                if (entities) entityIds.push(...entities);
+                if (entities) results.push(...entities.map(transformer));
               } else {
                 // Récupérer toutes les device classes pour ce domaine
                 const domainTags = Object.keys(this.#domains).filter(tag => tag.startsWith(`${cardDomain}:`));
                 if (domainTags.length > 0) {
                   for (const domainTag of domainTags) {
                     const entities = getGlobalEntitiesExceptUndisclosed(cardDomain, domainTag.split(":")[1]);
-                    if (entities) entityIds.push(...entities);
+                    if (entities) results.push(...entities.map(transformer));
                   }
                 } else {
                   const entities = getGlobalEntitiesExceptUndisclosed(cardDomain);
-                  if (entities) entityIds.push(...entities);
+                  if (entities) results.push(...entities.map(transformer));
                 }
               }
             }
@@ -1109,7 +1115,7 @@ class Helper {
                 // Filtrer par device_class si spécifié
                 if (!device_class || domainKey === device_class || domainKey.endsWith(`:${device_class}`)) {
                   const entities = area.domains[domainKey];
-                  if (entities) entityIds.push(...entities);
+                  if (entities) results.push(...entities.map(transformer));
                 }
               }
             }
@@ -1124,14 +1130,14 @@ class Helper {
                 // Filtrer par device_class si spécifié
                 if (!device_class || domainKey === device_class || domainKey.endsWith(`:${device_class}`)) {
                   const entities = area.domains[domainKey];
-                  if (entities) entityIds.push(...entities);
+                  if (entities) results.push(...entities.map(transformer));
                 }
               }
             }
           }
         }
       }
-      return entityIds;
+      return results;
     }
 
     const areaSlugs = Array.isArray(area_slug) ? area_slug : [area_slug];
@@ -1167,7 +1173,7 @@ class Helper {
             }
           }
 
-          if (entities) entityIds.push(...entities);
+          if (entities) results.push(...entities.map(transformer));
         } else {
           // If device_class is undefined, get all device_classes for the domain
           const domainTags = Object.keys(this.#domains).filter(tag => tag.startsWith(`${domain}:`));
@@ -1175,12 +1181,12 @@ class Helper {
             for (const domainTag of domainTags) {
               const magic_entity = getMAEntity(slug, domain, domainTag.split(":")[1]);
               const entities = magic_entity ? [magic_entity.entity_id] : area_slug === "global" ? getGlobalEntitiesExceptUndisclosed(domain, domainTag.split(":")[1]) : this.#areas[slug]?.domains?.[domainTag];
-              if (entities) entityIds.push(...entities);
+              if (entities) results.push(...entities.map(transformer));
             }
           } else {
             // If no device class exists for this domain, get all entities of the domain
             const entities = area_slug === "global" ? getGlobalEntitiesExceptUndisclosed(domain) : this.#areas[slug]?.domains?.[domain];
-            if (entities) entityIds.push(...entities);
+            if (entities) results.push(...entities.map(transformer));
           }
         }
       } else {
@@ -1188,22 +1194,29 @@ class Helper {
           if (area.area_id === UNDISCLOSED) continue;
           if (device_class) {
             const entities = this.#areas[area.slug]?.domains?.[`${domain}:${device_class}`];
-            if (entities) entityIds.push(...entities);
+            if (entities) results.push(...entities.map(transformer));
           } else {
             // If device_class is undefined, get all device_classes for the domain
             const domainTags = Object.keys(this.#domains).filter(tag => tag.startsWith(`${domain}:`));
             for (const domainTag of domainTags) {
               const entities = this.#areas[area.slug]?.domains?.[domainTag];
-              if (entities) entityIds.push(...entities);
+              if (entities) results.push(...entities.map(transformer));
             }
           }
         }
       }
     }
 
-    return entityIds;
+    return results;
   }
 
+  /**
+   * Get state strings (Jinja2 templates) for entities.
+   * Converts an array of entity IDs into Jinja2 state references.
+   *
+   * @param {string[]} entityIds - Array of entity IDs
+   * @returns {string[]} Array of Jinja2 state strings like "states['entity_id']"
+   */
   static getStateStrings(entityIds: string[]): string[] {
     return entityIds.map((entity_id) => `states['${entity_id}']`);
   }

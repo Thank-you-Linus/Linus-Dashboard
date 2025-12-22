@@ -468,10 +468,15 @@ export async function processFloorsAndAreas(
                     subtitleNavigate: area.slug
                 };
                 if (domain) {
-                    if (area.slug !== UNDISCLOSED && (!AGGREGATE_DOMAINS.includes(domain) || device_class)) {
+                    if (area.slug !== UNDISCLOSED) {
+                        // Always pass showControls and extraControls to ControllerCard
                         titleCardOptions.showControls = Helper.strategyOptions.domains[domain]?.showControls;
                         titleCardOptions.extraControls = Helper.strategyOptions.domains[domain]?.extraControls;
-                        titleCardOptions.controlChipOptions = { device_class, area_slug: area.slug }
+                        
+                        // Only pass controlChipOptions for non-aggregate domains or when device_class is specified
+                        if (!AGGREGATE_DOMAINS.includes(domain) || device_class) {
+                            titleCardOptions.controlChipOptions = { device_class, area_slug: area.slug };
+                        }
                     } else {
                         titleCardOptions.showControls = false;
                     }
@@ -491,13 +496,18 @@ export async function processFloorsAndAreas(
                 titleNavigate: floor.floor_id
             };
             if (domain) {
-                if (floor.floor_id !== UNDISCLOSED && (!AGGREGATE_DOMAINS.includes(domain) || device_class)) {
+                if (floor.floor_id !== UNDISCLOSED) {
+                    // Always pass showControls and extraControls to ControllerCard
                     titleSectionOptions.showControls = Helper.strategyOptions.domains[domain]?.showControls;
                     titleSectionOptions.extraControls = Helper.strategyOptions.domains[domain]?.extraControls;
-                    titleSectionOptions.controlChipOptions = {
-                        device_class,
-                        scope: "floor",
-                        floor_id: floor.floor_id
+                    
+                    // Only pass controlChipOptions for non-aggregate domains or when device_class is specified
+                    if (!AGGREGATE_DOMAINS.includes(domain) || device_class) {
+                        titleSectionOptions.controlChipOptions = {
+                            device_class,
+                            scope: "floor",
+                            floor_id: floor.floor_id
+                        };
                     }
                 } else {
                     titleSectionOptions.showControls = false;
@@ -598,7 +608,9 @@ export async function processEntitiesForAreaOrFloorView({
 
                             if (domain) {
                                 if (AGGREGATE_DOMAINS.includes(domain)) {
+                                    // For aggregate domains, still pass extraControls but no default controlChipOptions
                                     floorTitleCardOptions.showControls = false;
+                                    floorTitleCardOptions.extraControls = domainOptions.extraControls ?? [];
                                 } else {
                                     floorTitleCardOptions.showControls = domainOptions.showControls ?? false;
                                     floorTitleCardOptions.extraControls = domainOptions.extraControls ?? [];
@@ -627,7 +639,9 @@ export async function processEntitiesForAreaOrFloorView({
 
                     if (domain) {
                         if (AGGREGATE_DOMAINS.includes(domain)) {
+                            // For aggregate domains, still pass extraControls but no default controlChipOptions
                             titleCardOptions.showControls = false;
+                            titleCardOptions.extraControls = domainOptions.extraControls ?? [];
                         } else {
                             titleCardOptions.showControls = domainOptions.showControls ?? false;
                             titleCardOptions.extraControls = domainOptions.extraControls ?? [];

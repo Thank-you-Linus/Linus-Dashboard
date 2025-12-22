@@ -71,6 +71,7 @@ class CoverView extends AbstractView {
       activeStates: ["open", "opening"],
       translationKey: "cover",
       features: [],
+      show_content: true,
     });
 
     if (aggregateChip.getChip()) {

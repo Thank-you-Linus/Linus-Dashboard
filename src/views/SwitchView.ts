@@ -71,6 +71,7 @@ class SwitchView extends AbstractView {
       activeStates: ["on"],
       translationKey: "switch",
       features: [],
+      show_content: true,
     });
 
     if (aggregateChip.getChip()) {

@@ -405,9 +405,26 @@ export const getGlobalEntitiesExceptUndisclosed = memoize(function getGlobalEnti
           ]
         : Helper.domains[domainTag] ?? []);
 
-    return entities?.filter(entity =>
-        !Helper.areas[UNDISCLOSED]?.domains?.[domainTag]?.includes(entity.entity_id)
-    ).map(e => e.entity_id) ?? [];
+    // Filter out entities in UNDISCLOSED area
+    return entities?.filter(entity => {
+        // For AGGREGATE_DOMAINS without device_class, check against all possible domainTags
+        if (AGGREGATE_DOMAINS.includes(domain) && !device_class) {
+            // Check base domain (e.g., "cover")
+            if (Helper.areas[UNDISCLOSED]?.domains?.[domain]?.includes(entity.entity_id)) {
+                return false;
+            }
+            // Check all device_class variants (e.g., "cover:blind", "cover:curtain", etc.)
+            const deviceClasses = DEVICE_CLASSES[domain as keyof typeof DEVICE_CLASSES] ?? [];
+            for (const dc of deviceClasses) {
+                if (Helper.areas[UNDISCLOSED]?.domains?.[`${domain}:${dc}`]?.includes(entity.entity_id)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        // For other cases, use simple filter
+        return !Helper.areas[UNDISCLOSED]?.domains?.[domainTag]?.includes(entity.entity_id);
+    }).map(e => e.entity_id) ?? [];
 }) as (domain: string, device_class?: string) => string[];
 
 /**
@@ -487,6 +504,11 @@ export async function processFloorsAndAreas(
                         
                         // Always create controlChipOptions
                         titleCardOptions.controlChipOptions = { device_class, area_slug: area.slug };
+                        
+                        // Disable chips for sensor/binary_sensor (too many device_classes)
+                        if (domain === "sensor" || domain === "binary_sensor") {
+                            titleCardOptions.showControls = false;
+                        }
                     } else {
                         titleCardOptions.showControls = false;
                     }
@@ -508,6 +530,12 @@ export async function processFloorsAndAreas(
                 if (floor.floor_id !== UNDISCLOSED) {
                     // Always pass showControls and extraControls to ControllerCard
                     titleSectionOptions.showControls = Helper.strategyOptions.domains[domain]?.showControls;
+                    
+                    // Disable chips for sensor/binary_sensor (too many device_classes)
+                    if (domain === "sensor" || domain === "binary_sensor") {
+                        titleSectionOptions.showControls = false;
+                    }
+                    
                     titleSectionOptions.extraControls = Helper.strategyOptions.domains[domain]?.extraControls;
                     
                     // Always create controlChipOptions
@@ -617,6 +645,11 @@ export async function processEntitiesForAreaOrFloorView({
                                 floorTitleCardOptions.showControls = domainOptions.showControls ?? false;
                                 floorTitleCardOptions.extraControls = domainOptions.extraControls ?? [];
                                 floorTitleCardOptions.controlChipOptions = { area_slug: area.slug };
+                                
+                                // Disable chips for sensor/binary_sensor (too many device_classes)
+                                if (domain === "sensor" || domain === "binary_sensor") {
+                                    floorTitleCardOptions.showControls = false;
+                                }
                             }
 
                             const floorTitleCard = new ControllerCard(floorTitleCardOptions, domain, area.slug).createCard();
@@ -642,6 +675,11 @@ export async function processEntitiesForAreaOrFloorView({
                         titleCardOptions.showControls = domainOptions.showControls ?? false;
                         titleCardOptions.extraControls = domainOptions.extraControls ?? [];
                         titleCardOptions.controlChipOptions = { area_slug: area.slug };
+                        
+                        // Disable chips for sensor/binary_sensor (too many device_classes)
+                        if (domain === "sensor" || domain === "binary_sensor") {
+                            titleCardOptions.showControls = false;
+                        }
                     }
 
                     const titleCard = new ControllerCard(titleCardOptions, domain, area.slug).createCard();

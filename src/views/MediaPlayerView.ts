@@ -71,6 +71,7 @@ class MediaPlayerView extends AbstractView {
       activeStates: ["playing", "paused"],
       translationKey: "media_player",
       features: [],
+      show_content: true,
     });
 
     if (aggregateChip.getChip()) {

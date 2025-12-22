@@ -73,6 +73,7 @@ class LightView extends AbstractView {
       activeStates: ["on"],
       translationKey: "light",
       features: [{ type: "light-brightness" }],
+      show_content: true,
     });
 
     if (aggregateChip.getChip()) {

@@ -1,6 +1,5 @@
 import { LovelaceViewConfig } from "../homeassistant/data/lovelace";
 
-import { cards } from "./cards";
 
 export namespace views {
   /**

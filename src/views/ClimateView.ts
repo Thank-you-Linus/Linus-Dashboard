@@ -71,6 +71,7 @@ class ClimateView extends AbstractView {
       activeStates: ["heat", "cool", "heat_cool", "auto", "dry", "fan_only"],
       translationKey: "climate",
       features: [{ type: "climate-hvac-modes" }],
+      show_content: true,
     });
 
     if (aggregateChip.getChip()) {

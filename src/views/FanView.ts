@@ -71,6 +71,7 @@ class FanView extends AbstractView {
       activeStates: ["on"],
       translationKey: "fan",
       features: [{ type: "fan-speed" }],
+      show_content: true,
     });
 
     if (aggregateChip.getChip()) {

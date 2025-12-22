@@ -8,7 +8,6 @@ import { LightSettings } from "./popups/LightSettingsPopup";
 import { ToggleSceneChip } from "./chips/ToggleSceneChip";
 import { SceneSettings } from "./popups/SceneSettingsPopup";
 import { UNDISCLOSED } from "./variables";
-import { AggregateChip } from "./chips/AggregateChip";
 
 import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
 
@@ -103,47 +102,9 @@ export const configurationDefaults: StrategyDefaults = {
       },
     },
     cover: {
-      showControls: false,
+      showControls: true,
       hidden: false,
       order: 4,
-      extraControls: (device: MagicAreaRegistryEntry) => {
-        const chips: any[] = [];
-        // Get all cover entities for this area and group by device_class
-        const Helper = require("./Helper").Helper;
-        if (Helper.isInitialized()) {
-          // Get all covers for this area (all device_classes)
-          const allCoverIds = Helper.getEntityIds({
-            domain: "cover",
-            area_slug: device.slug
-          });
-
-          if (allCoverIds.length === 0) return chips;
-
-          // Group cover entity IDs by device_class
-          const deviceClassMap: Record<string, string[]> = {};
-
-          for (const entityId of allCoverIds) {
-            const entityState = Helper.getEntityState(entityId);
-            const deviceClass = entityState?.attributes?.device_class || "_";
-            if (!deviceClassMap[deviceClass]) deviceClassMap[deviceClass] = [];
-            deviceClassMap[deviceClass].push(entityId);
-          }
-
-          // Create a chip for each device_class that has entities
-          const sortedDeviceClasses = Object.keys(deviceClassMap).sort();
-          for (const deviceClass of sortedDeviceClasses) {
-            if (deviceClassMap[deviceClass].length > 0) {
-              chips.push(new AggregateChip({
-                domain: "cover",
-                device_class: deviceClass === "_" ? undefined : deviceClass,
-                area_slug: device.slug,
-                magic_device_id: device.slug
-              }).getChip());
-            }
-          }
-        }
-        return chips
-      },
     },
     scene: {
       showControls: false,
@@ -162,17 +123,11 @@ export const configurationDefaults: StrategyDefaults = {
       showControls: true,
       hidden: false,
       order: 6,
-      extraControls: (device: MagicAreaRegistryEntry) => {
-        return []
-      },
     },
     switch: {
       showControls: true,
       hidden: false,
       order: 7,
-      extraControls: (device: MagicAreaRegistryEntry) => {
-        return []
-      },
     },
     camera: {
       showControls: false,

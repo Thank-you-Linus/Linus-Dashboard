@@ -1,8 +1,7 @@
 import { cards } from "../types/strategy/cards";
 import { LovelaceBadgeConfig, LovelaceCardConfig } from "../types/homeassistant/data/lovelace";
-import { Helper } from "../Helper";
 import { navigateTo } from "../utils";
-import { DEVICE_CLASSES } from "../variables";
+import { DEVICE_CLASSES, AGGREGATE_DOMAINS } from "../variables";
 import { AggregateChip } from "../chips/AggregateChip";
 
 /**
@@ -103,7 +102,9 @@ class ControllerCard {
 
         const deviceClasses = chipOptions.device_class
           ? [chipOptions.device_class]
-          : DEVICE_CLASSES[this.#domain as keyof typeof DEVICE_CLASSES] ?? [];
+          : AGGREGATE_DOMAINS.includes(this.#domain)
+            ? [null, ...(DEVICE_CLASSES[this.#domain as keyof typeof DEVICE_CLASSES] ?? [])]
+            : [undefined]; // Create ONE chip for the entire domain
 
         const allChips = deviceClasses.flatMap((device_class) => {
           const chip = new AggregateChip({ ...chipOptions, device_class }).getChip();

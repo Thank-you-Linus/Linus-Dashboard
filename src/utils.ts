@@ -389,7 +389,20 @@ export const getGlobalEntitiesExceptUndisclosed = memoize(function getGlobalEnti
     const dc = domain === "binary_sensor" || domain === "sensor" || domain === "cover" ? device_class : undefined;
     const domainTag = `${domain}${dc ? ":" + dc : ""}`;
     const entities = (domain === "cover" && !device_class
-        ? DEVICE_CLASSES.cover.flatMap(d => Helper.domains[`cover:${d}`] ?? [])
+        ? [
+            ...(Helper.domains["cover"] ?? []),  // Covers WITHOUT device_class
+            ...DEVICE_CLASSES.cover.flatMap(d => Helper.domains[`cover:${d}`] ?? [])  // Covers WITH device_class
+          ]
+        : domain === "sensor" && !device_class
+        ? [
+            ...(Helper.domains["sensor"] ?? []),  // Sensors WITHOUT device_class
+            ...DEVICE_CLASSES.sensor.flatMap(d => Helper.domains[`sensor:${d}`] ?? [])  // Sensors WITH device_class
+          ]
+        : domain === "binary_sensor" && !device_class
+        ? [
+            ...(Helper.domains["binary_sensor"] ?? []),  // Binary sensors WITHOUT device_class
+            ...DEVICE_CLASSES.binary_sensor.flatMap(d => Helper.domains[`binary_sensor:${d}`] ?? [])  // Binary sensors WITH device_class
+          ]
         : Helper.domains[domainTag] ?? []);
 
     return entities?.filter(entity =>
@@ -472,10 +485,8 @@ export async function processFloorsAndAreas(
                         titleCardOptions.showControls = Helper.strategyOptions.domains[domain]?.showControls;
                         titleCardOptions.extraControls = Helper.strategyOptions.domains[domain]?.extraControls;
                         
-                        // Only pass controlChipOptions for non-aggregate domains or when device_class is specified
-                        if (!AGGREGATE_DOMAINS.includes(domain) || device_class) {
-                            titleCardOptions.controlChipOptions = { device_class, area_slug: area.slug };
-                        }
+                        // Always create controlChipOptions
+                        titleCardOptions.controlChipOptions = { device_class, area_slug: area.slug };
                     } else {
                         titleCardOptions.showControls = false;
                     }
@@ -499,14 +510,12 @@ export async function processFloorsAndAreas(
                     titleSectionOptions.showControls = Helper.strategyOptions.domains[domain]?.showControls;
                     titleSectionOptions.extraControls = Helper.strategyOptions.domains[domain]?.extraControls;
                     
-                    // Only pass controlChipOptions for non-aggregate domains or when device_class is specified
-                    if (!AGGREGATE_DOMAINS.includes(domain) || device_class) {
-                        titleSectionOptions.controlChipOptions = {
-                            device_class,
-                            scope: "floor",
-                            floor_id: floor.floor_id
-                        };
-                    }
+                    // Always create controlChipOptions
+                    titleSectionOptions.controlChipOptions = {
+                        device_class,
+                        scope: "floor",
+                        floor_id: floor.floor_id
+                    };
                 } else {
                     titleSectionOptions.showControls = false;
                 }
@@ -604,15 +613,10 @@ export async function processEntitiesForAreaOrFloorView({
                             };
 
                             if (domain) {
-                                if (AGGREGATE_DOMAINS.includes(domain)) {
-                                    // For aggregate domains, still pass extraControls but no default controlChipOptions
-                                    floorTitleCardOptions.showControls = false;
-                                    floorTitleCardOptions.extraControls = domainOptions.extraControls ?? [];
-                                } else {
-                                    floorTitleCardOptions.showControls = domainOptions.showControls ?? false;
-                                    floorTitleCardOptions.extraControls = domainOptions.extraControls ?? [];
-                                    floorTitleCardOptions.controlChipOptions = { area_slug: area.slug };
-                                }
+                                // Apply same logic for ALL domains (aggregate or not)
+                                floorTitleCardOptions.showControls = domainOptions.showControls ?? false;
+                                floorTitleCardOptions.extraControls = domainOptions.extraControls ?? [];
+                                floorTitleCardOptions.controlChipOptions = { area_slug: area.slug };
                             }
 
                             const floorTitleCard = new ControllerCard(floorTitleCardOptions, domain, area.slug).createCard();
@@ -634,15 +638,10 @@ export async function processEntitiesForAreaOrFloorView({
                     };
 
                     if (domain) {
-                        if (AGGREGATE_DOMAINS.includes(domain)) {
-                            // For aggregate domains, still pass extraControls but no default controlChipOptions
-                            titleCardOptions.showControls = false;
-                            titleCardOptions.extraControls = domainOptions.extraControls ?? [];
-                        } else {
-                            titleCardOptions.showControls = domainOptions.showControls ?? false;
-                            titleCardOptions.extraControls = domainOptions.extraControls ?? [];
-                            titleCardOptions.controlChipOptions = { area_slug: area.slug };
-                        }
+                        // Apply same logic for ALL domains (aggregate or not)
+                        titleCardOptions.showControls = domainOptions.showControls ?? false;
+                        titleCardOptions.extraControls = domainOptions.extraControls ?? [];
+                        titleCardOptions.controlChipOptions = { area_slug: area.slug };
                     }
 
                     const titleCard = new ControllerCard(titleCardOptions, domain, area.slug).createCard();

@@ -315,7 +315,7 @@ class AggregateChip extends AbstractChip {
     switch (options.scope) {
       case "global":
         // All entities assigned to areas (excludes global/undisclosed)
-        getOptions.area_slug = undefined;
+        getOptions.area_slug = "global";
         break;
 
       case "floor":

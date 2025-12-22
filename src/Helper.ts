@@ -1071,7 +1071,7 @@ class Helper {
     transformer
   }: {
     domain: string;
-    device_class?: string;
+    device_class?: string | null;
     area_slug?: string | string[];
     transformer: (entityId: string) => T;
   }): T[] {
@@ -1145,7 +1145,15 @@ class Helper {
 
     for (const slug of areaSlugs) {
       if (slug) {
-        if (device_class) {
+        // Handle device_class === null: ONLY entities WITHOUT device_class
+        if (device_class === null) {
+          const entities = slug === "global"
+            ? getGlobalEntitiesExceptUndisclosed(domain)
+            : this.#areas[slug]?.domains?.[domain];
+          if (entities) results.push(...entities.map(transformer));
+        }
+        // Handle device_class with a specific value
+        else if (device_class) {
           const magic_entity = getMAEntity(slug, domain, device_class);
 
           let entities: string[] | undefined;
@@ -1153,7 +1161,7 @@ class Helper {
           if (magic_entity) {
             // Si on a une magic area, on utilise son entité
             entities = [magic_entity.entity_id];
-          } else if (area_slug === "global") {
+          } else if (slug === "global") {
             // Mode global : récupérer toutes les entités sauf undisclosed
             entities = getGlobalEntitiesExceptUndisclosed(domain, device_class);
           } else {
@@ -1175,30 +1183,55 @@ class Helper {
           }
 
           if (entities) results.push(...entities.map(transformer));
-        } else {
+        }
+        // Handle device_class === undefined: ALL entities (with and without device_class)
+        else {
           // If device_class is undefined, get all device_classes for the domain
           const domainTags = Object.keys(this.#domains).filter(tag => tag.startsWith(`${domain}:`));
+          
+          // First, retrieve entities WITHOUT device_class
+          const entitiesWithoutDeviceClass = slug === "global" 
+            ? getGlobalEntitiesExceptUndisclosed(domain) 
+            : this.#areas[slug]?.domains?.[domain];
+          if (entitiesWithoutDeviceClass) results.push(...entitiesWithoutDeviceClass.map(transformer));
+          
+          // Then, retrieve entities WITH device_class
           if (domainTags.length > 0) {
             for (const domainTag of domainTags) {
               const magic_entity = getMAEntity(slug, domain, domainTag.split(":")[1]);
-              const entities = magic_entity ? [magic_entity.entity_id] : area_slug === "global" ? getGlobalEntitiesExceptUndisclosed(domain, domainTag.split(":")[1]) : this.#areas[slug]?.domains?.[domainTag];
+              const entities = magic_entity 
+                ? [magic_entity.entity_id] 
+                : slug === "global" 
+                  ? getGlobalEntitiesExceptUndisclosed(domain, domainTag.split(":")[1]) 
+                  : this.#areas[slug]?.domains?.[domainTag];
               if (entities) results.push(...entities.map(transformer));
             }
-          } else {
-            // If no device class exists for this domain, get all entities of the domain
-            const entities = area_slug === "global" ? getGlobalEntitiesExceptUndisclosed(domain) : this.#areas[slug]?.domains?.[domain];
-            if (entities) results.push(...entities.map(transformer));
           }
         }
       } else {
         for (const area of Object.values(this.#areas)) {
           if (area.area_id === UNDISCLOSED) continue;
-          if (device_class) {
+          
+          // Handle device_class === null: ONLY entities WITHOUT device_class
+          if (device_class === null) {
+            const entities = this.#areas[area.slug]?.domains?.[domain];
+            if (entities) results.push(...entities.map(transformer));
+          }
+          // Handle device_class with a specific value
+          else if (device_class) {
             const entities = this.#areas[area.slug]?.domains?.[`${domain}:${device_class}`];
             if (entities) results.push(...entities.map(transformer));
-          } else {
+          }
+          // Handle device_class === undefined: ALL entities (with and without device_class)
+          else {
             // If device_class is undefined, get all device_classes for the domain
             const domainTags = Object.keys(this.#domains).filter(tag => tag.startsWith(`${domain}:`));
+            
+            // First, retrieve entities WITHOUT device_class
+            const entitiesWithoutDeviceClass = this.#areas[area.slug]?.domains?.[domain];
+            if (entitiesWithoutDeviceClass) results.push(...entitiesWithoutDeviceClass.map(transformer));
+            
+            // Then, retrieve entities WITH device_class
             for (const domainTag of domainTags) {
               const entities = this.#areas[area.slug]?.domains?.[domainTag];
               if (entities) results.push(...entities.map(transformer));

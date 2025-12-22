@@ -33,6 +33,8 @@ export interface AggregateChipOptions extends chips.ChipOptions {
   floor_id?: string | null;
   /** DEPRECATED: Use area_slug from ChipOptions base */
   magic_device_id?: string;
+  /** Tap action mode: "popup" (default) opens popup on tap, "navigation" navigates to view on tap */
+  tapActionMode?: "popup" | "navigation";
 }
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
@@ -88,11 +90,15 @@ class AggregateChip extends AbstractChip {
 
     // Auto-detect scope if not provided
     const scope = options.scope ?? (options.area_slug ? "area" : "global");
+    
+    // Auto-detect tapActionMode if not provided (default: "popup")
+    const tapActionMode = options.tapActionMode ?? "popup";
 
     // Apply defaults for missing parameters
-    const config: Required<Omit<AggregateChipOptions, 'features' | 'device_class' | 'floor_id' | 'magic_device_id' | keyof chips.ChipOptions>> & AggregateChipOptions = {
+    const config: Required<Omit<AggregateChipOptions, 'features' | 'device_class' | 'floor_id' | 'magic_device_id' | 'tapActionMode' | keyof chips.ChipOptions>> & AggregateChipOptions = {
       ...options,
       scope,
+      tapActionMode,
       scopeName: options.scopeName ?? this.generateScopeName(options, scope),
       serviceOn: options.serviceOn ?? defaults.serviceOn,
       serviceOff: options.serviceOff ?? defaults.serviceOff,
@@ -104,8 +110,17 @@ class AggregateChip extends AbstractChip {
     // 1. Get entities for this scope
     const allEntities = this.getEntitiesForScope(config);
 
+    // DEBUG: Log pour investiguer le problème CoverView
+    if (Helper.debug && config.domain === "cover" && config.scope === "global") {
+      console.log("[AggregateChip DEBUG] Cover global entities:", allEntities);
+      console.log("[AggregateChip DEBUG] Config:", config);
+    }
 
     if (!allEntities.length) {
+      // DEBUG: Log quand aucune entité trouvée
+      if (Helper.debug && config.domain === "cover" && config.scope === "global") {
+        console.warn("[AggregateChip DEBUG] No cover entities found for global scope!");
+      }
       return;
     }
 
@@ -121,70 +136,96 @@ class AggregateChip extends AbstractChip {
       this.#defaultConfig.content = Helper.getContent(config.domain, config.device_class, allEntities);
     }
 
-    // 4. Configure tap/hold actions
-    // If Linus Brain group exists: tap = more-info on LB group
-    // Otherwise: tap = appropriate popup (specialized popups for media_player/cover, AggregatePopup for others)
-    if (linusBrainEntity) {
-      // Linus Brain group detected: open more-info
-      this.#defaultConfig.tap_action = { action: "more-info", entity: linusBrainEntity } as any;
-    } else {
-      // No Linus Brain: create appropriate popup based on domain
-      if (config.domain === "media_player") {
-        // Use MediaPlayerPopup for media players (extends AggregatePopup with play/pause/volume controls)
-        const { MediaPlayerPopup } = require("../popups/MediaPlayerPopup");
-        const popup = new MediaPlayerPopup({
-          domain: config.domain,
-          scope: config.scope,
-          scopeName: config.scopeName,
-          entity_ids: allEntities,
-          serviceOn: config.serviceOn,
-          serviceOff: config.serviceOff,
-          activeStates: config.activeStates,
-          translationKey: config.translationKey,
-          linusBrainEntity: null,
-          features: config.features,
-          device_class: config.device_class
-        });
-        this.#defaultConfig.tap_action = popup.getPopup();
-      } else if (config.domain === "cover") {
-        // Use CoverPopup for covers (extends AggregatePopup with device_class-specific icons and translations)
-        const { CoverPopup } = require("../popups/CoverPopup");
-        const popup = new CoverPopup({
-          domain: config.domain,
-          scope: config.scope,
-          scopeName: config.scopeName,
-          entity_ids: allEntities,
-          serviceOn: config.serviceOn,
-          serviceOff: config.serviceOff,
-          activeStates: config.activeStates,
-          translationKey: config.translationKey,
-          linusBrainEntity: null,
-          features: config.features,
-          device_class: config.device_class
-        });
-        this.#defaultConfig.tap_action = popup.getPopup();
+    // 4. Configure tap/hold actions based on tapActionMode
+    // Two modes:
+    // - "popup" (default): tap=popup, hold=navigation
+    // - "navigation" (HomeView): tap=navigation, hold=popup
+    
+    // Helper function to create popup action
+    const createPopupAction = () => {
+      if (linusBrainEntity) {
+        // Linus Brain group detected: open more-info
+        return { action: "more-info", entity: linusBrainEntity } as any;
       } else {
-        // Use AggregatePopup for all other domains (climate, fan, switch, light, etc.)
-        const { AggregatePopup } = require("../popups/AggregatePopup");
-        const popup = new AggregatePopup({
-          domain: config.domain,
-          scope: config.scope,
-          scopeName: config.scopeName,
-          entity_ids: allEntities,
-          serviceOn: config.serviceOn,
-          serviceOff: config.serviceOff,
-          activeStates: config.activeStates,
-          translationKey: config.translationKey,
-          linusBrainEntity: null,
-          features: config.features,
-          device_class: config.device_class
-        });
-
-        this.#defaultConfig.tap_action = popup.getPopup();
+        // No Linus Brain: create appropriate popup based on domain
+        if (config.domain === "media_player") {
+          // Use MediaPlayerPopup for media players (extends AggregatePopup with play/pause/volume controls)
+          const { MediaPlayerPopup } = require("../popups/MediaPlayerPopup");
+          const popup = new MediaPlayerPopup({
+            domain: config.domain,
+            scope: config.scope,
+            scopeName: config.scopeName,
+            entity_ids: allEntities,
+            serviceOn: config.serviceOn,
+            serviceOff: config.serviceOff,
+            activeStates: config.activeStates,
+            translationKey: config.translationKey,
+            linusBrainEntity: null,
+            features: config.features,
+            device_class: config.device_class
+          });
+          return popup.getPopup();
+        } else if (config.domain === "cover") {
+          // Use CoverPopup for covers (extends AggregatePopup with device_class-specific icons and translations)
+          const { CoverPopup } = require("../popups/CoverPopup");
+          const popup = new CoverPopup({
+            domain: config.domain,
+            scope: config.scope,
+            scopeName: config.scopeName,
+            entity_ids: allEntities,
+            serviceOn: config.serviceOn,
+            serviceOff: config.serviceOff,
+            activeStates: config.activeStates,
+            translationKey: config.translationKey,
+            linusBrainEntity: null,
+            features: config.features,
+            device_class: config.device_class
+          });
+          return popup.getPopup();
+        } else {
+          // Use AggregatePopup for all other domains (climate, fan, switch, light, etc.)
+          const { AggregatePopup } = require("../popups/AggregatePopup");
+          const popup = new AggregatePopup({
+            domain: config.domain,
+            scope: config.scope,
+            scopeName: config.scopeName,
+            entity_ids: allEntities,
+            serviceOn: config.serviceOn,
+            serviceOff: config.serviceOff,
+            activeStates: config.activeStates,
+            translationKey: config.translationKey,
+            linusBrainEntity: null,
+            features: config.features,
+            device_class: config.device_class
+          });
+          return popup.getPopup();
+        }
       }
+    };
+    
+    // Helper function to create navigation action
+    const createNavigationAction = () => {
+      const navigationPath = config.domain === 'sensor' || config.domain === "binary_sensor" 
+        ? config.device_class ?? config.domain 
+        : config.domain;
+      return navigateTo(navigationPath);
+    };
+    
+    // Apply actions based on tapActionMode
+    if (config.tapActionMode === "navigation") {
+      // NAVIGATION MODE (for HomeView)
+      // tap = navigate to domain view
+      // hold = open popup
+      this.#defaultConfig.tap_action = createNavigationAction();
+      this.#defaultConfig.hold_action = createPopupAction();
+    } else {
+      // POPUP MODE (default for all other views)
+      // tap = open popup
+      // hold = navigate to domain view
+      this.#defaultConfig.tap_action = createPopupAction();
+      this.#defaultConfig.hold_action = createNavigationAction();
     }
-
-    this.#defaultConfig.hold_action = navigateTo(config.domain === 'sensor' || config.domain === "binary_sensor" ? config.device_class ?? config.domain : config.domain);
+    
     // 5. Apply configuration
     this.config = Object.assign(this.config, this.#defaultConfig, options);
 

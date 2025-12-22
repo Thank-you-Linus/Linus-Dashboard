@@ -113,7 +113,13 @@ class HomeView {
     }
 
     // Home chips.
-    const homeChips = await createChipsFromList(HOME_EXPOSED_CHIPS, { show_content: true });
+    const homeChips = await createChipsFromList(
+      HOME_EXPOSED_CHIPS, 
+      { 
+        show_content: true,
+        tapActionMode: "navigation"  // Navigate to domain view on tap (HomeView only)
+      }
+    );
     if (homeChips) {
       chips.push(...homeChips);
     }

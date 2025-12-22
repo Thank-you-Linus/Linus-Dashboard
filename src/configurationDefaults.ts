@@ -9,7 +9,6 @@ import { ToggleSceneChip } from "./chips/ToggleSceneChip";
 import { SceneSettings } from "./popups/SceneSettingsPopup";
 import { UNDISCLOSED } from "./variables";
 import { AggregateChip } from "./chips/AggregateChip";
-import { LightChip } from "./chips/LightChip";
 
 import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
 
@@ -50,63 +49,39 @@ export const configurationDefaults: StrategyDefaults = {
     },
     light: {
       showControls: true,
-      controlChip: AggregateChip,
       extraControls: (device: MagicAreaRegistryEntry) => {
         const { adaptive_lighting_range, minimum_brightness, maximum_brightness, maximum_lighting_level } = device?.entities ?? {}
         const chips = [];
-        
+
         // Use EntityResolver to get light control switch (Linus Brain or Magic Areas)
         // Helper is imported dynamically to avoid circular dependency
         const Helper = require("./Helper").Helper;
         if (Helper.isInitialized()) {
           const resolver = Helper.entityResolver;
-          
-          // Add all lights chip (Linus Brain or Magic Areas)
-          const allLightsResolution = resolver.resolveAllLights(device.slug);
-          if (allLightsResolution.entity_id) {
-            chips.push(new LightChip({ area_slug: device.slug, magic_device_id: device.slug }).getChip());
-          }
-          
+
           // Add light control switch (Linus Brain or Magic Areas)
           const lightControlResolution = resolver.resolveLightControlSwitch(device.slug);
           const lightControlEntity = lightControlResolution.entity_id;
-          
+
           if (lightControlEntity) {
             chips.push(new ControlChip("light", lightControlEntity).getChip());
           }
         }
-        
+
         if (adaptive_lighting_range && minimum_brightness && maximum_brightness && maximum_lighting_level) {
           chips.push(new SettingsChip({ tap_action: new LightSettings(device).getPopup() }).getChip());
         }
         return chips
-      },
-      controllerCardOptions: {
-        onService: "light.turn_on",
-        offService: "light.turn_off",
-        toggleService: "light.toggle",
       },
       hidden: false,
       order: 1
     },
     climate: {
       showControls: true,
-      controlChip: AggregateChip,
-      controllerCardOptions: {
-        onService: "climate.turn_on",
-        offService: "climate.turn_off",
-        toggleService: "climate.toggle",
-      },
       hidden: false,
       order: 2,
       extraControls: (device: MagicAreaRegistryEntry) => {
         const chips = [];
-        // Add aggregate chip for climate controls
-        chips.push(new AggregateChip({
-          domain: "climate",
-          area_slug: device.slug,
-          magic_device_id: device.slug
-        }).getChip());
         // Add control switch if available
         if (device?.entities.climate_control?.entity_id) {
           chips.push(new ControlChip("climate", device?.entities.climate_control?.entity_id).getChip());
@@ -116,22 +91,10 @@ export const configurationDefaults: StrategyDefaults = {
     },
     media_player: {
       showControls: true,
-      controlChip: AggregateChip,
-      controllerCardOptions: {
-        onService: "media_player.turn_on",
-        offService: "media_player.turn_off",
-        toggleService: "media_player.toggle",
-      },
       hidden: false,
       order: 3,
       extraControls: (device: MagicAreaRegistryEntry) => {
         const chips = [];
-        // Add aggregate chip for media player controls
-        chips.push(new AggregateChip({
-          domain: "media_player",
-          area_slug: device.slug,
-          magic_device_id: device.slug
-        }).getChip());
         // Add control switch if available
         if (device?.entities.media_player_control?.entity_id) {
           chips.push(new ControlChip("media_player", device?.entities.media_player_control?.entity_id).getChip());
@@ -140,13 +103,7 @@ export const configurationDefaults: StrategyDefaults = {
       },
     },
     cover: {
-      showControls: true,
-      controlChip: AggregateChip,
-      controllerCardOptions: {
-        onService: "cover.open_cover",
-        offService: "cover.close_cover",
-        toggleService: "cover.toggle",
-      },
+      showControls: false,
       hidden: false,
       order: 4,
       extraControls: (device: MagicAreaRegistryEntry) => {
@@ -159,19 +116,19 @@ export const configurationDefaults: StrategyDefaults = {
             domain: "cover",
             area_slug: device.slug
           });
-          
+
           if (allCoverIds.length === 0) return chips;
-          
+
           // Group cover entity IDs by device_class
           const deviceClassMap: Record<string, string[]> = {};
-          
+
           for (const entityId of allCoverIds) {
             const entityState = Helper.getEntityState(entityId);
             const deviceClass = entityState?.attributes?.device_class || "_";
             if (!deviceClassMap[deviceClass]) deviceClassMap[deviceClass] = [];
             deviceClassMap[deviceClass].push(entityId);
           }
-          
+
           // Create a chip for each device_class that has entities
           const sortedDeviceClasses = Object.keys(deviceClassMap).sort();
           for (const deviceClass of sortedDeviceClasses) {
@@ -198,83 +155,45 @@ export const configurationDefaults: StrategyDefaults = {
         }
         return chips
       },
-      onService: "scene.turn_on",
-      offService: "scene.turn_off",
       hidden: false,
       order: 5
     },
     fan: {
       showControls: true,
-      controlChip: AggregateChip,
-      controllerCardOptions: {
-        onService: "fan.turn_on",
-        offService: "fan.turn_off",
-        toggleService: "fan.toggle",
-      },
       hidden: false,
       order: 6,
       extraControls: (device: MagicAreaRegistryEntry) => {
-        const chips = [];
-        // Add aggregate chip for fan controls
-        chips.push(new AggregateChip({
-          domain: "fan",
-          area_slug: device.slug,
-          magic_device_id: device.slug
-        }).getChip());
-        return chips
+        return []
       },
     },
     switch: {
       showControls: true,
-      controlChip: AggregateChip,
-      controllerCardOptions: {
-        onService: "switch.turn_on",
-        offService: "switch.turn_off",
-        toggleService: "switch.toggle",
-      },
       hidden: false,
       order: 7,
       extraControls: (device: MagicAreaRegistryEntry) => {
-        const chips = [];
-        // Add aggregate chip for switch controls
-        chips.push(new AggregateChip({
-          domain: "switch",
-          area_slug: device.slug,
-          magic_device_id: device.slug
-        }).getChip());
-        return chips
+        return []
       },
     },
     camera: {
       showControls: false,
-      controllerCardOptions: {
-      },
       hidden: false,
       order: 8
     },
     lock: {
       showControls: false,
-      controllerCardOptions: {
-      },
       hidden: false,
       order: 9
     },
     vacuum: {
       showControls: true,
-      controllerCardOptions: {
-        onService: "vacuum.start",
-        offService: "vacuum.stop",
-      },
       hidden: false,
       order: 10
     },
     sensor: {
-      controlChip: AggregateChip,
       showControls: true,
       hidden: false,
     },
     binary_sensor: {
-      controlChip: AggregateChip,
       showControls: true,
       hidden: false,
     },

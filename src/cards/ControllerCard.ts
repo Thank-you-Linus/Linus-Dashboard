@@ -3,6 +3,7 @@ import { LovelaceBadgeConfig, LovelaceCardConfig } from "../types/homeassistant/
 import { Helper } from "../Helper";
 import { navigateTo } from "../utils";
 import { DEVICE_CLASSES } from "../variables";
+import { AggregateChip } from "../chips/AggregateChip";
 
 /**
  * Controller Card class.
@@ -36,8 +37,6 @@ class ControllerCard {
     showControls: true,
     iconOn: "mdi:power-on",
     iconOff: "mdi:power-off",
-    onService: "none",
-    offService: "none",
   };
 
   /**
@@ -93,9 +92,7 @@ class ControllerCard {
       const badges: LovelaceBadgeConfig[] = [];
 
       if (this.#defaultConfig.showControls) {
-
-        const chipModule = Helper.strategyOptions.domains[this.#domain]?.controlChip;
-        
+        // Always use AggregateChip when showControls is true
         const chipOptions = {
           show_content: true,
           magic_device_id: this.#area_slug,
@@ -108,14 +105,12 @@ class ControllerCard {
           ? [chipOptions.device_class]
           : DEVICE_CLASSES[this.#domain as keyof typeof DEVICE_CLASSES] ?? [];
 
-        const allChips = chipModule && typeof chipModule === 'function'
-          ? deviceClasses.flatMap((device_class) => {
-              const chip = new chipModule({ ...chipOptions, device_class }).getChip();
-              return chip;
-            })
-          : [];
+        const allChips = deviceClasses.flatMap((device_class) => {
+          const chip = new AggregateChip({ ...chipOptions, device_class }).getChip();
+          return chip;
+        });
 
-        const chips = allChips.filter((chip) => chip?.icon !== undefined || chip.chip?.icon !== undefined);
+        const chips = allChips.filter((chip: any) => chip?.icon !== undefined || chip.chip?.icon !== undefined);
 
         badges.push({
           type: "custom:mushroom-chips-card",

@@ -5,11 +5,8 @@ import { cards } from "./cards";
 export namespace views {
   /**
    * Options for the extended View class.
-   *
-   * @property {cards.ControllerCardConfig} [controllerCardOptions] Options for the Controller card.
    */
   export interface ViewConfig extends LovelaceViewConfig {
-    controllerCardOptions?: cards.ControllerCardOptions;
   }
 
   export type AggregateViewOptions = { domain: string, device_class?: string } & ViewConfig;

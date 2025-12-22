@@ -461,8 +461,7 @@ export async function processFloorsAndAreas(
 
             if (entityCards.length) {
                 const areaCards = [new GroupedCard(entityCards).getCard()]
-                const titleCardOptions = {
-                    ...Helper.strategyOptions.domains[domain]?.controllerCardOptions,
+                const titleCardOptions: any = {
                     subtitle: getAreaName(area),
                     subtitleIcon: area.area_id === UNDISCLOSED ? "mdi:help-circle" : area.icon ?? "mdi:floor-plan",
                     subtitleNavigate: area.slug
@@ -490,7 +489,6 @@ export async function processFloorsAndAreas(
 
         if (floorCards.length) {
             const titleSectionOptions: any = {
-                ...Helper.strategyOptions.domains[domain]?.controllerCardOptions,
                 title: getFloorName(floor),
                 titleIcon: floor.icon ?? "mdi:floor-plan",
                 titleNavigate: floor.floor_id
@@ -598,8 +596,7 @@ export async function processEntitiesForAreaOrFloorView({
                         domainCardsMap[domain] = [];
 
                         if (isFloorView) {
-                            const floorTitleCardOptions = {
-                                ...(domainOptions.controllerCardOptions ?? {}),
+                            const floorTitleCardOptions: any = {
                                 title: Helper.localize(getDomainTranslationKey(domain)),
                                 domain,
                                 titleIcon: Helper.icons[domain as ResourceKeys]?._?.default,
@@ -623,8 +620,7 @@ export async function processEntitiesForAreaOrFloorView({
                         }
                     }
 
-                    const titleCardOptions = {
-                        ...(domainOptions.controllerCardOptions ?? {}),
+                    const titleCardOptions: any = {
                         ...(isFloorView ? {
                             subtitle: area.name,
                             subtitleIcon: area.icon ?? "mdi:floor-plan",

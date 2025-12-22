@@ -34,15 +34,17 @@ export namespace cards {
    * @property {boolean} [showControls=true] False to hide controls.
    * @property {string} [iconOn] Icon to show for switching entities from off state.
    * @property {string} [iconOff] Icon to show for switching entities to off state.
-   * @property {string} [onService=none] Service to call for switching entities from off state.
-   * @property {string} [offService=none] Service to call for switching entities to off state.
+   * @property {string} [onService=none] @deprecated No longer used - service calls are handled by chips
+   * @property {string} [offService=none] @deprecated No longer used - service calls are handled by chips
    */
   export interface ControllerCardConfig extends TitleCardConfig {
     type: "custom:mushroom-title-card",
     showControls?: boolean;
     iconOn?: string;
     iconOff?: string;
+    /** @deprecated No longer used - service calls are handled by chips */
     onService?: string;
+    /** @deprecated No longer used - service calls are handled by chips */
     offService?: string;
   }
 

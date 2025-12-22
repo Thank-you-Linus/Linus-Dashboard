@@ -1,6 +1,6 @@
 # 🧠 Linus Dashboard - Memory Bank
 
-> **Last updated**: 2025-11-30  
+> **Last updated**: 2024-12-22  
 > **Project**: Home Assistant Custom Integration for Auto-Generated Smart Dashboards
 
 ---
@@ -869,6 +869,93 @@ tap_action: {
 
 **Result**: Users can now quickly control all switches/fans/media players with a single tap + confirmation, improving UX for scenarios like "turn off all switches before leaving home".
 
+### Chip System Architecture (December 2024)
+
+**Comprehensive Control Chip System**
+
+The chip system provides compact, interactive controls throughout Linus Dashboard. Users can control groups of entities (e.g., "turn on all lights in living room") without opening detailed views.
+
+**Three-Level Control Hierarchy**:
+1. **Global Controls** (View Badges): Control ALL entities of a domain across the entire home
+2. **Floor Controls** (Floor Titles): Control all entities of a domain on a specific floor
+3. **Area Controls** (Area Titles): Control all entities of a domain in a specific area
+
+**Core Components**:
+
+1. **AggregateChip** (`src/chips/AggregateChip.ts`):
+   - Unified chip system for all domains (light, climate, cover, fan, switch, etc.)
+   - Handles device_class filtering for aggregate domains
+   - Shows entity count when `show_content: true`
+   - Opens specialized popups on tap (LightsGroupPopup, CoverPopup, etc.)
+   - Color-coded by domain and state
+
+2. **ControllerCard** (`src/cards/ControllerCard.ts`):
+   - Generates title/subtitle cards with embedded control chips
+   - Conditionally adds chips based on `showControls` configuration
+   - Supports `extraControls` callback for custom chips
+   - Handles navigation to domain/area views
+
+3. **Helper.getEntityIds()**:
+   - Central entity filtering and resolution
+   - Supports `device_class: null` (entities WITHOUT device_class)
+   - Supports `device_class: undefined` (ALL entities, with or without device_class)
+   - Filters by area, domain, device_class
+
+4. **getGlobalEntitiesExceptUndisclosed()** (`src/utils.ts`):
+   - Gets global entities while excluding UNDISCLOSED area
+   - Handles AGGREGATE_DOMAINS with device_class variants
+   - Checks ALL possible device_class locations (e.g., "cover", "cover:blind", "cover:curtain")
+
+**Aggregate Domains**:
+- Domains with device_class subcategories: sensor, binary_sensor, cover
+- Entities stored by device_class: `Helper.domains["cover:blind"]`, `Helper.domains["cover:curtain"]`
+- Three modes:
+  - `device_class: "blind"` → Only blinds
+  - `device_class: null` → Only covers WITHOUT device_class
+  - `device_class: undefined` → ALL covers (with or without device_class)
+
+**Chip Display Rules**:
+- **ALWAYS show chips**: light, climate, cover, fan, switch, media_player
+- **NEVER show chips**: sensor (57 device_classes), binary_sensor (24 device_classes)
+- **Never in UNDISCLOSED area**: Hidden entities shouldn't have visible controls
+
+**Recent Fixes** (commits 3b04c08, 8cc9d43):
+
+1. **Control Chips Missing in AreaView/FloorView**:
+   - Problem: No chips appeared for ANY domain
+   - Root Cause: `utils.ts` forced `showControls = false` for AGGREGATE_DOMAINS
+   - Solution: Removed special treatment, added `device_class: null` support, fixed global scope handling
+
+2. **Global Badges Missing Entity Count**:
+   - Problem: Badges showed only icon, not count
+   - Solution: Added `show_content: true` to all domain views
+
+3. **UNDISCLOSED Filter Broken**:
+   - Problem: Global chips included UNDISCLOSED entities for covers
+   - Root Cause: Only checked base domain ("cover"), not device_class variants ("cover:blind")
+   - Solution: Updated filter to check ALL device_class variants
+
+4. **Sensor/Binary Sensor Chip Clutter**:
+   - Problem: Too many device_classes created UI clutter
+   - Solution: Hard-coded disable for sensor/binary_sensor in 4 locations
+
+**Key Learnings**:
+- Aggregate domains require special handling for device_class variants
+- UNDISCLOSED filtering must check ALL possible storage locations
+- Global chips need `show_content: true` for entity count display
+- Sensor/binary_sensor have too many device_classes for chip display (57 and 24 respectively)
+- Cover chips are acceptable (10 device_classes is manageable)
+
+**Implementation Files**:
+- `src/chips/AggregateChip.ts` - Main chip class
+- `src/cards/ControllerCard.ts` - Title cards with chips
+- `src/Helper.ts` - Entity filtering & `device_class: null` support
+- `src/utils.ts` - Global entity filtering, chip generation logic
+- `src/views/*.ts` - Domain views with global badges
+- `docs/development/CHIP_SYSTEM_ARCHITECTURE.md` - Full technical documentation
+
+**Developer Guide**: See `docs/development/CHIP_SYSTEM_ARCHITECTURE.md` for complete architecture, debugging guide, and examples.
+
 ---
 
 ## 🚀 Future Enhancements
@@ -928,6 +1015,7 @@ homeassistant >= 2023.9.0  # Core framework
 - `CONTRIBUTING.md` - Contribution guidelines
 - `.devcontainer/devcontainer.json` - Dev environment setup
 - `docs/AREA_SPECIFIC_ENTITIES.md` - Area-specific entity documentation
+- `docs/development/CHIP_SYSTEM_ARCHITECTURE.md` - Complete chip system architecture and debugging guide
 - `.aidriven/AGENTS.md` - Agent command reference
 - `.aidriven/README.md` - AI-driven development workflow
 

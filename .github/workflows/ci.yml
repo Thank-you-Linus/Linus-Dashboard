@@ -101,7 +101,7 @@ jobs:
     if: always()
     steps:
       - name: "Post results comment"
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const pythonLintResult = '${{ needs.python-lint.result }}';

@@ -91,7 +91,7 @@ class AggregateChip extends AbstractChip {
 
     // Auto-detect scope if not provided
     const scope = options.scope ?? (options.area_slug ? "area" : "global");
-    
+
     // Auto-detect tapActionMode if not provided (default: "popup")
     const tapActionMode = options.tapActionMode ?? "popup";
 
@@ -111,17 +111,7 @@ class AggregateChip extends AbstractChip {
     // 1. Get entities for this scope
     const allEntities = this.getEntitiesForScope(config);
 
-    // DEBUG: Log pour investiguer le problème CoverView
-    if (Helper.debug && config.domain === "cover" && config.scope === "global") {
-      console.log("[AggregateChip DEBUG] Cover global entities:", allEntities);
-      console.log("[AggregateChip DEBUG] Config:", config);
-    }
-
     if (!allEntities.length) {
-      // DEBUG: Log quand aucune entité trouvée
-      if (Helper.debug && config.domain === "cover" && config.scope === "global") {
-        console.warn("[AggregateChip DEBUG] No cover entities found for global scope!");
-      }
       return;
     }
 
@@ -177,7 +167,7 @@ class AggregateChip extends AbstractChip {
       this.#defaultConfig.tap_action = popupAction;
       this.#defaultConfig.hold_action = navigationAction;
     }
-    
+
     // 5. Apply configuration
     this.config = Object.assign(this.config, this.#defaultConfig, options);
 
@@ -294,7 +284,7 @@ class AggregateChip extends AbstractChip {
 
   /**
    * Get entities for the specified scope
-   * 
+   *
    * @param options - Chip options
    * @returns Array of entity IDs
    * @private

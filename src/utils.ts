@@ -35,7 +35,15 @@ import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
 function memoize(fn: Function): Function {
     const cache = new Map();
     return function (...args: any[]) {
-        const key = JSON.stringify(args);
+        // Custom key generation to handle undefined and null correctly
+        // JSON.stringify(["cover", undefined]) gives '["cover"]' which is wrong
+        // We need to distinguish between undefined and null explicitly
+        const key = args.map((arg, i) => {
+            if (arg === undefined) return `__undefined_${i}`;
+            if (arg === null) return `__null_${i}`;
+            return JSON.stringify(arg);
+        }).join('|');
+
         if (cache.has(key)) {
             return cache.get(key);
         }
@@ -386,24 +394,39 @@ export const getAreaName = memoize(function getAreaName(area: StrategyArea): str
  * @param {string} device_class - The device class.
  * @returns {string[]} - The global entities.
  */
-export const getGlobalEntitiesExceptUndisclosed = memoize(function getGlobalEntitiesExceptUndisclosed(domain: string, device_class?: string): string[] {
+export const getGlobalEntitiesExceptUndisclosed = memoize(function getGlobalEntitiesExceptUndisclosed(domain: string, device_class?: string | null): string[] {
     const dc = domain === "binary_sensor" || domain === "sensor" || domain === "cover" ? device_class : undefined;
     const domainTag = `${domain}${dc ? ":" + dc : ""}`;
-    const entities = (domain === "cover" && !device_class
-        ? [
-            ...(Helper.domains["cover"] ?? []),  // Covers WITHOUT device_class
-            ...DEVICE_CLASSES.cover.flatMap(d => Helper.domains[`cover:${d}`] ?? [])  // Covers WITH device_class
-          ]
-        : domain === "sensor" && !device_class
-        ? [
-            ...(Helper.domains["sensor"] ?? []),  // Sensors WITHOUT device_class
-            ...DEVICE_CLASSES.sensor.flatMap(d => Helper.domains[`sensor:${d}`] ?? [])  // Sensors WITH device_class
-          ]
-        : domain === "binary_sensor" && !device_class
-        ? [
-            ...(Helper.domains["binary_sensor"] ?? []),  // Binary sensors WITHOUT device_class
-            ...DEVICE_CLASSES.binary_sensor.flatMap(d => Helper.domains[`binary_sensor:${d}`] ?? [])  // Binary sensors WITH device_class
-          ]
+
+    // Handle device_class === null: ONLY entities WITHOUT device_class
+    // Handle device_class === undefined: ALL entities (with and without device_class)
+    const entities = (domain === "cover"
+        ? device_class === null
+          ? Helper.domains["cover"] ?? []  // ONLY covers without device_class
+          : device_class === undefined
+          ? [
+              ...(Helper.domains["cover"] ?? []),  // Covers WITHOUT device_class
+              ...DEVICE_CLASSES.cover.flatMap(d => Helper.domains[`cover:${d}`] ?? [])  // Covers WITH device_class
+            ]
+          : Helper.domains[domainTag] ?? []  // Specific device_class
+        : domain === "sensor"
+        ? device_class === null
+          ? Helper.domains["sensor"] ?? []  // ONLY sensors without device_class
+          : device_class === undefined
+          ? [
+              ...(Helper.domains["sensor"] ?? []),  // Sensors WITHOUT device_class
+              ...DEVICE_CLASSES.sensor.flatMap(d => Helper.domains[`sensor:${d}`] ?? [])  // Sensors WITH device_class
+            ]
+          : Helper.domains[domainTag] ?? []  // Specific device_class
+        : domain === "binary_sensor"
+        ? device_class === null
+          ? Helper.domains["binary_sensor"] ?? []  // ONLY binary_sensors without device_class
+          : device_class === undefined
+          ? [
+              ...(Helper.domains["binary_sensor"] ?? []),  // Binary sensors WITHOUT device_class
+              ...DEVICE_CLASSES.binary_sensor.flatMap(d => Helper.domains[`binary_sensor:${d}`] ?? [])  // Binary sensors WITH device_class
+            ]
+          : Helper.domains[domainTag] ?? []  // Specific device_class
         : Helper.domains[domainTag] ?? []);
 
     // Filter out entities in UNDISCLOSED area
@@ -426,7 +449,7 @@ export const getGlobalEntitiesExceptUndisclosed = memoize(function getGlobalEnti
         // For other cases, use simple filter
         return !Helper.areas[UNDISCLOSED]?.domains?.[domainTag]?.includes(entity.entity_id);
     }).map(e => e.entity_id) ?? [];
-}) as (domain: string, device_class?: string) => string[];
+}) as (domain: string, device_class?: string | null) => string[];
 
 /**
  * Add light groups to entities.

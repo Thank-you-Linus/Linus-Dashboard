@@ -1,7 +1,7 @@
 import { cards } from "../types/strategy/cards";
 import { LovelaceBadgeConfig, LovelaceCardConfig } from "../types/homeassistant/data/lovelace";
 import { navigateTo } from "../utils";
-import { DEVICE_CLASSES, AGGREGATE_DOMAINS } from "../variables";
+import { DEVICE_CLASSES } from "../variables";
 import { AggregateChip } from "../chips/AggregateChip";
 
 /**
@@ -100,31 +100,45 @@ class ControllerCard {
           domain: this.#domain,
         };
 
+        // Determine device classes to create chips for
+        // If device_class is explicitly set in options, use only that one
+        // Otherwise, check if domain supports device_class (has DEVICE_CLASSES entry)
+        const domainDeviceClasses = DEVICE_CLASSES[this.#domain as keyof typeof DEVICE_CLASSES];
         const deviceClasses = chipOptions.device_class
           ? [chipOptions.device_class]
-          : AGGREGATE_DOMAINS.includes(this.#domain)
-            ? [null, ...(DEVICE_CLASSES[this.#domain as keyof typeof DEVICE_CLASSES] ?? [])]
+          : domainDeviceClasses?.length > 0
+            ? [null, ...domainDeviceClasses]  // Generic + each device_class
             : [undefined]; // Create ONE chip for the entire domain
 
-        const allChips = deviceClasses.flatMap((device_class) => {
+        // Collect all valid chips first
+        const allChips: any[] = [];
+        for (const device_class of deviceClasses) {
           const chip = new AggregateChip({ ...chipOptions, device_class }).getChip();
-          return chip;
-        });
 
-        const chips = allChips.filter((chip: any) => chip?.icon !== undefined || chip.chip?.icon !== undefined);
+          // Only add chip if it's valid (has type and icon)
+          const hasIcon = (chip as any)?.icon !== undefined && (chip as any)?.icon !== ''
+            || (chip as any)?.chip?.icon !== undefined && (chip as any)?.chip?.icon !== '';
 
-        badges.push({
-          type: "custom:mushroom-chips-card",
-          chips,
-          alignment: "end",
-          card_mod: {
-            style: `
-            ha-card {
-              min-width: ${this.#domain === "sensor" ? 100 : 58 * chips.length}px;
-              }
-              `,
+          if (chip && chip.type && hasIcon) {
+            allChips.push(chip);
           }
-        });
+        }
+
+        // Create ONE badge containing ALL chips (like StandardDomainView does)
+        if (allChips.length > 0) {
+          badges.push({
+            type: "custom:mushroom-chips-card",
+            chips: allChips,  // ALL chips in ONE card
+            alignment: "end",
+            card_mod: {
+              style: `
+              ha-card {
+                min-width: 100px;
+                }
+                `,
+            }
+          });
+        }
       }
 
       if (typeof this.#defaultConfig.extraControls === 'function') {

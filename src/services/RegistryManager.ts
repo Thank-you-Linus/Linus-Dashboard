@@ -6,11 +6,12 @@
  */
 
 import { HassEntities } from "home-assistant-js-websocket";
+
 import { generic } from "../types/strategy/generic";
 import { DashBoardInfo } from "../types/strategy/ha-dashboard-info";
 import { LinusDashboardConfig } from "../types/homeassistant/data/linus_dashboard";
-import { getEntityDomain, getGlobalEntitiesExceptUndisclosed, getMAEntity, getMagicAreaSlug, groupEntitiesByDomain, slugify } from "../utils";
-import { UNDISCLOSED, MAGIC_AREAS_NAME, MAGIC_AREAS_DOMAIN, LINUS_BRAIN_DOMAIN } from "../variables";
+import { getGlobalEntitiesExceptUndisclosed, getMAEntity, getMagicAreaSlug, groupEntitiesByDomain, slugify } from "../utils";
+import { UNDISCLOSED, MAGIC_AREAS_NAME } from "../variables";
 
 import StrategyEntity = generic.StrategyEntity;
 import StrategyArea = generic.StrategyArea;

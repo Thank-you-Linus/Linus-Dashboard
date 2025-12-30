@@ -81,25 +81,22 @@ class StandardDomainView extends AbstractView {
    * @override
    */
   override async createSectionBadges(): Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig)[]> {
-    console.log(`[StandardDomainView DEBUG] ========== createSectionBadges() called for domain: ${this.domain} ==========`);
     const chips: any[] = [];
     const deviceClasses = DEVICE_CLASSES[this.domain as keyof typeof DEVICE_CLASSES];
-    console.log(`[StandardDomainView DEBUG] Device classes for ${this.domain}:`, deviceClasses);
 
     if (deviceClasses?.length > 0) {
       // Domain with device_class support (cover, binary_sensor, sensor)
 
       // Generic chip for entities without device_class
+      // IMPORTANT: device_class: null explicitly requests ONLY entities without device_class
       const genericChip = new AggregateChip({
         domain: this.domain,
+        device_class: null as any, // null = only entities without device_class
         scope: "global",
         scopeName: Helper.localize(`component.linus_dashboard.entity.text.aggregate_popup.state.title_${this.domain}`),
         show_content: true,
       });
       const genericChipResult = genericChip.getChip();
-      console.log("[StandardDomainView DEBUG] Generic chip result:", genericChipResult);
-      console.log("[StandardDomainView DEBUG] Has type?", genericChipResult?.type);
-      console.log("[StandardDomainView DEBUG] Has icon?", (genericChipResult as any)?.icon);
       if (genericChipResult) chips.push(genericChipResult);
 
       // One chip per device_class
@@ -112,8 +109,6 @@ class StandardDomainView extends AbstractView {
           show_content: true,
         }).getChip();
 
-        console.log(`[StandardDomainView DEBUG] Chip for ${this.domain}:${deviceClass}:`, chip);
-        console.log(`[StandardDomainView DEBUG] Has type?`, chip?.type, "Has icon?", (chip as any)?.icon);
         if (chip) chips.push(chip);
       }
     } else {
@@ -131,20 +126,15 @@ class StandardDomainView extends AbstractView {
     // Refresh chip (always present)
     chips.push(new RefreshChip().getChip());
 
-    console.log("[StandardDomainView DEBUG] Total chips collected:", chips.length);
-    console.log("[StandardDomainView DEBUG] Chips details:", chips.map(c => ({ type: c?.type, icon: (c as any)?.icon })));
-
     // Return ONE badge containing ALL chips
     const validChips = chips.filter(chip => chip?.type && (chip as any)?.icon);
-    console.log("[StandardDomainView DEBUG] Valid chips after filter:", validChips.length);
-    console.log("[StandardDomainView DEBUG] Invalid chips filtered out:", chips.length - validChips.length);
 
     return validChips.length > 0
       ? [{
-          type: "custom:mushroom-chips-card",
-          alignment: "center",
-          chips: validChips,
-        }]
+        type: "custom:mushroom-chips-card",
+        alignment: "center",
+        chips: validChips,
+      }]
       : [];
   }
 }

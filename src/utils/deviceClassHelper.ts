@@ -79,23 +79,19 @@ export function createDeviceClassChips(
     return a.localeCompare(b); // Alphabetical for named classes
   });
 
-  console.log(`[DeviceClass] ${domain} ${contextType} "${contextData.floor_id || contextData.area_slug}" - Found device_classes: ${sortedDeviceClasses.join(", ")}`);
-
   // If only "_" (no device_class), create single fallback chip
   if (sortedDeviceClasses.length === 1 && sortedDeviceClasses[0] === "_") {
-    console.log(`[DeviceClass] ${domain} ${contextType} - No device_class found, creating single fallback chip`);
     chips.push(new AggregateChip({
       domain,
       device_class: undefined,
       scope: contextType,
-      ...(contextType === "floor" 
-        ? { floor_id: contextData.floor_id } 
+      ...(contextType === "floor"
+        ? { floor_id: contextData.floor_id }
         : { area_slug: contextData.area_slug, magic_device_id: contextData.magic_device_id }
       )
     }).getChip());
   } else {
     // Create a chip per device_class (including "_" if mixed with others)
-    console.log(`[DeviceClass] ${domain} ${contextType} - Creating ${sortedDeviceClasses.length} chip(s) by device_class`);
     for (const deviceClass of sortedDeviceClasses) {
       if (deviceClassMap[deviceClass].length > 0) {
         chips.push(new AggregateChip({

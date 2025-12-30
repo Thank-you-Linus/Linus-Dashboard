@@ -338,9 +338,11 @@ class Helper {
     }
 
     if (floor.areas_slug && floor.areas_slug.length > 0) {
-      console.log(
-        `[Helper.${methodName}] Floor "${floor_id}" (${floor.name}) → Areas: ${floor.areas_slug.join(", ")}`
-      );
+      if (this.debug) {
+        console.warn(
+          `[Helper.${methodName}] Floor "${floor_id}" (${floor.name}) → Areas: ${floor.areas_slug.join(", ")}`
+        );
+      }
       return floor.areas_slug;
     } else {
       console.warn(`[Helper.${methodName}] Floor "${floor_id}" (${floor.name}) has no areas`);
@@ -985,7 +987,9 @@ class Helper {
         area_slug: areaSlugs
       });
 
-      console.log(`[Helper.getStates] Found ${stateStrings.length} state strings for floor "${floor_id}"`);
+      if (this.debug) {
+        console.warn(`[Helper.getStates] Found ${stateStrings.length} state strings for floor "${floor_id}"`);
+      }
       return stateStrings;
     }
 
@@ -1143,7 +1147,7 @@ class Helper {
         // Handle device_class === null: ONLY entities WITHOUT device_class
         if (device_class === null) {
           const entities = slug === "global"
-            ? getGlobalEntitiesExceptUndisclosed(domain)
+            ? getGlobalEntitiesExceptUndisclosed(domain, null)  // Pass null explicitly
             : this.#areas[slug]?.domains?.[domain];
           if (entities) results.push(...entities.map(transformer));
         }
@@ -1313,6 +1317,15 @@ class Helper {
    * @returns {string} - The icon string (e.g., "mdi:thermometer").
    */
   static getIcon(domain: string, device_class = '_', entity_ids?: string[]): string {
+    // If device_class not provided or is default '_', try to auto-detect from first entity
+    // BUT do NOT auto-detect if device_class is explicitly null (means "no device_class")
+    if ((!device_class || device_class === '_') && device_class !== null && entity_ids?.length) {
+      const firstEntity = this.#hassStates[entity_ids[0]];
+      if (firstEntity?.attributes?.device_class) {
+        device_class = firstEntity.attributes.device_class;
+      }
+    }
+
     const domainIcons = Helper.icons[domain as keyof IconResources];
     if (!domainIcons) {
       return "mdi:help-circle-circle"; // Default icon if domain is not found
@@ -1334,6 +1347,21 @@ class Helper {
         return `{% set entities = [${states}] %}{% set valid_states = entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | map(attribute='state') | map('float') | list %}{% set temperature = valid_states | max if valid_states | length > 0 else 0 %}{% if temperature >= 30 %}mdi:thermometer-high{% elif temperature >= 20 %}mdi:thermometer{% elif temperature >= 10 %}mdi:thermometer-low{% else %}mdi:snowflake{% endif %}`;
       }
       return "mdi:thermometer"; // Default temperature icon if no states are available
+    }
+
+    // If device_class is explicitly null, use domain default icon with states
+    if (device_class === null || device_class === '_') {
+      if (domainIcons.state && states.length) {
+        let stateIconTemplate = `{% set entities = [${states}] %}{% set state = entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | map(attribute='state') | list %}`
+
+        for (const [stateKey, icon] of Object.entries(domainIcons.state)) {
+          stateIconTemplate += `{% if state | select('eq', '${stateKey}') | list | count > 0 %}${icon}{% else %}`;
+        }
+        stateIconTemplate += `${domainIcons.default || "mdi:help-circle"}` + "{% endif %}".repeat(Object.keys(domainIcons.state).length);
+
+        return stateIconTemplate;
+      }
+      return typeof domainIcons.default === "string" ? domainIcons.default : "mdi:help-circle";
     }
 
     if (device_class && domainIcons[device_class as keyof IconResources[keyof IconResources]]) {

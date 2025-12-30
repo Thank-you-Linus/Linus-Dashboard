@@ -92,7 +92,7 @@ export class ChipFactory {
    * ```
    */
   static async createChips(
-    chipSpecs: Array<{ type: string; options: any }>
+    chipSpecs: { type: string; options: any }[]
   ): Promise<LovelaceChipConfig[]> {
     const chips: LovelaceChipConfig[] = [];
 
@@ -127,7 +127,7 @@ export class ChipFactory {
   static async createChipSafe(
     chipClassName: string,
     options: any = {},
-    wrapInMushroom: boolean = false
+    wrapInMushroom = false
   ): Promise<any | null> {
     const chip = await this.createChip(chipClassName, options);
 

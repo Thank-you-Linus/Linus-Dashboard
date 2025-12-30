@@ -37,7 +37,7 @@ export class CardFactory {
   static async createCard(
     entity: StrategyEntity,
     options: any = {},
-    basePath: string = "../cards"
+    basePath = "../cards"
   ): Promise<LovelaceCardConfig | null> {
     try {
       const state = Helper.getEntityState(entity.entity_id);

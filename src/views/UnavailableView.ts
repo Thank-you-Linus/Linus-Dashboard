@@ -8,6 +8,7 @@ import { getAreaName, getEntityDomain, getFloorName, slugify } from '../utils';
 import { views } from '../types/strategy/views';
 import { GroupedCard } from '../cards/GroupedCard';
 import { ControllerCard } from '../cards/ControllerCard';
+import { CardFactory } from '../factories/CardFactory';
 
 /**
  * Abstract View Class.
@@ -69,15 +70,16 @@ class UnavailableView {
         
         const entities = Helper.areas[area.slug]?.entities;
         const unavailableEntities = entities?.filter(entity_id => AREA_CARDS_DOMAINS.includes(getEntityDomain(entity_id)) && Helper.getEntityState(entity_id)?.state === UNAVAILABLE).map(entity_id => Helper.entities[entity_id])?.filter(entity => entity !== undefined);
-        const cardModule = await import(`../cards/MiscellaneousCard`);
 
-        if (!entities || entities.length === 0 || !cardModule || !unavailableEntities) continue;
+        if (!entities || entities.length === 0 || !unavailableEntities) continue;
 
-        const entityCards = unavailableEntities
-          .filter(entity => !Helper.strategyOptions.card_options?.[entity.entity_id]?.hidden
-            && !Helper.strategyOptions.card_options?.[entity.device_id ?? "null"]?.hidden
-            && !(entity.entity_category === "config"))
-          .map(entity => new cardModule.MiscellaneousCard({}, entity).getCard());
+        const entityCards = (await Promise.all(
+          unavailableEntities
+            .filter(entity => !Helper.strategyOptions.card_options?.[entity.entity_id]?.hidden
+              && !Helper.strategyOptions.card_options?.[entity.device_id ?? "null"]?.hidden
+              && !(entity.entity_category === "config"))
+            .map(async entity => await CardFactory.createCardByName("MiscellaneousCard", {}, entity, "../cards"))
+        )).filter((card): card is LovelaceCardConfig => card !== null);
 
         if (entityCards.length) {
           const titleCardOptions = {

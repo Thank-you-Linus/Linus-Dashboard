@@ -17,6 +17,7 @@ import { PersonCard } from "../cards/PersonCard";
 import { AggregateChip } from "../chips/AggregateChip";
 import { WelcomeCard } from "../cards/WelcomeCard";
 import { ConditionalLightChip } from "../chips/ConditionalLightChip";
+import { ChipFactory } from "../factories/ChipFactory";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**
@@ -104,9 +105,8 @@ class HomeView {
     )?.entity_id;
     if (spotifyEntityId) {
       try {
-        const chipModule = await import("../chips/SpotifyChip");
-        const spotifyChip = new chipModule.SpotifyChip(spotifyEntityId);
-        chips.push(spotifyChip.getChip());
+        const spotifyChip = await ChipFactory.createChip("SpotifyChip", spotifyEntityId);
+        if (spotifyChip) chips.push(spotifyChip);
       } catch (e) {
         Helper.logError("An error occurred while creating the spotify chip!", e);
       }
@@ -130,12 +130,10 @@ class HomeView {
 
     // LinusBrain chip.
     try {
-      const linusBrainModule = await import("../chips/LinusBrainChip");
-      const linusBrainChip = new linusBrainModule.LinusBrainChip();
-      const chip = linusBrainChip.getChip() as any;
+      const linusBrainChip = await ChipFactory.createChip("LinusBrainChip", {});
       // Only add if chip has icon (checks if LinusBrain is installed)
-      if (chip.icon && chip.icon !== "") {
-        chips.push(chip);
+      if (linusBrainChip && (linusBrainChip as any).icon && (linusBrainChip as any).icon !== "") {
+        chips.push(linusBrainChip);
       }
     } catch (e) {
       Helper.logError("An error occurred while creating the Linus Brain chip!", e);
@@ -143,12 +141,10 @@ class HomeView {
 
     // MagicAreas chip.
     try {
-      const magicAreasModule = await import("../chips/MagicAreasChip");
-      const magicAreasChip = new magicAreasModule.MagicAreasChip();
-      const chip = magicAreasChip.getChip() as any;
+      const magicAreasChip = await ChipFactory.createChip("MagicAreasChip", {});
       // Only add if chip has icon (checks if MagicAreas is installed)
-      if (chip.icon && chip.icon !== "") {
-        chips.push(chip);
+      if (magicAreasChip && (magicAreasChip as any).icon && (magicAreasChip as any).icon !== "") {
+        chips.push(magicAreasChip);
       }
     } catch (e) {
       Helper.logError("An error occurred while creating the Magic Areas chip!", e);

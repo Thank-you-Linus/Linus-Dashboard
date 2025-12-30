@@ -2,6 +2,7 @@ import { Helper } from "../Helper";
 import { chips } from "../types/strategy/chips";
 import { TemplateChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
 import { navigateTo } from "../utils";
+import { PopupFactory } from "../services/PopupFactory";
 
 import { AbstractChip } from "./AbstractChip";
 
@@ -140,90 +141,41 @@ class AggregateChip extends AbstractChip {
     // Two modes:
     // - "popup" (default): tap=popup, hold=navigation
     // - "navigation" (HomeView): tap=navigation, hold=popup
-    
-    // Helper function to create popup action
-    const createPopupAction = () => {
-      if (linusBrainEntity) {
-        // Linus Brain group detected: open more-info
-        return { action: "more-info", entity: linusBrainEntity } as any;
-      } else {
-        // No Linus Brain: create appropriate popup based on domain
-        if (config.domain === "media_player") {
-          // Use MediaPlayerPopup for media players (extends AggregatePopup with play/pause/volume controls)
-          const { MediaPlayerPopup } = require("../popups/MediaPlayerPopup");
-          const popup = new MediaPlayerPopup({
-            domain: config.domain,
-            scope: config.scope,
-            scopeName: config.scopeName,
-            entity_ids: allEntities,
-            serviceOn: config.serviceOn,
-            serviceOff: config.serviceOff,
-            activeStates: config.activeStates,
-            translationKey: config.translationKey,
-            linusBrainEntity: null,
-            features: config.features,
-            device_class: config.device_class
-          });
-          return popup.getPopup();
-        } else if (config.domain === "cover") {
-          // Use CoverPopup for covers (extends AggregatePopup with device_class-specific icons and translations)
-          const { CoverPopup } = require("../popups/CoverPopup");
-          const popup = new CoverPopup({
-            domain: config.domain,
-            scope: config.scope,
-            scopeName: config.scopeName,
-            entity_ids: allEntities,
-            serviceOn: config.serviceOn,
-            serviceOff: config.serviceOff,
-            activeStates: config.activeStates,
-            translationKey: config.translationKey,
-            linusBrainEntity: null,
-            features: config.features,
-            device_class: config.device_class
-          });
-          return popup.getPopup();
-        } else {
-          // Use AggregatePopup for all other domains (climate, fan, switch, light, etc.)
-          const { AggregatePopup } = require("../popups/AggregatePopup");
-          const popup = new AggregatePopup({
-            domain: config.domain,
-            scope: config.scope,
-            scopeName: config.scopeName,
-            entity_ids: allEntities,
-            serviceOn: config.serviceOn,
-            serviceOff: config.serviceOff,
-            activeStates: config.activeStates,
-            translationKey: config.translationKey,
-            linusBrainEntity: null,
-            features: config.features,
-            device_class: config.device_class
-          });
-          return popup.getPopup();
-        }
-      }
-    };
-    
-    // Helper function to create navigation action
-    const createNavigationAction = () => {
-      const navigationPath = config.domain === 'sensor' || config.domain === "binary_sensor" 
-        ? config.device_class ?? config.domain 
-        : config.domain;
-      return navigateTo(navigationPath);
-    };
-    
+
+    // Create popup action using PopupFactory
+    const popupAction = PopupFactory.createPopup({
+      domain: config.domain,
+      scope: config.scope,
+      scopeName: config.scopeName,
+      entity_ids: allEntities,
+      serviceOn: config.serviceOn,
+      serviceOff: config.serviceOff,
+      activeStates: config.activeStates,
+      translationKey: config.translationKey,
+      linusBrainEntity: linusBrainEntity,
+      features: config.features,
+      device_class: config.device_class,
+    });
+
+    // Create navigation action
+    const navigationPath = config.domain === 'sensor' || config.domain === "binary_sensor"
+      ? config.device_class ?? config.domain
+      : config.domain;
+    const navigationAction = navigateTo(navigationPath);
+
     // Apply actions based on tapActionMode
     if (config.tapActionMode === "navigation") {
       // NAVIGATION MODE (for HomeView)
       // tap = navigate to domain view
       // hold = open popup
-      this.#defaultConfig.tap_action = createNavigationAction();
-      this.#defaultConfig.hold_action = createPopupAction();
+      this.#defaultConfig.tap_action = navigationAction;
+      this.#defaultConfig.hold_action = popupAction;
     } else {
       // POPUP MODE (default for all other views)
       // tap = open popup
       // hold = navigate to domain view
-      this.#defaultConfig.tap_action = createPopupAction();
-      this.#defaultConfig.hold_action = createNavigationAction();
+      this.#defaultConfig.tap_action = popupAction;
+      this.#defaultConfig.hold_action = navigationAction;
     }
     
     // 5. Apply configuration

@@ -21,6 +21,7 @@ import { EntityCardConfig } from "./types/lovelace-mushroom/cards/entity-card-co
 import { ImageAreaCard } from "./cards/ImageAreaCard";
 import { AggregateChip } from "./chips/AggregateChip";
 import { AggregateCard } from "./cards/AggregateCard";
+import { CardFactory } from "./factories/CardFactory";
 
 import StrategyArea = generic.StrategyArea;
 import StrategyFloor = generic.StrategyFloor;
@@ -742,16 +743,20 @@ export async function processEntitiesForAreaOrFloorView({
     // Handle default domain if not hidden
     if (!(Helper.strategyOptions.domains?.default?.hidden ?? true) && miscellaneousEntities.length) {
         try {
-            const cardModule = await import("./cards/MiscellaneousCard");
-
-            const miscellaneousEntityCards = miscellaneousEntities
-                .filter(entity_id => {
-                    const entity = Helper.entities[entity_id];
-                    const cardOptions = Helper.strategyOptions.card_options?.[entity?.entity_id];
-                    const deviceOptions = Helper.strategyOptions.card_options?.[entity?.device_id ?? "null"];
-                    return !cardOptions?.hidden && !deviceOptions?.hidden && !(entity?.entity_category === "config" && Helper.strategyOptions.domains["_"]?.hide_config_entities);
-                })
-                .map(entity_id => new cardModule.MiscellaneousCard(Helper.strategyOptions.card_options?.[entity_id], Helper.entities[entity_id]).getCard());
+            const miscellaneousEntityCards = (await Promise.all(
+                miscellaneousEntities
+                    .filter(entity_id => {
+                        const entity = Helper.entities[entity_id];
+                        const cardOptions = Helper.strategyOptions.card_options?.[entity?.entity_id];
+                        const deviceOptions = Helper.strategyOptions.card_options?.[entity?.device_id ?? "null"];
+                        return !cardOptions?.hidden && !deviceOptions?.hidden && !(entity?.entity_category === "config" && Helper.strategyOptions.domains["_"]?.hide_config_entities);
+                    })
+                    .map(async entity_id => {
+                        const options = Helper.strategyOptions.card_options?.[entity_id];
+                        const entity = Helper.entities[entity_id];
+                        return await CardFactory.createCardByName("MiscellaneousCard", options, entity, "./cards");
+                    })
+            )).filter((card): card is LovelaceCardConfig => card !== null);
 
             const miscellaneousCards = new GroupedCard(miscellaneousEntityCards).getCard();
 
@@ -795,18 +800,11 @@ async function processEntities(entities: any[]): Promise<any[]> {
         if (Helper.strategyOptions.card_options?.[entity.device_id ?? "null"]?.hidden) continue;
         if (entity.entity_category === "config" && configEntityHidden) continue;
 
-        // Récupère le state pour avoir le vrai device_class et domain
-        const entityDeviceClass = state?.attributes?.device_class;
-        let className = Helper.sanitizeClassName((entityDeviceClass ? entityDeviceClass : entityDomain) + "Card");
-        let cardModule: any;
-        try {
-            cardModule = await import(`./cards/${className}`);
-        } catch {
-            // Fallback sur la card du domain
-            className = Helper.sanitizeClassName(entityDomain + "Card");
-            cardModule = await import(`./cards/${className}`);
+        // Use CardFactory for consistent card creation with automatic fallback
+        const card = await CardFactory.createCard(entity, {}, "./cards");
+        if (card) {
+            cards.push(card);
         }
-        cards.push(new cardModule[className]({}, entity).getCard());
     }
     return cards;
 }

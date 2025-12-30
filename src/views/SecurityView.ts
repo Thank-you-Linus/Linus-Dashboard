@@ -10,6 +10,7 @@ import { TemplateCardConfig } from "../types/lovelace-mushroom/cards/template-ca
 import { LovelaceChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
 import { RefreshChip } from "../chips/RefreshChip";
 import { SECURITY_EXPOSED_CHIPS, SECURITY_EXPOSED_DOMAINS } from "../variables";
+import { ChipFactory } from "../factories/ChipFactory";
 
 /**
  * Security View Class.
@@ -67,16 +68,13 @@ class SecurityView {
 
     const chips: LovelaceChipConfig[] = [];
 
-    let chipModule;
-
     // Multi-alarmes : affiche un chip pour chaque alarme
     const alarmEntityIds = Helper.linus_dashboard_config?.alarm_entity_ids || [];
     if (Array.isArray(alarmEntityIds) && alarmEntityIds.length > 0) {
       try {
-        chipModule = await import("../chips/AlarmChip");
         for (const alarmEntityId of alarmEntityIds) {
-          const alarmChip = new chipModule.AlarmChip(alarmEntityId);
-          chips.push(alarmChip.getChip());
+          const alarmChip = await ChipFactory.createChip("AlarmChip", alarmEntityId);
+          if (alarmChip) chips.push(alarmChip);
         }
       } catch (e) {
         Helper.logError("An error occurred while creating the alarm chips!", e);

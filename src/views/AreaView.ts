@@ -10,6 +10,7 @@ import { LovelaceChipConfig } from "../types/lovelace-mushroom/utils/lovelace/ch
 import { createChipsFromList, processEntitiesForAreaOrFloorView } from "../utils";
 import { UnavailableChip } from "../chips/UnavailableChip";
 import { RefreshChip } from "../chips/RefreshChip";
+import { ChipFactory } from "../factories/ChipFactory";
 
 import StrategyArea = generic.StrategyArea;
 
@@ -73,11 +74,9 @@ class AreaView {
 
     // FIRST: Activity Detection chip (ALWAYS show, with or without Linus Brain)
     try {
-      const ActivityDetectionChipModule = await import("../chips/ActivityDetectionChip");
-      const activityDetectionChip = new ActivityDetectionChipModule.ActivityDetectionChip({ area_slug: this.area.slug });
-      const chip = activityDetectionChip.getChip();
-      if (chip) {
-        chips.push(chip);
+      const activityDetectionChip = await ChipFactory.createChip("ActivityDetectionChip", { area_slug: this.area.slug });
+      if (activityDetectionChip) {
+        chips.push(activityDetectionChip);
       }
     } catch (e) {
       Helper.logError("An error occurred while creating the Activity Detection chip!", e);

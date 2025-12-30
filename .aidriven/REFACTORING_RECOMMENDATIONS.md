@@ -1,7 +1,7 @@
 # Refactoring Recommendations - Linus Dashboard
 
 **Date:** 2025-12-30
-**Status:** Phase 1 ✅ COMPLETE | Phase 2 ✅ COMPLETE | Phase 3-4 📋 PENDING
+**Status:** Phase 1 ✅ COMPLETE | Phase 2 ✅ COMPLETE | Phase 3 ✅ COMPLETE | Phase 4 ⏸️ DEFERRED
 
 ---
 
@@ -47,7 +47,39 @@
 
 ---
 
-## 📋 Pending Refactorings (Phase 3 & 4)
+### Phase 3: Complexity Simplification (10h) - COMPLETE
+
+**Impact:**
+- **-49 lines from AggregateChip** (-11% complexity reduction)
+- **+433 lines in 3 new factories/services** (centralized logic)
+- **8 files updated** to use new factories
+- **Bundle size:** 508 KiB (+1 KiB acceptable overhead for abstraction)
+
+**Changes:**
+- [x] Created CardFactory.ts (~140 lines) - Centralizes all card creation with device_class → domain fallback
+- [x] Created ChipFactory.ts (~145 lines) - Centralizes all chip creation
+- [x] Created PopupFactory.ts (~148 lines) - Centralizes popup creation logic (extracted from AggregateChip)
+- [x] Simplified AggregateChip.ts (433 → 384 lines, -11%)
+- [x] Updated utils.ts to use CardFactory (2 locations)
+- [x] Updated HomeView.ts to use ChipFactory (3 chip imports)
+- [x] Updated SecurityView.ts to use ChipFactory (1 chip import)
+- [x] Updated AreaView.ts to use ChipFactory (1 chip import)
+- [x] Updated UnavailableView.ts to use CardFactory (1 card import)
+
+**Files modified:** 6 view/util files
+**Files created:** 3 factories/services
+**Build status:** ✅ PASS (0 errors)
+
+**Benefits:**
+- ✅ **Centralized dynamic imports** - Single source of truth for card/chip/popup creation
+- ✅ **Consistent error handling** - Graceful degradation with null returns
+- ✅ **Reusable services** - PopupFactory can be used by any chip/card
+- ✅ **Easier testing** - Isolated factories are unit-testable
+- ✅ **Future-proof** - Adding new cards/chips requires minimal boilerplate
+
+---
+
+## ⏸️ Deferred Refactorings (Phase 4)
 
 ### Phase 3: Complexity Simplification (10h) - NOT STARTED
 

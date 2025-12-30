@@ -84,6 +84,9 @@ class StandardDomainView extends AbstractView {
     const chips: any[] = [];
     const deviceClasses = DEVICE_CLASSES[this.domain as keyof typeof DEVICE_CLASSES];
 
+    // Cache localize call (used for all chips)
+    const scopeName = Helper.localize(`component.linus_dashboard.entity.text.aggregate_popup.state.title_${this.domain}`);
+
     if (deviceClasses?.length > 0) {
       // Domain with device_class support (cover, binary_sensor, sensor)
 
@@ -93,7 +96,7 @@ class StandardDomainView extends AbstractView {
         domain: this.domain,
         device_class: null as any, // null = only entities without device_class
         scope: "global",
-        scopeName: Helper.localize(`component.linus_dashboard.entity.text.aggregate_popup.state.title_${this.domain}`),
+        scopeName,
         show_content: true,
       });
       const genericChipResult = genericChip.getChip();
@@ -105,7 +108,7 @@ class StandardDomainView extends AbstractView {
           domain: this.domain,
           device_class: deviceClass,
           scope: "global",
-          scopeName: Helper.localize(`component.linus_dashboard.entity.text.aggregate_popup.state.title_${this.domain}`),
+          scopeName,
           show_content: true,
         }).getChip();
 
@@ -116,7 +119,7 @@ class StandardDomainView extends AbstractView {
       const chip = new AggregateChip({
         domain: this.domain,
         scope: "global",
-        scopeName: Helper.localize(`component.linus_dashboard.entity.text.aggregate_popup.state.title_${this.domain}`),
+        scopeName,
         show_content: true,
       }).getChip();
 
@@ -127,7 +130,14 @@ class StandardDomainView extends AbstractView {
     chips.push(new RefreshChip().getChip());
 
     // Return ONE badge containing ALL chips
-    const validChips = chips.filter(chip => chip?.type && (chip as any)?.icon);
+    // Filter out chips that don't have a type or icon
+    // Note: icon can be a string (static icon) or a template string (dynamic icon)
+    const validChips = chips.filter(chip => {
+      if (!chip || !chip.type) return false;
+      const chipIcon = (chip as any)?.icon;
+      // Icon must exist and be a non-empty string
+      return chipIcon !== undefined && chipIcon !== null && chipIcon !== '';
+    });
 
     return validChips.length > 0
       ? [{

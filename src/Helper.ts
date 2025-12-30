@@ -3,7 +3,7 @@ import merge from "lodash.merge";
 
 import { configurationDefaults } from "./configurationDefaults";
 import { generic } from "./types/strategy/generic";
-import { DEVICE_CLASSES, MAGIC_AREAS_DOMAIN, MAGIC_AREAS_NAME, LINUS_BRAIN_DOMAIN, SENSOR_STATE_CLASS_TOTAL, SENSOR_STATE_CLASS_TOTAL_INCREASING, UNDISCLOSED, colorMapping, ALL_HOME_ASSISTANT_DOMAINS } from "./variables";
+import { DEVICE_CLASSES, MAGIC_AREAS_DOMAIN, MAGIC_AREAS_NAME, LINUS_BRAIN_DOMAIN, SENSOR_STATE_CLASS_TOTAL, SENSOR_STATE_CLASS_TOTAL_INCREASING, UNDISCLOSED, colorMapping, ALL_HOME_ASSISTANT_DOMAINS, STANDARD_DOMAIN_ICONS } from "./variables";
 import { getEntityDomain, getGlobalEntitiesExceptUndisclosed, getMAEntity, getMagicAreaSlug, groupEntitiesByDomain, slugify } from "./utils";
 import { IconResources } from "./types/homeassistant/data/frontend";
 import { LinusDashboardConfig } from "./types/homeassistant/data/linus_dashboard";
@@ -1328,7 +1328,8 @@ class Helper {
 
     const domainIcons = Helper.icons[domain as keyof IconResources];
     if (!domainIcons) {
-      return "mdi:help-circle-circle"; // Default icon if domain is not found
+      // Fallback to STANDARD_DOMAIN_ICONS if Helper.icons doesn't have this domain
+      return STANDARD_DOMAIN_ICONS[domain] || "mdi:help-circle-circle";
     }
 
     const states = entity_ids?.length ? Helper.getStateStrings(entity_ids) : [];
@@ -1357,11 +1358,31 @@ class Helper {
         for (const [stateKey, icon] of Object.entries(domainIcons.state)) {
           stateIconTemplate += `{% if state | select('eq', '${stateKey}') | list | count > 0 %}${icon}{% else %}`;
         }
-        stateIconTemplate += `${domainIcons.default || "mdi:help-circle"}` + "{% endif %}".repeat(Object.keys(domainIcons.state).length);
+        stateIconTemplate += `${domainIcons.default || STANDARD_DOMAIN_ICONS[domain] || "mdi:help-circle"}` + "{% endif %}".repeat(Object.keys(domainIcons.state).length);
 
         return stateIconTemplate;
       }
-      return typeof domainIcons.default === "string" ? domainIcons.default : "mdi:help-circle";
+
+      // Fallback: create a simple state-aware template using STANDARD_DOMAIN_ICONS
+      if (states.length) {
+        // Map of state-aware icon patterns for common domains
+        const stateAwareIcons: Record<string, { activeStates: string[]; on: string; off: string }> = {
+          light: { activeStates: ['on'], on: "mdi:lightbulb-on", off: "mdi:lightbulb-off" },
+          switch: { activeStates: ['on'], on: "mdi:toggle-switch", off: "mdi:toggle-switch-off" },
+          fan: { activeStates: ['on'], on: "mdi:fan", off: "mdi:fan-off" },
+          media_player: { activeStates: ['playing', 'on'], on: "mdi:speaker-play", off: "mdi:speaker-off" },
+          climate: { activeStates: ['heat', 'cool', 'auto', 'heat_cool', 'dry', 'fan_only'], on: "mdi:thermostat", off: "mdi:thermostat-box" },
+          cover: { activeStates: ['open', 'opening'], on: "mdi:window-open", off: "mdi:window-closed" },
+        };
+
+        const iconConfig = stateAwareIcons[domain];
+        if (iconConfig) {
+          const stateChecks = iconConfig.activeStates.map(s => `'${s}'`).join(', ');
+          return `{% set entities = [${states}] %}{% set state = entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | map(attribute='state') | list %}{% if state | select('in', [${stateChecks}]) | list | count > 0 %}${iconConfig.on}{% else %}${iconConfig.off}{% endif %}`;
+        }
+      }
+
+      return typeof domainIcons.default === "string" ? domainIcons.default : (STANDARD_DOMAIN_ICONS[domain] || "mdi:help-circle");
     }
 
     if (device_class && domainIcons[device_class as keyof IconResources[keyof IconResources]]) {
@@ -1555,18 +1576,15 @@ class Helper {
         {% set entities = [${stateStrings}] %}
         {% set ${template.filter} %}
         {% set count = ${filterVar} | length %}
-        {% if count > 0 %}
-          {% if count > 9 %}
-            ${template.icon_max}
-          {% else %}
-            ${template.icon?.replace('{count}', '{{ count }}')}
-          {% endif %}
+        {% if count > 9 %}
+          ${template.icon_max}
         {% else %}
+          ${template.icon?.replace('{count}', '{{ count }}')}
         {% endif %}
       `;
     }
 
-    // Default: return the value as before, but return nothing if count is zero
+    // Default: return the count only if > 0, otherwise empty
     return `
       {% set entities = [${stateStrings}] %}
       {% set ${template.filter} %}

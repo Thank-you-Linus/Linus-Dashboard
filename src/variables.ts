@@ -25,6 +25,11 @@ export const DEVICE_CLASSES = {
     "shutter",
     "window",
   ],
+  media_player: [
+    "tv",
+    "speaker",
+    "receiver",
+  ],
   sensor: [
     "temperature",
     "humidity",
@@ -241,7 +246,12 @@ export const colorMapping: Record<string, Record<string, string | Record<number,
     ])
   ),
   fan: { '_': { state: { on: "cyan" } } },
-  media_player: { '_': { state: { playing: "light-blue", paused: "grey", stopped: "grey" } } },
+  media_player: Object.fromEntries(
+    ['_', ...DEVICE_CLASSES.media_player].map(deviceClass => [
+      deviceClass,
+      { state: { playing: "light-blue", paused: "grey", stopped: "grey" } }
+    ])
+  ),
   switch: { '_': { state: { on: "yellow" } } },
   binary_sensor: {
     motion: { state: { on: "red" } },

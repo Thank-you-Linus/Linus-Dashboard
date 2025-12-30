@@ -23,6 +23,7 @@ import { AggregateChip } from "./chips/AggregateChip";
 import { AggregateCard } from "./cards/AggregateCard";
 import { CardFactory } from "./factories/CardFactory";
 
+import StrategyEntity = generic.StrategyEntity;
 import StrategyArea = generic.StrategyArea;
 import StrategyFloor = generic.StrategyFloor;
 import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
@@ -395,39 +396,35 @@ export const getAreaName = memoize(function getAreaName(area: StrategyArea): str
  * @returns {string[]} - The global entities.
  */
 export const getGlobalEntitiesExceptUndisclosed = memoize(function getGlobalEntitiesExceptUndisclosed(domain: string, device_class?: string | null): string[] {
-    const dc = domain === "binary_sensor" || domain === "sensor" || domain === "cover" ? device_class : undefined;
+    const supportedDeviceClassDomains = ["binary_sensor", "sensor", "cover", "media_player"];
+    const supportsDeviceClass = supportedDeviceClassDomains.includes(domain);
+    const dc = supportsDeviceClass ? device_class : undefined;
     const domainTag = `${domain}${dc ? ":" + dc : ""}`;
 
     // Handle device_class === null: ONLY entities WITHOUT device_class
     // Handle device_class === undefined: ALL entities (with and without device_class)
-    const entities = (domain === "cover"
-        ? device_class === null
-          ? Helper.domains["cover"] ?? []  // ONLY covers without device_class
-          : device_class === undefined
-          ? [
-              ...(Helper.domains["cover"] ?? []),  // Covers WITHOUT device_class
-              ...DEVICE_CLASSES.cover.flatMap(d => Helper.domains[`cover:${d}`] ?? [])  // Covers WITH device_class
-            ]
-          : Helper.domains[domainTag] ?? []  // Specific device_class
-        : domain === "sensor"
-        ? device_class === null
-          ? Helper.domains["sensor"] ?? []  // ONLY sensors without device_class
-          : device_class === undefined
-          ? [
-              ...(Helper.domains["sensor"] ?? []),  // Sensors WITHOUT device_class
-              ...DEVICE_CLASSES.sensor.flatMap(d => Helper.domains[`sensor:${d}`] ?? [])  // Sensors WITH device_class
-            ]
-          : Helper.domains[domainTag] ?? []  // Specific device_class
-        : domain === "binary_sensor"
-        ? device_class === null
-          ? Helper.domains["binary_sensor"] ?? []  // ONLY binary_sensors without device_class
-          : device_class === undefined
-          ? [
-              ...(Helper.domains["binary_sensor"] ?? []),  // Binary sensors WITHOUT device_class
-              ...DEVICE_CLASSES.binary_sensor.flatMap(d => Helper.domains[`binary_sensor:${d}`] ?? [])  // Binary sensors WITH device_class
-            ]
-          : Helper.domains[domainTag] ?? []  // Specific device_class
-        : Helper.domains[domainTag] ?? []);
+    let entities: StrategyEntity[];
+
+    if (supportsDeviceClass) {
+        // Domain supports device_class (cover, sensor, binary_sensor, media_player)
+        if (device_class === null) {
+            // ONLY entities WITHOUT device_class
+            entities = Helper.domains[domain] ?? [];
+        } else if (device_class === undefined) {
+            // ALL entities (with and without device_class)
+            const deviceClasses = DEVICE_CLASSES[domain as keyof typeof DEVICE_CLASSES] ?? [];
+            entities = [
+                ...(Helper.domains[domain] ?? []),  // Entities WITHOUT device_class
+                ...deviceClasses.flatMap(d => Helper.domains[`${domain}:${d}`] ?? [])  // Entities WITH device_class
+            ];
+        } else {
+            // Specific device_class
+            entities = Helper.domains[domainTag] ?? [];
+        }
+    } else {
+        // Domain doesn't support device_class (light, climate, fan, switch, etc.)
+        entities = Helper.domains[domainTag] ?? [];
+    }
 
     // Filter out entities in UNDISCLOSED area
     return entities?.filter(entity => {

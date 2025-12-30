@@ -26,7 +26,7 @@ class ActivityDetectionChip extends AbstractChip {
     if (isLinusBrain && presenceSensorEntity) {
       const areaStateResolution = resolver.resolveAreaState(area_slug);
       const areaStateEntity = areaStateResolution.entity_id;
-      
+
       if (areaStateEntity) {
         return {
           type: "entity",

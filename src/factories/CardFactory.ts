@@ -48,7 +48,8 @@ export class CardFactory {
       if (entityDeviceClass) {
         try {
           const className = Helper.sanitizeClassName(entityDeviceClass + "Card");
-          const cardModule = await import(`${basePath}/${className}`);
+          // Note: Dynamic import path must be literal for webpack/rspack
+          const cardModule = await import(`../cards/${className}`);
           return new cardModule[className](options, entity).getCard();
         } catch {
           // Fallback to domain card (will be caught by outer try-catch)
@@ -57,7 +58,8 @@ export class CardFactory {
 
       // Fallback to domain card
       const className = Helper.sanitizeClassName(entityDomain + "Card");
-      const cardModule = await import(`${basePath}/${className}`);
+      // Note: Dynamic import path must be literal for webpack/rspack
+      const cardModule = await import(`../cards/${className}`);
       return new cardModule[className](options, entity).getCard();
 
     } catch (error) {
@@ -85,12 +87,12 @@ export class CardFactory {
   static async createCardByName(
     className: string,
     options: any = {},
-    entity?: StrategyEntity,
-    basePath: string = "../cards"
+    entity?: StrategyEntity
   ): Promise<LovelaceCardConfig | null> {
     try {
       const sanitizedClassName = Helper.sanitizeClassName(className);
-      const cardModule = await import(`${basePath}/${sanitizedClassName}`);
+      // Note: Dynamic import path must be literal for webpack/rspack
+      const cardModule = await import(`../cards/${sanitizedClassName}`);
 
       if (entity) {
         return new cardModule[sanitizedClassName](options, entity).getCard();

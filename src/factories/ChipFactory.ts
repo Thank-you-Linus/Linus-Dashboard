@@ -39,12 +39,12 @@ export class ChipFactory {
    */
   static async createChip(
     chipClassName: string,
-    options: any = {},
-    basePath: string = "../chips"
+    options: any = {}
   ): Promise<LovelaceChipConfig | null> {
     try {
       const sanitizedClassName = Helper.sanitizeClassName(chipClassName);
-      const chipModule = await import(`${basePath}/${sanitizedClassName}`);
+      // Note: Dynamic import path must be literal for webpack/rspack
+      const chipModule = await import(`../chips/${sanitizedClassName}`);
 
       const chipInstance = new chipModule[sanitizedClassName](options);
       return chipInstance.getChip();

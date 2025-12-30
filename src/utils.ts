@@ -754,7 +754,7 @@ export async function processEntitiesForAreaOrFloorView({
                     .map(async entity_id => {
                         const options = Helper.strategyOptions.card_options?.[entity_id];
                         const entity = Helper.entities[entity_id];
-                        return await CardFactory.createCardByName("MiscellaneousCard", options, entity, "./cards");
+                        return await CardFactory.createCardByName("MiscellaneousCard", options, entity);
                     })
             )).filter((card): card is LovelaceCardConfig => card !== null);
 
@@ -801,7 +801,7 @@ async function processEntities(entities: any[]): Promise<any[]> {
         if (entity.entity_category === "config" && configEntityHidden) continue;
 
         // Use CardFactory for consistent card creation with automatic fallback
-        const card = await CardFactory.createCard(entity, {}, "./cards");
+        const card = await CardFactory.createCard(entity, {});
         if (card) {
             cards.push(card);
         }

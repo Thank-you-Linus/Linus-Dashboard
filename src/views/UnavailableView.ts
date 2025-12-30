@@ -78,7 +78,7 @@ class UnavailableView {
             .filter(entity => !Helper.strategyOptions.card_options?.[entity.entity_id]?.hidden
               && !Helper.strategyOptions.card_options?.[entity.device_id ?? "null"]?.hidden
               && !(entity.entity_category === "config"))
-            .map(async entity => await CardFactory.createCardByName("MiscellaneousCard", {}, entity, "../cards"))
+            .map(async entity => await CardFactory.createCardByName("MiscellaneousCard", {}, entity))
         )).filter((card): card is LovelaceCardConfig => card !== null);
 
         if (entityCards.length) {

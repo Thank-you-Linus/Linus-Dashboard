@@ -10,7 +10,7 @@ export const TOD_ORDER = ["morning", "daytime", "evening", "night"];
 export const LIGHT_DOMAIN = "light";
 export const LIGHT_GROUPS = ["overhead_lights", "accent_lights", "task_lights", "sleep_lights"];
 export const GROUP_DOMAINS = ["climate", "media_player", "cover"];
-export const AGGREGATE_DOMAINS = ["binary_sensor", "sensor", "cover"];
+export const AGGREGATE_DOMAINS = ["binary_sensor", "sensor"];
 
 export const DEVICE_CLASSES = {
   cover: [

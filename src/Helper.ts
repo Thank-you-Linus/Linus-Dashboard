@@ -201,11 +201,11 @@ class Helper {
       if (a.order !== undefined && b.order !== undefined) {
         return a.order - b.order;
       }
-      
+
       // Priority 2: If only one has manual order, it comes first
       if (a.order !== undefined) return -1;
       if (b.order !== undefined) return 1;
-      
+
       // Priority 3: Alphabetical fallback for backward compatibility
       return a.name.localeCompare(b.name);
     });
@@ -239,18 +239,18 @@ class Helper {
       if (a.order !== undefined && b.order !== undefined) {
         return a.order - b.order;
       }
-      
+
       // Priority 2: If only one has manual order, it comes first
       if (a.order !== undefined) return -1;
       if (b.order !== undefined) return 1;
-      
+
       // Priority 3: Numeric level (legacy behavior)
       if (a.level !== undefined && b.level !== undefined) {
         return a.level - b.level;
       }
       if (a.level !== undefined) return -1;
       if (b.level !== undefined) return 1;
-      
+
       // Priority 4: Alphabetical fallback
       return a.name.localeCompare(b.name);
     });
@@ -327,16 +327,16 @@ class Helper {
    * @static
    */
   static #resolveFloorToAreas(
-    floor_id: string, 
+    floor_id: string,
     methodName: string
   ): string[] | null {
     const floor = this.#floors[floor_id];
-    
+
     if (!floor) {
       console.warn(`[Helper.${methodName}] Floor "${floor_id}" not found`);
       return null;
     }
-    
+
     if (floor.areas_slug && floor.areas_slug.length > 0) {
       console.log(
         `[Helper.${methodName}] Floor "${floor_id}" (${floor.name}) → Areas: ${floor.areas_slug.join(", ")}`
@@ -642,25 +642,25 @@ class Helper {
     if (this.#debug) {
       console.warn('[Linus Dashboard] Refreshing registries...');
     }
-    
+
     try {
       // Reset initialized flag to allow re-initialization
       this.#initialized = false;
-      
+
       // Re-initialize with fresh data from Home Assistant
       await this.initialize(info);
-      
+
       if (this.#debug) {
         console.warn('[Linus Dashboard] Registries refreshed successfully');
       }
-      
+
       // Fire custom event to notify dashboard components
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('linus-dashboard-refreshed', {
           detail: { timestamp: Date.now() }
         }));
       }
-      
+
     } catch (error) {
       this.logError('Failed to refresh registries', error);
       throw error;
@@ -978,17 +978,17 @@ class Helper {
     if (floor_id) {
       const areaSlugs = this.#resolveFloorToAreas(floor_id, 'getStates');
       if (areaSlugs === null) return [];
-      
+
       const stateStrings = this.getStates({
         domain,
         device_class,
         area_slug: areaSlugs
       });
-      
+
       console.log(`[Helper.getStates] Found ${stateStrings.length} state strings for floor "${floor_id}"`);
       return stateStrings;
     }
-    
+
     // Delegate to core logic with Jinja template transformer
     return this.#getEntitiesCore({
       domain,
@@ -1021,26 +1021,21 @@ class Helper {
     area_slug?: string | string[];
     floor_id?: string;
   }): string[] {
-    
+
     // Handle floor_id resolution
     if (floor_id) {
       const areaSlugs = this.#resolveFloorToAreas(floor_id, 'getEntityIds');
       if (areaSlugs === null) return [];
-      
+
       const entities = this.getEntityIds({
         domain,
         device_class,
         area_slug: areaSlugs
       });
-      
-      console.log(
-        `[Helper.getEntityIds] Found ${entities.length} entities for floor "${floor_id}"` +
-        ` (domain: "${domain}", device_class: "${device_class || 'N/A'}")`,
-        entities.slice(0, 5)  // Log first 5 entities
-      );
+
       return entities;
     }
-    
+
     // Delegate to core logic with identity transformer
     return this.#getEntitiesCore({
       domain,
@@ -1188,21 +1183,21 @@ class Helper {
         else {
           // If device_class is undefined, get all device_classes for the domain
           const domainTags = Object.keys(this.#domains).filter(tag => tag.startsWith(`${domain}:`));
-          
+
           // First, retrieve entities WITHOUT device_class
-          const entitiesWithoutDeviceClass = slug === "global" 
-            ? getGlobalEntitiesExceptUndisclosed(domain) 
+          const entitiesWithoutDeviceClass = slug === "global"
+            ? getGlobalEntitiesExceptUndisclosed(domain)
             : this.#areas[slug]?.domains?.[domain];
           if (entitiesWithoutDeviceClass) results.push(...entitiesWithoutDeviceClass.map(transformer));
-          
+
           // Then, retrieve entities WITH device_class
           if (domainTags.length > 0) {
             for (const domainTag of domainTags) {
               const magic_entity = getMAEntity(slug, domain, domainTag.split(":")[1]);
-              const entities = magic_entity 
-                ? [magic_entity.entity_id] 
-                : slug === "global" 
-                  ? getGlobalEntitiesExceptUndisclosed(domain, domainTag.split(":")[1]) 
+              const entities = magic_entity
+                ? [magic_entity.entity_id]
+                : slug === "global"
+                  ? getGlobalEntitiesExceptUndisclosed(domain, domainTag.split(":")[1])
                   : this.#areas[slug]?.domains?.[domainTag];
               if (entities) results.push(...entities.map(transformer));
             }
@@ -1211,7 +1206,7 @@ class Helper {
       } else {
         for (const area of Object.values(this.#areas)) {
           if (area.area_id === UNDISCLOSED) continue;
-          
+
           // Handle device_class === null: ONLY entities WITHOUT device_class
           if (device_class === null) {
             const entities = this.#areas[area.slug]?.domains?.[domain];
@@ -1226,11 +1221,11 @@ class Helper {
           else {
             // If device_class is undefined, get all device_classes for the domain
             const domainTags = Object.keys(this.#domains).filter(tag => tag.startsWith(`${domain}:`));
-            
+
             // First, retrieve entities WITHOUT device_class
             const entitiesWithoutDeviceClass = this.#areas[area.slug]?.domains?.[domain];
             if (entitiesWithoutDeviceClass) results.push(...entitiesWithoutDeviceClass.map(transformer));
-            
+
             // Then, retrieve entities WITH device_class
             for (const domainTag of domainTags) {
               const entities = this.#areas[area.slug]?.domains?.[domainTag];
@@ -1483,8 +1478,8 @@ class Helper {
         icon_max: "mdi:numeric-9-plus"
       },
       cover: {
-        filter: `open_covers = entities | selectattr('state', 'eq', 'open')${device_class ? " | selectattr('attributes.device_class', 'eq', '" + device_class + "')" : ""} | list`,
-        default: `{{ open_covers | length }}`,
+        filter: `active_covers = entities | selectattr('state', 'in', ['open', 'opening'])${device_class ? " | selectattr('attributes.device_class', 'eq', '" + device_class + "')" : ""} | list`,
+        default: `{{ active_covers | length }}`,
         icon: "mdi:numeric-{count}",
         icon_max: "mdi:numeric-9-plus"
       },
@@ -1571,12 +1566,12 @@ if (typeof window !== 'undefined') {
       // Get current hass instance from home-assistant element
       const homeAssistant = document.querySelector('home-assistant') as any;
       const hass = homeAssistant?.hass;
-      
+
       if (!hass) {
         console.error('[Linus Dashboard] Cannot refresh: hass instance not found');
         return;
       }
-      
+
       // Build info object needed for refresh
       // We pass the existing config or an empty one - it will be refetched anyway
       const info: generic.DashBoardInfo = {
@@ -1586,16 +1581,16 @@ if (typeof window !== 'undefined') {
           strategy: {}
         } as any,
       };
-      
+
       // Refresh registries
       await Helper.refresh(info);
-      
+
       // Reload dashboard to apply changes
       window.location.reload();
-      
+
     } catch (error) {
       console.error('[Linus Dashboard] Refresh failed:', error);
-      
+
       // Try to show error in Home Assistant logs
       const homeAssistant = document.querySelector('home-assistant') as any;
       const hass = homeAssistant?.hass;

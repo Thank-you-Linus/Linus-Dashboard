@@ -162,6 +162,23 @@ export const VIEWS_ICONS = {
   security: "mdi:security",
 };
 
+/**
+ * Standard domain view configurations.
+ * Maps domain names to their view icons for StandardDomainView.
+ * Domains in this list will use StandardDomainView instead of dedicated view classes.
+ */
+export const STANDARD_DOMAIN_ICONS: Record<string, string> = {
+  light: "mdi:lightbulb-group",
+  climate: "mdi:thermostat",
+  cover: "mdi:window-open",
+  fan: "mdi:fan",
+  switch: "mdi:toggle-switch",
+  vacuum: "mdi:robot-vacuum",
+  scene: "mdi:palette",
+  media_player: "mdi:speaker",
+  camera: "mdi:cctv",
+};
+
 export const AREA_STATE_ICONS = {
   occupied: "mdi:account",
   extended: "mdi:account-clock",

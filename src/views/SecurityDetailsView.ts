@@ -47,7 +47,8 @@ abstract class SecurityDetailsView {
   }
 
   /**
-   * Create the cards to include in the view.
+   * Create the section cards for this view.
+   * This is a legacy view that uses the cards property instead of sections.
    *
    * @return {Promise<(StackCardConfig | TitleCardConfig)[]>} An array of card objects.
    */
@@ -82,7 +83,8 @@ abstract class SecurityDetailsView {
   /**
    * Get a view object.
    *
-   * The view includes the cards which are created by method createViewCards().
+   * The view includes:
+   * - cards: created by createViewCards() (legacy view without sections)
    *
    * @returns {Promise<LovelaceViewConfig>} The view object.
    */

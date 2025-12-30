@@ -1,7 +1,7 @@
 import { Helper } from "./Helper";
 import { generic } from "./types/strategy/generic";
 import { LovelaceConfig, LovelaceViewConfig } from "./types/homeassistant/data/lovelace";
-import { AGGREGATE_DOMAINS, CUSTOM_VIEWS, DEVICE_CLASSES, DOMAINS_VIEWS, VIEWS_ICONS } from "./variables";
+import { AGGREGATE_DOMAINS, CUSTOM_VIEWS, DEVICE_CLASSES, DOMAINS_VIEWS, VIEWS_ICONS, STANDARD_DOMAIN_ICONS } from "./variables";
 import { AreaView } from "./views/AreaView";
 import { getAreaName, getDomainTranslationKey, getFloorName, getGlobalEntitiesExceptUndisclosed } from "./utils";
 import { FloorView } from "./views/FloorView";
@@ -256,8 +256,19 @@ class LinusStrategy extends HTMLTemplateElement {
           const viewModule = await import("./views/AggregateView");
           view = await new viewModule.AggregateView({ domain, device_class: viewId }).getView();
 
+        } else if (viewId in STANDARD_DOMAIN_ICONS) {
+
+          // Use StandardDomainView for standard domains (light, climate, cover, fan, etc.)
+          const viewModule = await import("./views/StandardDomainView");
+          view = await new viewModule.StandardDomainView({
+            domain: viewId,
+            icon: STANDARD_DOMAIN_ICONS[viewId],
+            viewOptions: Helper.strategyOptions.views[viewId],
+          }).getView();
+
         } else {
 
+          // Fallback: try to load a dedicated view class (for custom domains)
           const viewType = Helper.sanitizeClassName(viewId + "View");
           const viewModule = await import(`./views/${viewType}`);
           view = await new viewModule[viewType](Helper.strategyOptions.views[viewId]).getView();

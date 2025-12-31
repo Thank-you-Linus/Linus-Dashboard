@@ -446,6 +446,8 @@ class Helper {
       // }
 
       const domain = getEntityDomain(entity.entity_id);
+      if (!domain) return acc;
+      
       let device_class;
 
       if (Object.keys(DEVICE_CLASSES).includes(domain)) {

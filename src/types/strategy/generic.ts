@@ -118,8 +118,8 @@ export namespace generic {
     views: Record<string, ViewConfig>;
   }
 
-  const hiddenSectionList = ["chips", "persons", "greeting", "areas", "areasTitle"] as const;
-  export type HiddenSectionType = typeof hiddenSectionList[number];
+  const _hiddenSectionList = ["chips", "persons", "greeting", "areas", "areasTitle"] as const;
+  export type HiddenSectionType = typeof _hiddenSectionList[number];
 
   /**
    * Represents the default configuration for a strategy.

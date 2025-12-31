@@ -399,7 +399,7 @@ class ActivityDetectionPopup extends AbstractPopup {
 
             // Add entity cards for each sensor (compact)
             sortedEntities.forEach(entity => {
-                const state = Helper.getEntityState(entity);
+                const _state = Helper.getEntityState(entity);
                 const isActive = isEntityActive(entity);
                 const isMediaPlayer = entity.startsWith('media_player.');
 

@@ -101,7 +101,7 @@ class ComponentRegistry {
       const module = await import(`../cards/${className}`);
       this.cardModules.set(className, module);
       return module;
-    } catch (e) {
+    } catch (_e) {
       // Module doesn't exist - return null for fallback logic
       // Don't cache null to allow retry if module is added later
       return null;
@@ -124,7 +124,7 @@ class ComponentRegistry {
       const module = await import(`../chips/${className}`);
       this.chipModules.set(className, module);
       return module;
-    } catch (e) {
+    } catch (_e) {
       // Module doesn't exist - return null for fallback logic
       return null;
     }
@@ -146,7 +146,7 @@ class ComponentRegistry {
       const module = await import(`../views/${className}`);
       this.viewModules.set(className, module);
       return module;
-    } catch (e) {
+    } catch (_e) {
       // Module doesn't exist - return null
       return null;
     }

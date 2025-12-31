@@ -56,7 +56,7 @@ class HomeView {
   /**
    * Create the chips to include in the view.
    *
-   * @return {Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig | LovelaceBadgeConfig)[]>} Promise a View Card array.
+   * @return {Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig | LovelaceBadgeConfig)[]>} Promise a View Card array.
    * @override
    */
   async createSectionBadges(): Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig | LovelaceBadgeConfig)[]> {

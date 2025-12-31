@@ -67,9 +67,12 @@ class UnavailableView {
 
       for (const area of floors) {
         if (!area) continue;
-        
+
         const entities = Helper.areas[area.slug]?.entities;
-        const unavailableEntities = entities?.filter(entity_id => AREA_CARDS_DOMAINS.includes(getEntityDomain(entity_id)) && Helper.getEntityState(entity_id)?.state === UNAVAILABLE).map(entity_id => Helper.entities[entity_id])?.filter(entity => entity !== undefined);
+        const unavailableEntities = entities?.filter(entity_id => {
+          const domain = getEntityDomain(entity_id);
+          return domain && AREA_CARDS_DOMAINS.includes(domain) && Helper.getEntityState(entity_id)?.state === UNAVAILABLE;
+        }).map(entity_id => Helper.entities[entity_id])?.filter(entity => entity !== undefined);
 
         if (!entities || entities.length === 0 || !unavailableEntities) continue;
 

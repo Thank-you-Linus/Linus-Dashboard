@@ -91,7 +91,19 @@ export class RegistryManager {
         { ...entity, entity_id, floor_id: null } as StrategyEntity
       ])
     );
-    this.domains = groupEntitiesByDomain(this.entities);
+    
+    // Build domains mapping: domain -> array of StrategyEntity
+    this.domains = {};
+    for (const entity of Object.values(this.entities)) {
+      const domain = entity.entity_id.split('.')[0];
+      const device_class = (this.hassStates[entity.entity_id]?.attributes as any)?.device_class;
+      const domainTag = `${domain}${device_class ? ":" + device_class : ""}`;
+      
+      if (!this.domains[domainTag]) {
+        this.domains[domainTag] = [];
+      }
+      this.domains[domainTag].push(entity);
+    }
   }
 
   /**
@@ -149,7 +161,7 @@ export class RegistryManager {
         const slug = slugify(area_id);
         const areaEntities = Object.values(this.entities).filter(entity => entity.area_id === area_id);
         const areaDevices = Object.values(this.devices).filter(device => device.area_id === area_id);
-        const domainGroups = groupEntitiesByDomain(Object.fromEntries(areaEntities.map(e => [e.entity_id, e])));
+        const domainGroups = groupEntitiesByDomain(areaEntities.map(e => e.entity_id));
 
         return [
           slug,
@@ -167,7 +179,7 @@ export class RegistryManager {
 
     // Add UNDISCLOSED area for entities without area
     const undisclosedEntities = Object.values(this.entities).filter(entity => !entity.area_id);
-    const undisclosedDomains = groupEntitiesByDomain(Object.fromEntries(undisclosedEntities.map(e => [e.entity_id, e])));
+    const undisclosedDomains = groupEntitiesByDomain(undisclosedEntities.map(e => e.entity_id));
     this.areas[UNDISCLOSED] = {
       area_id: UNDISCLOSED,
       floor_id: UNDISCLOSED,

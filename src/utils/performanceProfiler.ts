@@ -74,7 +74,7 @@ class PerformanceProfiler {
    * @param metadata - Optional metadata to attach to this measurement
    * @returns Timer key to use with end(), or null if profiling is disabled
    */
-  static start(label: string, metadata?: Record<string, any>): string | null {
+  static start(label: string, _metadata?: Record<string, any>): string | null {
     if (!this.enabled) return null;
 
     // Create unique key to support nested/parallel operations

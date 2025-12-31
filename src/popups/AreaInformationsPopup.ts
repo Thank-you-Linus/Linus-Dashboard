@@ -20,7 +20,7 @@ class AreaInformations extends AbstractPopup {
 
         const { area_state } = device?.entities ?? {}
 
-        const { friendly_name, adjoining_areas, features, states, presence_sensors, on_states } = Helper.getEntityState(area_state?.entity_id)?.attributes ?? {}
+        const { friendly_name, adjoining_areas, features, states: _states, presence_sensors, on_states } = Helper.getEntityState(area_state?.entity_id)?.attributes ?? {}
 
         presence_sensors?.sort((a: string, b: string) => {
             const aState = Helper.getEntityState(a);

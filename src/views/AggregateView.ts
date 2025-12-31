@@ -6,6 +6,7 @@ import { StackCardConfig } from "../types/homeassistant/lovelace/cards/types";
 import { TemplateCardConfig } from "../types/lovelace-mushroom/cards/template-card-config";
 import { RefreshChip } from "../chips/RefreshChip";
 import { AggregateChip } from "../chips/AggregateChip";
+import { PerformanceProfiler } from "../utils/performanceProfiler";
 
 import { AbstractView } from "./AbstractView";
 
@@ -59,6 +60,7 @@ class AggregateView extends AbstractView {
    * @override
    */
   override async createSectionBadges(): Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig)[]> {
+    const perfKey = PerformanceProfiler.start('AggregateView.createSectionBadges');
     const badges: (StackCardConfig | TemplateCardConfig | ChipsCardConfig)[] = [];
 
     // 1. Scope navigation chips (global, floors, areas)
@@ -85,21 +87,40 @@ class AggregateView extends AbstractView {
           device_class: this.#device_class,
         };
 
+        // OPTIMIZATION: Single lookup instead of repeated access
         const magic_device = Helper.magicAreasDevices["global"];
         const deviceClasses = this.#device_class
           ? [this.#device_class]
           : DEVICE_CLASSES[this.#domain as keyof typeof DEVICE_CLASSES] ?? [];
 
-        const chips = deviceClasses
-          .flatMap((device_class: string) =>
-            new chipModule({ ...chipOptions, device_class }, magic_device).getChip()
-          )
+        // OPTIMIZATION: Parallel chip creation with Promise.all
+        const chipCreationKey = PerformanceProfiler.start('AggregateView.createControlChips');
+
+        const controlChips = await Promise.all(
+          deviceClasses.map(async (device_class: string) => {
+            try {
+              const chip = new chipModule({ ...chipOptions, device_class }, magic_device);
+              return chip.getChip();
+            } catch (e) {
+              if (Helper.debug) {
+                Helper.logError(`Failed to create control chip for ${device_class}`, e);
+              }
+              return null;
+            }
+          })
+        );
+
+        PerformanceProfiler.end(chipCreationKey);
+
+        // OPTIMIZATION: Single filter pass (no flatMap needed)
+        const validChips = controlChips
+          .filter((chip): chip is any => chip !== null)
           .filter((chip: any) => chip?.icon !== undefined || chip.chip?.icon !== undefined);
 
-        if (chips.length > 0) {
+        if (validChips.length > 0) {
           badges.push({
             type: "custom:mushroom-chips-card",
-            chips,
+            chips: validChips,
             alignment: "end",
           });
         }
@@ -114,6 +135,7 @@ class AggregateView extends AbstractView {
       chips: [refreshChip.getChip()],
     });
 
+    PerformanceProfiler.end(perfKey);
     return badges;
   }
 

@@ -22,37 +22,13 @@ import { ImageAreaCard } from "./cards/ImageAreaCard";
 import { AggregateChip } from "./chips/AggregateChip";
 import { AggregateCard } from "./cards/AggregateCard";
 import { CardFactory } from "./factories/CardFactory";
+import { memoize, MemoizedFunction } from "./utils/memoization";
+import { PerformanceProfiler } from "./utils/performanceProfiler";
 
 import StrategyEntity = generic.StrategyEntity;
 import StrategyArea = generic.StrategyArea;
 import StrategyFloor = generic.StrategyFloor;
 import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
-
-/**
- * Mémoïse une fonction pour éviter les calculs répétitifs.
- * @param {Function} fn - La fonction à mémoïser.
- * @returns {Function} - La fonction mémoïsée.
- */
-function memoize(fn: Function): Function {
-    const cache = new Map();
-    return function (...args: any[]) {
-        // Custom key generation to handle undefined and null correctly
-        // JSON.stringify(["cover", undefined]) gives '["cover"]' which is wrong
-        // We need to distinguish between undefined and null explicitly
-        const key = args.map((arg, i) => {
-            if (arg === undefined) return `__undefined_${i}`;
-            if (arg === null) return `__null_${i}`;
-            return JSON.stringify(arg);
-        }).join('|');
-
-        if (cache.has(key)) {
-            return cache.get(key);
-        }
-        const result = fn(...args);
-        cache.set(key, result);
-        return result;
-    };
-}
 
 /**
  * Groups the elements of an array based on a provided function
@@ -69,7 +45,7 @@ export const groupBy = memoize(function groupBy<T, K extends string | number | s
         result[key].push(item);
         return result;
     }, {} as Record<K, T[]>);
-});
+}, { name: 'groupBy', maxSize: 500 });
 
 /**
  * Converts a string to a slug format.
@@ -87,7 +63,7 @@ export const slugify = memoize(function slugify(text: string | null, separator =
         .replace(/\s+/g, separator)
         .replace(/-/g, "_");
     return slug === "" ? "unknown" : slug;
-});
+}, { name: 'slugify', maxSize: 200 });
 
 /**
  * Get the slug for a magic area device.
@@ -96,7 +72,7 @@ export const slugify = memoize(function slugify(text: string | null, separator =
  */
 export const getMagicAreaSlug = memoize(function getMagicAreaSlug(device: MagicAreaRegistryEntry): string {
     return slugify(device.name ?? "".replace('-', '_'));
-});
+}, { name: 'getMagicAreaSlug', maxSize: 100 });
 
 /**
  * Get the state content for an entity.
@@ -159,7 +135,7 @@ export const getMAEntity = memoize(function getMAEntity(magic_device_id: string,
     if (GROUP_DOMAINS.includes(domain)) return magicAreaDevice?.entities?.[`${domain}_group${device_class ? `_${device_class}` : ''}` as 'cover_group']
     if (device_class && [...DEVICE_CLASSES.binary_sensor, ...DEVICE_CLASSES.sensor].includes(device_class)) return magicAreaDevice?.entities?.[`aggregate_${device_class}` as 'aggregate_motion']
     return magicAreaDevice?.entities?.[domain] ?? undefined
-}) as (magic_device_id: string, domain: string, device_class?: string) => EntityRegistryEntry | undefined;
+}, { name: 'getMAEntity', maxSize: 300 }) as (magic_device_id: string, domain: string, device_class?: string) => EntityRegistryEntry | undefined;
 
 /**
  * Get the domain of an entity.
@@ -168,7 +144,7 @@ export const getMAEntity = memoize(function getMAEntity(magic_device_id: string,
  */
 export const getEntityDomain = memoize(function getEntityDomain(entityId: string): string | undefined {
     return entityId.split(".")[0];
-});
+}, { name: 'getEntityDomain', maxSize: 500 });
 
 /**
  * Group entities by domain.
@@ -179,7 +155,7 @@ export const groupEntitiesByDomain = memoize(function groupEntitiesByDomain(enti
     const grouped = entity_ids.reduce((acc: Record<string, string[]>, entity_id) => {
         const domain = getEntityDomain(entity_id);
         let device_class
-        if (Object.keys(DEVICE_CLASSES).includes(domain)) {
+        if (domain && Object.keys(DEVICE_CLASSES).includes(domain)) {
             const entityState = Helper.getEntityState(entity_id);
             if (entityState?.attributes?.device_class) {
                 device_class = entityState.attributes.device_class;
@@ -213,7 +189,7 @@ export const groupEntitiesByDomain = memoize(function groupEntitiesByDomain(enti
     });
 
     return grouped;
-});
+}, { name: 'groupEntitiesByDomain', maxSize: 300 });
 
 /**
  * Create items (chips or cards) from a list.
@@ -250,7 +226,7 @@ async function createItemsFromList(
         if (!domains.includes(domain)) continue;
 
         if (getGlobalEntitiesExceptUndisclosed(domain, device_class).length === 0) continue;
-        
+
         // For area-specific chips, check if the area has entities for this domain/device_class
         if (area_slug && magic_device_id !== "global") {
             const hasAreaEntities = area_slugs.some(slug => {
@@ -261,7 +237,7 @@ async function createItemsFromList(
             });
             if (!hasAreaEntities) continue;
         }
-        
+
         // For area-specific chips, check if the area has entities for this domain/device_class
         if (area_slug && magic_device_id !== "global") {
             const hasAreaEntities = area_slugs.some(slug => {
@@ -286,7 +262,7 @@ async function createItemsFromList(
                     // Filter out icon property to let AggregateChip calculate it
                     const chipOptions: any = { ...itemOptions };
                     delete chipOptions.icon;
-                    
+
                     item = new AggregateChip({
                         ...chipOptions,
                         domain,
@@ -357,7 +333,7 @@ export const getDomainTranslationKey = memoize(function getDomainTranslationKey(
     if (domain === 'scene') return 'ui.dialogs.quick-bar.commands.navigation.scene'
     if (AGGREGATE_DOMAINS.includes(domain) && device_class) return `component.${domain}.entity_component.${device_class}.name`
     return `component.${domain}.entity_component._.name`
-});
+}, { name: 'getDomainTranslationKey', maxSize: 150 });
 
 /**
  * Get the translation key for a state.
@@ -370,7 +346,7 @@ export const getStateTranslationKey = memoize(function getStateTranslationKey(st
     if (domain === 'scene') return 'ui.dialogs.quick-bar.commands.navigation.scene'
     if (AGGREGATE_DOMAINS.includes(domain)) return `component.${domain}.entity_component.${device_class}.state.${state}`
     return `component.${domain}.entity_component._.name`
-});
+}, { name: 'getStateTranslationKey', maxSize: 200 });
 
 /**
  * Get the name of a floor.
@@ -379,7 +355,7 @@ export const getStateTranslationKey = memoize(function getStateTranslationKey(st
  */
 export const getFloorName = memoize(function getFloorName(floor: StrategyFloor): string {
     return floor.floor_id === UNDISCLOSED ? Helper.localize("ui.components.area-picker.unassigned_areas") : floor.name
-});
+}, { name: 'getFloorName', maxSize: 50 });
 
 /**
  * Get the name of an area.
@@ -388,7 +364,7 @@ export const getFloorName = memoize(function getFloorName(floor: StrategyFloor):
  */
 export const getAreaName = memoize(function getAreaName(area: StrategyArea): string {
     return area.area_id === UNDISCLOSED ? Helper.localize("ui.card.area.area_not_found") : area.name
-});
+}, { name: 'getAreaName', maxSize: 100 });
 
 /**
  * Get global entities except undisclosed.
@@ -446,7 +422,7 @@ export const getGlobalEntitiesExceptUndisclosed = memoize(function getGlobalEnti
         // For other cases, use simple filter
         return !Helper.areas[UNDISCLOSED]?.domains?.[domainTag]?.includes(entity.entity_id);
     }).map(e => e.entity_id) ?? [];
-}) as (domain: string, device_class?: string | null) => string[];
+}, { name: 'getGlobalEntitiesExceptUndisclosed', maxSize: 200 }) as (domain: string, device_class?: string | null) => string[];
 
 /**
  * Add light groups to entities.
@@ -522,7 +498,7 @@ export async function processFloorsAndAreas(
                         // Always pass showControls and extraControls to ControllerCard
                         titleCardOptions.showControls = Helper.strategyOptions.domains[domain]?.showControls;
                         titleCardOptions.extraControls = Helper.strategyOptions.domains[domain]?.extraControls;
-                        
+
                         // Always create controlChipOptions
                         titleCardOptions.controlChipOptions = { device_class, area_slug: area.slug };
 
@@ -556,9 +532,9 @@ export async function processFloorsAndAreas(
                     if ((domain === "sensor" || domain === "binary_sensor") && !device_class) {
                         titleSectionOptions.showControls = false;
                     }
-                    
+
                     titleSectionOptions.extraControls = Helper.strategyOptions.domains[domain]?.extraControls;
-                    
+
                     // Always create controlChipOptions
                     titleSectionOptions.controlChipOptions = {
                         device_class,
@@ -664,9 +640,11 @@ export async function processEntitiesForAreaOrFloorView({
                             if (domain) {
                                 // Apply same logic for ALL domains (aggregate or not)
                                 floorTitleCardOptions.showControls = domainOptions.showControls ?? false;
-                                floorTitleCardOptions.extraControls = domainOptions.extraControls ?? [];
-                                floorTitleCardOptions.controlChipOptions = { area_slug: area.slug };
-                                
+                                floorTitleCardOptions.controlChipOptions = {
+                                    scope: "floor",
+                                    floor_id: floor.floor_id
+                                };
+
                                 // Disable chips for sensor/binary_sensor (too many device_classes)
                                 if (domain === "sensor" || domain === "binary_sensor") {
                                     floorTitleCardOptions.showControls = false;
@@ -696,7 +674,7 @@ export async function processEntitiesForAreaOrFloorView({
                         titleCardOptions.showControls = domainOptions.showControls ?? false;
                         titleCardOptions.extraControls = domainOptions.extraControls ?? [];
                         titleCardOptions.controlChipOptions = { area_slug: area.slug };
-                        
+
                         // Disable chips for sensor/binary_sensor (too many device_classes)
                         if (domain === "sensor" || domain === "binary_sensor") {
                             titleCardOptions.showControls = false;
@@ -809,22 +787,67 @@ export async function processEntitiesForAreaOrFloorView({
  * @param {string} [device_class] - The device class of the entities.
  * @returns {Promise<any[]>} - Promise resolving to an array of cards.
  */
+/**
+ * Process entities for a view with parallel card creation.
+ * Uses batching to avoid overwhelming the dynamic import system.
+ *
+ * @param entities - Entities to process
+ * @returns Promise resolving to array of cards
+ */
 async function processEntities(entities: any[]): Promise<any[]> {
-    const cards: any[] = [];
-    for (const entity of entities) {
+    const perfKey = PerformanceProfiler.start('processEntities', {
+        entityCount: entities.length
+    });
+
+    // Pre-filter entities to avoid processing hidden ones
+    const filteredEntities = entities.filter(entity => {
         const state = Helper.getEntityState(entity.entity_id);
         const entityDomain = state?.entity_id?.split(".")[0];
-        const domainOptions = entityDomain && Helper.strategyOptions.domains ? Helper.strategyOptions.domains[entityDomain] : undefined;
-        const configEntityHidden = (domainOptions?.hide_config_entities ?? false) || (Helper.strategyOptions.domains?.["_"]?.hide_config_entities ?? false);
-        if (Helper.strategyOptions.card_options?.[entity.entity_id]?.hidden) continue;
-        if (Helper.strategyOptions.card_options?.[entity.device_id ?? "null"]?.hidden) continue;
-        if (entity.entity_category === "config" && configEntityHidden) continue;
+        const domainOptions = entityDomain && Helper.strategyOptions.domains
+            ? Helper.strategyOptions.domains[entityDomain]
+            : undefined;
+        const configEntityHidden = (domainOptions?.hide_config_entities ?? false)
+            || (Helper.strategyOptions.domains?.["_"]?.hide_config_entities ?? false);
 
-        // Use CardFactory for consistent card creation with automatic fallback
-        const card = await CardFactory.createCard(entity, {});
-        if (card) {
-            cards.push(card);
-        }
+        if (Helper.strategyOptions.card_options?.[entity.entity_id]?.hidden) return false;
+        if (Helper.strategyOptions.card_options?.[entity.device_id ?? "null"]?.hidden) return false;
+        if (entity.entity_category === "config" && configEntityHidden) return false;
+
+        return true;
+    });
+
+    // Parallel card creation with batching to avoid browser concurrency limits
+    const BATCH_SIZE = 10; // Optimal for browser import concurrency
+    const cards: any[] = [];
+
+    for (let i = 0; i < filteredEntities.length; i += BATCH_SIZE) {
+        const batch = filteredEntities.slice(i, i + BATCH_SIZE);
+
+        const batchKey = PerformanceProfiler.start('processEntities.batch', {
+            batchSize: batch.length,
+            batchIndex: Math.floor(i / BATCH_SIZE)
+        });
+
+        // Process batch in parallel using Promise.all
+        const batchCards = await Promise.all(
+            batch.map(async entity => {
+                try {
+                    return await CardFactory.createCard(entity, {});
+                } catch (e) {
+                    if (Helper.debug) {
+                        Helper.logError(`Failed to create card for ${entity.entity_id}`, e);
+                    }
+                    return null;
+                }
+            })
+        );
+
+        PerformanceProfiler.end(batchKey);
+
+        // Filter out nulls and add to results
+        cards.push(...batchCards.filter((card): card is any => card !== null));
     }
+
+    PerformanceProfiler.end(perfKey, { cardCount: cards.length });
     return cards;
 }

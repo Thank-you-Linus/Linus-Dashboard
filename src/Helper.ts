@@ -7,6 +7,7 @@ import { DEVICE_CLASSES, MAGIC_AREAS_DOMAIN, MAGIC_AREAS_NAME, LINUS_BRAIN_DOMAI
 import { getEntityDomain, getGlobalEntitiesExceptUndisclosed, getMAEntity, getMagicAreaSlug, groupEntitiesByDomain, slugify } from "./utils";
 import { IconResources } from "./types/homeassistant/data/frontend";
 import { LinusDashboardConfig } from "./types/homeassistant/data/linus_dashboard";
+import { PerformanceProfiler } from "./utils/performanceProfiler";
 
 import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
 import StrategyDevice = generic.StrategyDevice;
@@ -358,16 +359,24 @@ class Helper {
    * @static
    */
   static async initialize(info: generic.DashBoardInfo): Promise<void> {
+    const perfKey = PerformanceProfiler.start('Helper.initialize');
+
     // Initialize properties.
     this.#hassStates = info.hass.states;
     this.#hassLocalize = info.hass.localize;
     this.#strategyOptions = merge(configurationDefaults, info.config?.strategy?.options ?? {});
     this.#debug = this.#strategyOptions.debug;
 
+    // Enable profiling in debug mode
+    if (this.#debug) {
+      PerformanceProfiler.enable();
+    }
+
     // console.log('this.#', info.hass)
 
     let homeAssistantRegistries = [];
 
+    const wsKey = PerformanceProfiler.start('Helper.initialize.registries');
     try {
       // Query the registries of Home Assistant.
       homeAssistantRegistries = await Promise.all([
@@ -382,6 +391,8 @@ class Helper {
     } catch (e) {
       Helper.logError("An error occurred while querying Home assistant's registries!", e);
       throw 'Check the console for details';
+    } finally {
+      PerformanceProfiler.end(wsKey, { registryCount: 7 });
     }
 
     const [entities, devices, areas, floors, entity_component_icons, services_icons, linus_dashboard_config] = homeAssistantRegistries as [any[], any[], any[], any[], { resources: any }, { resources: any }, LinusDashboardConfig];
@@ -389,14 +400,25 @@ class Helper {
     this.#icons = merge(entity_component_icons.resources, services_icons.resources);
     this.#linus_dashboard_config = linus_dashboard_config;
 
-    // Dictionaries for quick access
-    const areasById = Object.fromEntries(areas.map((a: any) => [a.area_id, a]));
-    const floorsById = Object.fromEntries(floors.map((f: any) => [f.floor_id, f]));
-    const devicesByAreaIdMap = Object.fromEntries(devices.map((device: any) => [device.id, device.area_id]));
-    const entitiesByDeviceId: Record<string, StrategyEntity[]> = {};
-    const entitiesByAreaId: Record<string, StrategyEntity[]> = {};
-    const devicesByAreaId: Record<string, StrategyDevice[]> = {};
+    // Create Map-based indexes for O(1) lookups (faster than Object)
+    const indexKey = PerformanceProfiler.start('Helper.initialize.indexing');
 
+    const areasById = new Map(areas.map((a: any) => [a.area_id, a]));
+    const floorsById = new Map(floors.map((f: any) => [f.floor_id, f]));
+    const deviceAreaMap = new Map(devices.map((d: any) => [d.id, d.area_id]));
+
+    // Use Map for grouping (faster than Object for frequent set operations)
+    const entitiesByDeviceId = new Map<string, StrategyEntity[]>();
+    const entitiesByAreaId = new Map<string, StrategyEntity[]>();
+    const devicesByAreaId = new Map<string, StrategyDevice[]>();
+
+    PerformanceProfiler.end(indexKey, {
+      areasCount: areas.length,
+      floorsCount: floors.length,
+      devicesCount: devices.length
+    });
+
+    const entityKey = PerformanceProfiler.start('Helper.initialize.entities');
     this.#entities = entities.reduce((acc: any, entity: any) => {
       // Exclusion par entité
       if (!(entity.entity_id in this.#hassStates) || entity.hidden_by) return acc;
@@ -441,8 +463,9 @@ class Helper {
       // Exclusion par classe de dispositif
       if (device_class && Helper.linus_dashboard_config?.excluded_device_classes?.includes(device_class)) return acc;
 
-      const area = entity.area_id ? areasById[entity.area_id] : {} as StrategyArea;
-      const floor = area?.floor_id ? floorsById[area?.floor_id] : {} as StrategyFloor;
+      // Use Map.get() for O(1) lookups (faster than Object property access)
+      const area = entity.area_id ? areasById.get(entity.area_id) : {} as StrategyArea;
+      const floor = area?.floor_id ? floorsById.get(area.floor_id) : {} as StrategyFloor;
       const enrichedEntity = {
         ...entity,
         floor_id: floor?.floor_id || null,
@@ -451,26 +474,33 @@ class Helper {
       acc[entity.entity_id] = enrichedEntity;
 
       if (entity.platform !== MAGIC_AREAS_DOMAIN && entity.platform !== LINUS_BRAIN_DOMAIN) {
-        const areaId = entity.area_id ?? devicesByAreaIdMap[entity.device_id ?? ""] ?? UNDISCLOSED;
-        if (!entitiesByAreaId[areaId]) entitiesByAreaId[areaId] = [];
-        entitiesByAreaId[areaId].push(enrichedEntity);
+        const areaId = entity.area_id ?? deviceAreaMap.get(entity.device_id ?? "") ?? UNDISCLOSED;
+        if (!entitiesByAreaId.has(areaId)) {
+          entitiesByAreaId.set(areaId, []);
+        }
+        entitiesByAreaId.get(areaId)!.push(enrichedEntity);
       }
 
       if (entity.device_id) {
-        if (!entitiesByDeviceId[entity.device_id]) entitiesByDeviceId[entity.device_id] = [];
-        entitiesByDeviceId[entity.device_id]?.push(enrichedEntity);
+        if (!entitiesByDeviceId.has(entity.device_id)) {
+          entitiesByDeviceId.set(entity.device_id, []);
+        }
+        entitiesByDeviceId.get(entity.device_id)!.push(enrichedEntity);
       }
 
       if (entity.platform !== MAGIC_AREAS_DOMAIN && entity.platform !== LINUS_BRAIN_DOMAIN) this.#domains[domainTag].push(enrichedEntity);
 
       return acc;
     }, {} as Record<string, StrategyEntity>);
+    PerformanceProfiler.end(entityKey, { entityCount: entities.length });
 
     // Enrich devices
+    const deviceKey = PerformanceProfiler.start('Helper.initialize.devices');
     this.#devices = devices.reduce((acc, device) => {
-      const entitiesInDevice = entitiesByDeviceId[device.id] || [];
-      const area = device.area_id ? areasById[device.area_id] : {} as StrategyArea;
-      const floor = area?.floor_id ? floorsById[area?.floor_id] : {} as StrategyFloor;
+      // Use Map.get() - O(1) instead of Object property access
+      const entitiesInDevice = entitiesByDeviceId.get(device.id) || [];
+      const area = device.area_id ? areasById.get(device.area_id) : {} as StrategyArea;
+      const floor = area?.floor_id ? floorsById.get(area.floor_id) : {} as StrategyFloor;
 
       const enrichedDevice = {
         ...device,
@@ -482,8 +512,10 @@ class Helper {
 
       if (device.manufacturer !== MAGIC_AREAS_NAME) {
         const areaId = device.area_id ?? UNDISCLOSED;
-        if (!devicesByAreaId[areaId]) devicesByAreaId[areaId] = [];
-        devicesByAreaId[areaId].push(enrichedDevice);
+        if (!devicesByAreaId.has(areaId)) {
+          devicesByAreaId.set(areaId, []);
+        }
+        devicesByAreaId.get(areaId)!.push(enrichedDevice);
       }
 
       if (device.manufacturer === MAGIC_AREAS_NAME) {
@@ -501,6 +533,7 @@ class Helper {
 
       return acc;
     }, {} as Record<string, StrategyDevice>);
+    PerformanceProfiler.end(deviceKey, { deviceCount: devices.length });
 
     // Create and add the undisclosed area if not hidden in the strategy options.
     if (!this.#strategyOptions.areas.undisclosed?.hidden) {
@@ -512,10 +545,14 @@ class Helper {
     }
 
     // Enrich areas
+    const areaKey = PerformanceProfiler.start('Helper.initialize.areas');
     this.#areas = areas.reduce((acc, area) => {
-      const areaEntities = entitiesByAreaId[area.area_id]?.map(entity => entity.entity_id) || [];
+      // Use Map.get() for O(1) lookups
+      const areaEntitiesArray = entitiesByAreaId.get(area.area_id) || [];
+      const areaEntities = areaEntitiesArray.map(entity => entity.entity_id);
       const slug = area.area_id === UNDISCLOSED ? area.area_id : slugify(area.name);
 
+      // Keep Object.values().find() for magicAreaDevice (only called once per area)
       const magicAreaDevice = Object.values(this.#devices).find(device => device.manufacturer === MAGIC_AREAS_NAME && device.name === area.name);
 
       const enrichedArea = {
@@ -523,7 +560,7 @@ class Helper {
         floor_id: area?.floor_id || UNDISCLOSED,
         slug,
         domains: groupEntitiesByDomain(areaEntities) ?? {},
-        devices: devicesByAreaId[area.area_id]?.map(device => device.id) || [],
+        devices: (devicesByAreaId.get(area.area_id) || []).map(device => device.id),
         ...(magicAreaDevice && { magicAreaDevice }),
         entities: areaEntities,
       };
@@ -531,6 +568,7 @@ class Helper {
       acc[slug] = enrichedArea;
       return acc;
     }, {} as Record<string, StrategyArea>);
+    PerformanceProfiler.end(areaKey, { areaCount: areas.length });
 
     // Create and add the undisclosed floor if not hidden in the strategy options.
     if (!this.#strategyOptions.areas.undisclosed?.hidden) {
@@ -542,6 +580,7 @@ class Helper {
     }
 
     // Enrich floors
+    const floorKey = PerformanceProfiler.start('Helper.initialize.floors');
     this.#floors = floors.reduce((acc, floor) => {
       const areasInFloor = Object.values(this.#areas).filter(area => area?.floor_id === floor.floor_id);
 
@@ -552,6 +591,7 @@ class Helper {
 
       return acc;
     }, {} as Record<string, StrategyFloor>);
+    PerformanceProfiler.end(floorKey, { floorCount: floors.length });
 
     // Sort custom and default views of the strategy options by order first and then by title.
     this.#strategyOptions.views = Object.fromEntries(
@@ -600,11 +640,24 @@ class Helper {
       }
     }
 
+    // Preload common components for faster subsequent loads
+    const { ComponentRegistry } = await import("./utils/componentRegistry");
+    const preloadKey = PerformanceProfiler.start('Helper.initialize.preload');
+    await ComponentRegistry.preloadCommon();
+    PerformanceProfiler.end(preloadKey);
+
     // Initialize entity resolver for Linus Brain / Magic Areas hybrid support
     const { EntityResolver } = await import("./utils/entityResolver");
     this.#entityResolver = new EntityResolver(info.hass);
 
     this.#initialized = true;
+
+    PerformanceProfiler.end(perfKey);
+
+    // Print summary in debug mode
+    if (this.#debug) {
+      PerformanceProfiler.printSummary();
+    }
   }
 
   /**

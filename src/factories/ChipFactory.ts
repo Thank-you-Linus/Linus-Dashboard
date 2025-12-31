@@ -1,5 +1,6 @@
 import { Helper } from "../Helper";
 import { LovelaceChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
+import { ComponentRegistry } from "../utils/componentRegistry";
 
 /**
  * Chip Factory
@@ -43,8 +44,11 @@ export class ChipFactory {
   ): Promise<LovelaceChipConfig | null> {
     try {
       const sanitizedClassName = Helper.sanitizeClassName(chipClassName);
-      // Note: Dynamic import path must be literal for webpack/rspack
-      const chipModule = await import(`../chips/${sanitizedClassName}`);
+      const chipModule = await ComponentRegistry.getChip(sanitizedClassName);
+
+      if (!chipModule || !chipModule[sanitizedClassName]) {
+        return null;
+      }
 
       const chipInstance = new chipModule[sanitizedClassName](options);
       return chipInstance.getChip();

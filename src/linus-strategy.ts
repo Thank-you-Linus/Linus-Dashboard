@@ -8,6 +8,7 @@ import { FloorView } from "./views/FloorView";
 import { ResourceKeys } from "./types/homeassistant/data/frontend";
 import { initVersionCheck } from "./version-check";
 import { processEmbeddedViews, loadEmbeddedDashboard, applyEmbeddedViewMetadata } from "./embedLovelace";
+import { PerformanceProfiler } from "./utils/performanceProfiler";
 
 // Extend Window interface for refresh listener flag
 declare global {
@@ -39,6 +40,8 @@ class LinusStrategy extends HTMLTemplateElement {
    * @return {Promise<LovelaceConfig>}
    */
   static async generateDashboard(info: generic.DashBoardInfo): Promise<LovelaceConfig> {
+    const perfKey = PerformanceProfiler.start('generateDashboard');
+
     if (!Helper.isInitialized()) await Helper.initialize(info);
 
     // Initialize version check (runs async, doesn't block dashboard generation)
@@ -111,6 +114,8 @@ class LinusStrategy extends HTMLTemplateElement {
         views.push(extraView);
       }
     }
+
+    PerformanceProfiler.end(perfKey);
 
     return { views };
   }

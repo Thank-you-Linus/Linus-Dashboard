@@ -1,6 +1,7 @@
 import { Helper } from "../Helper";
 import { LovelaceCardConfig } from "../types/homeassistant/data/lovelace";
 import { generic } from "../types/strategy/generic";
+import { ComponentRegistry } from "../utils/componentRegistry";
 
 type StrategyEntity = generic.StrategyEntity;
 
@@ -48,21 +49,23 @@ export class CardFactory {
 
       // Try device_class-specific card first
       if (entityDeviceClass) {
-        try {
-          const className = Helper.sanitizeClassName(entityDeviceClass + "Card");
-          // Note: Dynamic import path must be literal for webpack/rspack
-          const cardModule = await import(`../cards/${className}`);
+        const className = Helper.sanitizeClassName(entityDeviceClass + "Card");
+        const cardModule = await ComponentRegistry.getCard(className);
+
+        if (cardModule && cardModule[className]) {
           return new cardModule[className](options, entity).getCard();
-        } catch {
-          // Fallback to domain card (will be caught by outer try-catch)
         }
       }
 
       // Fallback to domain card
       const className = Helper.sanitizeClassName(entityDomain + "Card");
-      // Note: Dynamic import path must be literal for webpack/rspack
-      const cardModule = await import(`../cards/${className}`);
-      return new cardModule[className](options, entity).getCard();
+      const cardModule = await ComponentRegistry.getCard(className);
+
+      if (cardModule && cardModule[className]) {
+        return new cardModule[className](options, entity).getCard();
+      }
+
+      return null;
 
     } catch (error) {
       if (Helper.debug) {
@@ -93,8 +96,11 @@ export class CardFactory {
   ): Promise<LovelaceCardConfig | null> {
     try {
       const sanitizedClassName = Helper.sanitizeClassName(className);
-      // Note: Dynamic import path must be literal for webpack/rspack
-      const cardModule = await import(`../cards/${sanitizedClassName}`);
+      const cardModule = await ComponentRegistry.getCard(sanitizedClassName);
+
+      if (!cardModule || !cardModule[sanitizedClassName]) {
+        return null;
+      }
 
       if (entity) {
         return new cardModule[sanitizedClassName](options, entity).getCard();

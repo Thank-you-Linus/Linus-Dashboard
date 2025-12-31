@@ -20,7 +20,9 @@
     </a>
   </p>
 
-  ![Statut Validation](https://github.com/Thank-you-Linus/Linus-Dashboard/actions/workflows/validate.yml/badge.svg) ![Statut Lint](https://github.com/Thank-you-Linus/Linus-Dashboard/actions/workflows/lint.yml/badge.svg) [![Dernière version](https://img.shields.io/github/v/release/Thank-you-Linus/Linus-Dashboard.svg)](https://github.com/Thank-you-Linus/Linus-Dashboard/releases) [![Dernier commit](https://badgen.net/github/last-commit/Thank-you-Linus/Linus-Dashboard)](https://github.com/Thank-you-Linus/Linus-Dashboard/commit/) [![Contributeurs GitHub](https://badgen.net/github/contributors/Thank-you-Linus/Linus-Dashboard)](https://GitHub.com/Thank-you-Linus/Linus-Dashboard/graphs/contributors/)
+![Statut Validation](https://github.com/Thank-you-Linus/Linus-Dashboard/actions/workflows/validate.yml/badge.svg) ![Statut Lint](https://github.com/Thank-you-Linus/Linus-Dashboard/actions/workflows/lint.yml/badge.svg) [![Dernière version](https://img.shields.io/github/v/release/Thank-you-Linus/Linus-Dashboard.svg)](https://github.com/Thank-you-Linus/Linus-Dashboard/releases) [![Dernier commit](https://badgen.net/github/last-commit/Thank-you-Linus/Linus-Dashboard)](https://github.com/Thank-you-Linus/Linus-Dashboard/commit/) [![Contributeurs GitHub](https://badgen.net/github/contributors/Thank-you-Linus/Linus-Dashboard)](https://GitHub.com/Thank-you-Linus/Linus-Dashboard/graphs/contributors/)
+
+[![My Home Assistant](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=Thank-you-Linus&repository=Linus-Dashboard)
 
   <p align="center">
     <a href="https://www.instagram.com/thankyoulinus.ai/">
@@ -47,23 +49,108 @@
   <br />
 </div>
 
-## ✨ Qu’est-ce que Linus Dashboard ?
+## 🚀 Pourquoi Linus Dashboard ?
+
+### Le Problème avec les Tableaux de Bord Traditionnels
+
+- 😓 **Organiser manuellement 100+ appareils prend des heures** d'édition YAML
+- 🔄 **Chaque nouvel appareil nécessite une reconfiguration** à travers plusieurs vues
+- 📱 **Configuration complexe** juste pour une navigation basique
+- 👨‍👩‍👧 **Les membres de la famille ne trouvent pas les contrôles** dans votre tableau de bord personnalisé
+
+### Comment Linus Résout Ces Problèmes
+
+✅ **5 minutes de configuration** vs 2+ heures de configuration manuelle
+✅ **2 clics maximum** pour accéder à n'importe quel appareil
+✅ **Zéro YAML** - configuration visuelle uniquement
+✅ **Organisation automatique** - les nouveaux appareils apparaissent instantanément au bon endroit
+
+### Résultats Concrets
+
+⚡ Supporte de 10 à 1000+ appareils sans effort
+🎯 Navigation intuitive que tout le monde peut comprendre
+📊 Fonctionne seul ou aux côtés de vos tableaux de bord personnalisés
+
+---
+
+## ✨ Qu'est-ce que Linus Dashboard ?
 
 Linus Dashboard est un tableau de bord magique Plug n Play conçu pour simplifier et améliorer votre expérience Home Assistant.
-Il organise automatiquement vos appareils en sections intelligentes, regroupées par pièces et types d’appareils, sans nécessiter de configuration compliquée.
+Il organise automatiquement vos appareils en sections intelligentes, regroupées par pièces et types d'appareils, sans nécessiter de configuration compliquée.
 
-**Principaux avantages** :
+**Fonctionnalités principales** :
 
-- 🏠 **Sections intelligentes basées sur les pièces** : affiche automatiquement les appareils par pièce pour une navigation facile.
-- 📟 **Vues centrées sur les appareils** : accédez rapidement aux lumières, capteurs et interrupteurs.
-- 🎨 **Design élégant et réactif** : s'adapte parfaitement à toutes les tailles d'écran.
-- 🔗 **Intégration de tableaux de bord personnalisés** : intégrez vos propres tableaux de bord de manière transparente. [En savoir plus →](docs/EMBEDDED_DASHBOARDS.md)
-- ⚡ **Installation sans tracas** : branchez, utilisez et profitez.
+- 🏠 **Navigation Intelligente par Pièce**
+  Toutes les lumières, capteurs et contrôles climatiques de votre chambre au même endroit. Plus besoin de chercher dans les listes d'entités.
+
+- 📟 **Vues Appareil qui Font Sens**
+  Contrôlez toutes vos lumières de la maison depuis un seul écran. Même chose pour les volets, interrupteurs ou tout type d'appareil.
+
+- 🎨 **Magnifique sur Tous les Écrans**
+  S'adapte automatiquement au mobile, tablette et desktop. Superbe partout.
+
+- 🔗 **Gardez Vos Tableaux de Bord Personnalisés**
+  Vous avez déjà créé la vue énergétique parfaite ? Intégrez-la dans Linus ! [En savoir plus →](docs/EMBEDDED_DASHBOARDS.md)
+
+- ⚡ **Installation en 5 Minutes**
+  Branchez, utilisez et profitez. Aucun YAML requis.
 
 Que vous utilisiez déjà [hass-magic_areas](https://github.com/jseidl/hass-magic_areas) ou que vous débutiez avec Home Assistant, Linus Dashboard est la solution idéale pour une interface propre, organisée et intuitive.
 
-> **Envie de découvrir tout le potentiel de l’automatisation et de la personnalisation de votre maison connectée ?**
+> **Envie de découvrir tout le potentiel de l'automatisation et de la personnalisation de votre maison connectée ?**
 > Explorez [thankyou-linus.com](https://thankyou-linus.com/) pour en savoir plus sur Linus et bien plus encore.
+
+---
+
+## 🎥 Ils Parlent de Nous
+
+Découvrez ce que dit la communauté sur Linus Dashboard !
+
+<div align="center">
+
+### Critiques & Tutoriels en Vedette
+
+[![BeardedTinker - Présentation Linus Dashboard](https://img.youtube.com/vi/GHE_UIczBCQ/maxresdefault.jpg)](https://www.youtube.com/watch?v=GHE_UIczBCQ&t=367s)
+**BeardedTinker** - Présentation Complète de Linus Dashboard & Guide d'Installation
+
+---
+
+[![Tutoriel Complet Linus Dashboard](https://img.youtube.com/vi/T5vjP3gI1Zw/maxresdefault.jpg)](https://www.youtube.com/watch?v=T5vjP3gI1Zw)
+**Tutoriel Complet** - Tout Ce Qu'il Faut Savoir sur Linus Dashboard
+
+---
+
+[![Guide de Configuration Linus Dashboard](https://img.youtube.com/vi/lVhrBDsblEY/maxresdefault.jpg)](https://www.youtube.com/watch?v=lVhrBDsblEY)
+**Guide de Configuration** - Démarrage Rapide avec Linus Dashboard
+
+</div>
+
+**Vous voulez créer du contenu sur Linus Dashboard ?** On adorerait vous mettre en avant ici ! Contactez-nous sur [Discord](https://discord.gg/cZ7NH4ex) ou taguez-nous sur les réseaux sociaux.
+
+---
+
+## 🎨 Gardez Vos Tableaux de Bord Personnalisés
+
+Vous avez déjà créé la vue parfaite pour le monitoring énergétique ? Une grille de caméras ? Un centre multimédia ?
+
+**Ne repartez pas de zéro** - intégrez vos tableaux de bord existants directement dans Linus !
+
+![Linus Dashboard avec Vue Énergétique Intégrée](images/screenshots/embedded-dashboard-example.png)
+*Exemple : Tableau de bord énergétique intégré de manière transparente dans Linus*
+
+✅ **Utilisez Linus** pour l'organisation automatique des appareils
+✅ **Gardez vos vues personnalisées** pour le monitoring spécialisé
+✅ **Intégration transparente** - tout au même endroit
+
+**Cas d'usage populaires :**
+- 📊 Monitoring énergétique avec graphiques historiques
+- 📹 Vue multi-caméras de sécurité
+- 🎵 Centre de contrôle multimédia
+- 🌡️ Tableaux de bord climat & qualité de l'air
+
+[Guide complet avec configuration étape par étape →](docs/EMBEDDED_DASHBOARDS.md)
+
+---
 
 ## 🌟 Fonctionnalités que vous allez adorer
 
@@ -89,8 +176,9 @@ Que vous utilisiez déjà [hass-magic_areas](https://github.com/jseidl/hass-magi
   <img src="https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/images/screenshots/aggregate-views-fr.jpg?raw=true" alt="Vue agrégée">
 </div>
 
+## 📦 Guide d'installation
 
-## 📦 Guide d’installation
+**Nouveau sur Linus?** → [🚀 Guide de Démarrage Rapide 5 Minutes](docs/QUICK_START.md)
 
 ### Prérequis
 
@@ -99,11 +187,11 @@ Que vous utilisiez déjà [hass-magic_areas](https://github.com/jseidl/hass-magi
 
 ### 🎥 **Tutoriel d’installation**
 
-* **Option 1:** Pour un guide complet, regardez la vidéo YouTube de l’excellent @BeardedConti où il présente le Linus Dashboard et explique le processus d’installation (vidéo en anglais, sous-titres disponibles) :
-:arrow_forward: [Voir la vidéo](https://www.youtube.com/watch?v=GHE_UIczBCQ&t=367s&ab_channel=BeardedTinker)
+- **Option 1:** Pour un guide complet, regardez la vidéo YouTube de l’excellent @BeardedConti où il présente le Linus Dashboard et explique le processus d’installation (vidéo en anglais, sous-titres disponibles) :
+  :arrow_forward: [Voir la vidéo](https://www.youtube.com/watch?v=GHE_UIczBCQ&t=367s&ab_channel=BeardedTinker)
 
-* **Option 2:** Pour un aperçu visuel rapide, voici une capture d’écran silencieuse montrant le processus d’installation :
-[**Lien de la vidéo**](https://youtu.be/MLkVmtXgNBE?si=clJ1sREewRWDkTnE)
+- **Option 2:** Pour un aperçu visuel rapide, voici une capture d’écran silencieuse montrant le processus d’installation :
+  [**Lien de la vidéo**](https://youtu.be/MLkVmtXgNBE?si=clJ1sREewRWDkTnE)
 
 ### Méthodes d’installation
 
@@ -132,32 +220,62 @@ Après l’installation, suivez ces étapes :
 5. Une fois la configuration terminée, un nouvel **icône avec un nœud papillon** apparaîtra dans le menu de gauche. Cliquez dessus pour accéder directement à Linus Dashboard.
 
 #### ✨ Astuce
+
 - Si l’icône n’apparaît pas immédiatement, essayez de redémarrer Home Assistant à nouveau.
 
 ---
 
-### ❗ Dépannage
+## ❓ Foire Aux Questions
 
-#### Correction des erreurs de délai d’attente ou des messages d’erreur rouges
+### Installation & Configuration
 
-Si vous voyez un message d’erreur comme ci-dessous :
+**Q: Je ne vois pas l'icône nœud papillon 🎀**
+1. Redémarrez Home Assistant (Paramètres → Système → Redémarrer)
+2. Videz le cache du navigateur (Ctrl+F5 ou Cmd+Shift+R)
+3. Vérifiez que l'intégration Linus Dashboard est configurée (Paramètres → Appareils et services)
+
+**Q: Mes appareils ne s'affichent pas**
+- ✅ Vérifiez que l'appareil est assigné à une zone (Paramètres → Zones)
+- ✅ Vérifiez que l'appareil n'est pas dans les domaines exclus (Paramètres → Configuration Linus Dashboard)
+- ✅ Certaines entités sont intentionnellement cachées (non disponibles, entités de configuration)
+
+**Q: Comment réorganiser mes pièces ?**
+Avec Home Assistant 2025.1+, vous pouvez glisser-déposer les pièces directement dans les paramètres HA (Paramètres → Zones et secteurs). Linus respecte automatiquement votre ordre manuel.
+[En savoir plus →](docs/MANUAL_ORDERING.md)
+
+### Fonctionnalités & Compatibilité
+
+**Q: Puis-je utiliser Linus avec mon tableau de bord existant ?**
+**Oui !** Utilisez les tableaux de bord intégrés pour intégrer vos vues personnalisées de manière transparente. Vous pouvez garder votre monitoring énergétique, vues caméras ou tout tableau de bord personnalisé tout en profitant de l'organisation automatique de Linus.
+[Guide de configuration →](docs/EMBEDDED_DASHBOARDS.md)
+
+**Q: Ai-je besoin de Linus Brain ?**
+**Non** - Linus Dashboard fonctionne de manière autonome. Linus Brain est une mise à niveau optionnelle pour la détection d'activité par IA et l'automatisation avancée.
+[Comparer les fonctionnalités →](https://thankyou-linus.com/)
+
+**Q: Est-ce que Linus fonctionne avec Magic Areas ?**
+**Oui !** Linus détecte automatiquement les entités Magic Areas et les intègre magnifiquement. Que vous utilisiez Magic Areas ou simplement les zones natives de HA, Linus s'adapte automatiquement.
+
+### Dépannage
+
+**Q: Je vois une erreur timeout ou un message rouge**
 
 ![Erreur Timeout](https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/images/timeout-error.png?raw=true)
 
-**Procédez comme suit** :
+**Procédez comme suit :**
 
-1. **Videz le cache** :
-   - Navigateur : effacez le cache de votre navigateur.
-   - Application mobile Home Assistant : videz le cache de l’application via les paramètres de votre appareil.
-   - Si vous utilisez un proxy inverse ou un service DNS (Cloudflare par exemple), videz également le cache.
+1. **Videz le cache :**
+   - Navigateur : effacez le cache de votre navigateur
+   - Application mobile Home Assistant : videz le cache de l'application via les paramètres de votre appareil
+   - Si vous utilisez un proxy inverse ou un service DNS (Cloudflare par exemple), videz également le cache
 
-2. **Forcez un rafraîchissement** :
-   - **Windows** : appuyez sur `CTRL + F5`.
-   - **Mac** : maintenez `⇧ Shift` et cliquez sur le bouton de rechargement, ou maintenez `⌘ Cmd` + `⇧ Shift` puis appuyez sur `R`.
+2. **Forcez un rafraîchissement :**
+   - **Windows** : appuyez sur `CTRL + F5`
+   - **Mac** : maintenez `⇧ Shift` et cliquez sur le bouton de rechargement, ou maintenez `⌘ Cmd` + `⇧ Shift` puis appuyez sur `R`
 
-3. **Vérifiez votre configuration** : assurez-vous que votre instance Home Assistant est correctement configurée et qu’il n’y a pas de problèmes réseau.
+3. **Vérifiez votre configuration :** assurez-vous que votre instance Home Assistant est correctement configurée et qu'il n'y a pas de problèmes réseau
 
-Si le problème persiste, ouvrez un ticket sur le [dépôt GitHub](https://github.com/Thank-you-Linus/Linus-Dashboard/issues) en fournissant des détails sur votre configuration et le message d’erreur.
+**Vous rencontrez toujours des problèmes ?** Ouvrez un ticket sur le [dépôt GitHub](https://github.com/Thank-you-Linus/Linus-Dashboard/issues) avec les détails de votre configuration et le message d'erreur.
 
 ## 📣 Rejoignez la communauté
 

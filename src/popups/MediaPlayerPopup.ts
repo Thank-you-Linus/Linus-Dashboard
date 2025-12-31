@@ -127,8 +127,8 @@ class MediaPlayerPopup extends AggregatePopup {
       type: "tile",
       entity: entity_id,
       features: [
-        { type: "media-player-controls" },
-        { type: "volume" }
+        { type: "media-player-playback" },
+        { type: "media-player-volume-slider" }
       ]
     }));
   }

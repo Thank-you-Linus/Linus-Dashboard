@@ -7,8 +7,39 @@
 
 ## ✨ What's New
 
-- **State-aware dynamic icons for badges** - Badge icons now dynamically change based on entity state (e.g., climate heating/cooling, cover open/closed), providing instant visual feedback without opening the popup
-- **Navigation mode for HomeView chips** - HomeView chips can now navigate directly to area views instead of opening popups, offering faster access to specific rooms
+### 🎨 State-Aware Dynamic Icons for Badges
+
+![State-aware badge icons](images/screenshots/state-aware-badges.gif)
+*Badge icons change automatically based on what your devices are doing*
+
+**What it does:** Badge icons now change based on what your devices are actually doing - see at a glance if your AC is heating or cooling, if covers are open or closed, without opening any popup.
+
+**Where to find it:** Look at climate, cover, light, and switch badges on any room card
+
+**Why it matters:** Faster visual feedback, less clicking needed
+
+📖 [Technical details](docs/DASHBOARD_ENHANCEMENTS.md#state-aware-icons)
+
+---
+
+### 🚀 Navigation Mode for HomeView Chips
+
+![Navigation mode in action](images/screenshots/navigation-mode.gif)
+*Click a room chip to jump directly to that room - no popup*
+
+**What it does:** HomeView chips can now navigate directly to area views instead of opening popups, offering faster access to specific rooms.
+
+**Where to find it:** Enable in Settings → Linus Dashboard → Navigation Mode (coming soon)
+
+**Why it matters:** Skip the popup, jump directly to the room you want. Two clicks become one.
+
+📖 [Configuration guide](docs/DASHBOARD_ENHANCEMENTS.md#navigation-mode)
+
+---
+
+### Other New Features
+
+- **Device class-specific chips for covers** - Cover entities now display specialized control chips based on their device class (blinds, shutters, curtains), with appropriate icons and controls
 - **Device class-specific chips for covers** - Cover entities now display specialized control chips based on their device class (blinds, shutters, curtains), with appropriate icons and controls
 - **Smart control chips for Switch, Fan, and MediaPlayer** - Added intelligent control chips that provide quick actions directly from the view without opening popups (toggle switches, fan speed control, media playback)
 - **RefreshChip on all dashboard views** - Added a refresh button to all views with improved visual feedback, allowing manual registry refresh without reloading the entire dashboard

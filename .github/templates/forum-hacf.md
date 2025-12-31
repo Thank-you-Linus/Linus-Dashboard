@@ -11,6 +11,7 @@ Je suis ravi d'annoncer la sortie de **Linus Dashboard {{VERSION}}** !
 ## 📦 Installation
 
 ### Via HACS (Recommandé)
+
 1. Ouvrez HACS dans votre instance Home Assistant
 2. Recherchez "Linus Dashboard"
 3. Cliquez sur **Installer**
@@ -18,6 +19,7 @@ Je suis ravi d'annoncer la sortie de **Linus Dashboard {{VERSION}}** !
 5. Videz le cache de votre navigateur (Ctrl+F5)
 
 ### Installation Manuelle
+
 1. Téléchargez la dernière version depuis [GitHub Releases]({{RELEASE_URL}})
 2. Extrayez le dossier `linus_dashboard` dans votre répertoire `custom_components`
 3. Redémarrez Home Assistant
@@ -32,7 +34,7 @@ Si vous rencontrez des problèmes, merci de les signaler sur [GitHub Issues](htt
 
 ## 💬 Communauté
 
-- **Discord**: Rejoignez-nous sur https://discord.gg/cZ7NH4ex
+- **Discord**: Rejoignez-nous sur https://discord.com/invite/ej2Xn4GTww
 - **Documentation**: https://github.com/Thank-you-Linus/Linus-Dashboard
 - **Forum HA (Anglais)**: https://community.home-assistant.io/t/linus-dashboard-plug-n-play-magic-dashboard-with-smart-sections-for-rooms-and-devices
 

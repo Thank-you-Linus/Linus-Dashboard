@@ -12,7 +12,7 @@
     <a href="https://community.home-assistant.io/t/looking-for-beta-testers-for-linus-dashboard-integration/804564">
       <img src="https://img.shields.io/badge/Home%20Assistant-Community%20Forum-blue?logo=home-assistant" alt="Forum Communautaire Home Assistant"/>
     </a>
-    <a href="https://discord.gg/cZ7NH4ex">
+    <a href="https://discord.com/invite/ej2Xn4GTww">
       <img src="https://discordapp.com/api/guilds/1104794215440978042/widget.png?style=shield" alt="Communauté Discord"/>
     </a>
     <a href="https://github.com/Thank-you-Linus/Linus-Dashboard/stargazers">
@@ -20,7 +20,7 @@
     </a>
   </p>
 
-![Statut Validation](https://github.com/Thank-you-Linus/Linus-Dashboard/actions/workflows/validate.yml/badge.svg) ![Statut CI](https://github.com/Thank-you-Linus/Linus-Dashboard/actions/workflows/ci.yml/badge.svg) [![Dernière version](https://img.shields.io/github/v/release/Thank-you-Linus/Linus-Dashboard.svg)](https://github.com/Thank-you-Linus/Linus-Dashboard/releases) [![Dernier commit](https://badgen.net/github/last-commit/Thank-you-Linus/Linus-Dashboard)](https://github.com/Thank-you-Linus/Linus-Dashboard/commit/) [![Contributeurs GitHub](https://badgen.net/github/contributors/Thank-you-Linus/Linus-Dashboard)](https://GitHub.com/Thank-you-Linus/Linus-Dashboard/graphs/contributors/)
+![HACS Validation](https://github.com/Thank-you-Linus/Linus-Dashboard/actions/workflows/validate.yml/badge.svg) ![Statut Check](https://github.com/Thank-you-Linus/Linus-Dashboard/actions/workflows/main-check.yml/badge.svg) [![Dernière version](https://img.shields.io/github/v/release/Thank-you-Linus/Linus-Dashboard.svg)](https://github.com/Thank-you-Linus/Linus-Dashboard/releases) [![Dernier commit](https://badgen.net/github/last-commit/Thank-you-Linus/Linus-Dashboard)](https://github.com/Thank-you-Linus/Linus-Dashboard/commit/) [![Contributeurs GitHub](https://badgen.net/github/contributors/Thank-you-Linus/Linus-Dashboard)](https://GitHub.com/Thank-you-Linus/Linus-Dashboard/graphs/contributors/)
 
 [![My Home Assistant](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=Thank-you-Linus&repository=Linus-Dashboard)
 
@@ -61,14 +61,19 @@
 ### Comment Linus Résout Ces Problèmes
 
 ✅ **5 minutes de configuration** vs 2+ heures de configuration manuelle
+
 ✅ **2 clics maximum** pour accéder à n'importe quel appareil
+
 ✅ **Zéro YAML** - configuration visuelle uniquement
+
 ✅ **Organisation automatique** - les nouveaux appareils apparaissent instantanément au bon endroit
 
 ### Résultats Concrets
 
 ⚡ Supporte de 10 à 1000+ appareils sans effort
+
 🎯 Navigation intuitive que tout le monde peut comprendre
+
 📊 Fonctionne seul ou aux côtés de vos tableaux de bord personnalisés
 
 ---
@@ -125,7 +130,7 @@ Découvrez ce que dit la communauté sur Linus Dashboard !
 
 </div>
 
-**Vous voulez créer du contenu sur Linus Dashboard ?** On adorerait vous mettre en avant ici ! Contactez-nous sur [Discord](https://discord.gg/cZ7NH4ex) ou taguez-nous sur les réseaux sociaux.
+**Vous voulez créer du contenu sur Linus Dashboard ?** On adorerait vous mettre en avant ici ! Contactez-nous sur [Discord](https://discord.com/invite/ej2Xn4GTww) ou taguez-nous sur les réseaux sociaux.
 
 ---
 
@@ -286,7 +291,7 @@ Avec Home Assistant 2025.1+, vous pouvez glisser-déposer les pièces directemen
 
 - 🌟 **Soutenez-nous** : [Étoiles GitHub](https://github.com/Thank-you-Linus/Linus-Dashboard/stargazers)
 - 🐛 **Signaler un problème** : [Issues GitHub](https://github.com/Thank-you-Linus/Linus-Dashboard/issues)
-- 💬 **Retour et support** : [Discord](https://discord.gg/cZ7NH4ex)
+- 💬 **Retour et support** : [Discord](https://discord.com/invite/ej2Xn4GTww)
 
 ## ❤️ Contribuer
 

@@ -571,12 +571,6 @@ class Helper {
     // Note: The actual view metadata (title, icon, type) will be populated
     // by the strategy when loading the embedded dashboards
     if (linus_dashboard_config.embedded_dashboards?.length) {
-      if (this.#debug) {
-        console.warn(
-          "[Linus Dashboard] Found embedded_dashboards config:",
-          linus_dashboard_config.embedded_dashboards
-        );
-      }
 
       if (!this.#strategyOptions.extra_views) {
         this.#strategyOptions.extra_views = [];
@@ -603,13 +597,6 @@ class Helper {
           // Store config for later use (TypeScript will complain but it's ok)
           _embedConfig: embedConfig,
         } as any);
-      }
-
-      if (this.#debug) {
-        console.warn(
-          "[Linus Dashboard] Generated extra views from embedded dashboards:",
-          this.#strategyOptions.extra_views
-        );
       }
     }
 

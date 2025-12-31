@@ -56,16 +56,19 @@ All your devices are automatically organized by room and type. No configuration 
 Want to go further? Here are popular customizations:
 
 ### Embed Your Custom Dashboards
+
 Keep your energy dashboard, camera views, or any custom view alongside Linus's automatic organization.
 
 [📖 Complete guide](EMBEDDED_DASHBOARDS.md)
 
 ### Reorder Rooms (HA 2025.1+)
+
 Drag & drop rooms in Home Assistant settings to prioritize your most-used spaces.
 
 [📖 Learn more](MANUAL_ORDERING.md)
 
 ### Upgrade to Linus Brain (Optional)
+
 Add AI-powered activity detection and advanced automation.
 
 [🧠 Discover Linus Brain](https://thankyou-linus.com/)
@@ -75,16 +78,19 @@ Add AI-powered activity detection and advanced automation.
 ## Troubleshooting
 
 ### The bowtie icon doesn't appear
+
 1. **Restart Home Assistant** (Settings → System → Restart)
 2. Clear your browser cache (`Ctrl+F5` or `Cmd+Shift+R`)
 3. Check that the integration is configured (Settings → Devices & Services)
 
 ### My devices aren't showing up
+
 - Ensure devices are assigned to an area (Settings → Areas)
 - Check excluded domains in Linus Dashboard configuration
 - Some entities are intentionally hidden (unavailable, configuration entities)
 
 ### I see a timeout or red error
+
 [See full troubleshooting guide](../README.md#troubleshooting)
 
 ---
@@ -94,7 +100,7 @@ Add AI-powered activity detection and advanced automation.
 - [📖 Full Documentation](../README.md)
 - [🎨 Embed Custom Dashboards](EMBEDDED_DASHBOARDS.md)
 - [🐛 Report Issues](https://github.com/Thank-you-Linus/Linus-Dashboard/issues)
-- [💬 Join Discord Community](https://discord.gg/cZ7NH4ex)
+- [💬 Join Discord Community](https://discord.com/invite/ej2Xn4GTww)
 
 ---
 
@@ -150,16 +156,19 @@ Tous vos appareils sont automatiquement organisés par pièce et type. Aucune co
 Vous voulez aller plus loin ? Voici les personnalisations populaires :
 
 ### Intégrer Vos Tableaux de Bord Personnalisés
+
 Gardez votre tableau de bord énergie, vues caméras, ou toute vue personnalisée aux côtés de l'organisation automatique de Linus.
 
 [📖 Guide complet](EMBEDDED_DASHBOARDS.md)
 
 ### Réorganiser les Pièces (HA 2025.1+)
+
 Glissez-déposez les pièces dans les paramètres Home Assistant pour prioriser vos espaces les plus utilisés.
 
 [📖 En savoir plus](MANUAL_ORDERING.md)
 
 ### Passer à Linus Brain (Optionnel)
+
 Ajoutez la détection d'activité par IA et l'automatisation avancée.
 
 [🧠 Découvrir Linus Brain](https://thankyou-linus.com/)
@@ -169,16 +178,19 @@ Ajoutez la détection d'activité par IA et l'automatisation avancée.
 ## Dépannage
 
 ### L'icône nœud papillon n'apparaît pas
+
 1. **Redémarrez Home Assistant** (Paramètres → Système → Redémarrer)
 2. Videz le cache de votre navigateur (`Ctrl+F5` ou `Cmd+Shift+R`)
 3. Vérifiez que l'intégration est configurée (Paramètres → Appareils et services)
 
 ### Mes appareils ne s'affichent pas
+
 - Assurez-vous que les appareils sont assignés à une zone (Paramètres → Zones)
 - Vérifiez les domaines exclus dans la configuration Linus Dashboard
 - Certaines entités sont intentionnellement cachées (non disponibles, entités de configuration)
 
 ### Je vois une erreur timeout ou rouge
+
 [Voir le guide de dépannage complet](../README.md#troubleshooting)
 
 ---
@@ -188,4 +200,4 @@ Ajoutez la détection d'activité par IA et l'automatisation avancée.
 - [📖 Documentation Complète](../README.md)
 - [🎨 Intégrer des Tableaux de Bord Personnalisés](EMBEDDED_DASHBOARDS.md)
 - [🐛 Signaler des Problèmes](https://github.com/Thank-you-Linus/Linus-Dashboard/issues)
-- [💬 Rejoindre la Communauté Discord](https://discord.gg/cZ7NH4ex)
+- [💬 Rejoindre la Communauté Discord](https://discord.com/invite/ej2Xn4GTww)

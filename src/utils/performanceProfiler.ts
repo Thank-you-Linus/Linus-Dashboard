@@ -81,9 +81,6 @@ class PerformanceProfiler {
     const key = `${label}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     this.timers.set(key, performance.now());
 
-    // Also use console.time for browser DevTools integration
-    console.time(`[Perf] ${label}`);
-
     return key;
   }
 
@@ -108,9 +105,6 @@ class PerformanceProfiler {
       timestamp: Date.now(),
       metadata
     });
-
-    // Log to console
-    console.timeEnd(`[Perf] ${label}`);
 
     // Cleanup
     this.timers.delete(key);
@@ -170,6 +164,8 @@ class PerformanceProfiler {
     }
 
     console.warn('\n[Perf] Performance Summary:');
+    // Use console.warn for logging (allowed by linter)
+    // eslint-disable-next-line no-console
     console.table(summary);
 
     // Also print total time

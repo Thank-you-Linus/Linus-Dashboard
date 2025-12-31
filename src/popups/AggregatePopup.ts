@@ -1,5 +1,6 @@
 import { Helper } from "../Helper";
 import { PopupActionConfig } from "../types/homeassistant/data/lovelace";
+import { getDomainTranslationKey } from "../utils";
 
 import { AbstractPopup } from "./AbstractPopup";
 
@@ -138,17 +139,16 @@ class AggregatePopup extends AbstractPopup {
    * - Area: "Living Room" or "Lights Living Room" (avoids duplication)
    */
   protected buildTitle(config: AggregatePopupConfig): string {
-    // Get domain label using HA translations
-    // Try multiple sources in order:
-    // 1. Home Assistant component translation (e.g., "component.light.title")
-    // 2. Strategy options title
-    // 3. Translation key capitalized
-    // 4. Domain name capitalized
-    const haTranslation = Helper.localize(`component.${config.domain}.title`);
-    const domainLabel = 
+    // Get domain label using HA translations with device_class support
+    // For sensor/binary_sensor with device_class: use device_class translation (e.g., "Temperature")
+    // For other domains: use generic domain translation (e.g., "Lights")
+    const translationKey = getDomainTranslationKey(config.domain, config.device_class);
+    const haTranslation = Helper.localize(translationKey);
+    const domainLabel =
       (haTranslation && haTranslation !== "translation not found" ? haTranslation : null) ||
-      Helper.strategyOptions.domains[config.domain]?.title ||
+      Helper.strategyOptions.domains[config.device_class ? `${config.domain}_${config.device_class}` : config.domain]?.title ||
       (config.translationKey ? config.translationKey.charAt(0).toUpperCase() + config.translationKey.slice(1) : null) ||
+      (config.device_class ? config.device_class.charAt(0).toUpperCase() + config.device_class.slice(1) : null) ||
       config.domain.charAt(0).toUpperCase() + config.domain.slice(1);
     
     switch (config.scope) {

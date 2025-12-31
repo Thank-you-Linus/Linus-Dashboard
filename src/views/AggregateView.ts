@@ -5,6 +5,7 @@ import { ChipsCardConfig } from "../types/lovelace-mushroom/cards/chips-card";
 import { StackCardConfig } from "../types/homeassistant/lovelace/cards/types";
 import { TemplateCardConfig } from "../types/lovelace-mushroom/cards/template-card-config";
 import { RefreshChip } from "../chips/RefreshChip";
+import { AggregateChip } from "../chips/AggregateChip";
 
 import { AbstractView } from "./AbstractView";
 
@@ -60,7 +61,17 @@ class AggregateView extends AbstractView {
   override async createSectionBadges(): Promise<(StackCardConfig | TemplateCardConfig | ChipsCardConfig)[]> {
     const badges: (StackCardConfig | TemplateCardConfig | ChipsCardConfig)[] = [];
 
-    // 1. Control chips for all entities (global - if applicable)
+    // 1. Scope navigation chips (global, floors, areas)
+    const scopeChips = this.createScopeNavigationChips();
+    if (scopeChips.length > 0) {
+      badges.push({
+        type: "custom:mushroom-chips-card",
+        chips: scopeChips,
+        alignment: "end",
+      });
+    }
+
+    // 2. Control chips for all entities (global - if applicable)
     const shouldShowControls = this.#domain !== "sensor";
 
     if (shouldShowControls) {
@@ -95,7 +106,7 @@ class AggregateView extends AbstractView {
       }
     }
 
-    // 2. Refresh chip (centered)
+    // 3. Refresh chip (centered)
     const refreshChip = new RefreshChip();
     badges.push({
       type: "custom:mushroom-chips-card",
@@ -104,6 +115,35 @@ class AggregateView extends AbstractView {
     });
 
     return badges;
+  }
+
+  /**
+   * Create aggregate chip showing the global average/sum for this device_class.
+   *
+   * This chip displays the aggregated value (average for temperature/humidity, sum for energy/power)
+   * for all entities of this device_class across all areas.
+   *
+   * @private
+   * @returns {any[]} Array containing the global aggregate chip
+   */
+  private createScopeNavigationChips(): any[] {
+    const chips: any[] = [];
+
+    // Global chip - shows aggregated value (average/sum) for all entities
+    const globalChip = new AggregateChip({
+      domain: this.#domain,
+      device_class: this.#device_class,
+      scope: "global",
+      magic_device_id: "global",
+      area_slug: "global",
+      show_content: true, // IMPORTANT: Display the value (average/sum)
+    });
+    const globalConfig = globalChip.getChip();
+    if (globalConfig) {
+      chips.push(globalConfig);
+    }
+
+    return chips;
   }
 }
 

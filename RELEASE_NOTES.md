@@ -9,9 +9,6 @@
 
 ### 🎨 State-Aware Dynamic Icons for Badges
 
-![State-aware badge icons](images/screenshots/state-aware-badges.gif)
-*Badge icons change automatically based on what your devices are doing*
-
 **What it does:** Badge icons now change based on what your devices are actually doing - see at a glance if your AC is heating or cooling, if covers are open or closed, without opening any popup.
 
 **Where to find it:** Look at climate, cover, light, and switch badges on any room card
@@ -23,9 +20,6 @@
 ---
 
 ### 🚀 Navigation Mode for HomeView Chips
-
-![Navigation mode in action](images/screenshots/navigation-mode.gif)
-*Click a room chip to jump directly to that room - no popup*
 
 **What it does:** HomeView chips can now navigate directly to area views instead of opening popups, offering faster access to specific rooms.
 
@@ -50,7 +44,6 @@
 
 ### 🇬🇧 English
 
-
 - **State-aware dynamic icons for badges** - Badge icons now dynamically change based on entity state (e.g., climate heating/cooling, cover open/closed), providing instant visual feedback without opening the popup
 - **Navigation mode for HomeView chips** - HomeView chips can now navigate directly to area views instead of opening popups, offering faster access to specific rooms
 - **Device class-specific chips for covers** - Cover entities now display specialized control chips based on their device class (blinds, shutters, curtains), with appropriate icons and controls
@@ -58,10 +51,7 @@
 - **RefreshChip on all dashboard views** - Added a refresh button to all views with improved visual feedback, allowing manual registry refresh without reloading the entire dashboard
 - **Manual registry refresh with browser_mod.javascript** - Integrated browser_mod support for triggering registry updates directly from the UI, eliminating the need for page reloads
 
-
-
 ### 🇫🇷 Français
-
 
 - **Icônes dynamiques selon l'état des badges** - Les icônes des badges changent dynamiquement selon l'état de l'entité (ex: climatisation chauffe/refroidit, volet ouvert/fermé), offrant un retour visuel instantané sans ouvrir le popup
 - **Mode navigation pour les chips HomeView** - Les chips de la vue d'accueil peuvent maintenant naviguer directement vers les vues de pièces au lieu d'ouvrir des popups, offrant un accès plus rapide aux pièces spécifiques
@@ -69,8 +59,6 @@
 - **Chips de contrôle intelligentes pour Switch, Fan et MediaPlayer** - Ajout de chips intelligentes offrant des actions rapides directement depuis la vue sans ouvrir de popup (basculer interrupteurs, contrôle vitesse ventilateur, lecture média)
 - **RefreshChip sur toutes les vues** - Ajout d'un bouton de rafraîchissement sur toutes les vues avec retour visuel amélioré, permettant de rafraîchir le registre manuellement sans recharger tout le tableau de bord
 - **Rafraîchissement manuel du registre avec browser_mod.javascript** - Intégration du support browser_mod pour déclencher les mises à jour du registre directement depuis l'interface, éliminant le besoin de recharger la page
-
-
 
 </details>
 
@@ -107,6 +95,7 @@
 ## 🧪 For Beta Testers
 
 **What to test:**
+
 - [ ] **State-aware badge icons** - Verify that badge icons change correctly based on entity state (climate, covers, lights, switches)
 - [ ] **HomeView chip navigation** - Test that chips correctly navigate to area views when navigation mode is enabled
 - [ ] **Cover device class chips** - Check that different cover types (blinds, shutters, curtains) display appropriate control chips
@@ -125,6 +114,7 @@
 </details>
 
 **Known Issues:**
+
 - None currently
 
 ---
@@ -133,6 +123,7 @@
 <summary>📊 <b>Technical Details</b></summary>
 
 ### Key Commits
+
 - feat: add state-aware dynamic icons for StandardDomainView badges (9578c3c)
 - feat: add navigation mode for HomeView chips and debug logs for CoverView (5133e3d)
 - feat: add device_class-specific chips for covers and filter empty area badges (28144a9)
@@ -147,16 +138,17 @@
 - docs: add comprehensive chip system architecture documentation (5f3c22e)
 
 ### Contributors
+
 - @Julien-Decoen
 
 </details>
-
 
 ---
 
 ## 📦 Installation
 
 **Via HACS (Recommended):**
+
 1. Open HACS → Integrations
 2. Search for "Linus Dashboard"
 3. Click Update (if already installed) or Install
@@ -164,6 +156,7 @@
 5. Clear browser cache (Ctrl+Shift+R or Cmd+Shift+R)
 
 **Manual Installation:**
+
 1. Download the `linus_dashboard.zip` file from this release
 2. Extract to `custom_components/linus_dashboard/`
 3. Restart Home Assistant
@@ -176,4 +169,3 @@
 - 📖 [Documentation](https://github.com/Thank-you-Linus/Linus-Dashboard)
 - 🐛 [Report Issues](https://github.com/Thank-you-Linus/Linus-Dashboard/issues)
 - 💬 [Discord Community](https://discord.gg/your-discord-link)
-

@@ -525,9 +525,9 @@ export async function processFloorsAndAreas(
                         
                         // Always create controlChipOptions
                         titleCardOptions.controlChipOptions = { device_class, area_slug: area.slug };
-                        
-                        // Disable chips for sensor/binary_sensor (too many device_classes)
-                        if (domain === "sensor" || domain === "binary_sensor") {
+
+                        // Disable chips for sensor/binary_sensor UNLESS we're in an aggregate view (device_class is specified)
+                        if ((domain === "sensor" || domain === "binary_sensor") && !device_class) {
                             titleCardOptions.showControls = false;
                         }
                     } else {
@@ -551,9 +551,9 @@ export async function processFloorsAndAreas(
                 if (floor.floor_id !== UNDISCLOSED) {
                     // Always pass showControls and extraControls to ControllerCard
                     titleSectionOptions.showControls = Helper.strategyOptions.domains[domain]?.showControls;
-                    
-                    // Disable chips for sensor/binary_sensor (too many device_classes)
-                    if (domain === "sensor" || domain === "binary_sensor") {
+
+                    // Disable chips for sensor/binary_sensor UNLESS we're in an aggregate view (device_class is specified)
+                    if ((domain === "sensor" || domain === "binary_sensor") && !device_class) {
                         titleSectionOptions.showControls = false;
                     }
                     

@@ -20,7 +20,7 @@
     </a>
   </p>
 
-![Statut Validation](https://github.com/Thank-you-Linus/Linus-Dashboard/actions/workflows/validate.yml/badge.svg) ![Statut Lint](https://github.com/Thank-you-Linus/Linus-Dashboard/actions/workflows/lint.yml/badge.svg) [![Dernière version](https://img.shields.io/github/v/release/Thank-you-Linus/Linus-Dashboard.svg)](https://github.com/Thank-you-Linus/Linus-Dashboard/releases) [![Dernier commit](https://badgen.net/github/last-commit/Thank-you-Linus/Linus-Dashboard)](https://github.com/Thank-you-Linus/Linus-Dashboard/commit/) [![Contributeurs GitHub](https://badgen.net/github/contributors/Thank-you-Linus/Linus-Dashboard)](https://GitHub.com/Thank-you-Linus/Linus-Dashboard/graphs/contributors/)
+![Statut Validation](https://github.com/Thank-you-Linus/Linus-Dashboard/actions/workflows/validate.yml/badge.svg) ![Statut CI](https://github.com/Thank-you-Linus/Linus-Dashboard/actions/workflows/ci.yml/badge.svg) [![Dernière version](https://img.shields.io/github/v/release/Thank-you-Linus/Linus-Dashboard.svg)](https://github.com/Thank-you-Linus/Linus-Dashboard/releases) [![Dernier commit](https://badgen.net/github/last-commit/Thank-you-Linus/Linus-Dashboard)](https://github.com/Thank-you-Linus/Linus-Dashboard/commit/) [![Contributeurs GitHub](https://badgen.net/github/contributors/Thank-you-Linus/Linus-Dashboard)](https://GitHub.com/Thank-you-Linus/Linus-Dashboard/graphs/contributors/)
 
 [![My Home Assistant](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=Thank-you-Linus&repository=Linus-Dashboard)
 
@@ -136,13 +136,14 @@ Vous avez déjà créé la vue parfaite pour le monitoring énergétique ? Une g
 **Ne repartez pas de zéro** - intégrez vos tableaux de bord existants directement dans Linus !
 
 ![Linus Dashboard avec Vue Énergétique Intégrée](images/screenshots/embedded-dashboard-example.png)
-*Exemple : Tableau de bord énergétique intégré de manière transparente dans Linus*
+_Exemple : Tableau de bord énergétique intégré de manière transparente dans Linus_
 
 ✅ **Utilisez Linus** pour l'organisation automatique des appareils
 ✅ **Gardez vos vues personnalisées** pour le monitoring spécialisé
 ✅ **Intégration transparente** - tout au même endroit
 
 **Cas d'usage populaires :**
+
 - 📊 Monitoring énergétique avec graphiques historiques
 - 📹 Vue multi-caméras de sécurité
 - 🎵 Centre de contrôle multimédia
@@ -230,11 +231,13 @@ Après l’installation, suivez ces étapes :
 ### Installation & Configuration
 
 **Q: Je ne vois pas l'icône nœud papillon 🎀**
+
 1. Redémarrez Home Assistant (Paramètres → Système → Redémarrer)
 2. Videz le cache du navigateur (Ctrl+F5 ou Cmd+Shift+R)
 3. Vérifiez que l'intégration Linus Dashboard est configurée (Paramètres → Appareils et services)
 
 **Q: Mes appareils ne s'affichent pas**
+
 - ✅ Vérifiez que l'appareil est assigné à une zone (Paramètres → Zones)
 - ✅ Vérifiez que l'appareil n'est pas dans les domaines exclus (Paramètres → Configuration Linus Dashboard)
 - ✅ Certaines entités sont intentionnellement cachées (non disponibles, entités de configuration)
@@ -265,11 +268,13 @@ Avec Home Assistant 2025.1+, vous pouvez glisser-déposer les pièces directemen
 **Procédez comme suit :**
 
 1. **Videz le cache :**
+
    - Navigateur : effacez le cache de votre navigateur
    - Application mobile Home Assistant : videz le cache de l'application via les paramètres de votre appareil
    - Si vous utilisez un proxy inverse ou un service DNS (Cloudflare par exemple), videz également le cache
 
 2. **Forcez un rafraîchissement :**
+
    - **Windows** : appuyez sur `CTRL + F5`
    - **Mac** : maintenez `⇧ Shift` et cliquez sur le bouton de rechargement, ou maintenez `⌘ Cmd` + `⇧ Shift` puis appuyez sur `R`
 

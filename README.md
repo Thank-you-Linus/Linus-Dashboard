@@ -20,7 +20,7 @@
     </a>
   </p>
 
-![Validate Status](https://github.com/Thank-you-Linus/Linus-Dashboard/actions/workflows/validate.yml/badge.svg) ![Lint Status](https://github.com/Thank-you-Linus/Linus-Dashboard/actions/workflows/lint.yml/badge.svg) [![Latest release](https://img.shields.io/github/v/release/Thank-you-Linus/Linus-Dashboard.svg)](https://github.com/Thank-you-Linus/Linus-Dashboard/releases) [![GitHub latest commit](https://badgen.net/github/last-commit/Thank-you-Linus/Linus-Dashboard)](https://github.com/Thank-you-Linus/Linus-Dashboard/commit/) [![GitHub contributors](https://badgen.net/github/contributors/Thank-you-Linus/Linus-Dashboard)](https://GitHub.com/Thank-you-Linus/Linus-Dashboard/graphs/contributors/)
+![Validate Status](https://github.com/Thank-you-Linus/Linus-Dashboard/actions/workflows/validate.yml/badge.svg) ![CI Status](https://github.com/Thank-you-Linus/Linus-Dashboard/actions/workflows/ci.yml/badge.svg) [![Latest release](https://img.shields.io/github/v/release/Thank-you-Linus/Linus-Dashboard.svg)](https://github.com/Thank-you-Linus/Linus-Dashboard/releases) [![GitHub latest commit](https://badgen.net/github/last-commit/Thank-you-Linus/Linus-Dashboard)](https://github.com/Thank-you-Linus/Linus-Dashboard/commit/) [![GitHub contributors](https://badgen.net/github/contributors/Thank-you-Linus/Linus-Dashboard)](https://GitHub.com/Thank-you-Linus/Linus-Dashboard/graphs/contributors/)
 
 [![My Home Assistant](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=Thank-you-Linus&repository=Linus-Dashboard)
 
@@ -138,13 +138,14 @@ Already built the perfect energy monitoring view? Camera grid? Media center?
 **Don't rebuild from scratch** - embed your existing dashboards right into Linus!
 
 ![Linus Dashboard with Embedded Energy View](images/screenshots/embedded-dashboard-example.png)
-*Example: Energy dashboard embedded seamlessly in Linus*
+_Example: Energy dashboard embedded seamlessly in Linus_
 
 ✅ **Use Linus** for automatic device organization
 ✅ **Keep your custom views** for specialized monitoring
 ✅ **Seamless integration** - everything in one place
 
 **Popular use cases:**
+
 - 📊 Energy monitoring with historical graphs
 - 📹 Multi-camera security view
 - 🎵 Media control center
@@ -267,11 +268,13 @@ After installation, follow these steps to configure and access Linus Dashboard:
 ### Installation & Setup
 
 **Q: I don't see the bowtie icon 🎀**
+
 1. Restart Home Assistant (Settings → System → Restart)
 2. Clear browser cache (Ctrl+F5 or Cmd+Shift+R)
 3. Check that Linus Dashboard integration is configured (Settings → Devices & Services)
 
 **Q: My devices aren't showing up**
+
 - ✅ Check device is assigned to an area (Settings → Areas)
 - ✅ Verify device is not in excluded domains (Settings → Linus Dashboard configuration)
 - ✅ Some entities are intentionally hidden (unavailable, configuration entities)
@@ -302,11 +305,13 @@ With Home Assistant 2025.1+, you can drag & drop rooms directly in HA settings (
 **Follow these steps to resolve the issue**:
 
 1. **Clear your cache**:
+
    - For browsers: Clear your browser cache
    - For the Home Assistant mobile app: Clear the app cache via your device settings
    - If you're using a reverse proxy or a DNS service like Cloudflare: Clear the cache there as well
 
 2. **Force a refresh**:
+
    - On **Windows**: Press `CTRL + F5`
    - On **Mac**:
      - Hold `⇧ Shift` and click the Reload button

@@ -133,7 +133,7 @@ class ControllerCard {
             card_mod: {
               style: `
               ha-card {
-                min-width: 100px;
+                width: max-content;
                 }
                 `,
             }

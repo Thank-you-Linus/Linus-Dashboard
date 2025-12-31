@@ -209,6 +209,8 @@
                 "state": {
                     "state_on": "on",
                     "state_off": "off",
+                    "average": "Average",
+                    "total": "Total",
                     "title_light": "Lights",
                     "title_switch": "Switches",
                     "title_fan": "Fans",

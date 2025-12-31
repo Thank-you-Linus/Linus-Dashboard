@@ -54,7 +54,7 @@ export class RegistryManager {
     await this.#initializeFloors(info);
 
     // Initialize EntityResolver (for Linus Brain / Magic Areas hybrid support)
-    const { EntityResolver } = await import("../utils/EntityResolver");
+    const { EntityResolver } = await import("../utils/entityResolver");
     this.entityResolver = new EntityResolver();
 
     this.initialized = true;

@@ -231,7 +231,7 @@ class ActivityDetectionPopup extends AbstractPopup {
         if (isLinusBrain && activityEntity) {
             // Get media player entities for detection
             const media_entities_str = formatMediaEntitiesForTemplate(media_player_entities);
-            
+
             // Use shared templates to ensure synchronization with badge and activity chip
             statusChips.push({
                 type: "template",
@@ -292,11 +292,6 @@ class ActivityDetectionPopup extends AbstractPopup {
                 // Build horizontal markdown based on available attributes
                 if (attrs.seconds_until_timeout !== undefined && attrs.seconds_until_timeout > 0) {
                     markdownParts.push(`⏱️ ${attrs.seconds_until_timeout}s`);
-                }
-
-                if (attrs.is_dark !== undefined) {
-                    const isDark = attrs.is_dark === true || attrs.is_dark === "true";
-                    markdownParts.push(`${isDark ? '🌙 Dark' : '☀️ Bright'}`);
                 }
 
                 // Show active sensor names instead of count
@@ -373,12 +368,12 @@ class ActivityDetectionPopup extends AbstractPopup {
             const isEntityActive = (entity: string): boolean => {
                 const state = Helper.getEntityState(entity);
                 if (!state) return false;
-                
+
                 // Media players: playing state is active
                 if (entity.startsWith('media_player.')) {
                     return state.state === 'playing';
                 }
-                
+
                 // Binary sensors: on state is active
                 return state.state === 'on';
             };
@@ -407,7 +402,7 @@ class ActivityDetectionPopup extends AbstractPopup {
                 const state = Helper.getEntityState(entity);
                 const isActive = isEntityActive(entity);
                 const isMediaPlayer = entity.startsWith('media_player.');
-                
+
                 // Color logic:
                 // - Media players: blue when active, grey when inactive
                 // - Binary sensors: red when active, grey when inactive
@@ -417,7 +412,7 @@ class ActivityDetectionPopup extends AbstractPopup {
                 } else {
                     iconColor = isActive ? "red" : "grey";
                 }
-                
+
                 cards.push({
                     type: "custom:mushroom-entity-card",
                     entity: entity,

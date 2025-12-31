@@ -1,6 +1,8 @@
 import { Helper } from "../Helper";
 import { LovelaceCardConfig } from "../types/homeassistant/data/lovelace";
-import { StrategyEntity } from "../types/strategy/generic";
+import { generic } from "../types/strategy/generic";
+
+type StrategyEntity = generic.StrategyEntity;
 
 /**
  * Card Factory

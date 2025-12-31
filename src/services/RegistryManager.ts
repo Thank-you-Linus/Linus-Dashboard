@@ -7,10 +7,13 @@
 
 import { HassEntities } from "home-assistant-js-websocket";
 
+import type { EntityRegistryEntry } from "../types/homeassistant/data/entity_registry";
+import type { DeviceRegistryEntry } from "../types/homeassistant/data/device_registry";
+import type { AreaRegistryEntry } from "../types/homeassistant/data/area_registry";
+import type { FloorRegistryEntry } from "../types/homeassistant/data/floor_registry";
 import { generic } from "../types/strategy/generic";
-import { DashBoardInfo } from "../types/strategy/ha-dashboard-info";
 import { LinusDashboardConfig } from "../types/homeassistant/data/linus_dashboard";
-import { getGlobalEntitiesExceptUndisclosed, getMAEntity, getMagicAreaSlug, groupEntitiesByDomain, slugify } from "../utils";
+import { getMagicAreaSlug, groupEntitiesByDomain, slugify } from "../utils";
 import { UNDISCLOSED, MAGIC_AREAS_NAME } from "../variables";
 
 import StrategyEntity = generic.StrategyEntity;
@@ -18,6 +21,22 @@ import StrategyArea = generic.StrategyArea;
 import StrategyFloor = generic.StrategyFloor;
 import StrategyDevice = generic.StrategyDevice;
 import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
+
+/**
+ * Extended DashBoardInfo with loaded registries
+ */
+export interface RegistryInitInfo {
+  hass: {
+    states: HassEntities;
+    entities: Record<string, EntityRegistryEntry>;
+    devices: Record<string, DeviceRegistryEntry>;
+    areas: Record<string, AreaRegistryEntry>;
+    floors: Record<string, FloorRegistryEntry>;
+    [key: string]: any; // For HomeAssistant object methods
+  };
+  config: generic.StrategyConfig;
+  linus_dashboard_config: LinusDashboardConfig;
+}
 
 /**
  * Registry Manager Class
@@ -40,10 +59,10 @@ export class RegistryManager {
   /**
    * Initialize the registry manager with Home Assistant data
    *
-   * @param info - Dashboard information from Home Assistant
+   * @param info - Dashboard information from Home Assistant with loaded registries
    */
-  static async initialize(info: DashBoardInfo): Promise<void> {
-    this.hassStates = info.hass?.states;
+  static async initialize(info: RegistryInitInfo): Promise<void> {
+    this.hassStates = info.hass.states;
     this.strategyOptions = info.config;
     this.linusDashboardConfig = info.linus_dashboard_config;
 
@@ -55,7 +74,7 @@ export class RegistryManager {
 
     // Initialize EntityResolver (for Linus Brain / Magic Areas hybrid support)
     const { EntityResolver } = await import("../utils/entityResolver");
-    this.entityResolver = new EntityResolver();
+    this.entityResolver = new EntityResolver(info.hass as any);
 
     this.initialized = true;
   }
@@ -64,10 +83,13 @@ export class RegistryManager {
    * Initialize entities registry
    * @private
    */
-  static async #initializeEntities(info: DashBoardInfo): Promise<void> {
-    const entities = info.hass?.entities || {};
+  static async #initializeEntities(info: RegistryInitInfo): Promise<void> {
+    const entities = info.hass.entities || {};
     this.entities = Object.fromEntries(
-      Object.entries(entities).map(([entity_id, entity]) => [entity_id, { ...entity, entity_id }])
+      Object.entries(entities).map(([entity_id, entity]) => [
+        entity_id,
+        { ...entity, entity_id, floor_id: null } as StrategyEntity
+      ])
     );
     this.domains = groupEntitiesByDomain(this.entities);
   }
@@ -76,31 +98,39 @@ export class RegistryManager {
    * Initialize devices registry
    * @private
    */
-  static async #initializeDevices(info: DashBoardInfo): Promise<void> {
-    const devices = info.hass?.devices || {};
+  static async #initializeDevices(info: RegistryInitInfo): Promise<void> {
+    const devices = info.hass.devices || {};
     this.devices = Object.fromEntries(
-      Object.entries(devices).map(([device_id, device]) => [device_id, { ...device, device_id }])
+      Object.entries(devices).map(([device_id, device]) => [
+        device_id,
+        { ...device, floor_id: null, entities: [] } as StrategyDevice
+      ])
     );
 
     // Initialize Magic Areas devices
     this.magicAreasDevices = {};
     for (const [device_id, device] of Object.entries(this.devices)) {
-      if (device.name_by_user === MAGIC_AREAS_NAME || device.manufacturer === MAGIC_AREAS_NAME) {
-        const area_slug = getMagicAreaSlug(device);
+      if (device.manufacturer === MAGIC_AREAS_NAME) {
+        const area_slug = getMagicAreaSlug(device as any);
         if (area_slug) {
+          // Get all entities for this device
+          const deviceEntities = Object.values(this.entities).filter(
+            entity => entity.device_id === device_id
+          );
+
+          // Create entities map by translation_key
+          const entitiesMap = deviceEntities.reduce((acc, entity) => {
+            if (entity.translation_key) {
+              acc[entity.translation_key] = entity;
+            }
+            return acc;
+          }, {} as Record<string, EntityRegistryEntry>);
+
           this.magicAreasDevices[area_slug] = {
-            id: device_id,
+            ...device,
+            area_name: device.name || area_slug,
             slug: area_slug,
-            entities: {
-              area_state: getMAEntity(device_id, "area_state"),
-              all_lights: getMAEntity(device_id, "all_lights"),
-              light_control: getMAEntity(device_id, "light_control"),
-              aggregate_health: getMAEntity(device_id, "health"),
-              climate_group: getMAEntity(device_id, "climate_group"),
-              aggregate_window: getMAEntity(device_id, "window"),
-              aggregate_door: getMAEntity(device_id, "door"),
-              aggregate_cover: getMAEntity(device_id, "cover_group"),
-            },
+            entities: entitiesMap,
           };
         }
       }
@@ -111,13 +141,14 @@ export class RegistryManager {
    * Initialize areas registry
    * @private
    */
-  static async #initializeAreas(info: DashBoardInfo): Promise<void> {
-    const areas = info.hass?.areas || {};
+  static async #initializeAreas(info: RegistryInitInfo): Promise<void> {
+    const areas = info.hass.areas || {};
 
     this.areas = Object.fromEntries(
       Object.entries(areas).map(([area_id, area]) => {
         const slug = slugify(area_id);
         const areaEntities = Object.values(this.entities).filter(entity => entity.area_id === area_id);
+        const areaDevices = Object.values(this.devices).filter(device => device.area_id === area_id);
         const domainGroups = groupEntitiesByDomain(Object.fromEntries(areaEntities.map(e => [e.entity_id, e])));
 
         return [
@@ -128,13 +159,14 @@ export class RegistryManager {
             area_id,
             domains: domainGroups,
             entities: areaEntities.map(e => e.entity_id),
+            devices: areaDevices.map(d => d.id),
           } as StrategyArea,
         ];
       })
     );
 
     // Add UNDISCLOSED area for entities without area
-    const undisclosedEntities = getGlobalEntitiesExceptUndisclosed(this.entities);
+    const undisclosedEntities = Object.values(this.entities).filter(entity => !entity.area_id);
     const undisclosedDomains = groupEntitiesByDomain(Object.fromEntries(undisclosedEntities.map(e => [e.entity_id, e])));
     this.areas[UNDISCLOSED] = {
       area_id: UNDISCLOSED,
@@ -144,9 +176,8 @@ export class RegistryManager {
       slug: UNDISCLOSED,
       domains: undisclosedDomains,
       entities: undisclosedEntities.map(e => e.entity_id),
+      devices: [],
       aliases: [],
-      icon: null,
-      labels: [],
     };
   }
 
@@ -154,8 +185,8 @@ export class RegistryManager {
    * Initialize floors registry
    * @private
    */
-  static async #initializeFloors(info: DashBoardInfo): Promise<void> {
-    const floors = info.hass?.floors || {};
+  static async #initializeFloors(info: RegistryInitInfo): Promise<void> {
+    const floors = info.hass.floors || {};
 
     this.floors = Object.fromEntries(
       Object.entries(floors).map(([floor_id, floor]) => {

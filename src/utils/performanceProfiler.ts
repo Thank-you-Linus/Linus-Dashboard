@@ -49,7 +49,7 @@ class PerformanceProfiler {
    */
   static enable(): void {
     this.enabled = true;
-    console.log('[Perf] Performance profiling ENABLED');
+    console.warn('[Perf] Performance profiling ENABLED');
   }
 
   /**
@@ -57,7 +57,7 @@ class PerformanceProfiler {
    */
   static disable(): void {
     this.enabled = false;
-    console.log('[Perf] Performance profiling DISABLED');
+    console.warn('[Perf] Performance profiling DISABLED');
   }
 
   /**
@@ -165,16 +165,16 @@ class PerformanceProfiler {
     const summary = this.getSummary();
 
     if (Object.keys(summary).length === 0) {
-      console.log('[Perf] No metrics recorded');
+      console.warn('[Perf] No metrics recorded');
       return;
     }
 
-    console.log('\n[Perf] Performance Summary:');
+    console.warn('\n[Perf] Performance Summary:');
     console.table(summary);
 
     // Also print total time
     const total = Object.values(summary).reduce((sum, stats) => sum + stats.total, 0);
-    console.log(`[Perf] Total measured time: ${Math.round(total * 100) / 100}ms\n`);
+    console.warn(`[Perf] Total measured time: ${Math.round(total * 100) / 100}ms\n`);
   }
 
   /**
@@ -198,7 +198,7 @@ class PerformanceProfiler {
   static clear(): void {
     this.metrics = [];
     this.timers.clear();
-    console.log('[Perf] Metrics cleared');
+    console.warn('[Perf] Metrics cleared');
   }
 
   /**

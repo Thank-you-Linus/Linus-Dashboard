@@ -22,7 +22,7 @@ import { ImageAreaCard } from "./cards/ImageAreaCard";
 import { AggregateChip } from "./chips/AggregateChip";
 import { AggregateCard } from "./cards/AggregateCard";
 import { CardFactory } from "./factories/CardFactory";
-import { memoize, MemoizedFunction } from "./utils/memoization";
+import { memoize } from "./utils/memoization";
 import { PerformanceProfiler } from "./utils/performanceProfiler";
 
 import StrategyEntity = generic.StrategyEntity;

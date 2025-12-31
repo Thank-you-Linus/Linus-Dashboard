@@ -19,8 +19,8 @@
  */
 
 /**
- * Fast string hashing using FNV-1a algorithm
- * Performance: ~100M hashes/sec vs JSON.stringify ~1M/sec (100x faster)
+ * FNV-1a hash function for strings
+ * Fast, simple, and good distribution for cache keys
  *
  * @param str - String to hash
  * @returns 32-bit unsigned hash
@@ -28,9 +28,11 @@
 function hashString(str: string): number {
   let hash = 2166136261; // FNV offset basis (32-bit)
   for (let i = 0; i < str.length; i++) {
+    // eslint-disable-next-line no-bitwise
     hash ^= str.charCodeAt(i);
     hash = Math.imul(hash, 16777619); // FNV prime (32-bit)
   }
+  // eslint-disable-next-line no-bitwise
   return hash >>> 0; // Convert to unsigned 32-bit integer
 }
 
@@ -44,6 +46,7 @@ function hashString(str: string): number {
 function createCacheKey(args: any[]): string {
   const parts: string[] = [];
 
+  // eslint-disable-next-line @typescript-eslint/prefer-for-of
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
 

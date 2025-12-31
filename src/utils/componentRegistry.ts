@@ -20,6 +20,7 @@
  */
 
 import { Helper } from "../Helper";
+
 import { PerformanceProfiler } from "./performanceProfiler";
 
 /**
@@ -76,10 +77,6 @@ class ComponentRegistry {
         chipsPreloaded: commonChips.length,
         totalPreloaded: commonCards.length + commonChips.length
       });
-
-      if (Helper.debug) {
-        console.log('[ComponentRegistry] Preloaded components:', this.getStats());
-      }
     } catch (error) {
       PerformanceProfiler.end(perfKey);
       if (Helper.debug) {
@@ -163,10 +160,6 @@ class ComponentRegistry {
     this.cardModules.clear();
     this.chipModules.clear();
     this.viewModules.clear();
-
-    if (Helper.debug) {
-      console.log('[ComponentRegistry] All caches cleared');
-    }
   }
 
   /**
@@ -185,10 +178,6 @@ class ComponentRegistry {
       case 'views':
         this.viewModules.clear();
         break;
-    }
-
-    if (Helper.debug) {
-      console.log(`[ComponentRegistry] Cleared ${type} cache`);
     }
   }
 

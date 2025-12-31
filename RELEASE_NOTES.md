@@ -11,6 +11,7 @@ _No new features in this release_
 
 ## 🐛 Bug Fixes
 
+- **Build configuration for ES modules** - Renamed babel.config.js to babel.config.cjs to ensure compatibility with ES modules. This fixes build errors when package.json declares "type": "module"
 - **Domain handling and type safety** - Improved entity domain extraction with null checks to prevent runtime errors. Refactored the RegistryManager to build domain mappings more efficiently, ensuring proper entity grouping by domain and device class. This fix enhances stability when processing entities with missing or malformed domain information
 
 ## ⚡ Improvements
@@ -22,18 +23,18 @@ _No improvements in this release_
 ## 🧪 For Beta Testers
 
 **What to test:**
-- [ ] Verify that all entities display correctly in area views
+- [ ] Verify that the dashboard builds and loads without errors
 - [ ] Test entity filtering and grouping by domain and device class
-- [ ] Check that dashboard loads without console errors related to entity domains
+- [ ] Check that all entities display correctly in area views
 - [ ] Ensure aggregate views properly group entities
 - [ ] Test with entities that have unusual or missing domain information
 
 <details>
 <summary>🇫🇷 <b>Quoi tester</b></summary>
 
-- [ ] Vérifier que toutes les entités s'affichent correctement dans les vues de zone
+- [ ] Vérifier que le tableau de bord se construit et se charge sans erreurs
 - [ ] Tester le filtrage et le regroupement des entités par domaine et classe de dispositif
-- [ ] Vérifier que le tableau de bord se charge sans erreurs de console liées aux domaines d'entités
+- [ ] Vérifier que toutes les entités s'affichent correctement dans les vues de zone
 - [ ] S'assurer que les vues agrégées regroupent correctement les entités
 - [ ] Tester avec des entités ayant des informations de domaine inhabituelles ou manquantes
 

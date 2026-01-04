@@ -361,16 +361,15 @@ class Helper {
   static async initialize(info: generic.DashBoardInfo): Promise<void> {
     const perfKey = PerformanceProfiler.start('Helper.initialize');
 
+    Helper.logDebug('Initialization started', {
+      hasHass: !!info.hass,
+      hasConfig: !!info.config
+    });
+
     // Initialize properties.
     this.#hassStates = info.hass.states;
     this.#hassLocalize = info.hass.localize;
     this.#strategyOptions = merge(configurationDefaults, info.config?.strategy?.options ?? {});
-    this.#debug = this.#strategyOptions.debug;
-
-    // Enable profiling in debug mode
-    if (this.#debug) {
-      PerformanceProfiler.enable();
-    }
 
     // console.log('this.#', info.hass)
 
@@ -399,6 +398,40 @@ class Helper {
 
     this.#icons = merge(entity_component_icons.resources, services_icons.resources);
     this.#linus_dashboard_config = linus_dashboard_config;
+
+    // Log received config for debugging
+    console.warn('[Linus Dashboard] 📦 Received config from backend:', {
+      debug: linus_dashboard_config.debug,
+      debug_type: typeof linus_dashboard_config.debug,
+      has_debug_field: 'debug' in linus_dashboard_config
+    });
+
+    Helper.logDebug('Registries loaded', {
+      entities: entities.length,
+      devices: devices.length,
+      areas: areas.length,
+      floors: floors.length,
+      embedded_dashboards: linus_dashboard_config.embedded_dashboards?.length ?? 0
+    });
+
+    // Use backend debug setting if available, otherwise fall back to local config
+    if (typeof linus_dashboard_config.debug !== 'undefined') {
+      this.#debug = linus_dashboard_config.debug;
+      console.warn(
+        `[Linus Dashboard] 🔍 Debug mode ${this.#debug ? '✅ ENABLED' : '❌ DISABLED'} (from backend auto-detection)`
+      );
+    } else {
+      // Fallback to local config for backward compatibility
+      this.#debug = this.#strategyOptions.debug;
+      console.warn(
+        `[Linus Dashboard] 🔍 Debug mode ${this.#debug ? '✅ ENABLED' : '❌ DISABLED'} (from local fallback - backend didn't provide debug field)`
+      );
+    }
+
+    // Enable profiling in debug mode
+    if (this.#debug) {
+      PerformanceProfiler.enable();
+    }
 
     // Create Map-based indexes for O(1) lookups (faster than Object)
     const indexKey = PerformanceProfiler.start('Helper.initialize.indexing');
@@ -495,6 +528,13 @@ class Helper {
       return acc;
     }, {} as Record<string, StrategyEntity>);
     PerformanceProfiler.end(entityKey, { entityCount: entities.length });
+
+    Helper.logDebug('Entity filtering complete', {
+      totalProcessed: entities.length,
+      kept: Object.keys(this.#entities).length,
+      excluded: entities.length - Object.keys(this.#entities).length,
+      domains: Object.keys(this.#domains).length
+    });
 
     // Enrich devices
     const deviceKey = PerformanceProfiler.start('Helper.initialize.devices');
@@ -659,6 +699,14 @@ class Helper {
     // Print summary in debug mode
     if (this.#debug) {
       PerformanceProfiler.printSummary();
+      Helper.logDebug('Initialization complete', {
+        entities: Object.keys(this.#entities).length,
+        devices: Object.keys(this.#devices).length,
+        areas: Object.keys(this.#areas).length,
+        floors: Object.keys(this.#floors).length,
+        views: Object.keys(this.#strategyOptions.views).length,
+        extra_views: this.#strategyOptions.extra_views?.length ?? 0
+      });
     }
   }
 
@@ -984,6 +1032,21 @@ class Helper {
     }
 
     console.error(userMessage);
+  }
+
+  /**
+   * Logs a debug message to the console if debug mode is enabled.
+   *
+   * @param {string} message - The debug message to display.
+   * @param {unknown[]} [args] - (Optional) Additional arguments to log.
+   *
+   * @return {void}
+   */
+  static logDebug(message: string, ...args: unknown[]): void {
+    if (Helper.debug) {
+      // eslint-disable-next-line no-console
+      console.debug(`[Linus Dashboard] ${message}`, ...args);
+    }
   }
 
   /**

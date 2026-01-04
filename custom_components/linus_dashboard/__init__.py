@@ -30,6 +30,7 @@ from custom_components.linus_dashboard.const import (
     CONF_WEATHER_ENTITY,
     CONF_WEATHER_ENTITY_ID,
     DOMAIN,
+    is_logger_debug,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -164,6 +165,17 @@ async def websocket_get_entities(
 ) -> None:
     """Handle request for getting entities and version info."""
     config_entries = hass.config_entries.async_entries(DOMAIN)
+
+    # Auto-detect debug mode from logger level
+    import logging as log
+    debug_enabled = is_logger_debug()
+    _LOGGER.info(
+        "🔍 Debug mode detection: enabled=%s, logger_level=%s, effective_level=%s",
+        debug_enabled,
+        log.getLevelName(_LOGGER.level) if _LOGGER.level != log.NOTSET else "NOTSET",
+        log.getLevelName(_LOGGER.getEffectiveLevel())
+    )
+
     config = {
         CONF_ALARM_ENTITY_IDS: config_entries[0].options.get(CONF_ALARM_ENTITY_IDS, []),
         CONF_WEATHER_ENTITY_ID: config_entries[0].options.get(CONF_WEATHER_ENTITY),
@@ -179,13 +191,16 @@ async def websocket_get_entities(
         CONF_EMBEDDED_DASHBOARDS: config_entries[0].options.get(
             CONF_EMBEDDED_DASHBOARDS, []
         ),
+        "debug": debug_enabled,
         "version": await async_get_version(
             hass
         ),  # Include version for frontend version check
     }
 
     _LOGGER.info(
-        "WebSocket sending embedded_dashboards: %s", config[CONF_EMBEDDED_DASHBOARDS]
+        "WebSocket sending config: debug=%s, embedded_dashboards=%s",
+        config["debug"],
+        config[CONF_EMBEDDED_DASHBOARDS]
     )
 
     connection.send_message(result_message(msg["id"], config))

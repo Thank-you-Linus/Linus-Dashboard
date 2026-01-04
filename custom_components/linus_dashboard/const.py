@@ -25,6 +25,13 @@ def _get_version() -> str:
 
 VERSION = _get_version()
 
+
+def is_logger_debug() -> bool:
+    """Check if the logger is in DEBUG mode."""
+    import logging
+    return LOGGER.isEnabledFor(logging.DEBUG)
+
+
 URL_PANEL = "linus_dashboard_panel"
 
 CONF_ALARM_ENTITY_IDS = "alarm_entity_ids"

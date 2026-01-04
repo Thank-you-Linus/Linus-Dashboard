@@ -37,7 +37,7 @@ export const configurationDefaults: StrategyDefaults = {
       areas_slug: [UNDISCLOSED]
     }
   },
-  debug: true,
+  debug: false,
   domains: {
     _: {
       hide_config_entities: false,

@@ -21,4 +21,5 @@ export interface LinusDashboardConfig {
     excluded_device_classes?: string[];
     excluded_integrations?: string[];
     embedded_dashboards?: EmbeddedDashboardConfig[];
+    debug?: boolean;
 }

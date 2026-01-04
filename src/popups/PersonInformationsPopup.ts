@@ -71,7 +71,7 @@ class PersonInformationsPopup extends AbstractPopup {
                                         type: "custom:mushroom-person-card",
                                         entity: entityId,
                                         icon_type: "entity-picture",
-                                        secondary_info: "last-updated",
+                                        secondary_info: "last-changed",
                                         primary_info: "state"
                                     }
                                 ]

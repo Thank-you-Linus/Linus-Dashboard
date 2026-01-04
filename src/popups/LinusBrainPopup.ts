@@ -83,7 +83,7 @@ class LinusBrainPopup extends AbstractPopup {
                 icon: "mdi:clock-check-outline",
                 icon_color: "blue",
                 layout: "vertical",
-                secondary_info: "relative-time",
+                secondary_info: "last-changed",
                 tap_action: { action: "more-info" },
                 card_mod: {
                     style: `ha-card { box-shadow: none; margin: 2px; }`

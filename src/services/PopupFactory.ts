@@ -28,6 +28,8 @@ export interface PopupConfig {
   features?: any[];
   /** Optional device class */
   device_class?: string;
+  /** Show navigation button to domain view (default: true for area/floor scope) */
+  showNavigationButton?: boolean;
 }
 
 /**
@@ -62,6 +64,9 @@ export class PopupFactory {
    */
   private static createDomainPopup(config: PopupConfig): any {
     switch (config.domain) {
+      case "light":
+        return this.createLightPopup(config);
+
       case "media_player":
         return this.createMediaPlayerPopup(config);
 
@@ -71,6 +76,32 @@ export class PopupFactory {
       default:
         return this.createAggregatePopup(config);
     }
+  }
+
+  /**
+   * Create LightPopup (extends AggregatePopup with horizontal tile layout)
+   *
+   * @param config - Popup configuration
+   * @returns Popup action object
+   * @private
+   */
+  private static createLightPopup(config: PopupConfig): any {
+    const { LightPopup } = require("../popups/LightPopup");
+    const popup = new LightPopup({
+      domain: config.domain,
+      scope: config.scope,
+      scopeName: config.scopeName,
+      entity_ids: config.entity_ids,
+      serviceOn: config.serviceOn,
+      serviceOff: config.serviceOff,
+      activeStates: config.activeStates,
+      translationKey: config.translationKey,
+      linusBrainEntity: config.linusBrainEntity,
+      features: config.features,
+      device_class: config.device_class,
+      showNavigationButton: config.showNavigationButton,
+    });
+    return popup.getPopup();
   }
 
   /**
@@ -94,6 +125,7 @@ export class PopupFactory {
       linusBrainEntity: null,
       features: config.features,
       device_class: config.device_class,
+      showNavigationButton: config.showNavigationButton,
     });
     return popup.getPopup();
   }
@@ -119,6 +151,7 @@ export class PopupFactory {
       linusBrainEntity: null,
       features: config.features,
       device_class: config.device_class,
+      showNavigationButton: config.showNavigationButton,
     });
     return popup.getPopup();
   }
@@ -144,6 +177,7 @@ export class PopupFactory {
       linusBrainEntity: null,
       features: config.features,
       device_class: config.device_class,
+      showNavigationButton: config.showNavigationButton,
     });
     return popup.getPopup();
   }

@@ -54,11 +54,14 @@ export class EntityResolver {
     if (this.hasLinusBrain) {
       const linusEntity = `sensor.linus_brain_activity_${area_slug}`;
       if (this.hass.states[linusEntity]) {
-        return {
-          entity_id: linusEntity,
-          source: "linus_brain",
-          fallback: Helper.magicAreasDevices[area_slug]?.entities?.area_state?.entity_id
-        };
+        const state = this.hass.states[linusEntity];
+        if (state.state !== "unavailable" && state.state !== "unknown") {
+          return {
+            entity_id: linusEntity,
+            source: "linus_brain",
+            fallback: Helper.magicAreasDevices[area_slug]?.entities?.area_state?.entity_id
+          };
+        }
       }
     }
 
@@ -86,7 +89,10 @@ export class EntityResolver {
     if (this.hasLinusBrain) {
       const linusEntity = `binary_sensor.linus_brain_presence_detection_${area_slug}`;
       if (this.hass.states[linusEntity]) {
-        return { entity_id: linusEntity, source: "linus_brain" };
+        const state = this.hass.states[linusEntity];
+        if (state.state !== "unavailable" && state.state !== "unknown") {
+          return { entity_id: linusEntity, source: "linus_brain" };
+        }
       }
     }
 
@@ -107,11 +113,14 @@ export class EntityResolver {
     if (this.hasLinusBrain) {
       const linusEntity = `switch.linus_brain_feature_automatic_lighting_${area_slug}`;
       if (this.hass.states[linusEntity]) {
-        return {
-          entity_id: linusEntity,
-          source: "linus_brain",
-          fallback: Helper.magicAreasDevices[area_slug]?.entities?.light_control?.entity_id
-        };
+        const state = this.hass.states[linusEntity];
+        if (state.state !== "unavailable" && state.state !== "unknown") {
+          return {
+            entity_id: linusEntity,
+            source: "linus_brain",
+            fallback: Helper.magicAreasDevices[area_slug]?.entities?.light_control?.entity_id
+          };
+        }
       }
     }
 
@@ -137,11 +146,14 @@ export class EntityResolver {
     if (this.hasLinusBrain) {
       const linusEntity = `light.linus_brain_all_lights_${area_slug}`;
       if (this.hass.states[linusEntity]) {
-        return {
-          entity_id: linusEntity,
-          source: "linus_brain",
-          fallback: Helper.magicAreasDevices[area_slug]?.entities?.all_lights?.entity_id
-        };
+        const state = this.hass.states[linusEntity];
+        if (state.state !== "unavailable" && state.state !== "unknown") {
+          return {
+            entity_id: linusEntity,
+            source: "linus_brain",
+            fallback: Helper.magicAreasDevices[area_slug]?.entities?.all_lights?.entity_id
+          };
+        }
       }
     }
 
@@ -168,10 +180,13 @@ export class EntityResolver {
     // if (this.hasLinusBrain) {
     //   const linusEntity = `climate.linus_brain_climate_group_${area_slug}`;
     //   if (this.hass.states[linusEntity]) {
-    //     return { entity_id: linusEntity, source: "linus_brain" };
+    //     const state = this.hass.states[linusEntity];
+    //     if (state.state !== "unavailable" && state.state !== "unknown") {
+    //       return { entity_id: linusEntity, source: "linus_brain" };
+    //     }
     //   }
     // }
-    
+
     // Fallback to Magic Areas
     return this.resolveMagicAreasEntity(area_slug, "climate_group");
   }

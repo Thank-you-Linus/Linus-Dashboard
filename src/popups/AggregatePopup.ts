@@ -30,6 +30,8 @@ export interface AggregatePopupConfig {
   features?: any[];
   /** Device class (for covers, sensors, binary_sensors) */
   device_class?: string;
+  /** Show navigation button to domain view (default: true for area/floor scope) */
+  showNavigationButton?: boolean;
 }
 
 /**
@@ -74,45 +76,58 @@ class AggregatePopup extends AbstractPopup {
     // Store entity IDs
     this.#entity_ids = entity_ids;
 
-    // If Linus Brain entity available → use more-info
-    if (linusBrainEntity) {
-      return {
-        action: "more-info",
-        entity: linusBrainEntity
-      } as any; // Cast to any to allow more-info action
-    }
-
-    // Otherwise → custom popup
+    // Always create custom popup (even if Linus Brain entity exists)
     const title = this.buildTitle(config);
     const cards: any[] = [];
-    
+
+    // If Linus Brain entity exists, add a dedicated section for it FIRST
+    if (linusBrainEntity) {
+      cards.push(this.buildLinusBrainSection(linusBrainEntity));
+    }
+
     // Check if domain is sensor only (needs statistics)
     const statisticsDomains = ["sensor"];
     const needsStatistics = statisticsDomains.includes(domain);
-    
+
     // Check if domain is read-only (binary_sensor and sensor don't have control buttons)
     const readOnlyDomains = ["binary_sensor", "sensor"];
     const isReadOnly = readOnlyDomains.includes(domain);
 
-    // 1. Status card (X on • Y off) OR Statistics card (for sensors only)
-    if (needsStatistics) {
-      cards.push(this.buildStatisticsCard(config));
+    // 1. First line: Status + Navigation button (horizontal)
+    const statusCard = needsStatistics
+      ? this.buildStatisticsCard(config)
+      : this.buildStatusCard(config);
+
+    const showNavButton = config.showNavigationButton !== false && config.scope !== "global";
+
+    if (showNavButton) {
+      const navButton = this.buildNavigationButton(config);
+      if (navButton) {
+        // Horizontal layout with automatic sizing
+        cards.push({
+          type: "horizontal-stack",
+          cards: [statusCard, navButton]
+        });
+      }
     } else {
-      cards.push(this.buildStatusCard(config));
-    }
-    
-    // 2. Control buttons (Turn All On / Turn All Off) - only for controllable domains
-    if (!isReadOnly) {
-      cards.push(this.buildControlButtons(config));
+      // No navigation button: just show status card
+      cards.push(statusCard);
     }
 
-    // 3. Separator (only if multiple entities)
+    // 2. Second line: Control buttons (Turn All On / Turn All Off) - only for controllable domains
+    if (!isReadOnly) {
+      const controlButtons = this.buildControlButtons(config);
+      // Control buttons are already in horizontal-stack
+      cards.push(controlButtons);
+    }
+
+    // 4. Separator (only if multiple entities)
     const separator = this.buildSeparator(config);
     if (separator) {
       cards.push(separator);
     }
 
-    // 4. Individual entity cards
+    // 5. Individual entity cards
     cards.push(...this.buildIndividualCards(config));
 
     return {
@@ -150,14 +165,14 @@ class AggregatePopup extends AbstractPopup {
       (config.translationKey ? config.translationKey.charAt(0).toUpperCase() + config.translationKey.slice(1) : null) ||
       (config.device_class ? config.device_class.charAt(0).toUpperCase() + config.device_class.slice(1) : null) ||
       config.domain.charAt(0).toUpperCase() + config.domain.slice(1);
-    
+
     switch (config.scope) {
       case "global":
         return domainLabel; // "Lights", "Climates", etc.
-      
+
       case "floor":
         return `${domainLabel} - ${config.scopeName}`; // "Lights - Ground Floor"
-      
+
       case "area": {
         // Avoid duplication if area name already contains domain
         const lowerName = config.scopeName.toLowerCase();
@@ -176,20 +191,20 @@ class AggregatePopup extends AbstractPopup {
    */
   protected buildStatusCard(config: AggregatePopupConfig) {
     const { entity_ids, activeStates } = config;
-    
+
     // Create Jinja2 template for counting
     const statesArray = entity_ids.map(id => `states["${id}"]`).join(', ');
     const activeStatesCondition = activeStates.map(s => `'${s}'`).join(', ');
-    
+
     // Use HA translations for "on"/"off" states
     // Fallback to generic localization if HA translation not available
-    const stateOn = Helper.localize(`component.${config.domain}.entity_component._.state.on`) 
+    const stateOn = Helper.localize(`component.${config.domain}.entity_component._.state.on`)
       || Helper.localize('component.linus_dashboard.entity.text.aggregate_popup.state.state_on')
       || 'on';
     const stateOff = Helper.localize(`component.${config.domain}.entity_component._.state.off`)
       || Helper.localize('component.linus_dashboard.entity.text.aggregate_popup.state.state_off')
       || 'off';
-    
+
     return {
       type: "markdown",
       content: `
@@ -208,22 +223,22 @@ class AggregatePopup extends AbstractPopup {
    */
   protected buildStatisticsCard(config: AggregatePopupConfig) {
     const { entity_ids, device_class } = config;
-    
+
     // Determine if we should use SUM or AVERAGE based on device_class
     const sumDeviceClasses = ["energy", "power", "gas", "water", "voltage", "current", "data_size"];
     const useSum = device_class && sumDeviceClasses.includes(device_class);
-    
+
     // Create Jinja2 template for statistics
     const statesArray = entity_ids.map(id => `states["${id}"]`).join(', ');
-    
+
     // Get unit from first entity state
     const firstEntityState = Helper.getEntityState(entity_ids[0]);
     const unit = firstEntityState?.attributes?.unit_of_measurement || '';
-    
-    const statLabel = useSum 
+
+    const statLabel = useSum
       ? (Helper.localize('component.linus_dashboard.entity.text.aggregate_popup.state.total') || 'Total')
       : (Helper.localize('component.linus_dashboard.entity.text.aggregate_popup.state.average') || 'Average');
-    
+
     const jinjaCalculation = useSum
       ? `{% set entities = [${statesArray}] %}
          {% set valid = entities | selectattr('state', 'is_number') | map(attribute='state') | map('float') | list %}
@@ -231,7 +246,7 @@ class AggregatePopup extends AbstractPopup {
       : `{% set entities = [${statesArray}] %}
          {% set valid = entities | selectattr('state', 'is_number') | map(attribute='state') | map('float') | list %}
          {% set result = (valid | sum / valid | length) | round(1) if valid | length > 0 else '—' %}`;
-    
+
     return {
       type: "markdown",
       content: `
@@ -247,13 +262,13 @@ class AggregatePopup extends AbstractPopup {
    */
   protected buildControlButtons(config: AggregatePopupConfig) {
     const { domain, serviceOn, serviceOff, entity_ids, translationKey } = config;
-    
+
     // Use custom translations for action labels
     const actionOn = Helper.localize(`component.linus_dashboard.entity.text.aggregate_popup.state.action_on_${translationKey}`)
       || `Turn All On`;
     const actionOff = Helper.localize(`component.linus_dashboard.entity.text.aggregate_popup.state.action_off_${translationKey}`)
       || `Turn All Off`;
-    
+
     return {
       type: "horizontal-stack",
       cards: [
@@ -263,7 +278,7 @@ class AggregatePopup extends AbstractPopup {
           primary: actionOn,
           icon: "mdi:power-on",
           icon_color: "green",
-          layout: "vertical",
+          layout: "horizontal",
           tap_action: {
             action: "call-service",
             service: `${domain}.${serviceOn}`,
@@ -278,14 +293,14 @@ class AggregatePopup extends AbstractPopup {
             action: "none"
           }
         },
-        
+
         // Turn All OFF button
         {
           type: "custom:mushroom-template-card",
           primary: actionOff,
           icon: "mdi:power-off",
           icon_color: "red",
-          layout: "vertical",
+          layout: "horizontal",
           tap_action: {
             action: "call-service",
             service: `${domain}.${serviceOff}`,
@@ -305,6 +320,57 @@ class AggregatePopup extends AbstractPopup {
   }
 
   /**
+   * Build navigation button to domain view
+   */
+  protected buildNavigationButton(config: AggregatePopupConfig) {
+    const { domain, device_class } = config;
+
+    // Determine navigation path
+    // Only sensor and binary_sensor navigate to device_class view
+    // Other domains (cover, etc.) navigate to domain view
+    let navigationPath = domain;
+    if (device_class && (domain === "sensor" || domain === "binary_sensor")) {
+      navigationPath = device_class;
+    }
+
+    // Get localized label
+    const viewLabel = Helper.localize(`component.linus_dashboard.entity.text.aggregate_popup.state.view_all_${domain}`)
+      || `View All ${domain.charAt(0).toUpperCase() + domain.slice(1)}s`;
+
+    return {
+      type: "custom:mushroom-template-card",
+      primary: viewLabel,
+      icon: "mdi:view-dashboard",
+      icon_color: "blue",
+      layout: "horizontal",
+      tap_action: {
+        action: "navigate",
+        navigation_path: navigationPath
+      },
+      hold_action: {
+        action: "none"
+      },
+      double_tap_action: {
+        action: "none"
+      }
+    };
+  }
+
+  /**
+   * Build Linus Brain section (tile card for Linus Brain group entity)
+   */
+  protected buildLinusBrainSection(linusBrainEntity: string) {
+    return {
+      type: "tile",
+      entity: linusBrainEntity,
+      features: [
+        { type: "light-brightness" },
+        { type: "light-color-temp" }
+      ]
+    };
+  }
+
+  /**
    * Build separator title (only shown if multiple entities)
    */
   protected buildSeparator(config: AggregatePopupConfig) {
@@ -312,10 +378,10 @@ class AggregatePopup extends AbstractPopup {
     if (config.entity_ids.length <= 1) {
       return null;
     }
-    
+
     const subtitle = Helper.localize("component.linus_dashboard.entity.text.aggregate_popup.state.individual_controls")
       || "Individual Controls";
-    
+
     return {
       type: "custom:mushroom-title-card",
       subtitle,
@@ -335,7 +401,7 @@ class AggregatePopup extends AbstractPopup {
    */
   protected buildIndividualCards(config: AggregatePopupConfig) {
     const { entity_ids, features } = config;
-    
+
     return entity_ids.map(entity_id => ({
       type: "tile",
       entity: entity_id,

@@ -193,7 +193,9 @@ class AggregateChip extends AbstractChip {
         serviceOff: "turn_off",
         activeStates: ["on"],
         translationKey: "light",
-        features: [{ type: "light-brightness" }],
+        features: [
+          { type: "light-brightness" }
+        ],
       },
       climate: {
         serviceOn: "turn_on",

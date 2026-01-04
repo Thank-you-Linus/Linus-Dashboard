@@ -117,7 +117,7 @@ class HomeView {
       HOME_EXPOSED_CHIPS,
       {
         show_content: true,
-        tapActionMode: "navigation"  // Navigate to domain view on tap (HomeView only)
+        tapActionMode: "popup"  // Open aggregate popup on tap (changed from "navigation")
       }
     );
     if (homeChips) {

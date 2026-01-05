@@ -16,7 +16,6 @@ import { RefreshChip } from "../chips/RefreshChip";
 import { PersonCard } from "../cards/PersonCard";
 import { AggregateChip } from "../chips/AggregateChip";
 import { WelcomeCard } from "../cards/WelcomeCard";
-import { ConditionalLightChip } from "../chips/ConditionalLightChip";
 import { ChipFactory } from "../factories/ChipFactory";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
@@ -230,7 +229,12 @@ class HomeView {
       const fanEntities = Helper.getEntityIds({ domain: "fan", area_slug: floor.areas_slug });
 
       const chips = floor.floor_id === UNDISCLOSED ? [] : [
-        ...(lightEntities.length > 0 ? new ConditionalLightChip({ area_slug: floor.areas_slug, magic_device_id: floor.floor_id }).getChip() : []),
+        lightEntities.length > 0 && new AggregateChip({
+          domain: "light",
+          show_content: true,
+          magic_device_id: floor.floor_id,
+          area_slug: floor.areas_slug,
+        }).getChip(),
         climateEntities.length > 0 && new AggregateChip({
           domain: "climate",
           show_content: true,

@@ -46,7 +46,7 @@ export interface AggregateChipOptions extends chips.ChipOptions {
  * Supports device_class for binary_sensor, sensor, and cover domains.
  * 
  * **Features**:
- * - Automatic Linus Brain detection (uses more-info when LB group available)
+ * - Automatic Linus Brain/Magic Areas detection (passed to popup as linusBrainEntity)
  * - Scope-aware (adapts behavior for global/floor/area)
  * - EntityResolver integration (consistent entity resolution)
  * - Centralized color management (uses colorMapping from variables.ts)
@@ -54,7 +54,7 @@ export interface AggregateChipOptions extends chips.ChipOptions {
  * - Device class support (for binary_sensor, sensor, cover)
  * 
  * **Behavior**:
- * - tap_action: Opens AggregatePopup (or more-info if Linus Brain group exists)
+ * - tap_action: Always opens AggregatePopup (with Linus Brain/Magic Areas entity if available)
  * - hold_action: Navigates to domain/device_class view
  */
 class AggregateChip extends AbstractChip {
@@ -330,7 +330,7 @@ class AggregateChip extends AbstractChip {
   }
 
   /**
-   * Get Linus Brain group entity if available (only for area scope)
+   * Get Linus Brain or Magic Areas group entity if available
    * 
    * @param options - Chip options
    * @returns Entity ID or null
@@ -353,7 +353,8 @@ class AggregateChip extends AbstractChip {
     switch (options.domain) {
       case "light": {
         const lightResolution = resolver.resolveAllLights(options.area_slug);
-        return lightResolution.source === "linus_brain" ? lightResolution.entity_id : null;
+        // Return entity for both Linus Brain AND Magic Areas
+        return lightResolution.entity_id;
       }
 
       case "climate":

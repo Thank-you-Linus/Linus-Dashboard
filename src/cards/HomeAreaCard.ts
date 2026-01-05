@@ -10,7 +10,6 @@ import { EntityRegistryEntry } from "../types/homeassistant/data/entity_registry
 import { ConditionalChip } from "../chips/ConditionalChip";
 import { UNAVAILABLE, UNDISCLOSED } from "../variables";
 import { EntityCardConfig } from "../types/lovelace-mushroom/cards/entity-card-config";
-import { ConditionalLightChip } from "../chips/ConditionalLightChip";
 
 import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
 import StrategyArea = generic.StrategyArea;
@@ -219,8 +218,10 @@ class HomeAreaCard {
           fan.map(entity => ({ entity, state: "on" })),
           new AggregateChip({ domain: "fan", magic_device_id: this.area.slug, area_slug: this.area.slug, show_content: false }).getChip()
         ).getChip(),
-        // Two conditional light chips: one for ON state (turns off), one for OFF state (turns on)
-        ...(light?.length ? new ConditionalLightChip({ area_slug: this.area.slug, magic_device_id: this.area.slug }).getChip() : []),
+        light?.length && new ConditionalChip(
+          light.map(entity => ({ entity, state: "on" })),
+          new AggregateChip({ domain: "light", magic_device_id: this.area.slug, area_slug: this.area.slug, show_content: false }).getChip()
+        ).getChip(),
         // Light control switch - now supports Linus Brain or Magic Areas
         all_lights_entity && light_control_entity && new ConditionalChip(
           [{ entity: all_lights_entity, state_not: UNAVAILABLE }],

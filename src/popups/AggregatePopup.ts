@@ -80,11 +80,6 @@ class AggregatePopup extends AbstractPopup {
     const title = this.buildTitle(config);
     const cards: any[] = [];
 
-    // If Linus Brain entity exists, add a dedicated section for it FIRST
-    if (linusBrainEntity) {
-      cards.push(this.buildLinusBrainSection(linusBrainEntity));
-    }
-
     // Check if domain is sensor only (needs statistics)
     const statisticsDomains = ["sensor"];
     const needsStatistics = statisticsDomains.includes(domain);
@@ -119,6 +114,12 @@ class AggregatePopup extends AbstractPopup {
       const controlButtons = this.buildControlButtons(config);
       // Control buttons are already in horizontal-stack
       cards.push(controlButtons);
+    }
+
+
+    // 3. Linus Brain section (if exists) - positioned AFTER control buttons
+    if (linusBrainEntity) {
+      cards.push(this.buildLinusBrainSection(linusBrainEntity));
     }
 
     // 4. Separator (only if multiple entities)
@@ -365,8 +366,8 @@ class AggregatePopup extends AbstractPopup {
       entity: linusBrainEntity,
       features: [
         { type: "light-brightness" },
-        { type: "light-color-temp" }
-      ]
+      ],
+      features_position: "inline"
     };
   }
 

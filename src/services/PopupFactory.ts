@@ -43,15 +43,6 @@ export class PopupFactory {
    * @returns Popup action object (tap_action or hold_action)
    */
   static createPopup(config: PopupConfig): any {
-    // If Linus Brain group available, use more-info
-    if (config.linusBrainEntity) {
-      return {
-        action: "more-info",
-        entity: config.linusBrainEntity,
-      };
-    }
-
-    // Otherwise, create domain-specific popup
     return this.createDomainPopup(config);
   }
 

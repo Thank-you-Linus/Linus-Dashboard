@@ -29,6 +29,7 @@ VERSION = _get_version()
 def is_logger_debug() -> bool:
     """Check if the logger is in DEBUG mode."""
     import logging
+
     return LOGGER.isEnabledFor(logging.DEBUG)
 
 

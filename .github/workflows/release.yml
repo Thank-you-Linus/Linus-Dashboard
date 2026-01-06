@@ -4,6 +4,9 @@ on:
   release:
     types:
       - "published"
+  push:
+    tags:
+      - "*.*.*"
 
 permissions: {}
 
@@ -14,10 +17,33 @@ jobs:
     permissions:
       contents: write
     steps:
-      # 0. Validate release (not a pre-release)
+      # 0. Get tag name and validate release
+      - name: "Get tag name"
+        id: get_tag
+        run: |
+          if [[ "${{ github.event_name }}" == "release" ]]; then
+            TAG_NAME="${{ github.event.release.tag_name }}"
+            IS_PRERELEASE="${{ github.event.release.prerelease }}"
+            RELEASE_URL="${{ github.event.release.html_url }}"
+          else
+            TAG_NAME="${GITHUB_REF#refs/tags/}"
+            # Check if tag contains alpha/beta
+            if [[ "$TAG_NAME" =~ (alpha|beta) ]]; then
+              IS_PRERELEASE="true"
+            else
+              IS_PRERELEASE="false"
+            fi
+            RELEASE_URL="https://github.com/${{ github.repository }}/releases/tag/$TAG_NAME"
+          fi
+          echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
+          echo "is_prerelease=$IS_PRERELEASE" >> $GITHUB_OUTPUT
+          echo "release_url=$RELEASE_URL" >> $GITHUB_OUTPUT
+          echo "📦 Tag: $TAG_NAME"
+          echo "🏷️ Pre-release: $IS_PRERELEASE"
+
       - name: "Validate release"
         run: |
-          if [[ "${{ github.event.release.prerelease }}" == "true" ]]; then
+          if [[ "${{ steps.get_tag.outputs.is_prerelease }}" == "true" ]]; then
             echo "⚠️ This is a pre-release, skipping stable release workflow"
             exit 0
           fi
@@ -73,11 +99,17 @@ jobs:
           cd "${{ github.workspace }}/custom_components/linus_dashboard"
           zip linus_dashboard.zip -r ./
 
-      # 10. Télécharger l'archive ZIP dans la release
-      - name: "Upload the ZIP file to the release"
+      # 10. Create GitHub Release and upload ZIP
+      - name: "Create GitHub Release"
         uses: "softprops/action-gh-release@v2.3.3"
         with:
+          tag_name: ${{ steps.get_tag.outputs.tag_name }}
+          name: "v${{ steps.get_tag.outputs.tag_name }}"
+          body_path: RELEASE_NOTES.md
           files: ${{ github.workspace }}/custom_components/linus_dashboard/linus_dashboard.zip
+          draft: false
+          prerelease: false
+          make_latest: true
 
       # 11. Send Discord notification for stable release
       - name: "Send Discord Notification"
@@ -87,8 +119,8 @@ jobs:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: |
           if [ -n "$DISCORD_WEBHOOK_URL" ]; then
-            TAG_NAME="${{ github.event.release.tag_name }}"
-            RELEASE_URL="${{ github.event.release.html_url }}"
+            TAG_NAME="${{ steps.get_tag.outputs.tag_name }}"
+            RELEASE_URL="${{ steps.get_tag.outputs.release_url }}"
             bash scripts/notify-discord.sh release "$TAG_NAME" "$RELEASE_URL" || {
               echo "⚠️ Discord notification failed, but release succeeded"
               exit 0
@@ -117,8 +149,8 @@ jobs:
           if [ -n "$DISCORD_WEBHOOK_URL" ]; then
             curl -H "Content-Type: application/json" \
               -d '{
-                "content": "❌ **Stable Release Failed** ❌\n\n**Version:** ${{ github.event.release.tag_name }}\n**Workflow:** ${{ github.workflow }}\n**Run:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\n\nPlease check the logs and consider using `scripts/rollback-release.sh ${{ github.event.release.tag_name }}` if needed."
+                "content": "❌ **Stable Release Failed** ❌\n\n**Version:** ${{ steps.get_tag.outputs.tag_name }}\n**Workflow:** ${{ github.workflow }}\n**Run:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\n\nPlease check the logs and consider using `scripts/rollback-release.sh ${{ steps.get_tag.outputs.tag_name }}` if needed."
               }' \
               "$DISCORD_WEBHOOK_URL" || echo "Failed to send Discord failure notification"
           fi
-          echo "⚠️ Release failed. Consider running: scripts/rollback-release.sh ${{ github.event.release.tag_name }}"
+          echo "⚠️ Release failed. Consider running: scripts/rollback-release.sh ${{ steps.get_tag.outputs.tag_name }}"

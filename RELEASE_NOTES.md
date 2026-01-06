@@ -1,81 +1,93 @@
-# 🧪 Beta Release
+# 🎉 Release Notes - v1.4.0-beta.9
 
-> **This is a pre-release version for testing.**  
-> Please report any issues on [GitHub Issues](https://github.com/Thank-you-Linus/Linus-Dashboard/issues)
+## 🇬🇧 English
 
----
+### ✨ New Features
 
-## ✨ What's New
+**Claude Code Skills Integration**
+- Added 7 comprehensive Claude Code skills for streamlined development workflow
+- Skills include: release management (beta, stable, check, rollback), code review, debugging, and implementation
+- Skills automatically trigger based on natural language requests
+- Complete compatibility with existing OpenCode commands
 
-_No new features in this release_
+**Enhanced NPM Scripts**
+- Added 5 missing npm scripts for release management: `release:check`, `release:validate`, `release:changelog`, `release:notes`, `release:format-notes`
+- All scripts now properly integrated with both Claude Code skills and OpenCode commands
+- Improved developer experience with consistent tooling
 
-## 🐛 Bug Fixes
+### 🐛 Bug Fixes
 
-- **Build configuration for ES modules** - Renamed babel.config.js to babel.config.cjs to ensure compatibility with ES modules. This fixes build errors when package.json declares "type": "module"
-- **Domain handling and type safety** - Improved entity domain extraction with null checks to prevent runtime errors. Refactored the RegistryManager to build domain mappings more efficiently, ensuring proper entity grouping by domain and device class. This fix enhances stability when processing entities with missing or malformed domain information
+**Version Consistency Check**
+- Fixed `check-release-ready.sh` to correctly detect dynamic version in `const.py`
+- Now properly validates `_get_version()` function that reads from `package.json`
+- Eliminates false version mismatch errors during pre-release validation
 
-## ⚡ Improvements
+**Code Formatting**
+- Resolved Ruff formatting issues in Python codebase
+- Removed deprecated linting rules
+- Improved code quality and consistency
 
-_No improvements in this release_
+### ⚡ Improvements
 
----
+**Light Chip Handling**
+- Refactored light chip rendering for better performance
+- Improved aggregate popup behavior for light controls
+- Enhanced user experience when managing multiple lights
 
-## 🧪 For Beta Testers
+### 🧪 For Beta Testers
 
 **What to test:**
-- [ ] Verify that the dashboard builds and loads without errors
-- [ ] Test entity filtering and grouping by domain and device class
-- [ ] Check that all entities display correctly in area views
-- [ ] Ensure aggregate views properly group entities
-- [ ] Test with entities that have unusual or missing domain information
-
-<details>
-<summary>🇫🇷 <b>Quoi tester</b></summary>
-
-- [ ] Vérifier que le tableau de bord se construit et se charge sans erreurs
-- [ ] Tester le filtrage et le regroupement des entités par domaine et classe de dispositif
-- [ ] Vérifier que toutes les entités s'affichent correctement dans les vues de zone
-- [ ] S'assurer que les vues agrégées regroupent correctement les entités
-- [ ] Tester avec des entités ayant des informations de domaine inhabituelles ou manquantes
-
-</details>
+- Test the new Claude Code skills by asking natural language questions (e.g., "verify release readiness", "review my code")
+- Verify all npm release scripts work correctly: `npm run release:check`, `npm run release:validate`
+- Check that light chips display and function properly in aggregate popups
+- Confirm version consistency across all files (package.json, manifest.json, const.py)
 
 **Known Issues:**
-- _None currently_
+- None currently identified
 
 ---
 
-<details>
-<summary>📊 <b>Technical Details</b></summary>
+## 🇫🇷 Français
 
-### Contributors
-- @Julien-Decoen
+### ✨ Nouvelles fonctionnalités
 
-</details>
+**Intégration des Skills Claude Code**
+- Ajout de 7 skills Claude Code complets pour un workflow de développement optimisé
+- Skills inclus : gestion des releases (beta, stable, vérification, rollback), revue de code, débogage et implémentation
+- Déclenchement automatique des skills basé sur des requêtes en langage naturel
+- Compatibilité complète avec les commandes OpenCode existantes
 
+**Scripts NPM Améliorés**
+- Ajout de 5 scripts npm manquants pour la gestion des releases : `release:check`, `release:validate`, `release:changelog`, `release:notes`, `release:format-notes`
+- Tous les scripts sont maintenant correctement intégrés avec les skills Claude Code et les commandes OpenCode
+- Expérience développeur améliorée avec des outils cohérents
 
----
+### 🐛 Corrections de bugs
 
-## 📦 Installation
+**Vérification de Cohérence des Versions**
+- Correction de `check-release-ready.sh` pour détecter correctement la version dynamique dans `const.py`
+- Validation appropriée de la fonction `_get_version()` qui lit depuis `package.json`
+- Élimine les fausses erreurs de désynchronisation de version pendant la validation pré-release
 
-**Via HACS (Recommended):**
-1. Open HACS → Integrations
-2. Search for "Linus Dashboard"
-3. Click Update (if already installed) or Install
-4. Restart Home Assistant
-5. Clear browser cache (Ctrl+Shift+R or Cmd+Shift+R)
+**Formatage du Code**
+- Résolution des problèmes de formatage Ruff dans le code Python
+- Suppression des règles de linting dépréciées
+- Amélioration de la qualité et cohérence du code
 
-**Manual Installation:**
-1. Download the `linus_dashboard.zip` file from this release
-2. Extract to `custom_components/linus_dashboard/`
-3. Restart Home Assistant
-4. Clear browser cache
+### ⚡ Améliorations
 
----
+**Gestion des Chips de Lumière**
+- Refonte du rendu des chips de lumière pour de meilleures performances
+- Amélioration du comportement des popups agrégées pour les contrôles de lumière
+- Expérience utilisateur améliorée lors de la gestion de plusieurs lumières
 
-## 🔗 Links
+### 🧪 Pour les Beta Testeurs
 
-- 📖 [Documentation](https://github.com/Thank-you-Linus/Linus-Dashboard)
-- 🐛 [Report Issues](https://github.com/Thank-you-Linus/Linus-Dashboard/issues)
-- 💬 [Discord Community](https://discord.gg/your-discord-link)
+**Quoi tester :**
+- Tester les nouveaux skills Claude Code en posant des questions en langage naturel (ex: "vérifie si prêt pour release", "revois mon code")
+- Vérifier que tous les scripts npm de release fonctionnent correctement : `npm run release:check`, `npm run release:validate`
+- Vérifier que les chips de lumière s'affichent et fonctionnent correctement dans les popups agrégées
+- Confirmer la cohérence des versions dans tous les fichiers (package.json, manifest.json, const.py)
 
+**Problèmes connus :**
+- Aucun problème identifié actuellement

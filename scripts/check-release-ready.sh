@@ -154,13 +154,22 @@ echo ""
 echo -e "${BLUE}🔢 Checking version consistency...${NC}"
 PACKAGE_VERSION=$(node -p "require('./package.json').version")
 MANIFEST_VERSION=$(node -p "require('./custom_components/linus_dashboard/manifest.json').version")
-CONST_VERSION=$(grep '^VERSION = ' custom_components/linus_dashboard/const.py | sed 's/VERSION = "\(.*\)"/\1/')
+
+# Check if const.py uses _get_version() (dynamic version from package.json)
+if grep -q "VERSION = _get_version()" custom_components/linus_dashboard/const.py; then
+    CONST_VERSION="$PACKAGE_VERSION (dynamic from package.json)"
+    CONST_VERSION_CHECK="$PACKAGE_VERSION"
+else
+    # Legacy: extract static version
+    CONST_VERSION=$(grep '^VERSION = ' custom_components/linus_dashboard/const.py | sed 's/VERSION = "\(.*\)"/\1/')
+    CONST_VERSION_CHECK="$CONST_VERSION"
+fi
 
 echo "  package.json: $PACKAGE_VERSION"
 echo "  manifest.json: $MANIFEST_VERSION"
 echo "  const.py: $CONST_VERSION"
 
-if [[ "$PACKAGE_VERSION" == "$MANIFEST_VERSION" ]] && [[ "$PACKAGE_VERSION" == "$CONST_VERSION" ]]; then
+if [[ "$PACKAGE_VERSION" == "$MANIFEST_VERSION" ]] && [[ "$PACKAGE_VERSION" == "$CONST_VERSION_CHECK" ]]; then
     print_success "All versions match: $PACKAGE_VERSION"
 else
     print_error "Version mismatch detected"

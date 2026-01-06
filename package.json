@@ -70,6 +70,11 @@
     "test:smoke": "bash scripts/smoke-tests.sh",
     "test:ci": "bash scripts/ci-local.sh",
     "analyze:commits": "bash scripts/analyze-commits.sh",
+    "release:check": "bash scripts/check-release-ready.sh",
+    "release:validate": "bash scripts/validate-release-notes.sh",
+    "release:changelog": "bash scripts/generate-changelog.sh",
+    "release:notes": "bash scripts/generate-release-notes.sh",
+    "release:format-notes": "bash scripts/format-release-notes.sh",
     "release:rollback": "bash scripts/rollback-release.sh",
     "forums:open": "bash scripts/open-forums.sh",
     "update:ha": "bash scripts/update-ha-version.sh"

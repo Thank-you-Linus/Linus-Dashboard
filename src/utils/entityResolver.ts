@@ -176,16 +176,6 @@ export class EntityResolver {
    * @returns EntityResolution with the resolved entity
    */
   resolveClimateGroup(area_slug: string): EntityResolution {
-    // TODO: Add Linus Brain support when available
-    // if (this.hasLinusBrain) {
-    //   const linusEntity = `climate.linus_brain_climate_group_${area_slug}`;
-    //   if (this.hass.states[linusEntity]) {
-    //     const state = this.hass.states[linusEntity];
-    //     if (state.state !== "unavailable" && state.state !== "unknown") {
-    //       return { entity_id: linusEntity, source: "linus_brain" };
-    //     }
-    //   }
-    // }
 
     // Fallback to Magic Areas
     return this.resolveMagicAreasEntity(area_slug, "climate_group");
@@ -292,7 +282,7 @@ export class EntityResolver {
     const linusBrainDevices = devices.filter(
       device => device.manufacturer === "Linus Brain" && device.model === "Area Intelligence"
     );
-    
+
     // If no devices found, integration is not installed
     if (linusBrainDevices.length === 0) {
       return false;
@@ -309,7 +299,7 @@ export class EntityResolver {
     const linusBrainEntities = Object.keys(this.hass.states).filter(
       entity_id => entity_id.includes("linus_brain")
     );
-    
+
     // If we have at least one entity that is not unavailable, the integration is enabled
     return linusBrainEntities.some(
       entity_id => this.hass.states[entity_id]?.state !== "unavailable"

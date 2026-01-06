@@ -24,10 +24,18 @@ RELEASE_TYPE="${1:-prerelease}"
 VERSION="${2:-$(node -p "require('./package.json').version")}"
 RELEASE_URL="${3:-https://github.com/Thank-you-Linus/Linus-Dashboard/releases/tag/$VERSION}"
 
-# Check if DISCORD_WEBHOOK_URL is set
-if [ -z "$DISCORD_WEBHOOK_URL" ]; then
-    echo -e "${RED}❌ Error: DISCORD_WEBHOOK_URL environment variable is not set${NC}"
-    echo -e "${YELLOW}💡 Set it in GitHub Secrets or export it locally${NC}"
+# Select webhook URL based on release type
+if [[ "$RELEASE_TYPE" == "release" ]] && [ -n "$DISCORD_WEBHOOK_STABLE_URL" ]; then
+    # Use stable release webhook if available (for #annonces channel)
+    WEBHOOK_URL="$DISCORD_WEBHOOK_STABLE_URL"
+    echo -e "${GREEN}✓ Using stable release webhook (DISCORD_WEBHOOK_STABLE_URL)${NC}"
+elif [ -n "$DISCORD_WEBHOOK_URL" ]; then
+    # Fallback to default webhook (for beta testers channel)
+    WEBHOOK_URL="$DISCORD_WEBHOOK_URL"
+    echo -e "${YELLOW}⚠️  Using default webhook (DISCORD_WEBHOOK_URL)${NC}"
+else
+    echo -e "${RED}❌ Error: No Discord webhook URL configured${NC}"
+    echo -e "${YELLOW}💡 Set DISCORD_WEBHOOK_STABLE_URL for stable releases or DISCORD_WEBHOOK_URL for pre-releases${NC}"
     exit 1
 fi
 
@@ -58,8 +66,14 @@ if [ -f "RELEASE_NOTES.md" ]; then
     # Extract English changelog (features, fixes, improvements only)
     CHANGELOG_EN=""
     
-    # Get features (try bold items first, fallback to all items, limit to 5)
-    FEATURES=$(sed -n '/## 🇬🇧 English/,/## 🇫🇷 Français/p' RELEASE_NOTES.md | sed -n '/### ✨ New Features/,/^### /p' | grep -E '^[[:space:]]*-[[:space:]]*\*\*' | head -5)
+    # Get features (try both "Major New Features" and "New Features", bold items first, fallback to all items, limit to 5)
+    FEATURES=$(sed -n '/## 🇬🇧 English/,/## 🇫🇷 Français/p' RELEASE_NOTES.md | sed -n '/### ✨ Major New Features/,/^### /p' | grep -E '^[[:space:]]*-[[:space:]]*\*\*' | head -5)
+    if [ -z "$FEATURES" ]; then
+        FEATURES=$(sed -n '/## 🇬🇧 English/,/## 🇫🇷 Français/p' RELEASE_NOTES.md | sed -n '/### ✨ New Features/,/^### /p' | grep -E '^[[:space:]]*-[[:space:]]*\*\*' | head -5)
+    fi
+    if [ -z "$FEATURES" ]; then
+        FEATURES=$(sed -n '/## 🇬🇧 English/,/## 🇫🇷 Français/p' RELEASE_NOTES.md | sed -n '/### ✨ Major New Features/,/^### /p' | grep -E '^[[:space:]]*-' | grep -v '^\s*$' | head -5)
+    fi
     if [ -z "$FEATURES" ]; then
         FEATURES=$(sed -n '/## 🇬🇧 English/,/## 🇫🇷 Français/p' RELEASE_NOTES.md | sed -n '/### ✨ New Features/,/^### /p' | grep -E '^[[:space:]]*-' | grep -v '^\s*$' | head -5)
     fi
@@ -97,8 +111,14 @@ ${IMPROVEMENTS}"
     # Extract French changelog
     CHANGELOG_FR=""
     
-    # Get features (French) (try bold items first, fallback to all items, limit to 5)
-    FEATURES_FR=$(sed -n '/## 🇫🇷 Français/,/## 📊 Technical Details/p' RELEASE_NOTES.md | sed -n '/### ✨ Nouvelles fonctionnalités/,/^### /p' | grep -E '^[[:space:]]*-[[:space:]]*\*\*' | head -5)
+    # Get features (French) (try both "Nouvelles Fonctionnalités Majeures" and "Nouvelles fonctionnalités", bold items first, fallback to all items, limit to 5)
+    FEATURES_FR=$(sed -n '/## 🇫🇷 Français/,/## 📊 Technical Details/p' RELEASE_NOTES.md | sed -n '/### ✨ Nouvelles Fonctionnalités Majeures/,/^### /p' | grep -E '^[[:space:]]*-[[:space:]]*\*\*' | head -5)
+    if [ -z "$FEATURES_FR" ]; then
+        FEATURES_FR=$(sed -n '/## 🇫🇷 Français/,/## 📊 Technical Details/p' RELEASE_NOTES.md | sed -n '/### ✨ Nouvelles fonctionnalités/,/^### /p' | grep -E '^[[:space:]]*-[[:space:]]*\*\*' | head -5)
+    fi
+    if [ -z "$FEATURES_FR" ]; then
+        FEATURES_FR=$(sed -n '/## 🇫🇷 Français/,/## 📊 Technical Details/p' RELEASE_NOTES.md | sed -n '/### ✨ Nouvelles Fonctionnalités Majeures/,/^### /p' | grep -E '^[[:space:]]*-' | grep -v '^\s*$' | head -5)
+    fi
     if [ -z "$FEATURES_FR" ]; then
         FEATURES_FR=$(sed -n '/## 🇫🇷 Français/,/## 📊 Technical Details/p' RELEASE_NOTES.md | sed -n '/### ✨ Nouvelles fonctionnalités/,/^### /p' | grep -E '^[[:space:]]*-' | grep -v '^\s*$' | head -5)
     fi
@@ -190,7 +210,7 @@ JSON_PAYLOAD=$(jq -n \
 echo -e "${BLUE}📤 Sending to Discord...${NC}\n"
 
 # Send to Discord
-RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "$DISCORD_WEBHOOK_URL" \
+RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "$WEBHOOK_URL" \
     -H "Content-Type: application/json" \
     -d "$JSON_PAYLOAD")
 

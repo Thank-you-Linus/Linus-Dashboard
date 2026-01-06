@@ -117,8 +117,9 @@ jobs:
         continue-on-error: true
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          DISCORD_WEBHOOK_STABLE_URL: ${{ secrets.DISCORD_WEBHOOK_STABLE_URL }}
         run: |
-          if [ -n "$DISCORD_WEBHOOK_URL" ]; then
+          if [ -n "$DISCORD_WEBHOOK_STABLE_URL" ] || [ -n "$DISCORD_WEBHOOK_URL" ]; then
             TAG_NAME="${{ steps.get_tag.outputs.tag_name }}"
             RELEASE_URL="${{ steps.get_tag.outputs.release_url }}"
             bash scripts/notify-discord.sh release "$TAG_NAME" "$RELEASE_URL" || {

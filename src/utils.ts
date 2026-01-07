@@ -18,6 +18,7 @@ import { GroupedCard } from "./cards/GroupedCard";
 import { LovelaceGridCardConfig } from "./types/homeassistant/lovelace/cards/types";
 import { ResourceKeys } from "./types/homeassistant/data/frontend";
 import { EntityCardConfig } from "./types/lovelace-mushroom/cards/entity-card-config";
+import { createDomainTag, parseDomainTag } from "./utils/domainTagHelper";
 import { ImageAreaCard } from "./cards/ImageAreaCard";
 import { AggregateChip } from "./chips/AggregateChip";
 import { AggregateCard } from "./cards/AggregateCard";
@@ -154,14 +155,16 @@ export const getEntityDomain = memoize(function getEntityDomain(entityId: string
 export const groupEntitiesByDomain = memoize(function groupEntitiesByDomain(entity_ids: string[]): Record<string, string[]> {
     const grouped = entity_ids.reduce((acc: Record<string, string[]>, entity_id) => {
         const domain = getEntityDomain(entity_id);
+        if (!domain) return acc;
+
         let device_class
-        if (domain && Object.keys(DEVICE_CLASSES).includes(domain)) {
+        if (Object.keys(DEVICE_CLASSES).includes(domain)) {
             const entityState = Helper.getEntityState(entity_id);
             if (entityState?.attributes?.device_class) {
                 device_class = entityState.attributes.device_class;
             }
         }
-        const domainTag = `${domain}${device_class ? ":" + device_class : ""}`;
+        const domainTag = createDomainTag(domain, device_class);
         if (!acc[domainTag]) {
             acc[domainTag] = [];
         }
@@ -192,6 +195,132 @@ export const groupEntitiesByDomain = memoize(function groupEntitiesByDomain(enti
 }, { name: 'groupEntitiesByDomain', maxSize: 300 });
 
 /**
+ * Determine if an item should be created for a domain/device_class combination.
+ * Centralizes all validation logic to eliminate duplication.
+ *
+ * @param params - Validation parameters
+ * @returns True if the item should be created, false otherwise
+ */
+function shouldCreateItem(params: {
+    domain: string;
+    device_class?: string;
+    magic_device_id: string;
+    area_slugs: string[];
+    domains: string[];
+}): boolean {
+    const { domain, device_class, magic_device_id, area_slugs, domains } = params;
+
+    // Check excluded domains
+    if (Helper.linus_dashboard_config?.excluded_domains?.includes(domain)) {
+        return false;
+    }
+
+    // Check excluded device classes
+    if (device_class && Helper.linus_dashboard_config?.excluded_device_classes?.includes(device_class)) {
+        return false;
+    }
+
+    // Check domain existence using createDomainTag for consistency
+    const domainToCheck = createDomainTag(domain, device_class);
+    if (!domains.includes(domainToCheck)) {
+        return false;
+    }
+
+    // Check global entities
+    if (getGlobalEntitiesExceptUndisclosed(domain, device_class).length === 0) {
+        return false;
+    }
+
+    // For area-specific items, check area entities
+    if (magic_device_id !== "global" && area_slugs.length > 0) {
+        const hasAreaEntities = area_slugs.some(slug => {
+            const area = Helper.areas[slug];
+            if (!area) return false;
+            const entities = Helper.getAreaEntities(area, domain, device_class);
+            return entities && entities.length > 0;
+        });
+
+        if (!hasAreaEntities) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+/**
+ * Resolve Magic Areas entity for domain/device_class if available.
+ *
+ * @param magic_device_id - The magic device ID
+ * @param domain - The domain
+ * @param device_class - Optional device class
+ * @returns Magic Areas entity or undefined
+ */
+function resolveMagicAreasEntity(
+    magic_device_id: string,
+    domain: string,
+    device_class?: string
+): EntityRegistryEntry | undefined {
+    return getMAEntity(magic_device_id, domain, device_class);
+}
+
+/**
+ * Create a single chip or card for a domain/device_class.
+ * Handles dynamic import, fallback creation, and error handling.
+ *
+ * @param params - Creation parameters
+ * @returns The created chip/card or null if creation failed
+ */
+async function createSingleItem(params: {
+    domain: string;
+    device_class?: string;
+    magic_device_id: string;
+    area_slug?: string | string[];
+    itemOptions?: any;
+    magicAreasEntity?: EntityRegistryEntry;
+    isChip: boolean;
+}): Promise<LovelaceChipConfig | LovelaceCardConfig | null> {
+    const { domain, device_class, magic_device_id, area_slug, itemOptions, magicAreasEntity, isChip } = params;
+
+    const className = Helper.sanitizeClassName(device_class ?? domain + (isChip ? "Chip" : "Card"));
+
+    try {
+        // Try to import specific chip/card class
+        const itemModule = await import(`./${isChip ? "chips" : "cards"}/${className}`);
+        const item = new itemModule[className](
+            { ...itemOptions, device_class, magic_device_id, area_slug },
+            magicAreasEntity
+        );
+        return isChip ? item.getChip() : item.getCard();
+    } catch {
+        // Fallback to Aggregate chip/card
+        if (isChip) {
+            const chipOptions: any = { ...itemOptions };
+            delete chipOptions.icon; // Let AggregateChip calculate it
+
+            const item = new AggregateChip({
+                ...chipOptions,
+                domain,
+                device_class,
+                area_slug,
+                magic_device_id
+            });
+            return item.getChip();
+        } else {
+            const item = new AggregateCard({
+                ...itemOptions,
+                domain,
+                device_class,
+                area_slug,
+                magic_device_id,
+                tap_action: navigateTo(domain === "binary_sensor" || domain === "sensor" ? device_class ?? domain : domain)
+            });
+            return item.getCard();
+        }
+    }
+}
+
+/**
  * Create items (chips or cards) from a list.
  * @param {string[]} itemList - The list of items.
  * @param {Partial<chips.AggregateChipOptions> | Partial<generic.StrategyEntity>} [itemOptions] - The item options.
@@ -214,80 +343,34 @@ async function createItemsFromList(
         : area_slugs.flatMap(area_slug => Object.keys(Helper.areas[area_slug]?.domains ?? {}));
 
     for (const itemType of itemList) {
-        let domain = itemType;
-        let device_class: string | undefined;
+        // Parse domain and device_class from item type using helper
+        const { domain, device_class } = parseDomainTag(itemType);
 
-        if (itemType.includes(":")) {
-            [domain, device_class] = itemType.split(":");
+        // Validate if item should be created (eliminates duplicate code)
+        if (!shouldCreateItem({ domain, device_class, magic_device_id, area_slugs, domains })) {
+            continue;
         }
 
-        if (Helper.linus_dashboard_config?.excluded_domains?.includes(domain)) continue;
-        if (device_class && Helper.linus_dashboard_config?.excluded_device_classes?.includes(device_class)) continue;
-        // Fix: Check for device_class-specific domain if device_class is present
-        // For "cover:blind", check if "cover:blind" exists in domains
-        // For "light" (no device_class), check if "light" exists in domains
-        const domainToCheck = device_class ? `${domain}:${device_class}` : domain;
-        if (!domains.includes(domainToCheck)) continue;
+        // Resolve Magic Areas entity if available
+        const magicAreasEntity = resolveMagicAreasEntity(magic_device_id, domain, device_class);
 
-        if (getGlobalEntitiesExceptUndisclosed(domain, device_class).length === 0) continue;
-
-        // For area-specific chips, check if the area has entities for this domain/device_class
-        if (area_slug && magic_device_id !== "global") {
-            const hasAreaEntities = area_slugs.some(slug => {
-                const area = Helper.areas[slug];
-                if (!area) return false;
-                const entities = Helper.getAreaEntities(area, domain, device_class);
-                return entities && entities.length > 0;
-            });
-            if (!hasAreaEntities) continue;
-        }
-
-        // For area-specific chips, check if the area has entities for this domain/device_class
-        if (area_slug && magic_device_id !== "global") {
-            const hasAreaEntities = area_slugs.some(slug => {
-                const area = Helper.areas[slug];
-                if (!area) return false;
-                const entities = Helper.getAreaEntities(area, domain, device_class);
-                return entities && entities.length > 0;
-            });
-            if (!hasAreaEntities) continue;
-        }
-        const magicAreasEntity = getMAEntity(magic_device_id, domain, device_class);
-        const className = Helper.sanitizeClassName(device_class ?? domain + (isChip ? "Chip" : "Card"));
-
+        // Create the item
         try {
-            let itemModule;
-            let item;
-            try {
-                itemModule = await import(`./${isChip ? "chips" : "cards"}/${className}`);
-                item = new itemModule[className]({ ...itemOptions, device_class, magic_device_id, area_slug }, magicAreasEntity);
-            } catch {
-                if (isChip) {
-                    // Filter out icon property to let AggregateChip calculate it
-                    const chipOptions: any = { ...itemOptions };
-                    delete chipOptions.icon;
+            const item = await createSingleItem({
+                domain,
+                device_class,
+                magic_device_id,
+                area_slug,
+                itemOptions,
+                magicAreasEntity,
+                isChip
+            });
 
-                    item = new AggregateChip({
-                        ...chipOptions,
-                        domain,
-                        device_class,
-                        area_slug,
-                        magic_device_id
-                    });
-                } else {
-                    item = new AggregateCard({
-                        ...itemOptions,
-                        domain,
-                        device_class,
-                        area_slug,
-                        magic_device_id,
-                        tap_action: navigateTo(domain === "binary_sensor" || domain === "sensor" ? device_class ?? domain : domain)
-                    });
-                }
+            if (item) {
+                items.push(item);
             }
-            items.push(isChip ? item.getChip() : item.getCard());
         } catch (e) {
-            Helper.logError(`An error occurred while creating the ${itemType} chip!`, e);
+            Helper.logError(`An error occurred while creating the ${itemType} ${isChip ? 'chip' : 'card'}!`, e);
         }
     }
     return items;
@@ -379,7 +462,7 @@ export const getGlobalEntitiesExceptUndisclosed = memoize(function getGlobalEnti
     const supportedDeviceClassDomains = ["binary_sensor", "sensor", "cover", "media_player"];
     const supportsDeviceClass = supportedDeviceClassDomains.includes(domain);
     const dc = supportsDeviceClass ? device_class : undefined;
-    const domainTag = `${domain}${dc ? ":" + dc : ""}`;
+    const domainTag = createDomainTag(domain, dc);
 
     // Handle device_class === null: ONLY entities WITHOUT device_class
     // Handle device_class === undefined: ALL entities (with and without device_class)
@@ -395,7 +478,7 @@ export const getGlobalEntitiesExceptUndisclosed = memoize(function getGlobalEnti
             const deviceClasses = DEVICE_CLASSES[domain as keyof typeof DEVICE_CLASSES] ?? [];
             entities = [
                 ...(Helper.domains[domain] ?? []),  // Entities WITHOUT device_class
-                ...deviceClasses.flatMap(d => Helper.domains[`${domain}:${d}`] ?? [])  // Entities WITH device_class
+                ...deviceClasses.flatMap(d => Helper.domains[createDomainTag(domain, d)] ?? [])  // Entities WITH device_class
             ];
         } else {
             // Specific device_class
@@ -417,7 +500,7 @@ export const getGlobalEntitiesExceptUndisclosed = memoize(function getGlobalEnti
             // Check all device_class variants (e.g., "cover:blind", "cover:curtain", etc.)
             const deviceClasses = DEVICE_CLASSES[domain as keyof typeof DEVICE_CLASSES] ?? [];
             for (const dc of deviceClasses) {
-                if (Helper.areas[UNDISCLOSED]?.domains?.[`${domain}:${dc}`]?.includes(entity.entity_id)) {
+                if (Helper.areas[UNDISCLOSED]?.domains?.[createDomainTag(domain, dc)]?.includes(entity.entity_id)) {
                     return false;
                 }
             }

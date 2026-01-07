@@ -13,6 +13,7 @@ import type { AreaRegistryEntry } from "../types/homeassistant/data/area_registr
 import type { FloorRegistryEntry } from "../types/homeassistant/data/floor_registry";
 import { generic } from "../types/strategy/generic";
 import { LinusDashboardConfig } from "../types/homeassistant/data/linus_dashboard";
+import { createDomainTag } from "../utils/domainTagHelper";
 import { getMagicAreaSlug, groupEntitiesByDomain, slugify } from "../utils";
 import { UNDISCLOSED, MAGIC_AREAS_NAME } from "../variables";
 
@@ -97,8 +98,8 @@ export class RegistryManager {
     for (const entity of Object.values(this.entities)) {
       const domain = entity.entity_id.split('.')[0];
       const device_class = (this.hassStates[entity.entity_id]?.attributes as any)?.device_class;
-      const domainTag = `${domain}${device_class ? ":" + device_class : ""}`;
-      
+      const domainTag = createDomainTag(domain, device_class);
+
       if (!this.domains[domainTag]) {
         this.domains[domainTag] = [];
       }

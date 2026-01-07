@@ -39,6 +39,8 @@
     "@types/lodash.merge": "^4.6.9",
     "@typescript-eslint/eslint-plugin": "^7.18.0",
     "@typescript-eslint/parser": "^7.18.0",
+    "@vitest/coverage-v8": "^1.6.1",
+    "@vitest/ui": "^1.6.1",
     "babel-loader": "10.0.0",
     "concurrently": "^8.2.2",
     "core-js": "3.45.1",
@@ -50,6 +52,7 @@
     "eslint-plugin-wc": "3.0.1",
     "fancy-log": "^2.0.0",
     "gulp": "5.0.1",
+    "happy-dom": "^12.10.3",
     "home-assistant-js-websocket": "9.5.0",
     "ignore-loader": "^0.1.2",
     "rimraf": "^5.0.5",
@@ -58,7 +61,8 @@
     "ts-node": "^10",
     "typescript": "5.9.2",
     "typescript-eslint": "^8.49.0",
-    "version-bump-prompt": "^6"
+    "version-bump-prompt": "^6",
+    "vitest": "^1.6.1"
   },
   "scripts": {
     "build": "rspack build --config rspack.config.cjs",
@@ -67,6 +71,10 @@
     "lint": "eslint src --ext .ts,.tsx --fix",
     "lint:check": "eslint src --ext .ts,.tsx",
     "type-check": "tsc --noEmit",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest --coverage",
+    "test:watch": "vitest --watch",
     "test:smoke": "bash scripts/smoke-tests.sh",
     "test:ci": "bash scripts/ci-local.sh",
     "analyze:commits": "bash scripts/analyze-commits.sh",

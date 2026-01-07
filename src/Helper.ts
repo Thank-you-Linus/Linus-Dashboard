@@ -5,6 +5,7 @@ import { configurationDefaults } from "./configurationDefaults";
 import { generic } from "./types/strategy/generic";
 import { DEVICE_CLASSES, MAGIC_AREAS_DOMAIN, MAGIC_AREAS_NAME, LINUS_BRAIN_DOMAIN, SENSOR_STATE_CLASS_TOTAL, SENSOR_STATE_CLASS_TOTAL_INCREASING, UNDISCLOSED, colorMapping, ALL_HOME_ASSISTANT_DOMAINS, STANDARD_DOMAIN_ICONS } from "./variables";
 import { getEntityDomain, getGlobalEntitiesExceptUndisclosed, getMAEntity, getMagicAreaSlug, groupEntitiesByDomain, slugify } from "./utils";
+import { createDomainTag } from "./utils/domainTagHelper";
 import { IconResources } from "./types/homeassistant/data/frontend";
 import { LinusDashboardConfig } from "./types/homeassistant/data/linus_dashboard";
 import { PerformanceProfiler } from "./utils/performanceProfiler";
@@ -488,7 +489,7 @@ class Helper {
         if (entityState?.attributes?.device_class) device_class = entityState.attributes.device_class;
       }
 
-      const domainTag = `${domain}${device_class ? ":" + device_class : ""}`;
+      const domainTag = createDomainTag(domain, device_class);
 
       if (!this.#domains[domainTag]) this.#domains[domainTag] = [];
 
@@ -913,7 +914,7 @@ class Helper {
         }
 
         // Fallback vers la logique normale
-        const domainTag = `${domain}:${device_class}`;
+        const domainTag = createDomainTag(domain, device_class);
         return area.domains?.[domainTag]?.map(entity_id => this.#entities[entity_id]).filter(Boolean) as StrategyEntity[] ?? [];
       } else {
         // If device_class is not specified, get all entities of the domain regardless of device class
@@ -1278,11 +1279,11 @@ class Helper {
                 entities = [area.humidity_entity_id];
               } else {
                 // Fallback vers toutes les entités du device_class dans l'area
-                entities = area.domains?.[`${domain}:${device_class}`];
+                entities = area.domains?.[createDomainTag(domain, device_class)];
               }
             } else {
               // Pour les autres domaines, utiliser la logique normale
-              entities = this.#areas[slug]?.domains?.[`${domain}:${device_class}`];
+              entities = this.#areas[slug]?.domains?.[createDomainTag(domain, device_class)];
             }
           }
 
@@ -1323,7 +1324,7 @@ class Helper {
           }
           // Handle device_class with a specific value
           else if (device_class) {
-            const entities = this.#areas[area.slug]?.domains?.[`${domain}:${device_class}`];
+            const entities = this.#areas[area.slug]?.domains?.[createDomainTag(domain, device_class)];
             if (entities) results.push(...entities.map(transformer));
           }
           // Handle device_class === undefined: ALL entities (with and without device_class)
@@ -1664,7 +1665,7 @@ class Helper {
     };
 
     // Prefer device_class-specific template if available
-    const templateKey = device_class ? `${domain}:${device_class}` : domain;
+    const templateKey = createDomainTag(domain, device_class);
     const template = templates[templateKey] ?? templates[domain] ?? templates.default!;
 
     if (!template) {

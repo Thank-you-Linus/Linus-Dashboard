@@ -50,7 +50,9 @@ async function showVersionMismatchNotification(serverVersion: string, clientVers
  * Check if versions match and show notification if needed
  */
 async function checkVersion(backendVersion: string, hass: any): Promise<void> {
-    if (backendVersion && backendVersion !== version) {
+    // Skip notification if backend version is unknown (indicates package.json read failure on backend)
+    // This prevents false positives when the backend can't determine its version
+    if (backendVersion && backendVersion !== "unknown" && backendVersion !== version) {
         if (!versionNotificationPending) {
             versionNotificationPending = true;
             await showVersionMismatchNotification(backendVersion, version, hass);

@@ -223,7 +223,11 @@ async function createItemsFromList(
 
         if (Helper.linus_dashboard_config?.excluded_domains?.includes(domain)) continue;
         if (device_class && Helper.linus_dashboard_config?.excluded_device_classes?.includes(device_class)) continue;
-        if (!domains.includes(domain)) continue;
+        // Fix: Check for device_class-specific domain if device_class is present
+        // For "cover:blind", check if "cover:blind" exists in domains
+        // For "light" (no device_class), check if "light" exists in domains
+        const domainToCheck = device_class ? `${domain}:${device_class}` : domain;
+        if (!domains.includes(domainToCheck)) continue;
 
         if (getGlobalEntitiesExceptUndisclosed(domain, device_class).length === 0) continue;
 

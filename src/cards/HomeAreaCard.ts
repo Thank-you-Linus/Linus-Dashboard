@@ -218,10 +218,7 @@ class HomeAreaCard {
           fan.map(entity => ({ entity, state: "on" })),
           new AggregateChip({ domain: "fan", magic_device_id: this.area.slug, area_slug: this.area.slug, show_content: false }).getChip()
         ).getChip(),
-        light?.length && new ConditionalChip(
-          light.map(entity => ({ entity, state: "on" })),
-          new AggregateChip({ domain: "light", magic_device_id: this.area.slug, area_slug: this.area.slug, show_content: false }).getChip()
-        ).getChip(),
+        light?.length && new AggregateChip({ domain: "light", magic_device_id: this.area.slug, area_slug: this.area.slug, show_content: false }).getChip(),
         // Light control switch - now supports Linus Brain or Magic Areas
         all_lights_entity && light_control_entity && new ConditionalChip(
           [{ entity: all_lights_entity, state_not: UNAVAILABLE }],

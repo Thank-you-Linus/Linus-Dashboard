@@ -9,6 +9,17 @@ Create a **STABLE release** for production use.
 
 Current version: Check `package.json` for current version.
 
+## ⚠️ CRITICAL TAG FORMAT RULE
+
+**NEVER use 'v' prefix in git tags!**
+
+- ✅ CORRECT: `1.5.0`
+- ❌ WRONG: `v1.5.0`
+
+The GitHub workflows expect tags WITHOUT 'v' prefix. Using 'v' will cause workflow failures.
+All scripts (`bump-version.sh`, `create-release.sh`) already create tags without 'v'.
+**Never create tags manually** - always use the scripts.
+
 ## Intelligent Workflow
 
 The workflow adapts automatically based on the current version:

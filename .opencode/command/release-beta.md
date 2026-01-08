@@ -7,6 +7,17 @@ Create a **BETA pre-release** for community testing.
 
 Current version: !`node -p "require('./package.json').version"`
 
+## ⚠️ CRITICAL TAG FORMAT RULE
+
+**NEVER use 'v' prefix in git tags!**
+
+- ✅ CORRECT: `1.4.1-beta.1`
+- ❌ WRONG: `v1.4.1-beta.1`
+
+The GitHub workflows expect tags WITHOUT 'v' prefix. Using 'v' will cause workflow failures.
+All scripts (`bump-version.sh`, `create-prerelease.sh`) already create tags without 'v'.
+**Never create tags manually** - always use the scripts.
+
 ## 🤖 Intelligent Workflow
 
 The workflow adapts automatically based on the current version:

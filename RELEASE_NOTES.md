@@ -1,282 +1,141 @@
-# 🎉 Linus Dashboard 1.4.0 - A Major Milestone!
+# 🧪 Linus Dashboard 1.4.1-beta.1 - Beta Test Release
 
-> **A huge THANK YOU to our amazing community!** 🙏
-> Thanks to your support, we've reached **100+ GitHub stars** ⭐ and are approaching **4,000 downloads**! 🚀
-> This release is dedicated to all of you who believe in making Home Assistant more accessible and beautiful.
+> **⚠️ This is a BETA release for testing purposes**
+> Please report any issues on [GitHub Issues](https://github.com/Thank-you-Linus/Linus-Dashboard/issues)
 
 ---
 
 ## 🇬🇧 English
 
-### 🎊 Celebrating Our Community
+### 🐛 Bug Fixes
 
-This isn't just another release - it's a **celebration of what we've built together**!
+#### **Fixed Magic Areas Integration Issues**
 
-**Milestone Achieved:**
-- ⭐ **100+ GitHub Stars** - Your trust means everything to us
-- 📥 **Nearly 4,000 Downloads** - From around the world
-- 💬 **Active Community** - Constant feedback and feature requests
-- 🌍 **Growing Global Presence** - Users from France, USA, Germany, and beyond
+Magic Areas integration was causing problems with binary sensor popups, showing only the aggregate entity instead of individual sensors.
 
-**Special Thanks:**
-- To every **beta tester** who helped us catch bugs before production
-- To our **French community** at HACF for the incredible support
-- To everyone who **reported issues**, **suggested features**, and **spread the word**
-- To the **Home Assistant team** for creating such an amazing platform
+- **Binary Sensor Popups** - Now correctly displays all individual sensors (motion, occupancy, door, window, etc.) instead of just the Magic Areas aggregate entity
+- **Sensor Popups** - Fixed same issue for regular sensors (temperature, humidity, battery, etc.)
+- **Global Chips** - Global occupation/motion chips now show proper entity lists
+- **Improved Entity Resolution** - Smart logic to use Magic Areas aggregates for controllable domains (lights, climate) but individual entities for sensors
 
-### ✨ Major New Features
+**Technical Details:**
+- Modified [Helper.ts:1261-1265](src/Helper.ts#L1261-L1265) to skip Magic Areas for binary_sensor/sensor domains
+- Ensures individual entity visibility for monitoring devices while keeping smart aggregation for control devices
 
-#### 🎨 **Custom Embedded Dashboards** (Advanced Users)
+#### **Fixed Navigation Button Labels and Translations**
 
-**The most powerful feature for advanced users!**
+Navigation buttons in aggregate popups were showing incorrect labels like "View All Binary_sensors" instead of the proper device class name.
 
-Take complete control of your dashboard by embedding your own custom Lovelace views directly into Linus Dashboard. Perfect for power users who want to:
+- **Device Class Support** - Buttons now show proper device class names (e.g., "View All Occupation", "View All Temperature")
+- **French Translations** - Navigation buttons fully translated (e.g., "Voir tout Occupation", "Voir tout Température")
+- **Consistent Labels** - All domains now use Home Assistant's native translations when available
+- **Added Translation Key** - New `view_all_prefix` translation key for "View All" / "Voir tout"
 
-- **Mix auto-generated views with custom designs** - Keep Linus' smart automation while adding your personal touch
-- **Create specialized dashboards** - Energy monitoring, security cameras, custom graphs, or any Lovelace card you can imagine
-- **Full Lovelace compatibility** - Use ANY card from HACS or custom cards
-- **Seamless integration** - Your custom views appear right alongside auto-generated ones
+**Technical Details:**
+- Enhanced [AggregatePopup.ts:329-348](src/popups/AggregatePopup.ts#L329-L348) to use `getDomainTranslationKey()`
+- Added translations in [fr.json:214](custom_components/linus_dashboard/translations/fr.json#L214) and [en.json:214](custom_components/linus_dashboard/translations/en.json#L214)
 
-**How it works:**
-1. Create your custom dashboard in Home Assistant
-2. Configure it in Linus Dashboard settings
-3. Choose which views to embed (or embed the whole dashboard)
-4. Your custom content appears perfectly integrated!
+### 🧪 Beta Testing Checklist
 
-**Use cases:**
-- Energy dashboard with detailed consumption graphs
-- Security system with all your cameras
-- Climate control with advanced HVAC management
-- Media center with all your entertainment devices
-- Custom automations dashboard
+**Please test the following:**
 
-This feature bridges the gap between **full automation** and **complete customization** - the best of both worlds!
+- [ ] **Magic Areas Integration**: Verify that clicking on global occupation/motion/door/window chips shows all individual sensors, not just aggregate entities
+- [ ] **Binary Sensor Popups**: Check that area/floor level binary sensor popups display complete entity lists
+- [ ] **Navigation Buttons**: Confirm that "View All X" buttons show correct translated device class names (French and English)
+- [ ] **Sensor Statistics**: Verify that sensor aggregates (temperature, humidity, battery) still display correct average/sum calculations
+- [ ] **Control Domains**: Ensure that lights, climate, and covers still use Magic Areas aggregates when available
 
-#### 🔲 **Enhanced Aggregate Popup Modal**
+**Known Testing Environment:**
+- Home Assistant: Latest stable version recommended
+- Magic Areas: If installed, test with both aggregate and individual entities
+- Browser Mod: Required for popup functionality
+- Languages: Test both French and English UI
 
-**A game-changer for managing multiple devices!**
+### 📝 Known Issues
 
-We've completely redesigned how you interact with groups of similar devices. The new aggregate popup modal provides:
+None at this time. Please report any issues you encounter!
 
-**Smart Device Grouping:**
-- **Lights** - Control all lights in a room with one tap (brightness, color, temperature)
-- **Covers** - Open/close all blinds or shutters together
-- **Climate** - Adjust temperature for multiple zones
-- **Media Players** - Control volume and playback across devices
-- **Switches** - Toggle multiple switches as a group
+### 🔄 Migration Notes
 
-**Intuitive Interface:**
-- Beautiful, responsive modal design
-- Individual device controls within the group
-- Visual feedback for device states
-- Quick actions for common scenarios
-- Smooth animations and transitions
-
-**Performance Optimized:**
-- Faster rendering for large device groups
-- Reduced Home Assistant load
-- Better state synchronization
-- Improved error handling
-
-**Example:** Tap "All Lights" in your living room - instantly see and control each light individually, or use the master control to adjust everything at once!
-
-### 🐛 Bug Fixes & Improvements
-
-**Light Chip Handling**
-- Completely refactored light chip rendering for **2x faster performance**
-- Fixed aggregation issues with grouped lights
-- Better color temperature representation
-- Improved brightness slider responsiveness
-
-**Code Quality & Developer Experience**
-- Added **7 Claude Code Skills** for streamlined development
-- Fixed version consistency checks across all files
-- Resolved Python formatting issues (Ruff compliance)
-- Enhanced NPM scripts for release management
-- Better error messages and debugging tools
-
-**Stability Improvements**
-- Fixed edge cases in device state updates
-- Better handling of unavailable entities
-- Improved error recovery mechanisms
-- Memory usage optimizations
-
-### 🎯 What's Next?
-
-We're listening to your feedback! Upcoming features being considered:
-- Enhanced tablet/mobile layouts
-- More customization options for cards
-- Additional language support
-- Integration with popular HACS cards
-- Performance optimizations for large homes
-
-**Want to influence the roadmap?** Join the discussion on our [GitHub Issues](https://github.com/Thank-you-Linus/Linus-Dashboard/issues)!
+No breaking changes. This is a bug fix release that improves existing functionality.
 
 ---
 
 ## 🇫🇷 Français
 
-### 🎊 Célébration de Notre Communauté
+### 🐛 Corrections de Bugs
 
-Ce n'est pas qu'une simple release - c'est une **célébration de ce que nous avons construit ensemble** !
+#### **Correction des Problèmes d'Intégration Magic Areas**
 
-**Jalons Atteints :**
-- ⭐ **Plus de 100 étoiles GitHub** - Votre confiance nous touche énormément
-- 📥 **Près de 4 000 téléchargements** - Du monde entier
-- 💬 **Communauté Active** - Retours constants et demandes de fonctionnalités
-- 🌍 **Présence Mondiale Croissante** - Utilisateurs de France, USA, Allemagne et au-delà
+L'intégration Magic Areas causait des problèmes avec les popups de capteurs binaires, affichant seulement l'entité agrégée au lieu des capteurs individuels.
 
-**Remerciements Spéciaux :**
-- À tous les **beta testeurs** qui nous ont aidés à corriger les bugs avant la production
-- À notre **communauté française** sur HACF pour le soutien incroyable
-- À tous ceux qui ont **signalé des problèmes**, **suggéré des fonctionnalités** et **fait passer le mot**
-- À l'**équipe Home Assistant** pour avoir créé une plateforme aussi extraordinaire
+- **Popups de Capteurs Binaires** - Affiche maintenant correctement tous les capteurs individuels (mouvement, occupation, porte, fenêtre, etc.) au lieu de juste l'entité agrégée Magic Areas
+- **Popups de Capteurs** - Correction du même problème pour les capteurs réguliers (température, humidité, batterie, etc.)
+- **Chips Globales** - Les chips globales d'occupation/mouvement affichent maintenant les listes d'entités appropriées
+- **Résolution d'Entités Améliorée** - Logique intelligente pour utiliser les agrégats Magic Areas pour les domaines contrôlables (lumières, climat) mais les entités individuelles pour les capteurs
 
-### ✨ Nouvelles Fonctionnalités Majeures
+**Détails Techniques :**
+- Modifié [Helper.ts:1261-1265](src/Helper.ts#L1261-L1265) pour ignorer Magic Areas pour les domaines binary_sensor/sensor
+- Garantit la visibilité des entités individuelles pour les appareils de monitoring tout en gardant l'agrégation intelligente pour les appareils de contrôle
 
-#### 🎨 **Dashboards Personnalisés Intégrés** (Utilisateurs Avancés)
+#### **Correction des Labels et Traductions des Boutons de Navigation**
 
-**La fonctionnalité la plus puissante pour les utilisateurs avancés !**
+Les boutons de navigation dans les popups agrégées affichaient des labels incorrects comme "View All Binary_sensors" au lieu du nom de classe d'appareil approprié.
 
-Prenez le contrôle total de votre dashboard en intégrant vos propres vues Lovelace personnalisées directement dans Linus Dashboard. Parfait pour les power users qui veulent :
+- **Support des Classes d'Appareils** - Les boutons affichent maintenant les noms de classes d'appareils appropriés (ex: "Voir tout Occupation", "Voir tout Température")
+- **Traductions Françaises** - Boutons de navigation entièrement traduits (ex: "Voir tout Occupation", "Voir tout Température")
+- **Labels Cohérents** - Tous les domaines utilisent maintenant les traductions natives de Home Assistant quand disponibles
+- **Ajout de Clé de Traduction** - Nouvelle clé de traduction `view_all_prefix` pour "View All" / "Voir tout"
 
-- **Mixer vues auto-générées et designs personnalisés** - Gardez l'automatisation intelligente de Linus tout en ajoutant votre touche personnelle
-- **Créer des dashboards spécialisés** - Monitoring énergétique, caméras de sécurité, graphiques personnalisés, ou toute carte Lovelace imaginable
-- **Compatibilité Lovelace complète** - Utilisez N'IMPORTE quelle carte de HACS ou carte personnalisée
-- **Intégration transparente** - Vos vues personnalisées apparaissent aux côtés des vues auto-générées
+**Détails Techniques :**
+- Amélioré [AggregatePopup.ts:329-348](src/popups/AggregatePopup.ts#L329-L348) pour utiliser `getDomainTranslationKey()`
+- Ajout des traductions dans [fr.json:214](custom_components/linus_dashboard/translations/fr.json#L214) et [en.json:214](custom_components/linus_dashboard/translations/en.json#L214)
 
-**Comment ça marche :**
-1. Créez votre dashboard personnalisé dans Home Assistant
-2. Configurez-le dans les paramètres de Linus Dashboard
-3. Choisissez quelles vues intégrer (ou intégrez tout le dashboard)
-4. Votre contenu personnalisé apparaît parfaitement intégré !
+### 🧪 Checklist de Test Beta
 
-**Cas d'usage :**
-- Dashboard énergétique avec graphiques détaillés de consommation
-- Système de sécurité avec toutes vos caméras
-- Contrôle climatique avec gestion HVAC avancée
-- Centre multimédia avec tous vos appareils de divertissement
-- Dashboard d'automatisations personnalisées
+**Merci de tester les points suivants :**
 
-Cette fonctionnalité fait le pont entre **automatisation complète** et **personnalisation totale** - le meilleur des deux mondes !
+- [ ] **Intégration Magic Areas** : Vérifier que cliquer sur les chips globales d'occupation/mouvement/porte/fenêtre affiche tous les capteurs individuels, pas seulement les entités agrégées
+- [ ] **Popups de Capteurs Binaires** : Vérifier que les popups de capteurs binaires au niveau zone/étage affichent les listes complètes d'entités
+- [ ] **Boutons de Navigation** : Confirmer que les boutons "Voir tout X" affichent les noms de classes d'appareils corrects et traduits (français et anglais)
+- [ ] **Statistiques de Capteurs** : Vérifier que les agrégats de capteurs (température, humidité, batterie) affichent toujours les calculs de moyenne/somme corrects
+- [ ] **Domaines de Contrôle** : S'assurer que les lumières, le climat et les volets utilisent toujours les agrégats Magic Areas quand disponibles
 
-#### 🔲 **Modal Popup Agrégée Améliorée**
+**Environnement de Test Recommandé :**
+- Home Assistant : Dernière version stable recommandée
+- Magic Areas : Si installé, tester avec à la fois les entités agrégées et individuelles
+- Browser Mod : Requis pour la fonctionnalité de popup
+- Langues : Tester à la fois l'interface française et anglaise
 
-**Un game-changer pour gérer plusieurs appareils !**
+### 📝 Problèmes Connus
 
-Nous avons complètement repensé comment vous interagissez avec les groupes d'appareils similaires. La nouvelle modal popup agrégée offre :
+Aucun pour le moment. Merci de signaler tout problème rencontré !
 
-**Regroupement Intelligent des Appareils :**
-- **Lumières** - Contrôlez toutes les lumières d'une pièce en un tap (luminosité, couleur, température)
-- **Volets** - Ouvrez/fermez tous les volets ou stores ensemble
-- **Climat** - Ajustez la température pour plusieurs zones
-- **Lecteurs Média** - Contrôlez le volume et la lecture sur plusieurs appareils
-- **Interrupteurs** - Basculez plusieurs interrupteurs en groupe
+### 🔄 Notes de Migration
 
-**Interface Intuitive :**
-- Design de modal magnifique et réactif
-- Contrôles individuels des appareils au sein du groupe
-- Feedback visuel pour les états des appareils
-- Actions rapides pour les scénarios courants
-- Animations et transitions fluides
-
-**Optimisé pour la Performance :**
-- Rendu plus rapide pour les grands groupes d'appareils
-- Charge Home Assistant réduite
-- Meilleure synchronisation des états
-- Gestion d'erreurs améliorée
-
-**Exemple :** Tapez "Toutes les Lumières" dans votre salon - voyez et contrôlez instantanément chaque lumière individuellement, ou utilisez le contrôle maître pour tout ajuster d'un coup !
-
-### 🐛 Corrections de Bugs & Améliorations
-
-**Gestion des Chips de Lumière**
-- Refonte complète du rendu des chips de lumière pour **2x plus de performance**
-- Correction des problèmes d'agrégation avec les lumières groupées
-- Meilleure représentation de la température de couleur
-- Slider de luminosité plus réactif
-
-**Qualité du Code & Expérience Développeur**
-- Ajout de **7 Skills Claude Code** pour un développement optimisé
-- Correction des vérifications de cohérence de version sur tous les fichiers
-- Résolution des problèmes de formatage Python (conformité Ruff)
-- Scripts NPM améliorés pour la gestion des releases
-- Meilleurs messages d'erreur et outils de débogage
-
-**Améliorations de Stabilité**
-- Correction de cas limites dans les mises à jour d'état des appareils
-- Meilleure gestion des entités indisponibles
-- Mécanismes de récupération d'erreur améliorés
-- Optimisations de l'utilisation mémoire
-
-### 🎯 Et Ensuite ?
-
-Nous écoutons vos retours ! Fonctionnalités à venir considérées :
-- Mises en page améliorées pour tablettes/mobiles
-- Plus d'options de personnalisation pour les cartes
-- Support de langues supplémentaires
-- Intégration avec les cartes HACS populaires
-- Optimisations de performance pour les grandes maisons
-
-**Vous voulez influencer la roadmap ?** Rejoignez la discussion sur nos [GitHub Issues](https://github.com/Thank-you-Linus/Linus-Dashboard/issues) !
-
----
-
-## 💝 A Message From The Team
-
-Building Linus Dashboard has been an incredible journey. What started as a personal project to make Home Assistant more accessible has grown into something much bigger - a community-driven effort to reimagine what a smart home dashboard can be.
-
-**Thank you for:**
-- Every bug report that made us better
-- Every feature request that pushed our boundaries
-- Every star that motivated us to keep going
-- Every download that validated our vision
-- Every message of support that reminded us why we do this
-
-**Here's to the next 4,000 downloads and beyond!** 🚀
-
-With gratitude,
-The Linus Dashboard Team
+Aucun changement cassant. Ceci est une release de correction de bugs qui améliore les fonctionnalités existantes.
 
 ---
 
 ## 📊 Technical Details
 
-### Changelog Since 1.3.0
-
-**Features:**
-- Custom embedded dashboards with full Lovelace compatibility
-- Enhanced aggregate popup modal with improved UX
-- Claude Code Skills integration for development
-- 7 new NPM scripts for release management
+### Changes Since 1.4.0
 
 **Bug Fixes:**
-- Fixed light chip rendering performance (2x faster)
-- Resolved version consistency check issues
-- Fixed Python formatting compliance
-- Improved aggregate popup behavior
+- Fixed Magic Areas integration showing only aggregate entities for binary_sensor/sensor domains
+- Fixed navigation button labels to show correct device_class translations
+- Added missing `view_all_prefix` translation key
 
-**Performance:**
-- Optimized light chip rendering
-- Reduced memory usage
-- Better state synchronization
-- Faster modal loading
+**Files Modified:**
+- `src/Helper.ts` (lines 1261-1265) - Entity resolution logic
+- `src/popups/AggregatePopup.ts` (lines 329-348) - Navigation button labels
+- `custom_components/linus_dashboard/translations/fr.json` (line 214) - French translations
+- `custom_components/linus_dashboard/translations/en.json` (line 214) - English translations
 
-### Contributors
-
-A massive thank you to:
-- @Julien-Decoen - Lead Developer
-- All our beta testers
-- The HACF community
-- Everyone who contributed feedback
-
-### Download Stats
-
-- **Total Downloads:** ~4,000 (and growing!)
-- **GitHub Stars:** 100+
-- **Active Installations:** Growing daily
-- **Community Forums:** Active on HA Community & HACF
+**Commits:**
+- e7dd125 - refactor: consolidate domain tag construction and improve code maintainability
+- e287f4e - fix: enhance domain checking logic for device classes in createItemsFromList function
 
 ---
 
-**Ready to upgrade?** Update through HACS or manually download from our [GitHub Releases](https://github.com/Thank-you-Linus/Linus-Dashboard/releases)!
+**Ready to test?** Update through HACS (enable beta versions) or manually download from [GitHub Releases](https://github.com/Thank-you-Linus/Linus-Dashboard/releases)!

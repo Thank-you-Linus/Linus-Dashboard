@@ -334,9 +334,18 @@ class AggregatePopup extends AbstractPopup {
       navigationPath = device_class;
     }
 
-    // Get localized label
-    const viewLabel = Helper.localize(`component.linus_dashboard.entity.text.aggregate_popup.state.view_all_${domain}`)
-      || `View All ${domain.charAt(0).toUpperCase() + domain.slice(1)}s`;
+    // Get localized label - use navigationPath instead of domain for consistency
+    // Try to get domain-specific translation from HA
+    const translationKey = getDomainTranslationKey(domain, device_class);
+    const haTranslation = Helper.localize(translationKey);
+    const domainLabel = (haTranslation && haTranslation !== "translation not found" ? haTranslation : null)
+      || Helper.strategyOptions.domains[device_class ? `${domain}_${device_class}` : domain]?.title
+      || navigationPath.charAt(0).toUpperCase() + navigationPath.slice(1);
+
+    // Build "View All X" label with translation
+    const viewAllPrefix = Helper.localize('component.linus_dashboard.entity.text.aggregate_popup.state.view_all_prefix')
+      || 'View All';
+    const viewLabel = `${viewAllPrefix} ${domainLabel}`;
 
     return {
       type: "custom:mushroom-template-card",

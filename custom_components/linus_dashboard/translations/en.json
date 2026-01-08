@@ -211,6 +211,7 @@
                     "state_off": "off",
                     "average": "Average",
                     "total": "Total",
+                    "view_all_prefix": "View All",
                     "title_light": "Lights",
                     "title_switch": "Switches",
                     "title_fan": "Fans",

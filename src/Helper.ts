@@ -1259,7 +1259,10 @@ class Helper {
         }
         // Handle device_class with a specific value
         else if (device_class) {
-          const magic_entity = getMAEntity(slug, domain, device_class);
+          // For binary_sensor and sensor, do NOT use Magic Areas aggregate entities
+          // We want to always show individual sensors, not aggregated values
+          const useMagicArea = domain !== "binary_sensor" && domain !== "sensor";
+          const magic_entity = useMagicArea ? getMAEntity(slug, domain, device_class) : null;
 
           let entities: string[] | undefined;
 

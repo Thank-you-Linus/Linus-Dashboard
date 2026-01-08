@@ -63,110 +63,78 @@ TEMPLATE_CONTENT=$(cat "$TEMPLATE_FILE")
 if [ -f "RELEASE_NOTES.md" ]; then
     echo -e "${GREEN}✓ Found RELEASE_NOTES.md${NC}"
     
-    # Extract English changelog (features, fixes, improvements only)
+    # Extract English changelog (compact format for Discord)
     CHANGELOG_EN=""
-    
-    # Get features (try both "Major New Features" and "New Features", bold items first, fallback to all items, limit to 5)
-    FEATURES=$(sed -n '/## 🇬🇧 English/,/## 🇫🇷 Français/p' RELEASE_NOTES.md | sed -n '/### ✨ Major New Features/,/^### /p' | grep -E '^[[:space:]]*-[[:space:]]*\*\*' | head -5)
-    if [ -z "$FEATURES" ]; then
-        FEATURES=$(sed -n '/## 🇬🇧 English/,/## 🇫🇷 Français/p' RELEASE_NOTES.md | sed -n '/### ✨ New Features/,/^### /p' | grep -E '^[[:space:]]*-[[:space:]]*\*\*' | head -5)
-    fi
-    if [ -z "$FEATURES" ]; then
-        FEATURES=$(sed -n '/## 🇬🇧 English/,/## 🇫🇷 Français/p' RELEASE_NOTES.md | sed -n '/### ✨ Major New Features/,/^### /p' | grep -E '^[[:space:]]*-' | grep -v '^\s*$' | head -5)
-    fi
-    if [ -z "$FEATURES" ]; then
-        FEATURES=$(sed -n '/## 🇬🇧 English/,/## 🇫🇷 Français/p' RELEASE_NOTES.md | sed -n '/### ✨ New Features/,/^### /p' | grep -E '^[[:space:]]*-' | grep -v '^\s*$' | head -5)
-    fi
-    if [ -n "$FEATURES" ]; then
-        CHANGELOG_EN="${CHANGELOG_EN}**✨ New Features**
-${FEATURES}
 
-"
-    fi
-    
-    # Get bug fixes (try bold items first, fallback to all items, limit to 5)
-    FIXES=$(sed -n '/## 🇬🇧 English/,/## 🇫🇷 Français/p' RELEASE_NOTES.md | sed -n '/### 🐛 Bug Fixes/,/^### /p' | grep -E '^[[:space:]]*-[[:space:]]*\*\*' | head -5)
-    if [ -z "$FIXES" ]; then
-        FIXES=$(sed -n '/## 🇬🇧 English/,/## 🇫🇷 Français/p' RELEASE_NOTES.md | sed -n '/### 🐛 Bug Fixes/,/^### /p' | grep -E '^[[:space:]]*-' | grep -v '^\s*$' | head -5)
-    fi
+    # Get all bullet points under Bug Fixes section (only top-level bullets with bold titles)
+    FIXES=$(sed -n '/## 🇬🇧 English/,/## 🇫🇷 Français/p' RELEASE_NOTES.md | \
+            sed -n '/### 🐛 Bug Fixes/,/^### /p' | \
+            grep -E '^- \*\*' | \
+            sed 's/\*\*\(.*\)\*\*.*/• **\1**/g' | \
+            head -3)
+
     if [ -n "$FIXES" ]; then
-        CHANGELOG_EN="${CHANGELOG_EN}**🐛 Bug Fixes**
-${FIXES}
+        CHANGELOG_EN="${FIXES}"
+    fi
 
-"
-    fi
-    
-    # Get improvements (all items, limited to 3)
-    IMPROVEMENTS=$(sed -n '/## 🇬🇧 English/,/## 🇫🇷 Français/p' RELEASE_NOTES.md | sed -n '/### ⚡ Improvements/,/^### /p' | grep -E '^[[:space:]]*-' | grep -v '^\s*$' | head -3)
-    if [ -n "$IMPROVEMENTS" ]; then
-        CHANGELOG_EN="${CHANGELOG_EN}**⚡ Improvements**
-${IMPROVEMENTS}"
-    fi
-    
-    # If no changelog found, use a summary message
-    if [ -z "$CHANGELOG_EN" ]; then
-        CHANGELOG_EN="Multiple improvements and fixes. See full release notes for details."
-    fi
-    
-    # Extract French changelog
-    CHANGELOG_FR=""
-    
-    # Get features (French) (try both "Nouvelles Fonctionnalités Majeures" and "Nouvelles fonctionnalités", bold items first, fallback to all items, limit to 5)
-    FEATURES_FR=$(sed -n '/## 🇫🇷 Français/,/## 📊 Technical Details/p' RELEASE_NOTES.md | sed -n '/### ✨ Nouvelles Fonctionnalités Majeures/,/^### /p' | grep -E '^[[:space:]]*-[[:space:]]*\*\*' | head -5)
-    if [ -z "$FEATURES_FR" ]; then
-        FEATURES_FR=$(sed -n '/## 🇫🇷 Français/,/## 📊 Technical Details/p' RELEASE_NOTES.md | sed -n '/### ✨ Nouvelles fonctionnalités/,/^### /p' | grep -E '^[[:space:]]*-[[:space:]]*\*\*' | head -5)
-    fi
-    if [ -z "$FEATURES_FR" ]; then
-        FEATURES_FR=$(sed -n '/## 🇫🇷 Français/,/## 📊 Technical Details/p' RELEASE_NOTES.md | sed -n '/### ✨ Nouvelles Fonctionnalités Majeures/,/^### /p' | grep -E '^[[:space:]]*-' | grep -v '^\s*$' | head -5)
-    fi
-    if [ -z "$FEATURES_FR" ]; then
-        FEATURES_FR=$(sed -n '/## 🇫🇷 Français/,/## 📊 Technical Details/p' RELEASE_NOTES.md | sed -n '/### ✨ Nouvelles fonctionnalités/,/^### /p' | grep -E '^[[:space:]]*-' | grep -v '^\s*$' | head -5)
-    fi
-    if [ -n "$FEATURES_FR" ]; then
-        CHANGELOG_FR="${CHANGELOG_FR}**✨ Nouvelles fonctionnalités**
-${FEATURES_FR}
+    # Get features if available (limit to 3)
+    FEATURES=$(sed -n '/## 🇬🇧 English/,/## 🇫🇷 Français/p' RELEASE_NOTES.md | \
+               sed -n '/### ✨/,/^### /p' | \
+               grep -E '^- \*\*' | \
+               sed 's/\*\*\(.*\)\*\*.*/• **\1**/g' | \
+               head -3)
 
-"
-    fi
-    
-    # Get bug fixes (French) (try bold items first, fallback to all items, limit to 5)
-    FIXES_FR=$(sed -n '/## 🇫🇷 Français/,/## 📊 Technical Details/p' RELEASE_NOTES.md | sed -n '/### 🐛 Corrections de bugs/,/^### /p' | grep -E '^[[:space:]]*-[[:space:]]*\*\*' | head -5)
-    if [ -z "$FIXES_FR" ]; then
-        FIXES_FR=$(sed -n '/## 🇫🇷 Français/,/## 📊 Technical Details/p' RELEASE_NOTES.md | sed -n '/### 🐛 Corrections de bugs/,/^### /p' | grep -E '^[[:space:]]*-' | grep -v '^\s*$' | head -5)
-    fi
-    if [ -n "$FIXES_FR" ]; then
-        CHANGELOG_FR="${CHANGELOG_FR}**🐛 Corrections de bugs**
-${FIXES_FR}
-
-"
-    fi
-    
-    # Get improvements (French) (all items, limited to 3)
-    IMPROVEMENTS_FR=$(sed -n '/## 🇫🇷 Français/,/## 📊 Technical Details/p' RELEASE_NOTES.md | sed -n '/### ⚡ Améliorations/,/^### /p' | grep -E '^[[:space:]]*-' | grep -v '^\s*$' | head -3)
-    if [ -n "$IMPROVEMENTS_FR" ]; then
-        CHANGELOG_FR="${CHANGELOG_FR}**⚡ Améliorations**
-${IMPROVEMENTS_FR}"
-    fi
-    
-    # If no French changelog found, use English or summary
-    if [ -z "$CHANGELOG_FR" ]; then
-        if [ -n "$CHANGELOG_EN" ] && [ "$CHANGELOG_EN" != "Multiple improvements and fixes. See full release notes for details." ]; then
-            CHANGELOG_FR="$CHANGELOG_EN"
+    if [ -n "$FEATURES" ]; then
+        if [ -n "$CHANGELOG_EN" ]; then
+            CHANGELOG_EN="${CHANGELOG_EN}
+${FEATURES}"
         else
-            CHANGELOG_FR="Plusieurs améliorations et corrections. Voir les notes complètes pour les détails."
+            CHANGELOG_EN="${FEATURES}"
         fi
     fi
-    
-    # Extract testing notes EN
-    TESTING_NOTES_EN=$(sed -n '/### 🧪 For Beta Testers/,/## 🇫🇷 Français/p' RELEASE_NOTES.md | sed -n '/What to test:/,/Known Issues:/p' | grep -E '^[[:space:]]*-' | grep -v '^\s*$' | head -5)
-    if [ -z "$TESTING_NOTES_EN" ]; then
-        TESTING_NOTES_EN="- See full release notes for testing details"
+
+    # If no changelog found, use a summary message
+    if [ -z "$CHANGELOG_EN" ]; then
+        CHANGELOG_EN="See full release notes for details."
     fi
     
-    # Extract testing notes FR
-    TESTING_NOTES_FR=$(sed -n '/### 🧪 Pour les Beta Testeurs/,/## 📊 Technical Details/p' RELEASE_NOTES.md | sed -n '/Quoi tester/,/Problèmes connus/p' | grep -E '^[[:space:]]*-' | grep -v '^\s*$' | head -5)
-    if [ -z "$TESTING_NOTES_FR" ]; then
-        TESTING_NOTES_FR="- Voir les notes complètes pour les détails de test"
+    # Extract French changelog (compact format for Discord)
+    CHANGELOG_FR=""
+
+    # Get all bullet points under Bug Fixes section (only top-level bullets with bold titles)
+    FIXES_FR=$(sed -n '/## 🇫🇷 Français/,/## 📊 Technical Details/p' RELEASE_NOTES.md | \
+               sed -n '/### 🐛 Corrections de [Bb]ugs/,/^### /p' | \
+               grep -E '^- \*\*' | \
+               sed 's/\*\*\(.*\)\*\*.*/• **\1**/g' | \
+               head -3)
+
+    if [ -n "$FIXES_FR" ]; then
+        CHANGELOG_FR="${FIXES_FR}"
+    fi
+
+    # Get features if available (limit to 3)
+    FEATURES_FR=$(sed -n '/## 🇫🇷 Français/,/## 📊 Technical Details/p' RELEASE_NOTES.md | \
+                  sed -n '/### ✨/,/^### /p' | \
+                  grep -E '^- \*\*' | \
+                  sed 's/\*\*\(.*\)\*\*.*/• **\1**/g' | \
+                  head -3)
+
+    if [ -n "$FEATURES_FR" ]; then
+        if [ -n "$CHANGELOG_FR" ]; then
+            CHANGELOG_FR="${CHANGELOG_FR}
+${FEATURES_FR}"
+        else
+            CHANGELOG_FR="${FEATURES_FR}"
+        fi
+    fi
+
+    # If no French changelog found, use English or summary
+    if [ -z "$CHANGELOG_FR" ]; then
+        if [ -n "$CHANGELOG_EN" ] && [ "$CHANGELOG_EN" != "See full release notes for details." ]; then
+            CHANGELOG_FR="$CHANGELOG_EN"
+        else
+            CHANGELOG_FR="Voir les notes complètes pour les détails."
+        fi
     fi
 else
     echo -e "${YELLOW}⚠️  RELEASE_NOTES.md not found, using git log${NC}"
@@ -181,8 +149,6 @@ else
     
     CHANGELOG_EN=$(git log $COMMIT_RANGE --pretty=format:"- %s" --no-merges | head -10)
     CHANGELOG_FR="$CHANGELOG_EN"
-    TESTING_NOTES_EN="- See release notes for full details"
-    TESTING_NOTES_FR="- Voir les notes de version pour plus de détails"
 fi
 
 # Replace placeholders
@@ -191,8 +157,6 @@ MESSAGE="${MESSAGE//\{\{VERSION\}\}/$VERSION}"
 MESSAGE="${MESSAGE//\{\{RELEASE_URL\}\}/$RELEASE_URL}"
 MESSAGE="${MESSAGE//\{\{CHANGELOG_EN\}\}/$CHANGELOG_EN}"
 MESSAGE="${MESSAGE//\{\{CHANGELOG_FR\}\}/$CHANGELOG_FR}"
-MESSAGE="${MESSAGE//\{\{TESTING_NOTES_EN\}\}/$TESTING_NOTES_EN}"
-MESSAGE="${MESSAGE//\{\{TESTING_NOTES_FR\}\}/$TESTING_NOTES_FR}"
 
 # Truncate if too long (Discord limit is 2000 chars)
 if [ ${#MESSAGE} -gt 1900 ]; then

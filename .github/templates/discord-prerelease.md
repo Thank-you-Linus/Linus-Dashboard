@@ -1,34 +1,18 @@
-🚨 **New Beta Release | Nouvelle Version Beta** 🚨
+🚨 **Beta Release {{VERSION}}** 🚨
 @Beta Tester 🔍
 
-**Linus Dashboard {{VERSION}}** is now available for testing!
-**Linus Dashboard {{VERSION}}** est maintenant disponible pour les tests !
+📦 **[Download & Full Notes]({{RELEASE_URL}})**
 
----
-
-## 🇬🇧 English
+## 🇬🇧 What's New
 
 {{CHANGELOG_EN}}
 
-### 🧪 What to test
-
-{{TESTING_NOTES_EN}}
-
----
-
-## 🇫🇷 Français
+## 🇫🇷 Nouveautés
 
 {{CHANGELOG_FR}}
 
-### 🧪 Quoi tester
-
-{{TESTING_NOTES_FR}}
-
 ---
 
-📦 **Download | Télécharger:** {{RELEASE_URL}}
-📖 **Full Release Notes | Notes complètes:** {{RELEASE_URL}}
-
-Thank you for testing! | Merci pour vos tests ! 🙏
-Please report any issues on GitHub or in this channel.
-Merci de signaler tout problème sur GitHub ou dans ce channel.
+🧪 **Beta Testing:** Check the release notes for what to test
+🐛 **Report Issues:** GitHub or this channel
+🙏 **Thank you for testing!** | **Merci pour vos tests !**

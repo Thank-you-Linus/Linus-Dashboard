@@ -149,10 +149,18 @@ export const getEntityDomain = memoize(function getEntityDomain(entityId: string
 
 /**
  * Group entities by domain.
+ *
+ * NOTE: This function is NOT memoized intentionally. It needs to read fresh entity states
+ * with device_class attributes on every call. Memoization was causing stale cache issues
+ * where entity states were not fully loaded during initialization, resulting in incorrect
+ * domain tags (e.g., "binary_sensor" instead of "binary_sensor:occupancy").
+ *
+ * Performance impact: None (function is called once per area during initialization only)
+ *
  * @param {string[]} entity_ids - The entity IDs.
  * @returns {Record<string, string[]>} - The grouped entities.
  */
-export const groupEntitiesByDomain = memoize(function groupEntitiesByDomain(entity_ids: string[]): Record<string, string[]> {
+export function groupEntitiesByDomain(entity_ids: string[]): Record<string, string[]> {
     const grouped = entity_ids.reduce((acc: Record<string, string[]>, entity_id) => {
         const domain = getEntityDomain(entity_id);
         if (!domain) return acc;
@@ -192,7 +200,7 @@ export const groupEntitiesByDomain = memoize(function groupEntitiesByDomain(enti
     });
 
     return grouped;
-}, { name: 'groupEntitiesByDomain', maxSize: 300 });
+}
 
 /**
  * Determine if an item should be created for a domain/device_class combination.

@@ -425,18 +425,34 @@ class ActivityDetectionPopup extends AbstractPopup {
             });
         }
 
-        // Always show "Add sensors" card (whether there are sensors or not)
-        // This encourages users to add more detection points for better accuracy
-        const addSensorMessage = allPresenceEntities.length === 0
-            ? Helper.localize("component.linus_dashboard.entity.text.activity_detection_popup.state.no_sensors_message")
-            : Helper.localize("component.linus_dashboard.entity.text.activity_detection_popup.state.add_more_sensors");
+        // Add explanatory text about auto-detection criteria
+        // This appears AFTER the sensor list but BEFORE the "Add sensors" button
+        const explanationText = Helper.localize("component.linus_dashboard.entity.text.activity_detection_popup.state.auto_detection_criteria");
 
-        const addSensorExplanation = Helper.localize("component.linus_dashboard.entity.text.activity_detection_popup.state.add_sensor_explanation");
+        cards.push({
+            type: "markdown",
+            content: explanationText,
+            card_mod: {
+                style: `
+                    ha-card {
+                        box-shadow: none;
+                        padding: 12px 16px;
+                        background: rgba(var(--rgb-info-color), 0.1);
+                        border-left: 3px solid rgba(var(--rgb-info-color), 0.6);
+                        margin-top: ${allPresenceEntities.length > 0 ? '8px' : '0'};
+                        margin-bottom: 8px;
+                    }
+                `
+            }
+        });
+
+        // Always show "Add sensors" card with consistent message
+        // The button opens the entities page for assigning entities to this area
+        const addSensorMessage = Helper.localize("component.linus_dashboard.entity.text.activity_detection_popup.state.manage_area_entities");
 
         cards.push({
             type: "custom:mushroom-template-card",
             primary: addSensorMessage,
-            secondary: addSensorExplanation,
             icon: "mdi:plus-circle-outline",
             icon_color: "blue",
             layout: "horizontal",

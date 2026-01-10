@@ -73,6 +73,12 @@ Add AI-powered activity detection and advanced automation.
 
 [🧠 Discover Linus Brain](https://thankyou-linus.com/)
 
+### Learn About Activity Detection
+
+Understand room occupancy and activity with automatic sensor detection.
+
+[📊 Activity Detection Guide](ACTIVITY_DETECTION.md)
+
 ---
 
 ## Troubleshooting

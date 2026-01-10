@@ -190,6 +190,11 @@ _Example: Energy dashboard embedded seamlessly in Linus_
 
 **New to Linus?** → [🚀 5-Minute Quick Start Guide](docs/QUICK_START.md)
 
+**Learn about features:**
+- [📊 Activity Detection Guide](docs/ACTIVITY_DETECTION.md) - Understand room occupancy tracking
+- [📖 Embedded Dashboards](docs/EMBEDDED_DASHBOARDS.md) - Integrate custom views
+- [📚 Full Documentation Map](docs/DOCUMENTATION_MAP.md) - Complete guide index
+
 ### Prerequisites
 
 - **Home Assistant** (version 2023.9 or newer recommended).

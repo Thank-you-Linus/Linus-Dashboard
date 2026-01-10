@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cat:*)",
+      "Bash(wc:*)",
+      "Bash(grep:*)",
+      "Bash(npm run build:*)",
+      "Bash(ls:*)",
+      "Bash(xargs:*)",
+      "Bash(npm run lint)",
+      "Bash(npm run lint:check:*)",
+      "Bash(npm run type-check:*)",
+      "Bash(npm install:*)"
+    ]
+  },
+  "attribution": {
+    "commit": ""
+  }
+}

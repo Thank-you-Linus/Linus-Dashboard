@@ -90,13 +90,14 @@
 
 ### 🌟 Features Documentation
 
-| Document                                                              | Description                          | Audience   | Priority      |
-| --------------------------------------------------------------------- | ------------------------------------ | ---------- | ------------- |
-| **[Quick Start Guide](QUICK_START.md)**                               | 5-minute setup guide (NEW)           | Users      | 🔥 NEW USERS  |
-| [Embedded Dashboards](EMBEDDED_DASHBOARDS.md)                         | Integrate custom Lovelace dashboards | Users      | ⭐ Popular    |
-| [Manual Ordering](MANUAL_ORDERING.md)                                 | HA 2025.1+ room ordering             | Users      | 📖 HA 2025.1+ |
-| [Area Specific Entities](AREA_SPECIFIC_ENTITIES.md)                   | Temperature/humidity per area        | Users/Devs | 📖 Advanced   |
-| [Notification Improvements](development/NOTIFICATION_IMPROVEMENTS.md) | Notification system enhancements     | Devs       | 📖 Reference  |
+| Document                                                              | Description                                  | Audience   | Priority       |
+| --------------------------------------------------------------------- | -------------------------------------------- | ---------- | -------------- |
+| **[Quick Start Guide](QUICK_START.md)**                               | 5-minute setup guide (NEW)                   | Users      | 🔥 NEW USERS   |
+| **[Activity Detection](ACTIVITY_DETECTION.md)**                       | Automatic sensor detection & troubleshooting | Users      | ⭐ Core Feature |
+| [Embedded Dashboards](EMBEDDED_DASHBOARDS.md)                         | Integrate custom Lovelace dashboards         | Users      | ⭐ Popular     |
+| [Manual Ordering](MANUAL_ORDERING.md)                                 | HA 2025.1+ room ordering                     | Users      | 📖 HA 2025.1+  |
+| [Area Specific Entities](AREA_SPECIFIC_ENTITIES.md)                   | Temperature/humidity per area                | Users/Devs | 📖 Advanced    |
+| [Notification Improvements](development/NOTIFICATION_IMPROVEMENTS.md) | Notification system enhancements             | Devs       | 📖 Reference   |
 
 ### 🤖 AI & Automation
 

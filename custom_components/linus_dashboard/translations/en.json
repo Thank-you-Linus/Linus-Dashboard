@@ -134,7 +134,9 @@
                     "no_sensors_message": "Add motion, occupancy, or presence sensors to this area to track activity.",
                     "add_more_sensors": "Add more sensors to improve detection accuracy",
                     "add_sensor_explanation": "Click to assign sensors to this area",
-                    "add_entity_button": "Add Entity"
+                    "add_entity_button": "Add Entity",
+                    "manage_area_entities": "Manage area entities",
+                    "auto_detection_criteria": "ℹ️ **Auto-detection**\n\nEntities appear here if they are assigned to this area AND:\n✅ Binary sensors with `device_class` = motion, occupancy, or presence\n✅ Media players\n\n**To add sensors:**\n1. Click the button below to open entity settings\n2. Assign your sensors to this area\n3. Configure the `device_class` if needed\n4. **Click the refresh badge (🔄) at the top** to update the list\n\n[📖 Learn more about Activity Detection](https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/docs/ACTIVITY_DETECTION.md)"
                 }
             },
             "lights_group_popup": {

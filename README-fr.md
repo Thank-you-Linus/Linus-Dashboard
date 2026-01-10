@@ -186,6 +186,11 @@ _Exemple : Tableau de bord énergétique intégré de manière transparente dans
 
 **Nouveau sur Linus?** → [🚀 Guide de Démarrage Rapide 5 Minutes](docs/QUICK_START.md)
 
+**Découvrez les fonctionnalités :**
+- [📊 Guide de Détection d'Activité](docs/ACTIVITY_DETECTION.md) - Comprendre le suivi d'occupation des pièces
+- [📖 Tableaux de Bord Intégrés](docs/EMBEDDED_DASHBOARDS.md) - Intégrer des vues personnalisées
+- [📚 Carte Complète de la Documentation](docs/DOCUMENTATION_MAP.md) - Index complet des guides
+
 ### Prérequis
 
 - **Home Assistant** (version 2023.9 ou plus récente recommandée).

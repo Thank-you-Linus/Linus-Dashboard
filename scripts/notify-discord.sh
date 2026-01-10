@@ -24,31 +24,45 @@ RELEASE_TYPE="${1:-prerelease}"
 VERSION="${2:-$(node -p "require('./package.json').version")}"
 RELEASE_URL="${3:-https://github.com/Thank-you-Linus/Linus-Dashboard/releases/tag/$VERSION}"
 
-# Select webhook URL based on release type
-if [[ "$RELEASE_TYPE" == "release" ]] && [ -n "$DISCORD_WEBHOOK_STABLE_URL" ]; then
-    # Use stable release webhook if available (for #annonces channel)
-    WEBHOOK_URL="$DISCORD_WEBHOOK_STABLE_URL"
-    echo -e "${GREEN}✓ Using stable release webhook (DISCORD_WEBHOOK_STABLE_URL)${NC}"
-elif [ -n "$DISCORD_WEBHOOK_URL" ]; then
-    # Fallback to default webhook (for beta testers channel)
-    WEBHOOK_URL="$DISCORD_WEBHOOK_URL"
-    echo -e "${YELLOW}⚠️  Using default webhook (DISCORD_WEBHOOK_URL)${NC}"
-else
-    echo -e "${RED}❌ Error: No Discord webhook URL configured${NC}"
-    echo -e "${YELLOW}💡 Set DISCORD_WEBHOOK_STABLE_URL for stable releases or DISCORD_WEBHOOK_URL for pre-releases${NC}"
-    exit 1
-fi
-
 echo -e "${BLUE}📢 Preparing Discord notification...${NC}"
 echo -e "${BLUE}   Type: ${RELEASE_TYPE}${NC}"
 echo -e "${BLUE}   Version: ${VERSION}${NC}"
 echo -e "${BLUE}   URL: ${RELEASE_URL}${NC}\n"
 
+# Select webhook URL based on release type
+if [[ "$RELEASE_TYPE" == "release" ]]; then
+    # STABLE RELEASE: Use stable webhook or fail
+    if [ -n "$DISCORD_WEBHOOK_STABLE_URL" ]; then
+        WEBHOOK_URL="$DISCORD_WEBHOOK_STABLE_URL"
+        echo -e "${GREEN}✓ Using stable release webhook → #annonces channel${NC}"
+    elif [ -n "$DISCORD_WEBHOOK_URL" ]; then
+        # Fallback to default webhook with warning
+        WEBHOOK_URL="$DISCORD_WEBHOOK_URL"
+        echo -e "${YELLOW}⚠️  DISCORD_WEBHOOK_STABLE_URL not set, using DISCORD_WEBHOOK_URL as fallback${NC}"
+        echo -e "${YELLOW}⚠️  This may post to the wrong channel!${NC}"
+    else
+        echo -e "${RED}❌ Error: No Discord webhook URL configured for stable release${NC}"
+        exit 1
+    fi
+else
+    # PRE-RELEASE (BETA): Use default webhook for beta testers
+    if [ -n "$DISCORD_WEBHOOK_URL" ]; then
+        WEBHOOK_URL="$DISCORD_WEBHOOK_URL"
+        echo -e "${GREEN}✓ Using pre-release webhook → beta testers channel${NC}"
+    else
+        echo -e "${RED}❌ Error: DISCORD_WEBHOOK_URL not configured for pre-release${NC}"
+        echo -e "${YELLOW}💡 Set DISCORD_WEBHOOK_URL to point to your beta testers channel${NC}"
+        exit 1
+    fi
+fi
+
 # Select template based on release type
 if [[ "$RELEASE_TYPE" == "prerelease" ]]; then
     TEMPLATE_FILE=".github/templates/discord-prerelease.md"
+    echo -e "${BLUE}📄 Using template: discord-prerelease.md${NC}\n"
 else
     TEMPLATE_FILE=".github/templates/discord-release.md"
+    echo -e "${BLUE}📄 Using template: discord-release.md${NC}\n"
 fi
 
 if [ ! -f "$TEMPLATE_FILE" ]; then

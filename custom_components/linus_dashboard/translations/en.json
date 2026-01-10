@@ -234,6 +234,20 @@
                     "action_off_climate": "Turn All Off",
                     "individual_controls": "Individual Controls"
                 }
+            },
+            "cover_popup": {
+                "name": "Cover Control",
+                "state": {
+                    "open_all": "Open All",
+                    "close_all": "Close All"
+                }
+            },
+            "media_player_popup": {
+                "name": "Media Player Control",
+                "state": {
+                    "play_all": "Play All",
+                    "pause_all": "Pause All"
+                }
             }
         }
     }

@@ -114,30 +114,14 @@ class CoverPopup extends AggregatePopup {
 
   /**
    * Override: Build control buttons for covers
-   * Shows "Open All" / "Close All" with conditional display based on state
+   * Shows "Open All" and "Close All" buttons side-by-side
    * Uses device_class-specific icons
    */
   protected override buildControlButtons(config: AggregatePopupConfig): any {
     const { entity_ids, device_class } = config;
-    
+
     // Get appropriate icons based on device_class
     const icons = CoverPopup.COVER_ICONS[device_class || 'default'] || CoverPopup.COVER_ICONS.default;
-    
-    // Check if all covers are closed (for conditional display)
-    const allClosedConditions = entity_ids.map(entity => ({
-      entity,
-      state: "closed"
-    }));
-
-    // Check if any cover is NOT closed (for conditional display)
-    // Note: covers can be in states: closed, open, opening, closing
-    const anyOpenConditions = [{
-      condition: "or" as const,
-      conditions: entity_ids.map(entity => ({
-        entity,
-        state_not: "closed"
-      }))
-    }];
 
     // Use translations for buttons
     const openAllLabel = Helper.localize('component.linus_dashboard.entity.text.cover_popup.state.open_all')
@@ -146,43 +130,49 @@ class CoverPopup extends AggregatePopup {
       || 'Close All';
 
     return {
-      type: "vertical-stack",
+      type: "horizontal-stack",
       cards: [
-        // OPEN ALL button (shown when all covers are closed)
+        // OPEN ALL button (always visible)
         {
-          type: "conditional",
-          conditions: allClosedConditions,
-          card: {
-            type: "custom:mushroom-template-card",
-            primary: openAllLabel,
-            icon: icons.closed,
-            icon_color: "disabled",
-            tap_action: {
-              action: "call-service",
-              service: "cover.open_cover",
-              data: { entity_id: entity_ids }
-            },
-            hold_action: { action: "none" },
-            double_tap_action: { action: "none" }
+          type: "custom:mushroom-template-card",
+          primary: openAllLabel,
+          icon: icons.open,
+          icon_color: "blue",
+          layout: "horizontal",
+          tap_action: {
+            action: "call-service",
+            service: "cover.open_cover",
+            data: {
+              entity_id: entity_ids
+            }
+          },
+          hold_action: {
+            action: "none"
+          },
+          double_tap_action: {
+            action: "none"
           }
         },
-        
-        // CLOSE ALL button (shown when at least one cover is NOT closed)
+
+        // CLOSE ALL button (always visible)
         {
-          type: "conditional",
-          conditions: anyOpenConditions,
-          card: {
-            type: "custom:mushroom-template-card",
-            primary: closeAllLabel,
-            icon: icons.open,
-            icon_color: "blue",
-            tap_action: {
-              action: "call-service",
-              service: "cover.close_cover",
-              data: { entity_id: entity_ids }
-            },
-            hold_action: { action: "none" },
-            double_tap_action: { action: "none" }
+          type: "custom:mushroom-template-card",
+          primary: closeAllLabel,
+          icon: icons.closed,
+          icon_color: "disabled",
+          layout: "horizontal",
+          tap_action: {
+            action: "call-service",
+            service: "cover.close_cover",
+            data: {
+              entity_id: entity_ids
+            }
+          },
+          hold_action: {
+            action: "none"
+          },
+          double_tap_action: {
+            action: "none"
           }
         }
       ]

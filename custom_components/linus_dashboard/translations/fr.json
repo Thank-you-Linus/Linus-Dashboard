@@ -234,6 +234,20 @@
                     "action_off_climate": "Tout Éteindre",
                     "individual_controls": "Contrôles Individuels"
                 }
+            },
+            "cover_popup": {
+                "name": "Contrôle des Volets",
+                "state": {
+                    "open_all": "Tout Ouvrir",
+                    "close_all": "Tout Fermer"
+                }
+            },
+            "media_player_popup": {
+                "name": "Contrôle des Lecteurs",
+                "state": {
+                    "play_all": "Tout Lire",
+                    "pause_all": "Tout Mettre en Pause"
+                }
             }
         }
     }

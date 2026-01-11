@@ -99,45 +99,17 @@ jobs:
           cd "${{ github.workspace }}/custom_components/linus_dashboard"
           zip linus_dashboard.zip -r ./
 
-      # 9.5. Generate release notes from recent beta
-      - name: "Generate release notes for stable"
+      # 9.5. Verify release notes exist
+      - name: "Verify release notes"
         run: |
-          # Find the most recent beta tag for this version
-          CURRENT_TAG="${{ steps.get_tag.outputs.tag_name }}"
-          BETA_TAG=$(git tag -l "${CURRENT_TAG}-beta.*" | sort -V | tail -n1)
-
-          if [ -n "$BETA_TAG" ]; then
-            echo "📝 Found beta tag: $BETA_TAG"
-            # Get commits between the previous stable and current tag
-            PREV_STABLE=$(git tag -l "[0-9]*.[0-9]*.[0-9]*" --sort=-v:refname | grep -v "$CURRENT_TAG" | head -n1)
-
-            if [ -n "$PREV_STABLE" ]; then
-              COMMIT_RANGE="${PREV_STABLE}..${CURRENT_TAG}"
-            else
-              COMMIT_RANGE="${BETA_TAG}..${CURRENT_TAG}"
-            fi
-
-            echo "## 🎉 What's New in ${CURRENT_TAG}" > RELEASE_NOTES.md
-            echo "" >> RELEASE_NOTES.md
-            echo "### 🐛 Bug Fixes" >> RELEASE_NOTES.md
-            git log $COMMIT_RANGE --pretty=format:"- **%s**" --grep="^fix:" --no-merges >> RELEASE_NOTES.md || true
-            echo "" >> RELEASE_NOTES.md
-            echo "" >> RELEASE_NOTES.md
-            echo "### ✨ Features & Improvements" >> RELEASE_NOTES.md
-            git log $COMMIT_RANGE --pretty=format:"- **%s**" --grep="^feat:" --no-merges >> RELEASE_NOTES.md || true
-            echo "" >> RELEASE_NOTES.md
-            echo "" >> RELEASE_NOTES.md
-            echo "### 📦 Installation" >> RELEASE_NOTES.md
-            echo "Available via HACS or manual download from this release." >> RELEASE_NOTES.md
-          else
-            echo "⚠️ No beta tag found, using generic notes"
-            echo "## Release ${CURRENT_TAG}" > RELEASE_NOTES.md
-            echo "" >> RELEASE_NOTES.md
-            echo "See commits for details." >> RELEASE_NOTES.md
+          if [ ! -f "RELEASE_NOTES.md" ]; then
+            echo "❌ Error: RELEASE_NOTES.md not found!"
+            echo "Please create RELEASE_NOTES.md before releasing stable version"
+            exit 1
           fi
-
-          cat RELEASE_NOTES.md
-          echo "✅ Release notes generated"
+          echo "✅ RELEASE_NOTES.md found"
+          echo "📄 Content preview:"
+          head -20 RELEASE_NOTES.md
 
       # 10. Create GitHub Release and upload ZIP
       - name: "Create GitHub Release"

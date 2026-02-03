@@ -84,3 +84,9 @@ Thumbs.db
 *.log
 logs/
 .opencode/logs/
+# SAPIENS - core is copied (not a symlink) for DevContainer compatibility
+# .sapiens/core is now committed to support DevContainer environment
+# To update SAPIENS: run ./update-sapiens.sh from project root
+
+# Claude Code - generated configuration
+.claude/

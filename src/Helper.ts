@@ -214,6 +214,146 @@ class Helper {
   }
 
   /**
+   * Check if an entity is unavailable or unknown.
+   *
+   * @param {string} entity_id - The entity ID to check
+   * @returns {boolean} - True if entity is unavailable or unknown
+   * @static
+   */
+  static isEntityUnavailable(entity_id: string): boolean {
+    const state = this.getEntityState(entity_id)?.state;
+    return state === "unavailable" || state === "unknown";
+  }
+
+  /**
+   * Get the floor sort index for an entity.
+   *
+   * @param {string} entity_id - The entity ID
+   * @returns {number} - Floor index in orderedFloors, or 999 if not found/UNDISCLOSED
+   * @static
+   */
+  static getEntityFloorIndex(entity_id: string): number {
+    const entity = this.entities[entity_id];
+    if (!entity || !entity.floor_id || entity.floor_id === UNDISCLOSED) {
+      return 999;
+    }
+
+    const floorIndex = this.orderedFloors.findIndex(floor => floor.floor_id === entity.floor_id);
+    return floorIndex >= 0 ? floorIndex : 999;
+  }
+
+  /**
+   * Get the area sort index for an entity.
+   *
+   * @param {string} entity_id - The entity ID
+   * @returns {number} - Area index in orderedAreas, or 999 if not found/UNDISCLOSED
+   * @static
+   */
+  static getEntityAreaIndex(entity_id: string): number {
+    const entity = this.entities[entity_id];
+    if (!entity || !entity.area_id) {
+      return 999;
+    }
+
+    // Find area slug by matching area_id
+    const areaSlug = Object.keys(this.areas).find(
+      slug => this.areas[slug]?.area_id === entity.area_id
+    );
+
+    if (!areaSlug || areaSlug === UNDISCLOSED) {
+      return 999;
+    }
+
+    const areaIndex = this.orderedAreas.findIndex(area => area.slug === areaSlug);
+    return areaIndex >= 0 ? areaIndex : 999;
+  }
+
+  /**
+   * Sort entities by floor, then by area, then alphabetically by friendly name.
+   *
+   * Multi-tier sorting:
+   * 1. Unavailable/unknown entities → end
+   * 2. Floor order (using orderedFloors)
+   * 3. Area order within same floor (using orderedAreas)
+   * 4. Alphabetical by entity friendly name
+   * 5. Original order as tiebreaker (stable sort)
+   *
+   * @param {string[]} entity_ids - Array of entity IDs to sort
+   * @returns {string[]} - Sorted copy of entity IDs
+   * @static
+   */
+  static sortEntitiesByFloorAndArea(entity_ids: string[]): string[] {
+    if (!entity_ids || entity_ids.length === 0) {
+      return [];
+    }
+
+    // Create index maps for O(1) lookups
+    const floorIndexMap = new Map<string, number>();
+    this.orderedFloors.forEach((floor, idx) => {
+      floorIndexMap.set(floor.floor_id, idx);
+    });
+
+    const areaIndexMap = new Map<string, number>();
+    this.orderedAreas.forEach((area, idx) => {
+      areaIndexMap.set(area.slug, idx);
+    });
+
+    // Sort with multi-tier comparison
+    return [...entity_ids].sort((entityIdA, entityIdB) => {
+      // Tier 1: Unavailable entities go last
+      const unavailableA = this.isEntityUnavailable(entityIdA);
+      const unavailableB = this.isEntityUnavailable(entityIdB);
+
+      if (unavailableA !== unavailableB) {
+        return unavailableA ? 1 : -1;
+      }
+
+      // Get entities
+      const entityA = this.entities[entityIdA];
+      const entityB = this.entities[entityIdB];
+
+      // Tier 2: Sort by floor order
+      const floorIdA = entityA?.floor_id || UNDISCLOSED;
+      const floorIdB = entityB?.floor_id || UNDISCLOSED;
+
+      const floorSortA = floorIndexMap.get(floorIdA) ?? 999;
+      const floorSortB = floorIndexMap.get(floorIdB) ?? 999;
+
+      if (floorSortA !== floorSortB) {
+        return floorSortA - floorSortB;
+      }
+
+      // Tier 3: Sort by area order within same floor
+      // Find area slugs by matching area_id
+      const areaSlugA = entityA?.area_id
+        ? Object.keys(this.areas).find(slug => this.areas[slug]?.area_id === entityA.area_id)
+        : null;
+      const areaSlugB = entityB?.area_id
+        ? Object.keys(this.areas).find(slug => this.areas[slug]?.area_id === entityB.area_id)
+        : null;
+
+      const areaSortA = areaSlugA ? (areaIndexMap.get(areaSlugA) ?? 999) : 999;
+      const areaSortB = areaSlugB ? (areaIndexMap.get(areaSlugB) ?? 999) : 999;
+
+      if (areaSortA !== areaSortB) {
+        return areaSortA - areaSortB;
+      }
+
+      // Tier 4: Sort alphabetically by friendly name
+      const nameA = entityA?.name || entityIdA;
+      const nameB = entityB?.name || entityIdB;
+
+      const nameCompare = nameA.localeCompare(nameB);
+      if (nameCompare !== 0) {
+        return nameCompare;
+      }
+
+      // Tier 5: Preserve original order (stable sort)
+      return entity_ids.indexOf(entityIdA) - entity_ids.indexOf(entityIdB);
+    });
+  }
+
+  /**
    * Get the entities from Home Assistant's floor registry.
    *
    * @returns {Record<string, StrategyFloor>}
@@ -481,7 +621,7 @@ class Helper {
 
       const domain = getEntityDomain(entity.entity_id);
       if (!domain) return acc;
-      
+
       let device_class;
 
       if (Object.keys(DEVICE_CLASSES).includes(domain)) {
@@ -629,7 +769,17 @@ class Helper {
 
       acc[floor.floor_id] = {
         ...floor,
-        areas_slug: areasInFloor.map(area => area.slug),
+        areas_slug: areasInFloor
+          .sort((a, b) => {
+            // Sort by order property first (if defined), then alphabetically by name
+            if (a.order !== undefined && b.order !== undefined) {
+              return a.order - b.order;
+            }
+            if (a.order !== undefined) return -1;  // a has order, b doesn't → a comes first
+            if (b.order !== undefined) return 1;   // b has order, a doesn't → b comes first
+            return a.name.localeCompare(b.name);   // Neither has order → alphabetical
+          })
+          .map(area => area.slug),
       };
 
       return acc;

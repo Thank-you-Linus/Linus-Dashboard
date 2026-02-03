@@ -95,9 +95,8 @@ class ControllerCard {
         const chipOptions = {
           show_content: true,
           magic_device_id: this.#area_slug,
-          area_slug: this.#area_slug,
-          ...this.#defaultConfig.controlChipOptions,
           domain: this.#domain,
+          ...this.#defaultConfig.controlChipOptions,
         };
 
         // Determine device classes to create chips for

@@ -12,8 +12,10 @@ export interface PopupConfig {
   scope: "global" | "floor" | "area";
   /** Display name for scope */
   scopeName: string;
-  /** Entity IDs to control */
-  entity_ids: string[];
+  /** Floor ID for floor scope (entities will be queried dynamically) */
+  floor_id?: string;
+  /** Area slug for area scope (entities will be queried dynamically) */
+  area_slug?: string;
   /** Service to turn on */
   serviceOn: string;
   /** Service to turn off */
@@ -82,7 +84,8 @@ export class PopupFactory {
       domain: config.domain,
       scope: config.scope,
       scopeName: config.scopeName,
-      entity_ids: config.entity_ids,
+      floor_id: config.floor_id,
+      area_slug: config.area_slug,
       serviceOn: config.serviceOn,
       serviceOff: config.serviceOff,
       activeStates: config.activeStates,
@@ -108,7 +111,8 @@ export class PopupFactory {
       domain: config.domain,
       scope: config.scope,
       scopeName: config.scopeName,
-      entity_ids: config.entity_ids,
+      floor_id: config.floor_id,
+      area_slug: config.area_slug,
       serviceOn: config.serviceOn,
       serviceOff: config.serviceOff,
       activeStates: config.activeStates,
@@ -134,7 +138,8 @@ export class PopupFactory {
       domain: config.domain,
       scope: config.scope,
       scopeName: config.scopeName,
-      entity_ids: config.entity_ids,
+      floor_id: config.floor_id,
+      area_slug: config.area_slug,
       serviceOn: config.serviceOn,
       serviceOff: config.serviceOff,
       activeStates: config.activeStates,
@@ -160,7 +165,8 @@ export class PopupFactory {
       domain: config.domain,
       scope: config.scope,
       scopeName: config.scopeName,
-      entity_ids: config.entity_ids,
+      floor_id: config.floor_id,
+      area_slug: config.area_slug,
       serviceOn: config.serviceOn,
       serviceOff: config.serviceOff,
       activeStates: config.activeStates,

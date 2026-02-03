@@ -419,6 +419,74 @@ export async function createCardsFromList(
 }
 
 /**
+ * Create aggregate chips with global scope for hierarchical popup display.
+ *
+ * This function creates AggregateChip instances with scope: "global" which
+ * ensures the popup displays entities grouped by Floor → Area → Entities.
+ *
+ * Unlike createChipsFromList which uses auto-detected scope, this function
+ * explicitly sets scope: "global" for consistent hierarchical display.
+ *
+ * @param domainTags - List of domain tags (e.g., ["light", "climate", "cover:blind"])
+ * @param options - Optional chip options
+ * @returns Array of chip configurations
+ */
+export function createGlobalScopeChips(
+    domainTags: string[],
+    options?: {
+        tapActionMode?: "popup" | "navigation";
+        show_content?: boolean;
+    }
+): LovelaceChipConfig[] {
+    const result: LovelaceChipConfig[] = [];
+
+    for (const domainTag of domainTags) {
+        const { domain, device_class } = parseDomainTag(domainTag);
+
+        // Skip non-controllable domains (handled separately)
+        if (domain === "weather" || domain === "alarm" || domain === "spotify" || domain === "safety") {
+            continue;
+        }
+
+        // Check excluded domains
+        if (Helper.linus_dashboard_config?.excluded_domains?.includes(domain)) {
+            continue;
+        }
+
+        // Check excluded device classes
+        if (device_class && Helper.linus_dashboard_config?.excluded_device_classes?.includes(device_class)) {
+            continue;
+        }
+
+        // Check global entities exist (excluding UNDISCLOSED)
+        if (getGlobalEntitiesExceptUndisclosed(domain, device_class).length === 0) {
+            continue;
+        }
+
+        try {
+            const chip = new AggregateChip({
+                domain,
+                device_class,
+                scope: "global",
+                show_content: options?.show_content ?? true,
+                tapActionMode: options?.tapActionMode ?? "popup"
+            }).getChip();
+
+            // Only add chips with valid icons
+            if (chip && (chip as any).icon) {
+                result.push(chip);
+            }
+        } catch (e) {
+            if (Helper.debug) {
+                console.warn(`[createGlobalScopeChips] Failed to create chip for ${domainTag}`, e);
+            }
+        }
+    }
+
+    return result;
+}
+
+/**
  * Get the translation key for a domain.
  * @param {string} domain - The domain.
  * @param {string} [device_class] - The device class.

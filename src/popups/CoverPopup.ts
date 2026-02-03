@@ -2,6 +2,8 @@ import { Helper } from "../Helper";
 
 import { AggregatePopup, AggregatePopupConfig } from "./AggregatePopup";
 
+type AggregatePopupConfigWithEntities = AggregatePopupConfig & { entity_ids: string[] };
+
 /**
  * Cover Popup Class
  * 
@@ -47,7 +49,7 @@ class CoverPopup extends AggregatePopup {
   protected override buildTitle(config: AggregatePopupConfig): string {
     // Get device_class translation if available
     let domainLabel: string;
-    
+
     if (config.device_class) {
       // Try to get device_class-specific translation from Home Assistant
       // Priority: 1. HA translation, 2. Strategy options, 3. Translation key, 4. device_class name
@@ -61,18 +63,18 @@ class CoverPopup extends AggregatePopup {
       // Priority: 1. HA translation, 2. Strategy options, 3. Translation key, 4. domain name
       const haTranslation = Helper.localize(`component.${config.domain}.title`);
       domainLabel = (haTranslation && haTranslation !== "translation not found" ? haTranslation : null)
-        || Helper.strategyOptions.domains[config.domain]?.title 
+        || Helper.strategyOptions.domains[config.domain]?.title
         || (config.translationKey ? config.translationKey.charAt(0).toUpperCase() + config.translationKey.slice(1) : null)
         || config.domain.charAt(0).toUpperCase() + config.domain.slice(1);
     }
-    
+
     switch (config.scope) {
       case "global":
         return domainLabel; // "Blinds", "Curtains", etc.
-      
+
       case "floor":
         return `${domainLabel} - ${config.scopeName}`; // "Blinds - Ground Floor"
-      
+
       case "area": {
         // Avoid duplication if area name already contains domain
         const lowerName = config.scopeName.toLowerCase();
@@ -86,29 +88,13 @@ class CoverPopup extends AggregatePopup {
   }
 
   /**
-   * Override: Build status card showing count of open/closed covers
-   * Uses "open" and "closed" states, not "on/off"
+   * Override: Get status labels for covers
+   * Shows "open" / "closed" instead of generic "on"/"off"
    */
-  protected override buildStatusCard(config: AggregatePopupConfig): any {
-    const { entity_ids } = config;
-    
-    // Create Jinja2 template for counting
-    const statesArray = entity_ids.map(id => `states["${id}"]`).join(', ');
-    
-    // Use HA translations for cover states
-    const stateOpen = Helper.localize('component.cover.entity_component._.state.open') 
-      || 'open';
-    const stateClosed = Helper.localize('component.cover.entity_component._.state.closed')
-      || 'closed';
-    
+  protected override getStatusLabels(_config: any): { active: string; inactive: string } {
     return {
-      type: "markdown",
-      content: `
-        {% set entities = [${statesArray}] %}
-        {% set open_count = entities | selectattr('state', 'ne', 'closed') | list | count %}
-        {% set closed_count = entities | count - open_count %}
-        **{{ open_count }}** ${stateOpen} • **{{ closed_count }}** ${stateClosed}
-      `.trim()
+      active: Helper.localize('component.cover.entity_component._.state.open') || 'open',
+      inactive: Helper.localize('component.cover.entity_component._.state.closed') || 'closed'
     };
   }
 
@@ -117,7 +103,7 @@ class CoverPopup extends AggregatePopup {
    * Shows "Open All" and "Close All" buttons side-by-side
    * Uses device_class-specific icons
    */
-  protected override buildControlButtons(config: AggregatePopupConfig): any {
+  protected override buildControlButtons(config: AggregatePopupConfigWithEntities): any {
     const { entity_ids, device_class } = config;
 
     // Get appropriate icons based on device_class
@@ -180,31 +166,29 @@ class CoverPopup extends AggregatePopup {
   }
 
   /**
-   * Override: Build individual cover tile cards with cover controls
-   * Includes open/close/stop and position slider
+   * Helper: Build cover features dynamically based on supported_features
    */
-  protected override buildIndividualCards(config: AggregatePopupConfig): any {
-    const { entity_ids } = config;
-    
-    return entity_ids.map(entity_id => {
-      const features: any[] = [{ type: "cover-open-close" }];
-      
-      // Check if entity supports position
-      // SUPPORT_SET_POSITION = 4 in Home Assistant
-      const entityState = Helper.getEntityState(entity_id);
-      const supportedFeatures = entityState?.attributes?.supported_features || 0;
-      const supportsPosition = Math.floor(supportedFeatures / 4) % 2 === 1; // Check if bit 2 is set
-      
-      if (supportsPosition) {
-        features.push({ type: "cover-position" });
-      }
-      
-      return {
-        type: "tile",
-        entity: entity_id,
-        features
-      };
-    });
+  private buildCoverFeatures(entity_id: string): any[] {
+    const features: any[] = [{ type: "cover-open-close" }];
+    const entityState = Helper.getEntityState(entity_id);
+    const supportedFeatures = entityState?.attributes?.supported_features || 0;
+    const supportsPosition = Math.floor(supportedFeatures / 4) % 2 === 1;
+    if (supportsPosition) {
+      features.push({ type: "cover-position" });
+    }
+    return features;
+  }
+
+  /**
+   * Override: Build cover tile with dynamic features
+   * Features vary based on supported_features (position control, tilt, etc.)
+   */
+  protected override buildEntityTile(entity_id: string, _config: any): any {
+    return {
+      type: "tile",
+      entity: entity_id,
+      features: this.buildCoverFeatures(entity_id)
+    };
   }
 }
 

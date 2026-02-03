@@ -2,6 +2,8 @@ import { Helper } from "../Helper";
 
 import { AggregatePopup, AggregatePopupConfig } from "./AggregatePopup";
 
+type AggregatePopupConfigWithEntities = AggregatePopupConfig & { entity_ids: string[] };
+
 /**
  * Media Player Popup Class
  * 
@@ -18,30 +20,15 @@ import { AggregatePopup, AggregatePopupConfig } from "./AggregatePopup";
  */
 class MediaPlayerPopup extends AggregatePopup {
 
+
   /**
-   * Override: Build status card showing count of playing/not playing media players
-   * Uses "playing" as the active state instead of generic "on"
+   * Override: Get status labels for media players
+   * Shows "playing" / "not playing" instead of generic "on"/"off"
    */
-  protected override buildStatusCard(config: AggregatePopupConfig): any {
-    const { entity_ids } = config;
-
-    // Create Jinja2 template for counting
-    const statesArray = entity_ids.map(id => `states["${id}"]`).join(', ');
-
-    // Use HA translations for media player states
-    const statePlaying = Helper.localize('component.media_player.entity_component._.state.playing')
-      || 'playing';
-    const stateNotPlaying = Helper.localize('component.linus_dashboard.entity.text.media_player_popup.state.not_playing')
-      || 'not playing';
-
+  protected override getStatusLabels(_config: any): { active: string; inactive: string } {
     return {
-      type: "markdown",
-      content: `
-        {% set entities = [${statesArray}] %}
-        {% set playing = entities | selectattr('state', 'eq', 'playing') | list | count %}
-        {% set not_playing = entities | count - playing %}
-        **{{ playing }}** ${statePlaying} • **{{ not_playing }}** ${stateNotPlaying}
-      `.trim()
+      active: Helper.localize('component.media_player.entity_component._.state.playing') || 'playing',
+      inactive: Helper.localize('component.linus_dashboard.entity.text.media_player_popup.state.not_playing') || 'not playing'
     };
   }
 
@@ -49,11 +36,11 @@ class MediaPlayerPopup extends AggregatePopup {
    * Override: Build control buttons for media players
    * Shows "Play All" / "Pause All" with conditional display based on state
    */
-  protected override buildControlButtons(config: AggregatePopupConfig): any {
+  protected override buildControlButtons(config: AggregatePopupConfigWithEntities): any {
     const { entity_ids } = config;
 
     // Check if all media players are NOT playing (for conditional display)
-    const allNotPlayingConditions = entity_ids.map(entity => ({
+    const allNotPlayingConditions = entity_ids.map((entity: string) => ({
       entity,
       state_not: "playing"
     }));
@@ -61,7 +48,7 @@ class MediaPlayerPopup extends AggregatePopup {
     // Check if any media player is playing (for conditional display)
     const anyPlayingConditions = [{
       condition: "or" as const,
-      conditions: entity_ids.map(entity => ({
+      conditions: entity_ids.map((entity: string) => ({
         entity,
         state: "playing"
       }))
@@ -117,20 +104,19 @@ class MediaPlayerPopup extends AggregatePopup {
     };
   }
 
-  /**
-   * Override: Build individual media player tile cards with media controls and volume
-   */
-  protected override buildIndividualCards(config: AggregatePopupConfig): any {
-    const { entity_ids } = config;
 
-    return entity_ids.map(entity_id => ({
+  /**
+   * Override: Build media player tile with playback controls
+   */
+  protected override buildEntityTile(entity_id: string, _config: any): any {
+    return {
       type: "tile",
       entity: entity_id,
       features: [
         { type: "media-player-playback" },
         { type: "media-player-volume-slider" }
       ]
-    }));
+    };
   }
 }
 

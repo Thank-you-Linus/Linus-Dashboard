@@ -9,7 +9,7 @@ import { AREA_EXPOSED_CHIPS } from "../variables";
 import { LovelaceChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
 import { AreaStateChip } from "../chips/AreaStateChip";
 import { RefreshChip } from "../chips/RefreshChip";
-import { createChipsFromList, processEntitiesForAreaOrFloorView } from "../utils";
+import { createGlobalScopeChips, processEntitiesForAreaOrFloorView } from "../utils";
 
 import StrategyFloor = generic.StrategyFloor;
 
@@ -70,10 +70,11 @@ class FloorView {
       chips.push(new AreaStateChip({ floor: this.floor, showContent: true }).getChip());
     }
 
-    const areaChips = await createChipsFromList(AREA_EXPOSED_CHIPS, { show_content: true }, this.floor.floor_id, this.floor.areas_slug);
-    if (areaChips) {
-      chips.push(...areaChips);
-    }
+    // Domain aggregate chips with global scope (hierarchical popup display)
+    const areaChips = createGlobalScopeChips(AREA_EXPOSED_CHIPS, {
+      show_content: true
+    });
+    chips.push(...areaChips);
 
     // Refresh chip - allows manual refresh of registries
     const refreshChip = new RefreshChip();

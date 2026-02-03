@@ -9,7 +9,7 @@ import { PersonCardConfig } from "../types/lovelace-mushroom/cards/person-card-c
 import { SettingsChip } from "../chips/SettingsChip";
 import { SettingsPopup } from "../popups/SettingsPopup";
 import { DEVICE_CLASSES, HOME_EXPOSED_CHIPS, UNDISCLOSED } from "../variables";
-import { createChipsFromList, getFloorName, navigateTo, slugify } from "../utils";
+import { createGlobalScopeChips, getFloorName, navigateTo, slugify } from "../utils";
 import { WeatherChip } from "../chips/WeatherChip";
 import { UnavailableChip } from "../chips/UnavailableChip";
 import { RefreshChip } from "../chips/RefreshChip";
@@ -111,17 +111,12 @@ class HomeView {
       }
     }
 
-    // Home chips.
-    const homeChips = await createChipsFromList(
-      HOME_EXPOSED_CHIPS,
-      {
-        show_content: true,
-        tapActionMode: "popup"  // Open aggregate popup on tap (changed from "navigation")
-      }
-    );
-    if (homeChips) {
-      chips.push(...homeChips);
-    }
+    // Domain aggregate chips with global scope (hierarchical popup display)
+    const homeChips = createGlobalScopeChips(HOME_EXPOSED_CHIPS, {
+      show_content: true,
+      tapActionMode: "popup"
+    });
+    chips.push(...homeChips);
 
     // Unavailable chip.
     const unavailableChip = new UnavailableChip().getChip();

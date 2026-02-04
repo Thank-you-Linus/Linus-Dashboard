@@ -25,8 +25,7 @@ class AggregateListPopup extends AbstractPopup {
 
     for (const floor of Helper.orderedFloors) {
       // Skip excluded floors
-      const isFloorExcluded = Helper.linus_dashboard_config?.excluded_targets?.floor_id?.includes(floor.floor_id);
-      if (isFloorExcluded) continue;
+      if (Helper.isFloorExcluded(floor.floor_id)) continue;
 
       if (floor.areas_slug.length === 0) continue
 
@@ -46,8 +45,7 @@ class AggregateListPopup extends AbstractPopup {
 
       for (const [i, area] of floor.areas_slug.map(area_slug => Helper.areas[area_slug]).entries()) {
         // Skip excluded areas
-        const isExcluded = Helper.linus_dashboard_config?.excluded_targets?.area_id?.includes(area?.area_id);
-        if (isExcluded) continue;
+        if (Helper.isAreaExcluded(area?.area_id)) continue;
 
         const _entity = Helper.magicAreasDevices[area.slug]?.entities[`aggregate_${device_class}`]
 

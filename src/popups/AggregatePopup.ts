@@ -778,8 +778,7 @@ class AggregatePopup extends AbstractPopup {
     // Helper to process a single floor
     const processFloor = (floor: StrategyFloor, addFloorSeparator: boolean) => {
       // Skip excluded floors
-      const isFloorExcluded = Helper.linus_dashboard_config?.excluded_targets?.floor_id?.includes(floor.floor_id);
-      if (isFloorExcluded) return;
+      if (Helper.isFloorExcluded(floor.floor_id)) return;
 
       if (!floor.areas_slug || floor.areas_slug.length === 0) return;
 
@@ -791,8 +790,7 @@ class AggregatePopup extends AbstractPopup {
         if (!area) continue;
 
         // Skip excluded areas
-        const isExcluded = Helper.linus_dashboard_config?.excluded_targets?.area_id?.includes(area.area_id);
-        if (isExcluded) continue;
+        if (Helper.isAreaExcluded(area.area_id)) continue;
 
         // Get entities for this area ONLY (single query per area)
         const entities = Helper.getAreaEntities(area, domain, device_class);

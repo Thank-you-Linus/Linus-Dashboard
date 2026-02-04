@@ -218,8 +218,7 @@ class HomeView {
     // Now process floors and areas
     for (const floor of floors) {
       // Skip excluded floors
-      const isFloorExcluded = Helper.linus_dashboard_config?.excluded_targets?.floor_id?.includes(floor.floor_id);
-      if (isFloorExcluded) continue;
+      if (Helper.isFloorExcluded(floor.floor_id)) continue;
       
       if (floor.areas_slug.length === 0) continue;
 
@@ -295,9 +294,7 @@ class HomeView {
         }
 
         // Get a card for the area.
-        const isExcluded = Helper.linus_dashboard_config?.excluded_targets?.area_id?.includes(area.area_id);
-
-        if (!Helper.strategyOptions.areas[area.slug]?.hidden && !isExcluded) {
+        if (!Helper.strategyOptions.areas[area.slug]?.hidden && !Helper.isAreaExcluded(area.area_id)) {
           const options = {
             ...Helper.strategyOptions.areas["_"],
             ...Helper.strategyOptions.areas[area.slug],

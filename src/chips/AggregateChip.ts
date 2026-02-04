@@ -274,8 +274,7 @@ class AggregateChip extends AbstractChip {
 
     if (scope === "floor" && options.floor_id) {
       // Check if floor is excluded
-      const isFloorExcluded = Helper.linus_dashboard_config?.excluded_targets?.floor_id?.includes(options.floor_id);
-      if (isFloorExcluded) {
+      if (Helper.isFloorExcluded(options.floor_id)) {
         return ""; // Don't show chip for excluded floor
       }
       

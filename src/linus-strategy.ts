@@ -183,8 +183,7 @@ class LinusStrategy extends HTMLTemplateElement {
   private static createAreaSubviews(views: LovelaceViewConfig[]) {
     for (const area of Helper.orderedAreas) {
       // Skip excluded areas
-      const isExcluded = Helper.linus_dashboard_config?.excluded_targets?.area_id?.includes(area.area_id);
-      if (!area.hidden && !isExcluded) {
+      if (!area.hidden && !Helper.isAreaExcluded(area.area_id)) {
         views.push({
           title: getAreaName(area),
           path: area.slug ?? area.name,

@@ -1864,6 +1864,50 @@ class Helper {
       {% endif %}
     `;
   }
+
+  /**
+   * Check if a floor is excluded based on configuration.
+   * 
+   * @param floor_id - The floor ID to check
+   * @returns true if the floor should be excluded, false otherwise
+   */
+  static isFloorExcluded(floor_id: string | undefined): boolean {
+    if (!floor_id) return false;
+    return Helper.linus_dashboard_config?.excluded_targets?.floor_id?.includes(floor_id) ?? false;
+  }
+
+  /**
+   * Check if an area is excluded based on configuration.
+   * 
+   * @param area_id - The area ID to check
+   * @returns true if the area should be excluded, false otherwise
+   */
+  static isAreaExcluded(area_id: string | undefined): boolean {
+    if (!area_id) return false;
+    return Helper.linus_dashboard_config?.excluded_targets?.area_id?.includes(area_id) ?? false;
+  }
+
+  /**
+   * Check if an entity is excluded based on configuration.
+   * 
+   * @param entity_id - The entity ID to check
+   * @returns true if the entity should be excluded, false otherwise
+   */
+  static isEntityExcluded(entity_id: string | undefined): boolean {
+    if (!entity_id) return false;
+    return Helper.linus_dashboard_config?.excluded_targets?.entity_id?.includes(entity_id) ?? false;
+  }
+
+  /**
+   * Check if a device is excluded based on configuration.
+   * 
+   * @param device_id - The device ID to check
+   * @returns true if the device should be excluded, false otherwise
+   */
+  static isDeviceExcluded(device_id: string | undefined): boolean {
+    if (!device_id) return false;
+    return Helper.linus_dashboard_config?.excluded_targets?.device_id?.includes(device_id) ?? false;
+  }
 }
 
 export { Helper };

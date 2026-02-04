@@ -119,7 +119,7 @@ export const DEVICE_CLASSES = {
   ],
 };
 
-export const AREA_CARDS_DOMAINS = [LIGHT_DOMAIN, "switch", "climate", "fan", "vacuum", "media_player", "camera", "cover", "lock", "scene", "plant", "binary_sensor", "sensor"];
+export const AREA_CARDS_DOMAINS = [LIGHT_DOMAIN, "switch", "climate", "fan", "vacuum", "media_player", "camera", "cover", "lock", "scene", "plant", "binary_sensor", "sensor", "siren"];
 
 export const ALL_HOME_ASSISTANT_DOMAINS = [
   // Core domains
@@ -140,7 +140,7 @@ export const DOMAINS_VIEWS = [...AREA_CARDS_DOMAINS, ...DEVICE_CLASSES.binary_se
 
 export const HOME_EXPOSED_CHIPS = ["weather", "alarm", "spotify", LIGHT_DOMAIN, "climate", "fan", "media_player", "switch", "safety", ...DEVICE_CLASSES.cover.map(d => `cover:${d}`), "binary_sensor:motion", "binary_sensor:occupancy", "binary_sensor:door", "binary_sensor:window"];
 export const AREA_EXPOSED_CHIPS = [LIGHT_DOMAIN, ...GROUP_DOMAINS, ...DEVICE_CLASSES.cover.map(d => `cover:${d}`), "fan", "switch", "safety", ...DEVICE_CLASSES.binary_sensor.map(d => `binary_sensor:${d}`), ...DEVICE_CLASSES.sensor.map(d => `sensor:${d}`)];
-export const SECURITY_EXPOSED_DOMAINS = ["light", "alarm", "safety", ...DEVICE_CLASSES.cover.map(d => `cover:${d}`), "lock"];
+export const SECURITY_EXPOSED_DOMAINS = ["light", "alarm", "safety", ...DEVICE_CLASSES.cover.map(d => `cover:${d}`), "lock", "siren"];
 export const SECURITY_EXPOSED_SENSORS = [
   "binary_sensor:motion", 
   "binary_sensor:occupancy", 
@@ -156,7 +156,7 @@ export const SECURITY_EXPOSED_SENSORS = [
   "binary_sensor:lock",
   "binary_sensor:moisture"
 ];
-export const SECURITY_EXPOSED_CHIPS = ["light", "alarm", "safety", "lock", ...DEVICE_CLASSES.cover.map(d => `cover:${d}`), ...SECURITY_EXPOSED_SENSORS];
+export const SECURITY_EXPOSED_CHIPS = ["light", "alarm", "safety", "lock", "siren", ...DEVICE_CLASSES.cover.map(d => `cover:${d}`), ...SECURITY_EXPOSED_SENSORS];
 
 export const DEVICE_ICONS = {
   presence_hold: 'mdi:car-brake-hold'
@@ -182,6 +182,7 @@ export const STANDARD_DOMAIN_ICONS: Record<string, string> = {
   scene: "mdi:palette",
   media_player: "mdi:speaker",
   camera: "mdi:cctv",
+  siren: "mdi:bullhorn",
 };
 
 export const AREA_STATE_ICONS = {
@@ -253,6 +254,7 @@ export const colorMapping: Record<string, Record<string, string | Record<number,
     ])
   ),
   switch: { '_': { state: { on: "yellow" } } },
+  siren: { '_': { state: { on: "red" } } },
   binary_sensor: {
     motion: { state: { on: "red" } },
     door: { state: { on: "orange" } },

@@ -247,6 +247,13 @@ class AggregateChip extends AbstractChip {
         translationKey: "sensor",
         features: [],
       },
+      siren: {
+        serviceOn: "turn_on",
+        serviceOff: "turn_off",
+        activeStates: ["on"],
+        translationKey: "siren",
+        features: [],
+      },
     };
 
     return defaults[domain] ?? {

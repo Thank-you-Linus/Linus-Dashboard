@@ -144,6 +144,11 @@ export const configurationDefaults: StrategyDefaults = {
       hidden: false,
       order: 10
     },
+    siren: {
+      showControls: true,
+      hidden: false,
+      order: 11
+    },
     sensor: {
       showControls: true,
       hidden: false,
@@ -203,6 +208,10 @@ export const configurationDefaults: StrategyDefaults = {
     },
     vacuum: {
       order: 11,
+      hidden: false,
+    },
+    siren: {
+      order: 12,
       hidden: false,
     },
     sensor: {

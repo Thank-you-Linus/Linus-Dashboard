@@ -1528,7 +1528,11 @@ class Helper {
       ...(area_slug && { area_slug })
     }));
 
-    return `{% set entities = [${states}] %}{% set _ = now() %}{{ relative_time(entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | map(attribute='last_changed') | max) }}`;
+    // Force re-evaluation every minute by including current minute in template
+    // This triggers Home Assistant to recalculate the relative_time every minute
+    // NOTE: relative_time() returns English text only (Home Assistant limitation)
+    // See: https://github.com/home-assistant/core/issues/97358
+    return `{% set current_time = now().strftime('%Y-%m-%d %H:%M') %}{% set entities = [${states}] %}{{ relative_time(entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | map(attribute='last_changed') | max) }}`;
   }
 
   static getLastChangedEntityIdTemplate({ domain, device_class, area_slug }: { domain: string, device_class?: string, area_slug?: string | string[] }): string {

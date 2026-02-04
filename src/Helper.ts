@@ -480,11 +480,6 @@ class Helper {
     }
 
     if (floor.areas_slug && floor.areas_slug.length > 0) {
-      if (this.debug) {
-        console.warn(
-          `[Helper.${methodName}] Floor "${floor_id}" (${floor.name}) → Areas: ${floor.areas_slug.join(", ")}`
-        );
-      }
       return floor.areas_slug;
     } else {
       console.warn(`[Helper.${methodName}] Floor "${floor_id}" (${floor.name}) has no areas`);
@@ -599,7 +594,7 @@ class Helper {
       if (!(entity.entity_id in this.#hassStates) || entity.hidden_by) return acc;
       const targets = Helper.linus_dashboard_config?.excluded_targets;
       const effectiveAreaId = entity.area_id ?? deviceAreaMap.get(entity.device_id ?? "");
-      
+
       // Filter entities from excluded floors
       if (effectiveAreaId && targets?.floor_id?.length) {
         const area = Object.values(this.#areas).find(a => a.area_id === effectiveAreaId);
@@ -607,7 +602,7 @@ class Helper {
           return acc;
         }
       }
-      
+
       if (effectiveAreaId && targets?.area_id?.includes(effectiveAreaId)) return acc;
       if (targets?.entity_id?.includes(entity.entity_id)) return acc;
       if (entity.device_id && targets?.device_id?.includes(entity.device_id)) return acc;

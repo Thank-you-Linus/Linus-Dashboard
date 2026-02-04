@@ -12,14 +12,14 @@ ICON = "mdi:bow-tie"
 
 
 def _get_version() -> str:
-    """Read version from package.json (single source of truth)."""
+    """Read version from manifest.json (Home Assistant standard)."""
     try:
-        package_json = Path(__file__).parent.parent.parent / "package.json"
-        with package_json.open(encoding="utf-8") as f:
+        manifest_json = Path(__file__).parent / "manifest.json"
+        with manifest_json.open(encoding="utf-8") as f:
             data = json.load(f)
             return data.get("version", "unknown")
     except Exception as e:  # noqa: BLE001
-        LOGGER.warning("Failed to read version from package.json: %s", e)
+        LOGGER.warning("Failed to read version from manifest.json: %s", e)
         return "unknown"
 
 

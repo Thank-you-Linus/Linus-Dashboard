@@ -125,7 +125,7 @@ async def register_static_paths_and_resources(
         StaticPathConfig(js_url, str(js_path), cache_headers=False),
     ])
 
-    # Get version from const.py (single source of truth via package.json)
+    # Get version from const.py (reads from manifest.json)
     manifest_version = VERSION
 
     # Register as a Lovelace resource with version query param for cache busting

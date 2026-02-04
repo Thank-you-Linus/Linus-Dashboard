@@ -16,6 +16,7 @@ export interface LinusDashboardConfig {
         device_id?: string[];
         area_id?: string[];
         label_id?: string[];
+        floor_id?: string[];
     };
     excluded_domains?: string[];
     excluded_device_classes?: string[];

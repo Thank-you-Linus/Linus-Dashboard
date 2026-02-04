@@ -173,9 +173,54 @@ class HomeView {
 
     const groupedSections: LovelaceGridCardConfig[] = [];
     const floors = Helper.orderedFloors;
-    let isFirstLoop = true;
 
+    // Create first section with welcome cards (always displayed, independent of floors)
+    const firstSection = {
+      type: "grid",
+      column_span: 1,
+      cards: [],
+    } as LovelaceGridCardConfig;
+
+    // Add WelcomeCard with clock, greeting, weather, alarms, and person chips
+    if (!Helper.linus_dashboard_config?.hide_greeting) {
+      const clockWelcomeCard = new WelcomeCard();
+      firstSection.cards.push(await clockWelcomeCard.getCard());
+    }
+
+    const personCards = await this.#createPersonCards();
+    firstSection.cards.push({
+      type: "horizontal-stack",
+      cards: personCards,
+    } as StackCardConfig);
+
+    // Add quick access cards.
+    if (Helper.strategyOptions.quick_access_cards) {
+      firstSection.cards.push(...Helper.strategyOptions.quick_access_cards);
+    }
+
+    // Add custom cards.
+    if (Helper.strategyOptions.extra_cards) {
+      firstSection.cards.push(...Helper.strategyOptions.extra_cards);
+    }
+
+    // Add "Areas" title heading
+    if (!Helper.strategyOptions.home_view.hidden.includes("areasTitle")) {
+      firstSection.cards.push({
+        type: "heading",
+        heading: `${Helper.localize("ui.components.area-picker.area")}s`,
+        heading_style: "title",
+      });
+    }
+
+    // Always add first section
+    groupedSections.push(firstSection);
+
+    // Now process floors and areas
     for (const floor of floors) {
+      // Skip excluded floors
+      const isFloorExcluded = Helper.linus_dashboard_config?.excluded_targets?.floor_id?.includes(floor.floor_id);
+      if (isFloorExcluded) continue;
+      
       if (floor.areas_slug.length === 0) continue;
 
       const floorSection = {
@@ -183,41 +228,6 @@ class HomeView {
         column_span: 1,
         cards: [],
       } as LovelaceGridCardConfig;
-
-      if (isFirstLoop) {
-
-        // Add WelcomeCard with clock, greeting, weather, alarms, and person chips
-
-        if (!Helper.linus_dashboard_config?.hide_greeting) {
-          const clockWelcomeCard = new WelcomeCard();
-          floorSection.cards.push(await clockWelcomeCard.getCard());
-        }
-
-        const personCards = await this.#createPersonCards();
-        floorSection.cards.push({
-          type: "horizontal-stack",
-          cards: personCards,
-        } as StackCardConfig);
-
-        // Add quick access cards.
-        if (Helper.strategyOptions.quick_access_cards) {
-          floorSection.cards.push(...Helper.strategyOptions.quick_access_cards);
-        }
-
-        // Add custom cards.
-        if (Helper.strategyOptions.extra_cards) {
-          floorSection.cards.push(...Helper.strategyOptions.extra_cards);
-        }
-      }
-
-      if (isFirstLoop && !Helper.strategyOptions.home_view.hidden.includes("areasTitle")) {
-        floorSection.cards.push({
-          type: "heading",
-          heading: `${Helper.localize("ui.components.area-picker.area")}s`,
-          heading_style: "title",
-        });
-        isFirstLoop = false;
-      }
 
       const lightEntities = Helper.getEntityIds({ domain: "light", area_slug: floor.areas_slug });
       const climateEntities = Helper.getEntityIds({ domain: "climate", area_slug: floor.areas_slug });
@@ -263,27 +273,8 @@ class HomeView {
         }),
       ].filter(Boolean);
 
-      if (floors.length > 1) {
-        floorSection.cards.push({
-          type: "heading",
-          heading: getFloorName(floor),
-          heading_style: "subtitle",
-          icon: floor.icon ?? "mdi:floor-plan",
-          badges: [{
-            type: "custom:mushroom-chips-card",
-            alignment: "end",
-            chips,
-            card_mod: {
-              style: `
-                ha-card {
-                  width: max-content;
-                }
-              `,
-            }
-          }],
-          tap_action: floor.floor_id !== UNDISCLOSED ? navigateTo(slugify(floor.floor_id)) : undefined,
-        });
-      }
+      // Collect area cards first to check if floor should be displayed
+      const areaCards: any[] = [];
 
       for (const area of floor.areas_slug.map(area_slug => Helper.areas[area_slug]).values()) {
         if (!area) continue;
@@ -304,38 +295,71 @@ class HomeView {
         }
 
         // Get a card for the area.
-        if (!Helper.strategyOptions.areas[area.slug]?.hidden) {
+        const isExcluded = Helper.linus_dashboard_config?.excluded_targets?.area_id?.includes(area.area_id);
+
+        if (!Helper.strategyOptions.areas[area.slug]?.hidden && !isExcluded) {
           const options = {
             ...Helper.strategyOptions.areas["_"],
             ...Helper.strategyOptions.areas[area.slug],
             area_slug: area.slug,
           };
 
-          floorSection.cards.push({
+          areaCards.push({
             ...new module.HomeAreaCard(options).getCard(),
           });
         }
       }
 
-      if (floor.floor_id === UNDISCLOSED) {
-        floorSection.cards.push({
-          type: "custom:mushroom-template-card",
-          primary: Helper.localize("component.linus_dashboard.entity.button.add_new_area.state.on"),
-          secondary: Helper.localize("component.linus_dashboard.entity.button.add_new_area.state.off"),
-          multiline_secondary: true,
-          icon: "mdi:view-dashboard-variant",
-          fill_container: true,
-          grid_options: {
-            columns: 12,
-          },
-          tap_action: {
-            action: "navigate",
-            navigation_path: "/config/areas/dashboard",
-          },
-        } as any);
-      }
+      // Only display floor if it has visible area cards
+      if (areaCards.length > 0) {
+        // Add floor heading (only if multiple floors)
+        if (floors.length > 1) {
+          floorSection.cards.push({
+            type: "heading",
+            heading: getFloorName(floor),
+            heading_style: "subtitle",
+            icon: floor.icon ?? "mdi:floor-plan",
+            badges: [{
+              type: "custom:mushroom-chips-card",
+              alignment: "end",
+              chips,
+              card_mod: {
+                style: `
+                  ha-card {
+                    width: max-content;
+                  }
+                `,
+              }
+            }],
+            tap_action: floor.floor_id !== UNDISCLOSED ? navigateTo(slugify(floor.floor_id)) : undefined,
+          });
+        }
 
-      groupedSections.push(floorSection);
+        // Add all area cards
+        floorSection.cards.push(...areaCards);
+
+        // Add "add new area" card for UNDISCLOSED floor
+        if (floor.floor_id === UNDISCLOSED) {
+          floorSection.cards.push({
+            type: "custom:mushroom-template-card",
+            primary: Helper.localize("component.linus_dashboard.entity.button.add_new_area.state.on"),
+            secondary: Helper.localize("component.linus_dashboard.entity.button.add_new_area.state.off"),
+            multiline_secondary: true,
+            icon: "mdi:view-dashboard-variant",
+            fill_container: true,
+            grid_options: {
+              columns: 12,
+            },
+            tap_action: {
+              action: "navigate",
+              navigation_path: "/config/areas/dashboard",
+            },
+          } as any);
+        }
+
+        // Add floor section to grouped sections
+        groupedSections.push(floorSection);
+      }
     }
 
     return groupedSections;

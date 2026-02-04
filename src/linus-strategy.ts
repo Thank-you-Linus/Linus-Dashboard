@@ -182,7 +182,9 @@ class LinusStrategy extends HTMLTemplateElement {
    */
   private static createAreaSubviews(views: LovelaceViewConfig[]) {
     for (const area of Helper.orderedAreas) {
-      if (!area.hidden) {
+      // Skip excluded areas
+      const isExcluded = Helper.linus_dashboard_config?.excluded_targets?.area_id?.includes(area.area_id);
+      if (!area.hidden && !isExcluded) {
         views.push({
           title: getAreaName(area),
           path: area.slug ?? area.name,
@@ -204,15 +206,29 @@ class LinusStrategy extends HTMLTemplateElement {
   private static createFloorSubviews(views: LovelaceViewConfig[]) {
     for (const floor of Helper.orderedFloors) {
       if (!floor.hidden) {
-        views.push({
-          title: getFloorName(floor),
-          path: floor.floor_id,
-          subview: true,
-          strategy: {
-            type: "custom:linus-strategy",
-            options: { floor },
-          },
+        const excludedTargets = Helper.linus_dashboard_config?.excluded_targets;
+        
+        // Check direct floor exclusion
+        const isFloorExcluded = excludedTargets?.floor_id?.includes(floor.floor_id);
+        
+        // Check if ALL areas in this floor are excluded
+        const allAreasExcluded = floor.areas_slug.every((area_slug) => {
+          const area = Helper.areas[area_slug];
+          return area && excludedTargets?.area_id?.includes(area.area_id);
         });
+
+        // Skip floor if directly excluded OR all its areas are excluded
+        if (!isFloorExcluded && !allAreasExcluded) {
+          views.push({
+            title: getFloorName(floor),
+            path: floor.floor_id,
+            subview: true,
+            strategy: {
+              type: "custom:linus-strategy",
+              options: { floor },
+            },
+          });
+        }
       }
     }
   }

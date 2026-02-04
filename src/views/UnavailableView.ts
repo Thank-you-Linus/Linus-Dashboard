@@ -60,6 +60,10 @@ class UnavailableView {
     const viewSections: LovelaceGridCardConfig[] = [];
 
     for (const floor of Helper.orderedFloors) {
+      // Skip excluded floors
+      const isFloorExcluded = Helper.linus_dashboard_config?.excluded_targets?.floor_id?.includes(floor.floor_id);
+      if (isFloorExcluded) continue;
+      
       if (floor.areas_slug.length === 0) continue;
 
       const floorCards = [];

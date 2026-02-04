@@ -24,6 +24,9 @@ class AggregateListPopup extends AbstractPopup {
     const is_binary_sensor = ["motion", "window", "door", "health"].includes(device_class)
 
     for (const floor of Helper.orderedFloors) {
+      // Skip excluded floors
+      const isFloorExcluded = Helper.linus_dashboard_config?.excluded_targets?.floor_id?.includes(floor.floor_id);
+      if (isFloorExcluded) continue;
 
       if (floor.areas_slug.length === 0) continue
 
@@ -42,6 +45,9 @@ class AggregateListPopup extends AbstractPopup {
       const areaCards: (TemplateCardConfig)[] = [];
 
       for (const [i, area] of floor.areas_slug.map(area_slug => Helper.areas[area_slug]).entries()) {
+        // Skip excluded areas
+        const isExcluded = Helper.linus_dashboard_config?.excluded_targets?.area_id?.includes(area?.area_id);
+        if (isExcluded) continue;
 
         const _entity = Helper.magicAreasDevices[area.slug]?.entities[`aggregate_${device_class}`]
 

@@ -544,7 +544,8 @@ class Helper {
     console.warn('[Linus Dashboard] 📦 Received config from backend:', {
       debug: linus_dashboard_config.debug,
       debug_type: typeof linus_dashboard_config.debug,
-      has_debug_field: 'debug' in linus_dashboard_config
+      has_debug_field: 'debug' in linus_dashboard_config,
+      excluded_targets: linus_dashboard_config.excluded_targets
     });
 
     Helper.logDebug('Registries loaded', {
@@ -597,7 +598,17 @@ class Helper {
       // Exclusion par entité
       if (!(entity.entity_id in this.#hassStates) || entity.hidden_by) return acc;
       const targets = Helper.linus_dashboard_config?.excluded_targets;
-      if (entity.area_id && targets?.area_id?.includes(entity.area_id)) return acc;
+      const effectiveAreaId = entity.area_id ?? deviceAreaMap.get(entity.device_id ?? "");
+      
+      // Filter entities from excluded floors
+      if (effectiveAreaId && targets?.floor_id?.length) {
+        const area = Object.values(this.#areas).find(a => a.area_id === effectiveAreaId);
+        if (area?.floor_id && targets.floor_id.includes(area.floor_id)) {
+          return acc;
+        }
+      }
+      
+      if (effectiveAreaId && targets?.area_id?.includes(effectiveAreaId)) return acc;
       if (targets?.entity_id?.includes(entity.entity_id)) return acc;
       if (entity.device_id && targets?.device_id?.includes(entity.device_id)) return acc;
       if (targets?.label_id?.length && entity.labels?.length) {

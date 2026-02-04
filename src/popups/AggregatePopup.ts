@@ -127,7 +127,7 @@ class AggregatePopup extends AbstractPopup {
       ? this.buildStatisticsCard(configWithEntities)
       : this.buildStatusCard(configWithEntities);
 
-    const showNavButton = config.showNavigationButton !== false && config.scope !== "global";
+    const showNavButton = config.showNavigationButton !== false;
 
     if (showNavButton) {
       const navButton = this.buildNavigationButton(configWithEntities);
@@ -386,6 +386,13 @@ class AggregatePopup extends AbstractPopup {
       navigationPath = device_class;
     }
 
+    // Check if we're already on the navigation target page
+    // Don't show navigation button if we're already there
+    const currentPath = window.location.pathname;
+    if (currentPath.includes(`/${navigationPath}`)) {
+      return null; // Don't show button if already on target page
+    }
+
     // Get localized label - use navigationPath instead of domain for consistency
     // Try to get domain-specific translation from HA
     const translationKey = getDomainTranslationKey(domain, device_class);
@@ -504,7 +511,7 @@ class AggregatePopup extends AbstractPopup {
       translationKey: config.translationKey,
       linusBrainEntity: null,
       features: config.features,
-      showNavigationButton: false,
+      showNavigationButton: true,
     });
 
     // Create aggregate chip for floor control
@@ -586,7 +593,7 @@ class AggregatePopup extends AbstractPopup {
       translationKey: config.translationKey,
       linusBrainEntity: null,
       features: config.features,
-      showNavigationButton: false,
+      showNavigationButton: true,
     });
 
     // Create aggregate chip for area control
@@ -707,7 +714,7 @@ class AggregatePopup extends AbstractPopup {
       translationKey: config.translationKey,
       linusBrainEntity: null,
       features: config.features,
-      showNavigationButton: false  // Don't show nav button in sub-popups
+      showNavigationButton: true  // Don't show nav button in sub-popups
     };
 
     if (areaSlug) {
@@ -770,6 +777,10 @@ class AggregatePopup extends AbstractPopup {
 
     // Helper to process a single floor
     const processFloor = (floor: StrategyFloor, addFloorSeparator: boolean) => {
+      // Skip excluded floors
+      const isFloorExcluded = Helper.linus_dashboard_config?.excluded_targets?.floor_id?.includes(floor.floor_id);
+      if (isFloorExcluded) return;
+
       if (!floor.areas_slug || floor.areas_slug.length === 0) return;
 
       const floorCards: any[] = [];
@@ -778,6 +789,10 @@ class AggregatePopup extends AbstractPopup {
       for (const area_slug of floor.areas_slug) {
         const area = Helper.areas[area_slug];
         if (!area) continue;
+
+        // Skip excluded areas
+        const isExcluded = Helper.linus_dashboard_config?.excluded_targets?.area_id?.includes(area.area_id);
+        if (isExcluded) continue;
 
         // Get entities for this area ONLY (single query per area)
         const entities = Helper.getAreaEntities(area, domain, device_class);

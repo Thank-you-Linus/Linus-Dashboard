@@ -635,6 +635,10 @@ export async function processFloorsAndAreas(
     const floors = Helper.orderedFloors;
 
     for (const floor of floors) {
+        // Skip excluded floors
+        const isFloorExcluded = Helper.linus_dashboard_config?.excluded_targets?.floor_id?.includes(floor.floor_id);
+        if (isFloorExcluded) continue;
+        
         if (floor.areas_slug.length === 0 || !AREA_CARDS_DOMAINS.includes(domain ?? "")) continue;
 
         const floorCards = [];
@@ -770,6 +774,11 @@ export async function processEntitiesForAreaOrFloorView({
 
     for (const area of areas) {
         if (!area) continue;
+
+        // Skip excluded areas
+        const isExcluded = Helper.linus_dashboard_config?.excluded_targets?.area_id?.includes(area.area_id);
+        if (isExcluded) continue;
+
         // Create global section card if area is not undisclosed
         if (!isFloorView && area.area_id !== UNDISCLOSED && area.picture) {
             viewSections.push({

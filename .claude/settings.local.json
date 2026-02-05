@@ -1,4 +1,7 @@
 {
+  "attribution": {
+    "commit": ""
+  },
   "permissions": {
     "allow": [
       "Bash(cat:*)",
@@ -10,10 +13,12 @@
       "Bash(npm run lint)",
       "Bash(npm run lint:check:*)",
       "Bash(npm run type-check:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(gh issue view:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(python3:*)",
+      "Bash(./ha-env/bin/ruff check:*)",
+      "Bash(ruff:*)"
     ]
-  },
-  "attribution": {
-    "commit": ""
   }
 }

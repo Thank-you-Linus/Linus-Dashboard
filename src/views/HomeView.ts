@@ -12,6 +12,7 @@ import { DEVICE_CLASSES, HOME_EXPOSED_CHIPS, UNDISCLOSED } from "../variables";
 import { createGlobalScopeChips, getFloorName, navigateTo, slugify } from "../utils";
 import { WeatherChip } from "../chips/WeatherChip";
 import { UnavailableChip } from "../chips/UnavailableChip";
+import { SecurityChip } from "../chips/SecurityChip";
 import { RefreshChip } from "../chips/RefreshChip";
 import { PersonCard } from "../cards/PersonCard";
 import { AggregateChip } from "../chips/AggregateChip";
@@ -96,6 +97,14 @@ class HomeView {
       } catch (e) {
         Helper.logError("An error occurred while creating the alarm chips!", e);
       }
+    }
+
+    // Security status chip - shows overall security status with quick access to SecurityView.
+    try {
+      const securityChip = new SecurityChip();
+      chips.push(securityChip.getChip());
+    } catch (e) {
+      Helper.logError("An error occurred while creating the security chip!", e);
     }
 
     // Spotify chip.

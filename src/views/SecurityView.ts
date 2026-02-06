@@ -5,7 +5,6 @@ import { AlarmCard } from "../cards/AlarmCard";
 import { PersonCard } from "../cards/PersonCard";
 import { SecurityStatusCard } from "../cards/SecurityStatusCard";
 import { SecurityActivityCard } from "../cards/SecurityActivityCard";
-import { SecurityStatsCard } from "../cards/SecurityStatsCard";
 import { getDomainTranslationKey } from "../utils";
 import { parseDomainTag } from "../utils/domainTagHelper";
 import { views } from "../types/strategy/views";
@@ -310,33 +309,41 @@ class SecurityView {
       });
     }
 
-    // Quick Actions card - opens popup with all actions
+    // Quick Actions + Activity cards on the same line (horizontal-stack)
+    const activityCard = new SecurityActivityCard(10);
+    const activityCardConfig = await activityCard.getCard();
+
     if (quickActionsCards.length > 0) {
       globalSection.cards.push({
-        type: "custom:mushroom-template-card",
-        primary: Helper.localize("component.linus_dashboard.entity.text.security_view.state.quick_actions"),
-        secondary: `${quickActionsCards.length} actions`,
-        icon: "mdi:lightning-bolt",
-        icon_color: "purple",
-        tap_action: {
-          action: "fire-dom-event",
-          browser_mod: {
-            service: "browser_mod.popup",
-            data: {
-              title: Helper.localize("component.linus_dashboard.entity.text.security_view.state.quick_actions"),
-              content: {
-                type: "vertical-stack",
-                cards: quickActionsCards
+        type: "horizontal-stack",
+        cards: [
+          {
+            type: "custom:mushroom-template-card",
+            primary: Helper.localize("component.linus_dashboard.entity.text.security_view.state.quick_actions"),
+            secondary: `${quickActionsCards.length} actions`,
+            icon: "mdi:lightning-bolt",
+            icon_color: "purple",
+            tap_action: {
+              action: "fire-dom-event",
+              browser_mod: {
+                service: "browser_mod.popup",
+                data: {
+                  title: Helper.localize("component.linus_dashboard.entity.text.security_view.state.quick_actions"),
+                  content: {
+                    type: "vertical-stack",
+                    cards: quickActionsCards
+                  }
+                }
               }
             }
-          }
-        }
+          },
+          activityCardConfig
+        ]
       });
+    } else {
+      // No quick actions, just show activity card
+      globalSection.cards.push(activityCardConfig);
     }
-
-    // Security Activity Card - Timeline des 10 derniers événements
-    const activityCard = new SecurityActivityCard(10);
-    globalSection.cards.push(await activityCard.getCard());
 
     // Multi-alarmes : affiche une carte pour chaque alarme
     const alarmEntityIds = Helper.linus_dashboard_config?.alarm_entity_ids || [];
@@ -472,10 +479,6 @@ class SecurityView {
       globalSection.cards.push(...securityAggregateCards);
     }
 
-    // Security Statistics Card - Compteurs et statistiques
-    const statsCard = new SecurityStatsCard();
-    globalSection.cards.push(await statsCard.getCard());
-
     // Organize sensors by category for better UX
     const criticalSensors = [
       "binary_sensor:smoke",
@@ -588,48 +591,60 @@ class SecurityView {
       return cards;
     };
 
-    // Critical Safety Sensors (🔴 RED for critical alerts)
+    // Critical Safety Sensors (RED for critical alerts)
     const criticalCards = createAggregateSensorCards(criticalSensors, 'red');
     if (criticalCards.length > 0) {
       globalSection.cards.push({
         type: "heading",
-        heading: "🔥 Critical Safety",
+        heading: "Critical Safety",
         heading_style: "subtitle",
         icon: "mdi:fire-alert",
       });
       globalSection.cards.push(...criticalCards);
     }
 
-    // Access Control Sensors (🟡 ORANGE when open)
+    // Access Control Sensors (ORANGE when open)
     const accessCards = createAggregateSensorCards(accessSensors, 'orange');
     if (accessCards.length > 0) {
+      // Count total access entities
+      const accessEntityCount = accessSensors.reduce((count, sensorTag) => {
+        const { domain, device_class } = parseDomainTag(sensorTag);
+        return count + Helper.getEntityIds({ domain, device_class }).length;
+      }, 0);
+
       globalSection.cards.push({
         type: "heading",
-        heading: "🚪 Access Control",
+        heading: `Access Control (${accessEntityCount})`,
         heading_style: "subtitle",
         icon: "mdi:door",
       });
       globalSection.cards.push(...accessCards);
     }
 
-    // Detection Sensors (🔵 BLUE when active)
+    // Detection Sensors (BLUE when active)
     const detectionCards = createAggregateSensorCards(detectionSensors, 'blue');
     if (detectionCards.length > 0) {
+      // Count total detection entities
+      const detectionEntityCount = detectionSensors.reduce((count, sensorTag) => {
+        const { domain, device_class } = parseDomainTag(sensorTag);
+        return count + Helper.getEntityIds({ domain, device_class }).length;
+      }, 0);
+
       globalSection.cards.push({
         type: "heading",
-        heading: "👁️ Detection",
+        heading: `Detection (${detectionEntityCount})`,
         heading_style: "subtitle",
         icon: "mdi:motion-sensor",
       });
       globalSection.cards.push(...detectionCards);
     }
 
-    // Other Security Sensors (⚪ GREY default)
+    // Other Security Sensors (GREY default)
     const otherCards = createAggregateSensorCards(otherSensors, 'grey');
     if (otherCards.length > 0) {
       globalSection.cards.push({
         type: "heading",
-        heading: "🛡️ Other",
+        heading: "Other",
         heading_style: "subtitle",
         icon: "mdi:shield-alert",
       });

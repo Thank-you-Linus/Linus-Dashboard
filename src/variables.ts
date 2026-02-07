@@ -138,23 +138,92 @@ export const CUSTOM_VIEWS = ["home", "security", "security-details"];
 
 export const DOMAINS_VIEWS = [...AREA_CARDS_DOMAINS, ...DEVICE_CLASSES.binary_sensor, ...DEVICE_CLASSES.sensor];
 
-export const HOME_EXPOSED_CHIPS = ["weather", "alarm", "spotify", LIGHT_DOMAIN, "climate", "fan", "media_player", "switch", "safety", ...DEVICE_CLASSES.cover.map(d => `cover:${d}`), "binary_sensor:motion", "binary_sensor:occupancy", "binary_sensor:door", "binary_sensor:window"];
-export const AREA_EXPOSED_CHIPS = [LIGHT_DOMAIN, ...GROUP_DOMAINS, ...DEVICE_CLASSES.cover.map(d => `cover:${d}`), "fan", "switch", "safety", ...DEVICE_CLASSES.binary_sensor.map(d => `binary_sensor:${d}`), ...DEVICE_CLASSES.sensor.map(d => `sensor:${d}`)];
-export const SECURITY_EXPOSED_DOMAINS = ["light", "alarm", "safety", ...DEVICE_CLASSES.cover.map(d => `cover:${d}`), "lock", "siren", "camera"];
-export const SECURITY_EXPOSED_SENSORS = [
-  "binary_sensor:motion", 
-  "binary_sensor:occupancy", 
-  "binary_sensor:door", 
-  "binary_sensor:window", 
+// ============================================
+// Reusable sensor/binary_sensor groupings
+// ============================================
+
+// Essential binary sensors for presence/access detection
+export const PRESENCE_BINARY_SENSORS = [
+  "binary_sensor:motion",
+  "binary_sensor:occupancy",
+  "binary_sensor:presence",
+];
+
+// Access control binary sensors (doors, windows, locks)
+export const ACCESS_BINARY_SENSORS = [
+  "binary_sensor:door",
+  "binary_sensor:window",
+  "binary_sensor:garage_door",
+  "binary_sensor:lock",
+];
+
+// Safety/security binary sensors
+export const SAFETY_BINARY_SENSORS = [
   "binary_sensor:smoke",
   "binary_sensor:gas",
   "binary_sensor:carbon_monoxide",
-  "binary_sensor:garage_door",
+  "binary_sensor:moisture",
   "binary_sensor:tamper",
   "binary_sensor:sound",
   "binary_sensor:vibration",
-  "binary_sensor:lock",
-  "binary_sensor:moisture"
+];
+
+// Climate-related sensors
+export const CLIMATE_SENSORS = [
+  "sensor:temperature",
+  "sensor:humidity",
+  "sensor:illuminance",
+];
+
+// Energy monitoring sensors
+export const ENERGY_SENSORS = [
+  "sensor:power",
+  "sensor:energy",
+  "sensor:battery",
+];
+
+// ============================================
+// View-specific chip configurations
+// ============================================
+
+export const HOME_EXPOSED_CHIPS = [
+  "weather", "alarm", "spotify",
+  LIGHT_DOMAIN, "climate", "fan", "media_player", "switch", "safety",
+  ...DEVICE_CLASSES.cover.map(d => `cover:${d}`),
+  // Essential presence & access
+  "binary_sensor:motion", "binary_sensor:occupancy", "binary_sensor:door", "binary_sensor:window",
+  // Critical safety alerts
+  "binary_sensor:smoke", "binary_sensor:gas", "binary_sensor:carbon_monoxide"
+];
+
+// Reduced chip list for AreaView/FloorView with essential items only
+export const AREA_EXPOSED_CHIPS = [
+  // Controllable domains
+  LIGHT_DOMAIN,
+  ...GROUP_DOMAINS, // climate, media_player, cover
+  ...DEVICE_CLASSES.cover.map(d => `cover:${d}`),
+  "fan",
+  "switch",
+  "safety",
+  // Essential binary sensors (presence + access + safety alerts)
+  ...PRESENCE_BINARY_SENSORS.filter(s => s !== "binary_sensor:presence"), // motion, occupancy
+  ...ACCESS_BINARY_SENSORS.filter(s => s !== "binary_sensor:garage_door" && s !== "binary_sensor:lock"), // door, window
+  ...SAFETY_BINARY_SENSORS.filter(s => !["binary_sensor:tamper", "binary_sensor:sound", "binary_sensor:vibration"].includes(s)), // smoke, gas, co, moisture
+  // Essential sensors (climate + energy)
+  ...CLIMATE_SENSORS,
+  ...ENERGY_SENSORS,
+];
+
+export const SECURITY_EXPOSED_DOMAINS = [
+  "light", "alarm", "safety",
+  ...DEVICE_CLASSES.cover.map(d => `cover:${d}`),
+  "lock", "siren", "camera"
+];
+
+export const SECURITY_EXPOSED_SENSORS = [
+  ...PRESENCE_BINARY_SENSORS,
+  ...ACCESS_BINARY_SENSORS,
+  ...SAFETY_BINARY_SENSORS,
 ];
 export const SECURITY_EXPOSED_CHIPS = ["light", "alarm", "safety", "lock", "siren", ...DEVICE_CLASSES.cover.map(d => `cover:${d}`), ...SECURITY_EXPOSED_SENSORS];
 

@@ -487,6 +487,144 @@ export function createGlobalScopeChips(
 }
 
 /**
+ * Create aggregate chips with area scope for area-specific display.
+ *
+ * This function creates AggregateChip instances with scope: "area" which
+ * ensures the popup displays only entities within the specified area.
+ *
+ * @param domainTags - List of domain tags (e.g., ["light", "climate", "cover:blind"])
+ * @param area_slug - The area slug to scope the chips to
+ * @param options - Optional chip options
+ * @returns Array of chip configurations
+ */
+export function createAreaScopeChips(
+    domainTags: string[],
+    area_slug: string,
+    options?: {
+        tapActionMode?: "popup" | "navigation";
+        show_content?: boolean;
+    }
+): LovelaceChipConfig[] {
+    const result: LovelaceChipConfig[] = [];
+
+    for (const domainTag of domainTags) {
+        const { domain, device_class } = parseDomainTag(domainTag);
+
+        // Skip non-controllable domains (handled separately)
+        if (domain === "weather" || domain === "alarm" || domain === "spotify" || domain === "safety") {
+            continue;
+        }
+
+        // Check excluded domains
+        if (Helper.linus_dashboard_config?.excluded_domains?.includes(domain)) {
+            continue;
+        }
+
+        // Check excluded device classes
+        if (device_class && Helper.linus_dashboard_config?.excluded_device_classes?.includes(device_class)) {
+            continue;
+        }
+
+        // Check area entities exist
+        const areaEntities = Helper.getEntityIds({ domain, device_class, area_slug });
+        if (areaEntities.length === 0) {
+            continue;
+        }
+
+        try {
+            const chip = new AggregateChip({
+                domain,
+                device_class,
+                scope: "area",
+                area_slug,
+                show_content: options?.show_content ?? true,
+                tapActionMode: options?.tapActionMode ?? "popup"
+            }).getChip();
+
+            // Only add chips with valid icons
+            if (chip && (chip as any).icon) {
+                result.push(chip);
+            }
+        } catch (e) {
+            if (Helper.debug) {
+                console.warn(`[createAreaScopeChips] Failed to create chip for ${domainTag}`, e);
+            }
+        }
+    }
+
+    return result;
+}
+
+/**
+ * Create aggregate chips with floor scope for floor-specific display.
+ *
+ * This function creates AggregateChip instances with scope: "floor" which
+ * ensures the popup displays only entities within the specified floor.
+ *
+ * @param domainTags - List of domain tags (e.g., ["light", "climate", "cover:blind"])
+ * @param floor_id - The floor ID to scope the chips to
+ * @param options - Optional chip options
+ * @returns Array of chip configurations
+ */
+export function createFloorScopeChips(
+    domainTags: string[],
+    floor_id: string,
+    options?: {
+        tapActionMode?: "popup" | "navigation";
+        show_content?: boolean;
+    }
+): LovelaceChipConfig[] {
+    const result: LovelaceChipConfig[] = [];
+
+    for (const domainTag of domainTags) {
+        const { domain, device_class } = parseDomainTag(domainTag);
+
+        // Skip non-controllable domains (handled separately)
+        if (domain === "weather" || domain === "alarm" || domain === "spotify" || domain === "safety") {
+            continue;
+        }
+
+        // Check excluded domains
+        if (Helper.linus_dashboard_config?.excluded_domains?.includes(domain)) {
+            continue;
+        }
+
+        // Check excluded device classes
+        if (device_class && Helper.linus_dashboard_config?.excluded_device_classes?.includes(device_class)) {
+            continue;
+        }
+
+        // Check floor entities exist
+        const floorEntities = Helper.getEntityIds({ domain, device_class, floor_id });
+        if (floorEntities.length === 0) {
+            continue;
+        }
+
+        try {
+            const chip = new AggregateChip({
+                domain,
+                device_class,
+                scope: "floor",
+                floor_id,
+                show_content: options?.show_content ?? true,
+                tapActionMode: options?.tapActionMode ?? "popup"
+            }).getChip();
+
+            // Only add chips with valid icons
+            if (chip && (chip as any).icon) {
+                result.push(chip);
+            }
+        } catch (e) {
+            if (Helper.debug) {
+                console.warn(`[createFloorScopeChips] Failed to create chip for ${domainTag}`, e);
+            }
+        }
+    }
+
+    return result;
+}
+
+/**
  * Get the translation key for a domain.
  * @param {string} domain - The domain.
  * @param {string} [device_class] - The device class.

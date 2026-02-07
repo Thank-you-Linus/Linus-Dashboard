@@ -7,7 +7,7 @@ import { LovelaceViewConfig } from "../types/homeassistant/data/lovelace";
 import { generic } from "../types/strategy/generic";
 import { AREA_EXPOSED_CHIPS } from "../variables";
 import { LovelaceChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
-import { createGlobalScopeChips, processEntitiesForAreaOrFloorView } from "../utils";
+import { createAreaScopeChips, processEntitiesForAreaOrFloorView } from "../utils";
 import { UnavailableChip } from "../chips/UnavailableChip";
 import { RefreshChip } from "../chips/RefreshChip";
 import { ChipFactory } from "../factories/ChipFactory";
@@ -82,8 +82,8 @@ class AreaView {
       Helper.logError("An error occurred while creating the Activity Detection chip!", e);
     }
 
-    // Domain aggregate chips with global scope (hierarchical popup display)
-    const areaChips = createGlobalScopeChips(AREA_EXPOSED_CHIPS, {
+    // Domain aggregate chips with area scope (shows only entities in this area)
+    const areaChips = createAreaScopeChips(AREA_EXPOSED_CHIPS, this.area.slug, {
       show_content: true
     });
     chips.push(...areaChips);

@@ -234,14 +234,29 @@ class AggregatePopup extends AbstractPopup {
     active: string;
     inactive: string
   } {
-    const stateOn = Helper.localize(`component.${config.domain}.entity_component._.state.on`)
-      || Helper.localize('component.linus_dashboard.entity.text.aggregate_popup.state.state_on')
-      || 'on';
-    const stateOff = Helper.localize(`component.${config.domain}.entity_component._.state.off`)
-      || Helper.localize('component.linus_dashboard.entity.text.aggregate_popup.state.state_off')
-      || 'off';
+    const { domain } = config;
 
-    return { active: stateOn, inactive: stateOff };
+    // Domain-specific state translations - use our translations with (s) for plurals
+    if (domain === 'cover') {
+      // "ouvert(s)" / "fermé(s)"
+      return {
+        active: Helper.localize('component.linus_dashboard.entity.text.aggregate_popup.state.state_open') || 'open',
+        inactive: Helper.localize('component.linus_dashboard.entity.text.aggregate_popup.state.state_closed') || 'closed'
+      };
+    }
+
+    if (domain === 'lock') {
+      return {
+        active: Helper.localize('component.linus_dashboard.entity.text.aggregate_popup.state.state_locked') || 'locked',
+        inactive: Helper.localize('component.linus_dashboard.entity.text.aggregate_popup.state.state_unlocked') || 'unlocked'
+      };
+    }
+
+    // Default: on/off - use our translations with (s)
+    return {
+      active: Helper.localize('component.linus_dashboard.entity.text.aggregate_popup.state.state_on') || 'on',
+      inactive: Helper.localize('component.linus_dashboard.entity.text.aggregate_popup.state.state_off') || 'off'
+    };
   }
 
   /**
@@ -255,16 +270,17 @@ class AggregatePopup extends AbstractPopup {
     const statesArray = entity_ids.map(id => `states["${id}"]`).join(', ');
     const activeStatesCondition = activeStates.map(s => `'${s}'`).join(', ');
 
-    // Get labels (can be overridden by child classes)
+    // Get the "on" state label
     const labels = this.getStatusLabels(config);
 
+    // Format: "5/6 allumé(s)" or "5/6 on"
     return {
       type: "markdown",
       content: `
         {% set entities = [${statesArray}] %}
         {% set active = entities | selectattr('state', 'in', [${activeStatesCondition}]) | list | count %}
-        {% set inactive = entities | count - active %}
-        **{{ active }}** ${labels.active} • **{{ inactive }}** ${labels.inactive}
+        {% set total = entities | count %}
+        **{{ active }}/{{ total }}** ${labels.active}
       `.trim()
     };
   }
@@ -393,23 +409,14 @@ class AggregatePopup extends AbstractPopup {
       return null; // Don't show button if already on target page
     }
 
-    // Get localized label - use navigationPath instead of domain for consistency
-    // Try to get domain-specific translation from HA
-    const translationKey = getDomainTranslationKey(domain, device_class);
-    const haTranslation = Helper.localize(translationKey);
-    const domainLabel = (haTranslation && haTranslation !== "translation not found" ? haTranslation : null)
-      || Helper.strategyOptions.domains[device_class ? `${domain}_${device_class}` : domain]?.title
-      || navigationPath.charAt(0).toUpperCase() + navigationPath.slice(1);
-
-    // Build "View All X" label with translation
-    const viewAllPrefix = Helper.localize('component.linus_dashboard.entity.text.aggregate_popup.state.view_all_prefix')
+    // Simple "View All" / "Voir tout" label
+    const viewLabel = Helper.localize('component.linus_dashboard.entity.text.aggregate_popup.state.view_all')
       || 'View All';
-    const viewLabel = `${viewAllPrefix} ${domainLabel}`;
 
     return {
       type: "custom:mushroom-template-card",
       primary: viewLabel,
-      icon: "mdi:view-dashboard",
+      icon: "mdi:arrow-right",
       icon_color: "blue",
       layout: "horizontal",
       tap_action: {

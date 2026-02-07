@@ -90,3 +90,6 @@ logs/
 
 # Claude Code - generated configuration
 .claude/
+
+# Personal todo files
+todo

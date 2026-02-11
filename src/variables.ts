@@ -134,7 +134,7 @@ export const ALL_HOME_ASSISTANT_DOMAINS = [
   "proximity", "remote", "tag", "text", "time", "todo", "valve", "wake_word"
 ];
 
-export const CUSTOM_VIEWS = ["home", "security", "security-details"];
+export const CUSTOM_VIEWS = ["home", "security", "security-details", "tags"];
 
 export const DOMAINS_VIEWS = [...AREA_CARDS_DOMAINS, ...DEVICE_CLASSES.binary_sensor, ...DEVICE_CLASSES.sensor];
 

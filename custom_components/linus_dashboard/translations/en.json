@@ -236,7 +236,8 @@
                     "action_off_media_player": "Pause All",
                     "action_off_cover": "Close All",
                     "action_off_climate": "Turn All Off",
-                    "individual_controls": "Individual Controls"
+                    "individual_controls": "Individual Controls",
+                    "no_label": "No label"
                 }
             },
             "cover_popup": {
@@ -306,6 +307,14 @@
                     "confirm_arm_alarm": "Arm/Disarm alarm?",
                     "cancel": "Cancel",
                     "confirm": "Confirm"
+                }
+            },
+            "tags_view": {
+                "name": "Tags",
+                "state": {
+                    "title": "Tags",
+                    "entities": "entities",
+                    "no_entities": "No entities with this label"
                 }
             }
         }

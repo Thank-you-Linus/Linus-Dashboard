@@ -8,6 +8,7 @@ import { getEntityDomain, getGlobalEntitiesExceptUndisclosed, getMAEntity, getMa
 import { createDomainTag } from "./utils/domainTagHelper";
 import { IconResources } from "./types/homeassistant/data/frontend";
 import { LinusDashboardConfig } from "./types/homeassistant/data/linus_dashboard";
+import { LabelRegistryEntry } from "./types/homeassistant/data/label_registry";
 import { PerformanceProfiler } from "./utils/performanceProfiler";
 
 import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
@@ -61,6 +62,14 @@ class Helper {
    * @private
    */
   static #floors: Record<string, StrategyFloor> = {};
+
+  /**
+   * Label registry from Home Assistant.
+   *
+   * @type {Record<string, LabelRegistryEntry>}
+   * @private
+   */
+  static #labels: Record<string, LabelRegistryEntry> = {};
 
   /**
    * An array of state entities from Home Assistant's Hass object.
@@ -399,6 +408,69 @@ class Helper {
   }
 
   /**
+   * Get the label registry from Home Assistant.
+   *
+   * @returns {Record<string, LabelRegistryEntry>}
+   * @static
+   */
+  static get labels(): Record<string, LabelRegistryEntry> {
+    return this.#labels;
+  }
+
+  /**
+   * Get display name for a label ID.
+   *
+   * @param {string} labelId - The label ID
+   * @returns {string} Display name or labelId as fallback
+   * @static
+   */
+  static getLabelName(labelId: string): string {
+    return this.#labels[labelId]?.name ?? labelId;
+  }
+
+  /**
+   * Get label info (id, name, icon, color).
+   *
+   * @param {string} labelId - The label ID
+   * @returns {LabelRegistryEntry | undefined} Label info or undefined
+   * @static
+   */
+  static getLabel(labelId: string): LabelRegistryEntry | undefined {
+    return this.#labels[labelId];
+  }
+
+  /**
+   * Get the area for an entity, considering device inheritance.
+   * Entities can inherit their area from their parent device.
+   *
+   * @param {string} entityId - The entity ID
+   * @returns {StrategyArea | null} Area object or null if not found
+   * @static
+   */
+  static getEntityArea(entityId: string): StrategyArea | null {
+    const entity = this.#entities[entityId];
+    if (!entity) return null;
+
+    // Get effective area_id: entity's own area_id or inherited from device
+    let effectiveAreaId = entity.area_id;
+
+    // If entity has no direct area, check if device has one
+    if (!effectiveAreaId && entity.device_id) {
+      const device = this.#devices[entity.device_id];
+      effectiveAreaId = device?.area_id;
+    }
+
+    if (!effectiveAreaId) return null;
+
+    // Find area by matching area_id (Helper.areas is keyed by slug)
+    const areaSlug = Object.keys(this.#areas).find(
+      slug => this.#areas[slug]?.area_id === effectiveAreaId
+    );
+
+    return areaSlug ? this.#areas[areaSlug] : null;
+  }
+
+  /**
    * Get the devices from Home Assistant's device registry.
    *
    * @returns {Record<string, StrategyDevice>}
@@ -519,6 +591,7 @@ class Helper {
         info.hass.callWS({ type: "config/device_registry/list" }),
         info.hass.callWS({ type: "config/area_registry/list" }),
         info.hass.callWS({ type: "config/floor_registry/list" }),
+        info.hass.callWS({ type: "config/label_registry/list" }),
         info.hass.callWS({ type: "frontend/get_icons", category: "entity_component" }),
         info.hass.callWS({ type: "frontend/get_icons", category: "services" }),
         info.hass.callWS({ type: "linus_dashboard/get_config" }),
@@ -527,13 +600,19 @@ class Helper {
       Helper.logError("An error occurred while querying Home assistant's registries!", e);
       throw 'Check the console for details';
     } finally {
-      PerformanceProfiler.end(wsKey, { registryCount: 7 });
+      PerformanceProfiler.end(wsKey, { registryCount: 8 });
     }
 
-    const [entities, devices, areas, floors, entity_component_icons, services_icons, linus_dashboard_config] = homeAssistantRegistries as [any[], any[], any[], any[], { resources: any }, { resources: any }, LinusDashboardConfig];
+    const [entities, devices, areas, floors, labelsList, entity_component_icons, services_icons, linus_dashboard_config] = homeAssistantRegistries as [any[], any[], any[], any[], any[], { resources: any }, { resources: any }, LinusDashboardConfig];
 
     this.#icons = merge(entity_component_icons.resources, services_icons.resources);
     this.#linus_dashboard_config = linus_dashboard_config;
+
+    // Build labels map from label registry
+    this.#labels = (labelsList as LabelRegistryEntry[]).reduce((acc, label) => {
+      acc[label.label_id] = label;
+      return acc;
+    }, {} as Record<string, LabelRegistryEntry>);
 
     // Log received config for debugging
     console.warn('[Linus Dashboard] 📦 Received config from backend:', {
@@ -548,6 +627,7 @@ class Helper {
       devices: devices.length,
       areas: areas.length,
       floors: floors.length,
+      labels: Object.keys(this.#labels).length,
       embedded_dashboards: linus_dashboard_config.embedded_dashboards?.length ?? 0
     });
 
@@ -861,6 +941,7 @@ class Helper {
         devices: Object.keys(this.#devices).length,
         areas: Object.keys(this.#areas).length,
         floors: Object.keys(this.#floors).length,
+        labels: Object.keys(this.#labels).length,
         views: Object.keys(this.#strategyOptions.views).length,
         extra_views: this.#strategyOptions.extra_views?.length ?? 0
       });

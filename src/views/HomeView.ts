@@ -13,6 +13,7 @@ import { createGlobalScopeChips, getFloorName, navigateTo, slugify } from "../ut
 import { WeatherChip } from "../chips/WeatherChip";
 import { UnavailableChip } from "../chips/UnavailableChip";
 import { SecurityChip } from "../chips/SecurityChip";
+import { TagsChip } from "../chips/TagsChip";
 import { RefreshChip } from "../chips/RefreshChip";
 import { PersonCard } from "../cards/PersonCard";
 import { AggregateChip } from "../chips/AggregateChip";
@@ -105,6 +106,18 @@ class HomeView {
       chips.push(securityChip.getChip());
     } catch (e) {
       Helper.logError("An error occurred while creating the security chip!", e);
+    }
+
+    // Tags chip - shows label count with quick access to TagsView.
+    try {
+      const tagsChip = new TagsChip();
+      const tagsChipConfig = tagsChip.getChip();
+      // Only add if there are labels (chip has icon)
+      if (tagsChipConfig && (tagsChipConfig as any).icon) {
+        chips.push(tagsChipConfig);
+      }
+    } catch (e) {
+      Helper.logError("An error occurred while creating the tags chip!", e);
     }
 
     // Spotify chip.

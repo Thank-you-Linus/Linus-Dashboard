@@ -10,6 +10,7 @@ import { LovelaceChipConfig } from "../types/lovelace-mushroom/utils/lovelace/ch
 import { createAreaScopeChips, processEntitiesForAreaOrFloorView } from "../utils";
 import { UnavailableChip } from "../chips/UnavailableChip";
 import { RefreshChip } from "../chips/RefreshChip";
+import { TagsChip } from "../chips/TagsChip";
 import { ChipFactory } from "../factories/ChipFactory";
 
 import StrategyArea = generic.StrategyArea;
@@ -87,6 +88,17 @@ class AreaView {
       show_content: true
     });
     chips.push(...areaChips);
+
+    // Tags chip - shows label count for this area with link to TagsView
+    try {
+      const tagsChip = new TagsChip({ area_slug: this.area.slug });
+      const tagsChipConfig = tagsChip.getChip();
+      if (tagsChipConfig && (tagsChipConfig as any).icon) {
+        chips.push(tagsChipConfig);
+      }
+    } catch (e) {
+      Helper.logError("An error occurred while creating the tags chip!", e);
+    }
 
     const unavailableChip = new UnavailableChip({ area_slug: this.area.slug }).getChip();
     if (unavailableChip) chips.push(unavailableChip);

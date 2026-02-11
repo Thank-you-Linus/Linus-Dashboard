@@ -236,7 +236,8 @@
                     "action_off_media_player": "Tout Mettre en Pause",
                     "action_off_cover": "Tout Fermer",
                     "action_off_climate": "Tout Éteindre",
-                    "individual_controls": "Contrôles Individuels"
+                    "individual_controls": "Contrôles Individuels",
+                    "no_label": "Sans étiquette"
                 }
             },
             "cover_popup": {
@@ -306,6 +307,14 @@
                     "confirm_arm_alarm": "Armer/Désarmer l'alarme ?",
                     "cancel": "Annuler",
                     "confirm": "Confirmer"
+                }
+            },
+            "tags_view": {
+                "name": "Étiquettes",
+                "state": {
+                    "title": "Étiquettes",
+                    "entities": "entités",
+                    "no_entities": "Aucune entité avec cette étiquette"
                 }
             }
         }

@@ -811,9 +811,34 @@ class AggregatePopup extends AbstractPopup {
         const areaSeparator = this.buildAreaSeparator(config, area.slug, areaEntityIds);
         floorCards.push(...areaSeparator);
 
-        // Add individual entity tiles (simple flat list - no GroupedCard wrapper)
-        for (const entity of entities) {
-          floorCards.push(this.buildEntityTile(entity.entity_id, config));
+        // Group entities by labels
+        const entitiesByLabel = this.groupEntitiesByLabel(entities);
+
+        // Get label IDs, excluding __no_label__ (we only show tagged entities)
+        const labelIds = Object.keys(entitiesByLabel).filter(id => id !== '__no_label__');
+
+        // If no labeled entities, add all entities without separators
+        if (labelIds.length === 0) {
+          for (const entity of entities) {
+            floorCards.push(this.buildEntityTile(entity.entity_id, config));
+          }
+        } else {
+          // Only show label separators if there are multiple label groups
+          const showLabelSeparators = labelIds.length > 1;
+
+          for (const labelId of labelIds) {
+            const labelEntities = entitiesByLabel[labelId];
+
+            // Add label separator if multiple groups exist
+            if (showLabelSeparators) {
+              floorCards.push(this.buildLabelSeparator(labelId));
+            }
+
+            // Add individual entity tiles
+            for (const entity of labelEntities) {
+              floorCards.push(this.buildEntityTile(entity.entity_id, config));
+            }
+          }
         }
       }
 
@@ -858,6 +883,69 @@ class AggregatePopup extends AbstractPopup {
   }
 
   /**
+   * Group entities by their labels.
+   * Entities with multiple labels appear in ALL groups.
+   * Entities without labels go to '__no_label__' group at the end.
+   *
+   * @param entities - Array of entities with labels
+   * @returns Record of labelId -> entities
+   * @protected
+   */
+  protected groupEntitiesByLabel(entities: generic.StrategyEntity[]): Record<string, generic.StrategyEntity[]> {
+    const groups: Record<string, generic.StrategyEntity[]> = {};
+    const noLabelEntities: generic.StrategyEntity[] = [];
+
+    for (const entity of entities) {
+      // Get all labels for this entity
+      const entityLabels = entity.labels || [];
+
+      if (entityLabels.length === 0) {
+        // No labels - add to "no label" group
+        noLabelEntities.push(entity);
+      } else {
+        // Add to ALL label groups (entity appears in each)
+        for (const labelId of entityLabels) {
+          if (!groups[labelId]) {
+            groups[labelId] = [];
+          }
+          groups[labelId].push(entity);
+        }
+      }
+    }
+
+    // Add "no label" group at the end if any
+    if (noLabelEntities.length > 0) {
+      groups['__no_label__'] = noLabelEntities;
+    }
+
+    return groups;
+  }
+
+  /**
+   * Build a simple label separator (non-clickable heading).
+   * Only shown when there are multiple label groups in an area.
+   *
+   * @param labelId - Label ID or '__no_label__'
+   * @returns Heading card configuration
+   * @protected
+   */
+  protected buildLabelSeparator(labelId: string): any {
+    const isNoLabel = labelId === '__no_label__';
+    const labelInfo = isNoLabel ? null : Helper.getLabel(labelId);
+
+    const displayName = isNoLabel
+      ? Helper.localize("component.linus_dashboard.entity.text.aggregate_popup.state.no_label") || "No label"
+      : labelInfo?.name ?? labelId;
+
+    return {
+      type: "heading",
+      heading: displayName,
+      heading_style: "subtitle",
+      icon: isNoLabel ? "mdi:tag-off" : (labelInfo?.icon ?? "mdi:tag"),
+    };
+  }
+
+  /**
    * Build individual cards for area scope (no floor/area separators needed)
    * Returns simple flat list of tiles
    * 
@@ -868,12 +956,51 @@ class AggregatePopup extends AbstractPopup {
     config: AggregatePopupConfigWithEntities
   ): any[] {
     const { entity_ids } = config;
+    const cards: any[] = [];
 
-    // Sort entities by floor and area for consistent ordering
-    const sortedIds = Helper.sortEntitiesByFloorAndArea(entity_ids);
+    // Get entities from IDs
+    const entities = entity_ids
+      .map(id => Helper.entities[id])
+      .filter((e): e is generic.StrategyEntity => !!e);
 
-    // Build tile cards (simple flat list - no GroupedCard wrapper)
-    return sortedIds.map(entity_id => this.buildEntityTile(entity_id, config));
+    // Group entities by labels (entity with multiple labels appears in each group)
+    const entitiesByLabel = this.groupEntitiesByLabel(entities);
+
+    // Get sorted label IDs (alphabetically by label name), excluding __no_label__
+    const sortedLabelIds = Object.keys(entitiesByLabel)
+      .filter(labelId => labelId !== '__no_label__')
+      .sort((a, b) => {
+        const nameA = Helper.getLabelName(a);
+        const nameB = Helper.getLabelName(b);
+        return nameA.localeCompare(nameB);
+      });
+
+    // Check if we have multiple labels to show separators
+    const hasMultipleLabels = sortedLabelIds.length > 1;
+
+    // Build cards grouped by label
+    for (const labelId of sortedLabelIds) {
+      const labelEntities = entitiesByLabel[labelId];
+
+      // Add label separator only if multiple labels exist
+      if (hasMultipleLabels) {
+        cards.push(this.buildLabelSeparator(labelId));
+      }
+
+      // Add entity tiles
+      for (const entity of labelEntities) {
+        cards.push(this.buildEntityTile(entity.entity_id, config));
+      }
+    }
+
+    // If no labeled entities, fall back to showing all entities without separators
+    // This handles the case where entities have no labels at all
+    if (sortedLabelIds.length === 0) {
+      const sortedIds = Helper.sortEntitiesByFloorAndArea(entity_ids);
+      return sortedIds.map(entity_id => this.buildEntityTile(entity_id, config));
+    }
+
+    return cards;
   }
 
   /**

@@ -174,44 +174,48 @@ export const configurationDefaults: StrategyDefaults = {
       order: 2,
       hidden: false,
     },
-    light: {
+    tags: {
       order: 3,
       hidden: false,
     },
-    climate: {
+    light: {
       order: 4,
       hidden: false,
     },
-    media_player: {
+    climate: {
       order: 5,
       hidden: false,
     },
-    cover: {
+    media_player: {
       order: 6,
       hidden: false,
     },
-    scene: {
+    cover: {
       order: 7,
       hidden: false,
     },
-    fan: {
+    scene: {
       order: 8,
       hidden: false,
     },
-    switch: {
+    fan: {
       order: 9,
       hidden: false,
     },
-    camera: {
+    switch: {
       order: 10,
       hidden: false,
     },
-    vacuum: {
+    camera: {
       order: 11,
       hidden: false,
     },
-    siren: {
+    vacuum: {
       order: 12,
+      hidden: false,
+    },
+    siren: {
+      order: 13,
       hidden: false,
     },
     sensor: {

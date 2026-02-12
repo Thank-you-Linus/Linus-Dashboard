@@ -1,6 +1,6 @@
-# 🎉 Beta Release 1.4.3-beta.1
+# 🎉 Beta Release 1.5.0-beta.2
 
-This incremental beta release focuses on UX improvements and code organization for better maintainability.
+This incremental beta release adds camera integration features and Home Assistant labels management.
 
 ---
 
@@ -8,31 +8,37 @@ This incremental beta release focuses on UX improvements and code organization f
 
 ### ✨ New Features
 
-_No new features in this release_
+- **CameraPopup with live camera feed** - View live camera streams directly in aggregate popups when clicking on camera entities. The popup displays the camera feed with controls for navigation and interaction.
+
+- **TagsView and TagsChip for Home Assistant labels** - New interface for managing Home Assistant labels (tags) with a dedicated view and chip components. Quickly organize and filter your entities using the native Home Assistant labeling system.
+
 
 ### 🐛 Bug Fixes
 
-- **Badge scope correction in Area and Floor views** - Fixed incorrect badge scoping that was causing inconsistent status displays in AreaView and FloorView. Badges now correctly reflect the status of entities within their designated scope, ensuring accurate at-a-glance information.
+- **CI workflow improvements** - Fixed release workflow to properly handle pre-releases created via GitHub UI and prevent duplicate workflows for beta/alpha tags
+
+- **Badge scope correction** - Fixed badge rendering in AreaView and FloorView to use correct entity scope, ensuring badges display accurate information
+
 
 ### ⚡ Improvements
 
-- **Enhanced aggregate popup UX** - Redesigned the aggregate popup interface with a cleaner status display, making it easier to understand entity states at a glance. The new layout reduces visual clutter and improves readability.
+- **Enhanced aggregate popup UX** - Cleaner status display with improved visual hierarchy and better entity grouping
 
-- **Optimized sensor organization** - Reorganized sensor constants for better code maintainability and reduced the number of Area/Floor chips displayed, focusing on the most relevant information to avoid overwhelming users.
+- **Optimized sensor organization** - Refined sensor constants and reduced Area/Floor chips for better performance and cleaner interface
 
-- **Improved SecurityView layout** - Refined the SecurityView interface by removing the redundant stats card and optimizing the layout for better visual hierarchy and usability.
 
 ### 🧪 For Beta Testers
 
 **What to test:**
-- [ ] Verify badge displays correctly show entity status in Area and Floor views
-- [ ] Test the aggregate popup to ensure status information is clear and accurate
-- [ ] Check that Area/Floor chips display the right amount of information (not too many)
-- [ ] Review the SecurityView layout and confirm it's more intuitive
-- [ ] Ensure no visual regressions in entity status indicators
+- [ ] Test CameraPopup in aggregate views - Click on camera entities in area/floor badges and verify live feed displays correctly
+- [ ] Test TagsView and TagsChip - Create, edit, and filter entities using Home Assistant labels
+- [ ] Verify badge popups show correct entity information in AreaView and FloorView
+- [ ] Test aggregate popup navigation and status display improvements
+- [ ] Check overall dashboard performance and responsiveness
 
 **Known Issues:**
 - None currently
+
 
 ---
 
@@ -40,31 +46,37 @@ _No new features in this release_
 
 ### ✨ Nouvelles fonctionnalités
 
-_Aucune nouvelle fonctionnalité dans cette version_
+- **CameraPopup avec flux caméra en direct** - Visualisez les flux caméra en direct directement dans les popups agrégés lors du clic sur les entités caméra. Le popup affiche le flux avec des contrôles pour la navigation et l'interaction.
+
+- **TagsView et TagsChip pour la gestion des étiquettes Home Assistant** - Nouvelle interface pour gérer les étiquettes (tags) Home Assistant avec une vue dédiée et des composants de puce. Organisez et filtrez rapidement vos entités en utilisant le système d'étiquetage natif de Home Assistant.
+
 
 ### 🐛 Corrections de bugs
 
-- **Correction de la portée des badges dans les vues Zone et Étage** - Correction d'une erreur de portée des badges qui causait des affichages d'état incohérents dans AreaView et FloorView. Les badges reflètent maintenant correctement l'état des entités dans leur portée désignée, garantissant des informations précises en un coup d'œil.
+- **Améliorations du workflow CI** - Correction du workflow de publication pour gérer correctement les pré-versions créées via l'interface GitHub et prévenir les workflows dupliqués pour les tags beta/alpha
+
+- **Correction du scope des badges** - Correction de l'affichage des badges dans AreaView et FloorView pour utiliser le scope d'entité correct, garantissant que les badges affichent les bonnes informations
+
 
 ### ⚡ Améliorations
 
-- **Interface popup agrégée améliorée** - Refonte de l'interface du popup agrégé avec un affichage d'état plus épuré, facilitant la compréhension des états d'entités en un coup d'œil. La nouvelle disposition réduit l'encombrement visuel et améliore la lisibilité.
+- **UX des popups agrégés améliorée** - Affichage du statut plus propre avec une hiérarchie visuelle améliorée et un meilleur regroupement des entités
 
-- **Organisation des capteurs optimisée** - Réorganisation des constantes de capteurs pour une meilleure maintenabilité du code et réduction du nombre de puces Zone/Étage affichées, en se concentrant sur les informations les plus pertinentes pour éviter de submerger les utilisateurs.
+- **Organisation optimisée des capteurs** - Constantes de capteurs affinées et réduction des puces Area/Floor pour de meilleures performances et une interface plus épurée
 
-- **Mise en page SecurityView améliorée** - Amélioration de l'interface SecurityView en supprimant la carte de statistiques redondante et en optimisant la mise en page pour une meilleure hiérarchie visuelle et utilisabilité.
 
 ### 🧪 Pour les Beta Testeurs
 
 **Quoi tester :**
-- [ ] Vérifier que les badges affichent correctement l'état des entités dans les vues Zone et Étage
-- [ ] Tester le popup agrégé pour s'assurer que les informations d'état sont claires et précises
-- [ ] Vérifier que les puces Zone/Étage affichent la bonne quantité d'informations (pas trop)
-- [ ] Examiner la mise en page SecurityView et confirmer qu'elle est plus intuitive
-- [ ] S'assurer qu'il n'y a pas de régressions visuelles dans les indicateurs d'état des entités
+- [ ] Tester CameraPopup dans les vues agrégées - Cliquer sur les entités caméra dans les badges area/floor et vérifier que le flux en direct s'affiche correctement
+- [ ] Tester TagsView et TagsChip - Créer, modifier et filtrer les entités en utilisant les étiquettes Home Assistant
+- [ ] Vérifier que les popups de badges affichent les bonnes informations d'entité dans AreaView et FloorView
+- [ ] Tester la navigation et l'affichage du statut amélioré des popups agrégés
+- [ ] Vérifier les performances globales et la réactivité du tableau de bord
 
 **Problèmes connus :**
 - Aucun actuellement
+
 
 ---
 
@@ -96,10 +108,10 @@ _Aucune nouvelle fonctionnalité dans cette version_
 ## 📊 Technical Details
 
 ### All Commits
-- refactor: improve aggregate popup UX with cleaner status display (1994f36)
-- refactor: organize sensor constants and reduce Area/Floor chips (66e3e1a)
-- fix: use correct scope for badges in AreaView and FloorView (1e4c532)
-- refactor: improve SecurityView layout and remove stats card (0bfb5b0)
+- fix(ci): skip release workflow for prereleases created via GitHub UI (22e1d08)
+- feat: add CameraPopup with live camera feed in aggregate popups (2e71248)
+- feat: add TagsView and TagsChip for Home Assistant labels management (b2a3488)
 
 ### Contributors
 - @Juicy
+

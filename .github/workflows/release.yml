@@ -14,39 +14,26 @@ jobs:
   release:
     name: "Release"
     runs-on: "ubuntu-latest"
+    if: |
+      github.event_name == 'push' ||
+      (github.event_name == 'release' && github.event.release.prerelease == false)
     permissions:
       contents: write
     steps:
-      # 0. Get tag name and validate release
+      # 0. Get tag name
       - name: "Get tag name"
         id: get_tag
         run: |
           if [[ "${{ github.event_name }}" == "release" ]]; then
             TAG_NAME="${{ github.event.release.tag_name }}"
-            IS_PRERELEASE="${{ github.event.release.prerelease }}"
             RELEASE_URL="${{ github.event.release.html_url }}"
           else
             TAG_NAME="${GITHUB_REF#refs/tags/}"
-            # Check if tag contains alpha/beta
-            if [[ "$TAG_NAME" =~ (alpha|beta) ]]; then
-              IS_PRERELEASE="true"
-            else
-              IS_PRERELEASE="false"
-            fi
             RELEASE_URL="https://github.com/${{ github.repository }}/releases/tag/$TAG_NAME"
           fi
           echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
-          echo "is_prerelease=$IS_PRERELEASE" >> $GITHUB_OUTPUT
           echo "release_url=$RELEASE_URL" >> $GITHUB_OUTPUT
           echo "📦 Tag: $TAG_NAME"
-          echo "🏷️ Pre-release: $IS_PRERELEASE"
-
-      - name: "Validate release"
-        run: |
-          if [[ "${{ steps.get_tag.outputs.is_prerelease }}" == "true" ]]; then
-            echo "⚠️ This is a pre-release, skipping stable release workflow"
-            exit 0
-          fi
           echo "✅ This is a stable release"
 
       # 1. Checkout le code source

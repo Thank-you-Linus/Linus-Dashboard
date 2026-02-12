@@ -250,35 +250,35 @@ class HomeView {
         cards: [],
       } as LovelaceGridCardConfig;
 
-      const lightEntities = Helper.getEntityIds({ domain: "light", area_slug: floor.areas_slug });
-      const climateEntities = Helper.getEntityIds({ domain: "climate", area_slug: floor.areas_slug });
-      const fanEntities = Helper.getEntityIds({ domain: "fan", area_slug: floor.areas_slug });
+      const lightEntities = Helper.getEntityIds({ domain: "light", floor_id: floor.floor_id });
+      const climateEntities = Helper.getEntityIds({ domain: "climate", floor_id: floor.floor_id });
+      const fanEntities = Helper.getEntityIds({ domain: "fan", floor_id: floor.floor_id });
 
       const chips = floor.floor_id === UNDISCLOSED ? [] : [
         lightEntities.length > 0 && new AggregateChip({
           domain: "light",
           show_content: true,
-          magic_device_id: floor.floor_id,
-          area_slug: floor.areas_slug,
+          scope: "floor",
+          floor_id: floor.floor_id,
         }).getChip(),
         climateEntities.length > 0 && new AggregateChip({
           domain: "climate",
           show_content: true,
-          magic_device_id: floor.floor_id,
-          area_slug: floor.areas_slug,
+          scope: "floor",
+          floor_id: floor.floor_id,
         }).getChip(),
         fanEntities.length > 0 && new AggregateChip({
           domain: "fan",
           show_content: true,
-          magic_device_id: floor.floor_id,
-          area_slug: floor.areas_slug,
+          scope: "floor",
+          floor_id: floor.floor_id,
         }).getChip(),
         // Add a chip for each cover type if entities exist
         ...DEVICE_CLASSES.cover.map(device_class => {
           const coverEntities = Helper.getEntityIds({
             domain: "cover",
             device_class,
-            area_slug: floor.areas_slug,
+            floor_id: floor.floor_id,
           });
 
           if (coverEntities.length > 0) {
@@ -286,8 +286,8 @@ class HomeView {
               domain: "cover",
               device_class,
               show_content: true,
-              magic_device_id: floor.floor_id,
-              area_slug: floor.areas_slug,
+              scope: "floor",
+              floor_id: floor.floor_id,
             }).getChip();
           }
           return null;

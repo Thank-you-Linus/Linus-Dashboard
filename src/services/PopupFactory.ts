@@ -66,6 +66,9 @@ export class PopupFactory {
       case "cover":
         return this.createCoverPopup(config);
 
+      case "camera":
+        return this.createCameraPopup(config);
+
       default:
         return this.createAggregatePopup(config);
     }
@@ -135,6 +138,33 @@ export class PopupFactory {
   private static createCoverPopup(config: PopupConfig): any {
     const { CoverPopup } = require("../popups/CoverPopup");
     const popup = new CoverPopup({
+      domain: config.domain,
+      scope: config.scope,
+      scopeName: config.scopeName,
+      floor_id: config.floor_id,
+      area_slug: config.area_slug,
+      serviceOn: config.serviceOn,
+      serviceOff: config.serviceOff,
+      activeStates: config.activeStates,
+      translationKey: config.translationKey,
+      linusBrainEntity: null,
+      features: config.features,
+      device_class: config.device_class,
+      showNavigationButton: config.showNavigationButton,
+    });
+    return popup.getPopup();
+  }
+
+  /**
+   * Create CameraPopup (extends AggregatePopup with live camera feed cards)
+   *
+   * @param config - Popup configuration
+   * @returns Popup action object
+   * @private
+   */
+  private static createCameraPopup(config: PopupConfig): any {
+    const { CameraPopup } = require("../popups/CameraPopup");
+    const popup = new CameraPopup({
       domain: config.domain,
       scope: config.scope,
       scopeName: config.scopeName,

@@ -273,7 +273,26 @@ class HomeView {
           scope: "floor",
           floor_id: floor.floor_id,
         }).getChip(),
-        // Add a chip for each cover type if entities exist
+        // Add a chip for covers WITHOUT device_class
+        (() => {
+          const coverEntities = Helper.getEntityIds({
+            domain: "cover",
+            device_class: null,  // ONLY covers without device_class
+            floor_id: floor.floor_id,
+          });
+
+          if (coverEntities.length > 0) {
+            return new AggregateChip({
+              domain: "cover",
+              device_class: null,
+              show_content: true,
+              scope: "floor",
+              floor_id: floor.floor_id,
+            }).getChip();
+          }
+          return null;
+        })(),
+        // Add a chip for each cover device_class if entities exist
         ...DEVICE_CLASSES.cover.map(device_class => {
           const coverEntities = Helper.getEntityIds({
             domain: "cover",

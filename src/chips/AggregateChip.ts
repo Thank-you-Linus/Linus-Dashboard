@@ -28,8 +28,8 @@ export interface AggregateChipOptions extends chips.ChipOptions {
   translationKey?: string;
   /** Optional features for tile cards in popup */
   features?: any[];
-  /** Optional device class (for covers, sensors, binary_sensors) */
-  device_class?: string;
+  /** Optional device class (for covers, sensors, binary_sensors). Pass null to get ONLY entities without device_class */
+  device_class?: string | null;
   /** Optional floor ID for floor scope */
   floor_id?: string | null;
   /** DEPRECATED: Use area_slug from ChipOptions base */

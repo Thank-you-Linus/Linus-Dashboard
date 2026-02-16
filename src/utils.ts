@@ -419,6 +419,42 @@ export async function createCardsFromList(
 }
 
 /**
+ * Apply deduplication logic to domain tags for chip/card creation.
+ *
+ * When both a base domain (e.g., "cover") and device_class variants (e.g., "cover:blind")
+ * exist in the list, this function ensures the base domain ONLY retrieves entities without
+ * device_class by returning null instead of undefined.
+ *
+ * This prevents duplicates where entities with device_class would be included in both
+ * the base domain and the device_class-specific domain.
+ *
+ * @param domainTag - The domain tag to process (e.g., "cover", "cover:blind")
+ * @param domainTags - The full list of domain tags being processed
+ * @returns The effective device_class to use: null (ONLY entities without device_class),
+ *          undefined (keep original behavior), or the specific device_class value
+ */
+function getEffectiveDeviceClass(
+    domainTag: string,
+    domainTags: string[]
+): string | null | undefined {
+    const { domain, device_class } = parseDomainTag(domainTag);
+
+    // If this is a device_class-specific tag, return it as-is
+    if (device_class) {
+        return device_class;
+    }
+
+    // Check if there are device_class variants for this base domain
+    const hasDeviceClassVariants = domainTags.some(
+        tag => tag !== domainTag && tag.startsWith(`${domain}:`)
+    );
+
+    // If base domain has variants, pass null to get ONLY entities without device_class
+    // Otherwise, pass undefined to get ALL entities (original behavior)
+    return hasDeviceClassVariants ? null : undefined;
+}
+
+/**
  * Create aggregate chips with global scope for hierarchical popup display.
  *
  * This function creates AggregateChip instances with scope: "global" which
@@ -458,15 +494,18 @@ export function createGlobalScopeChips(
             continue;
         }
 
+        // Apply deduplication logic using utility function
+        const effectiveDeviceClass = getEffectiveDeviceClass(domainTag, domainTags);
+
         // Check global entities exist (excluding UNDISCLOSED)
-        if (getGlobalEntitiesExceptUndisclosed(domain, device_class).length === 0) {
+        if (getGlobalEntitiesExceptUndisclosed(domain, effectiveDeviceClass).length === 0) {
             continue;
         }
 
         try {
             const chip = new AggregateChip({
                 domain,
-                device_class,
+                device_class: effectiveDeviceClass,
                 scope: "global",
                 show_content: options?.show_content ?? true,
                 tapActionMode: options?.tapActionMode ?? "popup"
@@ -525,8 +564,11 @@ export function createAreaScopeChips(
             continue;
         }
 
+        // Apply deduplication logic using utility function
+        const effectiveDeviceClass = getEffectiveDeviceClass(domainTag, domainTags);
+
         // Check area entities exist
-        const areaEntities = Helper.getEntityIds({ domain, device_class, area_slug });
+        const areaEntities = Helper.getEntityIds({ domain, device_class: effectiveDeviceClass, area_slug });
         if (areaEntities.length === 0) {
             continue;
         }
@@ -534,7 +576,7 @@ export function createAreaScopeChips(
         try {
             const chip = new AggregateChip({
                 domain,
-                device_class,
+                device_class: effectiveDeviceClass,
                 scope: "area",
                 area_slug,
                 show_content: options?.show_content ?? true,
@@ -594,8 +636,11 @@ export function createFloorScopeChips(
             continue;
         }
 
+        // Apply deduplication logic using utility function
+        const effectiveDeviceClass = getEffectiveDeviceClass(domainTag, domainTags);
+
         // Check floor entities exist
-        const floorEntities = Helper.getEntityIds({ domain, device_class, floor_id });
+        const floorEntities = Helper.getEntityIds({ domain, device_class: effectiveDeviceClass, floor_id });
         if (floorEntities.length === 0) {
             continue;
         }
@@ -603,7 +648,7 @@ export function createFloorScopeChips(
         try {
             const chip = new AggregateChip({
                 domain,
-                device_class,
+                device_class: effectiveDeviceClass,
                 scope: "floor",
                 floor_id,
                 show_content: options?.show_content ?? true,
@@ -705,8 +750,8 @@ export const getGlobalEntitiesExceptUndisclosed = memoize(function getGlobalEnti
 
     // Filter out entities in UNDISCLOSED area
     return entities?.filter(entity => {
-        // For AGGREGATE_DOMAINS without device_class, check against all possible domainTags
-        if (AGGREGATE_DOMAINS.includes(domain) && !device_class) {
+        // For AGGREGATE_DOMAINS with undefined device_class (= ALL entities), check against all possible domainTags
+        if (AGGREGATE_DOMAINS.includes(domain) && device_class === undefined) {
             // Check base domain (e.g., "cover")
             if (Helper.areas[UNDISCLOSED]?.domains?.[domain]?.includes(entity.entity_id)) {
                 return false;
@@ -720,7 +765,12 @@ export const getGlobalEntitiesExceptUndisclosed = memoize(function getGlobalEnti
             }
             return true;
         }
-        // For other cases, use simple filter
+        // For device_class === null (ONLY base domain without device_class)
+        // Check if entity is in UNDISCLOSED base domain (e.g., "cover" without device_class)
+        if (device_class === null) {
+            return !Helper.areas[UNDISCLOSED]?.domains?.[domain]?.includes(entity.entity_id);
+        }
+        // For specific device_class, use simple filter with domainTag
         return !Helper.areas[UNDISCLOSED]?.domains?.[domainTag]?.includes(entity.entity_id);
     }).map(e => e.entity_id) ?? [];
 }, { name: 'getGlobalEntitiesExceptUndisclosed', maxSize: 200 }) as (domain: string, device_class?: string | null) => string[];
@@ -775,7 +825,7 @@ export async function processFloorsAndAreas(
     for (const floor of floors) {
         // Skip excluded floors
         if (Helper.isFloorExcluded(floor.floor_id)) continue;
-        
+
         if (floor.areas_slug.length === 0 || !AREA_CARDS_DOMAINS.includes(domain ?? "")) continue;
 
         const floorCards = [];
@@ -924,23 +974,35 @@ export async function processEntitiesForAreaOrFloorView({
             });
         }
 
-        for (const domain of exposedDomainIds) {
-            if (Helper.linus_dashboard_config?.excluded_domains?.includes(domain)) continue;
-            if (Helper.linus_dashboard_config?.excluded_device_classes?.includes(domain)) continue;
-            if (domain === "default") continue;
+        for (const domainTag of exposedDomainIds) {
+            if (Helper.linus_dashboard_config?.excluded_domains?.includes(domainTag)) continue;
+            if (Helper.linus_dashboard_config?.excluded_device_classes?.includes(domainTag)) continue;
+            if (domainTag === "default") continue;
+
+            // Parse domain tag to extract base domain and device_class
+            const { domain, device_class } = parseDomainTag(domainTag);
+
+            // Check if there are device_class specific domains for this base domain
+            const hasDeviceClassDomains = exposedDomainIds.some(
+                tag => tag !== domainTag && tag.startsWith(`${domain}:`)
+            );
+
+            // If this is a base domain (no device_class) and device_class specific domains exist,
+            // we should ONLY get entities without device_class to avoid duplicates
+            const deviceClassParam = (!device_class && hasDeviceClassDomains) ? null : device_class;
 
             // Early exit: skip if area has no entities for this domain (avoids costly getAreaEntities call)
             const areaDomains = area.domains;
             if (areaDomains) {
                 const hasDomainEntities = Object.keys(areaDomains).some(
-                    tag => tag === domain || tag.startsWith(`${domain}:`)
+                    tag => tag === domainTag || tag.startsWith(`${domainTag}:`)
                 );
                 if (!hasDomainEntities) continue;
             }
 
             try {
-                const domainOptions = Helper.strategyOptions.domains?.[domain] ?? {};
-                let entities = Helper.getAreaEntities(area, domain) ?? [];
+                const domainOptions = Helper.strategyOptions.domains?.[domainTag] ?? {};
+                let entities = Helper.getAreaEntities(area, domain, deviceClassParam) ?? [];
                 if (entities.length) {
                     if (!domainCardsMap[domain]) {
                         domainCardsMap[domain] = [];

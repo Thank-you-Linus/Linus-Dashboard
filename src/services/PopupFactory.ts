@@ -28,8 +28,8 @@ export interface PopupConfig {
   linusBrainEntity: string | null;
   /** Optional features for tile cards */
   features?: any[];
-  /** Optional device class */
-  device_class?: string;
+  /** Optional device class. Pass null to get ONLY entities without device_class */
+  device_class?: string | null;
   /** Show navigation button to domain view (default: true for area/floor scope) */
   showNavigationButton?: boolean;
 }

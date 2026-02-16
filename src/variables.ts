@@ -189,6 +189,7 @@ export const ENERGY_SENSORS = [
 export const HOME_EXPOSED_CHIPS = [
   "weather", "alarm", "spotify",
   LIGHT_DOMAIN, "climate", "fan", "media_player", "switch", "safety",
+  "cover",  // Base domain for covers without device_class
   ...DEVICE_CLASSES.cover.map(d => `cover:${d}`),
   // Essential presence & access
   "binary_sensor:motion", "binary_sensor:occupancy", "binary_sensor:door", "binary_sensor:window",

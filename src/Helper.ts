@@ -152,7 +152,7 @@ class Helper {
    * @type {EntityResolver}
    * @private
    */
-   static #entityResolver: any; // Import will be added after
+  static #entityResolver: any; // Import will be added after
 
   /**
    * Promise that resolves when deferred initialization (preload + entity resolver) completes.
@@ -1223,14 +1223,19 @@ class Helper {
    * @return {StrategyEntity[]} Array of device entities.
    * @static
    */
-  static getAreaEntities(area: StrategyArea, domain?: string, device_class?: string): StrategyEntity[] {
+  static getAreaEntities(area: StrategyArea, domain?: string, device_class?: string | null): StrategyEntity[] {
 
     if (!this.isInitialized()) {
       console.warn("Helper class should be initialized before calling this method!");
     }
 
     if (domain) {
-      if (device_class) {
+      // device_class === null: ONLY entities WITHOUT device_class
+      if (device_class === null) {
+        return area.domains?.[domain]?.map(entity_id => this.#entities[entity_id]).filter(Boolean) as StrategyEntity[] ?? [];
+      }
+      // device_class with a specific value: entities WITH this device_class
+      else if (device_class) {
         // Vérifier si on a une entité spécifique pour cette area
         if (domain === 'sensor') {
           if (device_class === 'temperature' && area.temperature_entity_id) {
@@ -1243,8 +1248,9 @@ class Helper {
         // Fallback vers la logique normale
         const domainTag = createDomainTag(domain, device_class);
         return area.domains?.[domainTag]?.map(entity_id => this.#entities[entity_id]).filter(Boolean) as StrategyEntity[] ?? [];
-      } else {
-        // If device_class is not specified, get all entities of the domain regardless of device class
+      }
+      // device_class === undefined: ALL entities (with and without device_class)
+      else {
         const domainTags = Object.keys(area.domains || {}).filter(tag => tag.startsWith(`${domain}:`) || tag === domain);
         return domainTags.flatMap(tag => area.domains?.[tag]?.map(entity_id => this.#entities[entity_id]).filter(Boolean) as StrategyEntity[] ?? []);
       }
@@ -1454,7 +1460,7 @@ class Helper {
     floor_id
   }: {
     domain: string;
-    device_class?: string;
+    device_class?: string | null;
     area_slug?: string | string[];
     floor_id?: string;
   }): string[] {
@@ -1756,7 +1762,7 @@ class Helper {
    * @param {string | undefined} state - The state of the entity (e.g., "on", "off").
    * @returns {string} - The icon string (e.g., "mdi:thermometer").
    */
-  static getIcon(domain: string, device_class = '_', entity_ids?: string[]): string {
+  static getIcon(domain: string, device_class: string | null = '_', entity_ids?: string[]): string {
     // If device_class not provided or is default '_', try to auto-detect from first entity
     // BUT do NOT auto-detect if device_class is explicitly null (means "no device_class")
     if ((!device_class || device_class === '_') && device_class !== null && entity_ids?.length) {
@@ -1863,18 +1869,21 @@ class Helper {
    * @param {string[]} entity_ids - The list of entity IDs to evaluate.
    * @returns {string} - The color string (e.g., "red", "blue").
    */
-  static getIconColor(domain: string, device_class = '_', entity_ids: string[] = []): string {
+  static getIconColor(domain: string, device_class: string | null = '_', entity_ids: string[] = []): string {
     const states = entity_ids.length ? Helper.getStateStrings(entity_ids) : [];
     const domainColors = colorMapping[domain] || colorMapping.default;
     let defaultColor = "grey";
 
-    if (device_class && domainColors?.[device_class] && typeof domainColors[device_class] === "object") {
-      const deviceClassColors = domainColors[device_class] as Record<string | number, string | Record<string, string>>;
+    // Convert null device_class to '_' for lookup in color mapping
+    const effectiveDeviceClass = device_class ?? '_';
+
+    if (effectiveDeviceClass && domainColors?.[effectiveDeviceClass] && typeof domainColors[effectiveDeviceClass] === "object") {
+      const deviceClassColors = domainColors[effectiveDeviceClass] as Record<string | number, string | Record<string, string>>;
       if (domain === "sensor" && typeof deviceClassColors === "object") {
         // Handle threshold-based color mapping for sensors
         const thresholds = deviceClassColors.state as Record<number, string>;
         const thresholdKeys = Object.keys(thresholds).map(Number).sort((a, b) => b - a); // Sort descending for maximum value
-        const aggregation = SENSOR_STATE_CLASS_TOTAL.includes(device_class) || SENSOR_STATE_CLASS_TOTAL_INCREASING.includes(device_class) ? 'sum' : 'sum / valid_states | length';
+        const aggregation = SENSOR_STATE_CLASS_TOTAL.includes(effectiveDeviceClass) || SENSOR_STATE_CLASS_TOTAL_INCREASING.includes(effectiveDeviceClass) ? 'sum' : 'sum / valid_states | length';
         defaultColor = states.length
           ? `{% set entities = [${states}] %}{% set valid_states = entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | map(attribute='state') | map('float') | list %}{% set aggregated_state = valid_states | ${aggregation} if valid_states | length > 0 else 0 %}`
           : `{% set aggregated_state = 0 %}`;
@@ -1925,7 +1934,7 @@ class Helper {
    * @param {string} entity_id - The entity ID.
    * @returns {string} - The content string.
    */
-  static getContent(domain: string, device_class?: string, entity_ids: string[] = [], as_icon = false): string {
+  static getContent(domain: string, device_class?: string | null, entity_ids: string[] = [], as_icon = false): string {
     const stateStrings = Helper.getStateStrings(entity_ids);
 
     // Define templates for each domain/device_class combination

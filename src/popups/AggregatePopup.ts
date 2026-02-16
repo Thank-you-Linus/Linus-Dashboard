@@ -98,7 +98,7 @@ class AggregatePopup extends AbstractPopup {
     } else if (scope === "area" && area_slug) {
       queryOptions.area_slug = area_slug;
     }
-    // For global scope, no additional filters needed
+    // For global scope, no additional filters needed (UNDISCLOSED excluded in buildIndividualCardsHierarchical)
 
     const entity_ids = Helper.getEntityIds(queryOptions);
 
@@ -775,10 +775,8 @@ class AggregatePopup extends AbstractPopup {
       ? [Helper.floors[targetFloorId]].filter(Boolean)
       : Helper.orderedFloors;
 
-    // For global scope: separate UNDISCLOSED floor to display at the end
-    let undisclosedFloor: StrategyFloor | undefined;
+    // For global scope: exclude UNDISCLOSED floor entirely (keep popups clean)
     if (scope === "global") {
-      undisclosedFloor = floors.find(f => f.floor_id === UNDISCLOSED);
       floors = floors.filter(f => f.floor_id !== UNDISCLOSED);
     }
 
@@ -857,10 +855,8 @@ class AggregatePopup extends AbstractPopup {
       processFloor(floor, scope === "global");
     }
 
-    // Process UNDISCLOSED floor at the end (global scope only)
-    if (undisclosedFloor) {
-      processFloor(undisclosedFloor, false); // No floor separator for UNDISCLOSED
-    }
+    // UNDISCLOSED floor is intentionally skipped for global scope to keep popups clean
+    // UNDISCLOSED entities are filtered out at the entity retrieval level
 
     return cards;
   }

@@ -1,5 +1,6 @@
 """Linus Dashboard integration for Home Assistant."""
 
+import asyncio
 import logging
 from pathlib import Path
 
@@ -54,13 +55,48 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Linus Dashboard from a config entry."""
     _LOGGER.info("Setting up Linus Dashboard entry")
 
-    # Path to the JavaScript file for the strategy - register all static resources
-    await register_static_paths_and_resources(hass, "browser_mod.js")
-    await register_static_paths_and_resources(hass, "lovelace-mushroom/mushroom.js")
-    await register_static_paths_and_resources(hass, "lovelace-card-mod/card-mod.js")
-    await register_static_paths_and_resources(hass, "swipe-card/swipe-card.js")
-    await register_static_paths_and_resources(hass, "stack-in-card/stack-in-card.js")
-    await register_static_paths_and_resources(hass, "linus-strategy.js")
+    # Register all static paths and resources for bundled JS files.
+    # Phase 1: Check file existence and register static paths in parallel (I/O-bound).
+    # Phase 2: Register lovelace resources sequentially (shared storage, not parallelizable).
+    js_files = [
+        "browser_mod.js",
+        "lovelace-mushroom/mushroom.js",
+        "lovelace-card-mod/card-mod.js",
+        "swipe-card/swipe-card.js",
+        "stack-in-card/stack-in-card.js",
+        "linus-strategy.js",
+    ]
+
+    base_path = Path(__file__).parent / "www"
+    manifest_version = VERSION
+
+    # Phase 1: Check existence in parallel and register static paths
+    async def register_static_path(js_file: str) -> str | None:
+        """Register static path if file exists. Returns js_file if successful, None otherwise."""
+        js_path = base_path / js_file
+        if not await hass.async_add_executor_job(js_path.exists):
+            _LOGGER.warning(
+                "JavaScript file not found: %s - skipping registration", js_path
+            )
+            return None
+        js_url = f"/{DOMAIN}_files/www/{js_file}"
+        await hass.http.async_register_static_paths([
+            StaticPathConfig(js_url, str(js_path), cache_headers=False),
+        ])
+        return js_file
+
+    registered = await asyncio.gather(*(register_static_path(f) for f in js_files))
+
+    # Phase 2: Register lovelace resources sequentially (shared ResourceStorageCollection)
+    for js_file in registered:
+        if js_file is None:
+            continue
+        js_url = f"/{DOMAIN}_files/www/{js_file}"
+        versioned_url = f"{js_url}?v={manifest_version}"
+        await utils.init_resource(hass, versioned_url, str(manifest_version))
+        _LOGGER.debug(
+            "Registered resource: %s (version: %s)", versioned_url, manifest_version
+        )
 
     # Use a unique name for the panel to avoid conflicts
     sidebar_title = "Linus Dashboard"
@@ -97,46 +133,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         frontend.async_remove_panel(hass, panel_url)
 
     return True
-
-
-async def register_static_paths_and_resources(
-    hass: HomeAssistant, js_file: str
-) -> None:
-    """
-    Register static paths and resources for a given JavaScript file.
-
-    Always registers the bundled resources to ensure compatibility with Linus Dashboard,
-    regardless of whether they are installed via HACS or other means.
-
-    Implements cache-busting by appending version query parameter to resource URLs.
-    """
-    js_url = f"/{DOMAIN}_files/www/{js_file}"
-    js_path = Path(__file__).parent / f"www/{js_file}"
-
-    # Check if the file actually exists (using executor to avoid blocking I/O)
-    if not await hass.async_add_executor_job(js_path.exists):
-        _LOGGER.warning(
-            "JavaScript file not found: %s - skipping registration", js_path
-        )
-        return
-
-    # Register the static path (without version param - Home Assistant will handle it)
-    await hass.http.async_register_static_paths([
-        StaticPathConfig(js_url, str(js_path), cache_headers=False),
-    ])
-
-    # Get version from const.py (reads from manifest.json)
-    manifest_version = VERSION
-
-    # Register as a Lovelace resource with version query param for cache busting
-    # This ensures browsers fetch the new version after updates
-    versioned_url = f"{js_url}?v={manifest_version}"
-
-    await utils.init_resource(hass, versioned_url, str(manifest_version))
-
-    _LOGGER.debug(
-        "Registered resource: %s (version: %s)", versioned_url, manifest_version
-    )
 
 
 @websocket_command({

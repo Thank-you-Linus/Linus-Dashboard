@@ -929,6 +929,14 @@ export async function processEntitiesForAreaOrFloorView({
             if (Helper.linus_dashboard_config?.excluded_device_classes?.includes(domain)) continue;
             if (domain === "default") continue;
 
+            // Early exit: skip if area has no entities for this domain (avoids costly getAreaEntities call)
+            const areaDomains = area.domains;
+            if (areaDomains) {
+                const hasDomainEntities = Object.keys(areaDomains).some(
+                    tag => tag === domain || tag.startsWith(`${domain}:`)
+                );
+                if (!hasDomainEntities) continue;
+            }
 
             try {
                 const domainOptions = Helper.strategyOptions.domains?.[domain] ?? {};

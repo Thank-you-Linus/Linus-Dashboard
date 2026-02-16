@@ -64,6 +64,41 @@ class Helper {
   static #floors: Record<string, StrategyFloor> = {};
 
   /**
+   * Pre-sorted list of areas (computed once during initialization).
+   *
+   * @type {StrategyArea[]}
+   * @private
+   */
+  static #orderedAreasList: StrategyArea[] = [];
+
+  /**
+   * Pre-sorted list of floors (computed once during initialization).
+   *
+   * @type {StrategyFloor[]}
+   * @private
+   */
+  static #orderedFloorsList: StrategyFloor[] = [];
+
+  /**
+   * Index for O(1) area_id to slug lookup.
+   *
+   * @type {Map<string, string>}
+   * @private
+   */
+  static #areaIdToSlugMap = new Map<string, string>();
+
+  /**
+   * Sets for O(1) exclusion checks.
+   *
+   * @private
+   */
+  static #excludedEntityIds = new Set<string>();
+  static #excludedAreaIds = new Set<string>();
+  static #excludedDeviceIds = new Set<string>();
+  static #excludedFloorIds = new Set<string>();
+  static #excludedLabelIds = new Set<string>();
+
+  /**
    * Label registry from Home Assistant.
    *
    * @type {Record<string, LabelRegistryEntry>}
@@ -117,7 +152,16 @@ class Helper {
    * @type {EntityResolver}
    * @private
    */
-  static #entityResolver: any; // Import will be added after
+   static #entityResolver: any; // Import will be added after
+
+  /**
+   * Promise that resolves when deferred initialization (preload + entity resolver) completes.
+   * Fired during initialize() but not awaited — await this before generateView().
+   *
+   * @type {Promise<void> | null}
+   * @private
+   */
+  static #deferredInitPromise: Promise<void> | null = null;
 
   /**
    * Set to true for more verbose information in the console.
@@ -186,6 +230,18 @@ class Helper {
   }
 
   /**
+   * Wait for deferred initialization (component preload + entity resolver) to complete.
+   * Call this before generateView() to ensure all lazy-loaded resources are ready.
+   *
+   * @static
+   */
+  static async awaitDeferredInit(): Promise<void> {
+    if (this.#deferredInitPromise) {
+      await this.#deferredInitPromise;
+    }
+  }
+
+  /**
    * Get the entities from Home Assistant's area registry.
    *
    * @returns {Record<string, StrategyArea>}
@@ -197,7 +253,7 @@ class Helper {
 
   /**
    * Get the entities from Home Assistant's floor registry.
-   * 
+   *
    * Sorting priority:
    * 1. Manual order (HA 2025.1+) - if both areas have 'order' property
    * 2. Areas with order come before areas without order
@@ -207,19 +263,7 @@ class Helper {
    * @static
    */
   static get orderedAreas(): StrategyArea[] {
-    return Object.values(this.#areas).sort((a, b) => {
-      // Priority 1: Manual order (HA 2025.1+)
-      if (a.order !== undefined && b.order !== undefined) {
-        return a.order - b.order;
-      }
-
-      // Priority 2: If only one has manual order, it comes first
-      if (a.order !== undefined) return -1;
-      if (b.order !== undefined) return 1;
-
-      // Priority 3: Alphabetical fallback for backward compatibility
-      return a.name.localeCompare(b.name);
-    });
+    return this.#orderedAreasList;
   }
 
   /**
@@ -264,10 +308,8 @@ class Helper {
       return 999;
     }
 
-    // Find area slug by matching area_id
-    const areaSlug = Object.keys(this.areas).find(
-      slug => this.areas[slug]?.area_id === entity.area_id
-    );
+    // O(1) lookup via pre-built index
+    const areaSlug = this.getAreaSlugById(entity.area_id);
 
     if (!areaSlug || areaSlug === UNDISCLOSED) {
       return 999;
@@ -333,12 +375,12 @@ class Helper {
       }
 
       // Tier 3: Sort by area order within same floor
-      // Find area slugs by matching area_id
+      // O(1) lookup via pre-built index
       const areaSlugA = entityA?.area_id
-        ? Object.keys(this.areas).find(slug => this.areas[slug]?.area_id === entityA.area_id)
+        ? this.getAreaSlugById(entityA.area_id)
         : null;
       const areaSlugB = entityB?.area_id
-        ? Object.keys(this.areas).find(slug => this.areas[slug]?.area_id === entityB.area_id)
+        ? this.getAreaSlugById(entityB.area_id)
         : null;
 
       const areaSortA = areaSlugA ? (areaIndexMap.get(areaSlugA) ?? 999) : 999;
@@ -373,8 +415,19 @@ class Helper {
   }
 
   /**
+   * Get area slug by area_id (O(1) lookup).
+   *
+   * @param {string} areaId - The area ID to look up
+   * @returns {string | undefined} The area slug or undefined if not found
+   * @static
+   */
+  static getAreaSlugById(areaId: string): string | undefined {
+    return this.#areaIdToSlugMap.get(areaId);
+  }
+
+  /**
    * Get the entities from Home Assistant's floor registry.
-   * 
+   *
    * Sorting priority:
    * 1. Manual order (HA 2025.1+) - if both floors have 'order' property
    * 2. Floors with order come before floors without order
@@ -385,26 +438,7 @@ class Helper {
    * @static
    */
   static get orderedFloors(): StrategyFloor[] {
-    return Object.values(this.#floors).sort((a, b) => {
-      // Priority 1: Manual order (HA 2025.1+)
-      if (a.order !== undefined && b.order !== undefined) {
-        return a.order - b.order;
-      }
-
-      // Priority 2: If only one has manual order, it comes first
-      if (a.order !== undefined) return -1;
-      if (b.order !== undefined) return 1;
-
-      // Priority 3: Numeric level (legacy behavior)
-      if (a.level !== undefined && b.level !== undefined) {
-        return a.level - b.level;
-      }
-      if (a.level !== undefined) return -1;
-      if (b.level !== undefined) return 1;
-
-      // Priority 4: Alphabetical fallback
-      return a.name.localeCompare(b.name);
-    });
+    return this.#orderedFloorsList;
   }
 
   /**
@@ -462,10 +496,8 @@ class Helper {
 
     if (!effectiveAreaId) return null;
 
-    // Find area by matching area_id (Helper.areas is keyed by slug)
-    const areaSlug = Object.keys(this.#areas).find(
-      slug => this.#areas[slug]?.area_id === effectiveAreaId
-    );
+    // O(1) lookup via pre-built index
+    const areaSlug = this.getAreaSlugById(effectiveAreaId);
 
     return areaSlug ? this.#areas[areaSlug] : null;
   }
@@ -668,35 +700,44 @@ class Helper {
       devicesCount: devices.length
     });
 
+    // Build exclusion Sets early for O(1) checks during entity processing
+    const initExcludedTargets = linus_dashboard_config?.excluded_targets;
+    this.#excludedEntityIds = new Set(initExcludedTargets?.entity_id ?? []);
+    this.#excludedAreaIds = new Set(initExcludedTargets?.area_id ?? []);
+    this.#excludedDeviceIds = new Set(initExcludedTargets?.device_id ?? []);
+    this.#excludedFloorIds = new Set(initExcludedTargets?.floor_id ?? []);
+    this.#excludedLabelIds = new Set(initExcludedTargets?.label_id ?? []);
+    const excludedIntegrations = new Set(linus_dashboard_config?.excluded_integrations ?? []);
+    const excludedDomains = new Set(linus_dashboard_config?.excluded_domains ?? []);
+    const excludedDeviceClasses = new Set(linus_dashboard_config?.excluded_device_classes ?? []);
+
     const entityKey = PerformanceProfiler.start('Helper.initialize.entities');
     this.#entities = entities.reduce((acc: any, entity: any) => {
       // Exclusion par entité
       if (!(entity.entity_id in this.#hassStates) || entity.hidden_by) return acc;
-      const targets = Helper.linus_dashboard_config?.excluded_targets;
       const effectiveAreaId = entity.area_id ?? deviceAreaMap.get(entity.device_id ?? "");
 
       // Filter entities from excluded floors
-      if (effectiveAreaId && targets?.floor_id?.length) {
-        const area = Object.values(this.#areas).find(a => a.area_id === effectiveAreaId);
-        if (area?.floor_id && targets.floor_id.includes(area.floor_id)) {
+      if (effectiveAreaId && this.#excludedFloorIds.size > 0) {
+        const area = areasById.get(effectiveAreaId);
+        if (area?.floor_id && this.#excludedFloorIds.has(area.floor_id)) {
           return acc;
         }
       }
 
-      if (effectiveAreaId && targets?.area_id?.includes(effectiveAreaId)) return acc;
-      if (targets?.entity_id?.includes(entity.entity_id)) return acc;
-      if (entity.device_id && targets?.device_id?.includes(entity.device_id)) return acc;
-      if (targets?.label_id?.length && entity.labels?.length) {
-        const hasExcludedLabel = entity.labels.some((label: any) => targets.label_id?.includes(label));
+      if (effectiveAreaId && this.#excludedAreaIds.has(effectiveAreaId)) return acc;
+      if (this.#excludedEntityIds.has(entity.entity_id)) return acc;
+      if (entity.device_id && this.#excludedDeviceIds.has(entity.device_id)) return acc;
+      if (this.#excludedLabelIds.size > 0 && entity.labels?.length) {
+        const hasExcludedLabel = entity.labels.some((label: any) => this.#excludedLabelIds.has(label));
         if (hasExcludedLabel) {
           return acc;
         }
       }
 
       // Exclusion par intégration
-      if (Helper.linus_dashboard_config?.excluded_integrations?.length) {
-        const integration = entity.platform;
-        if (Helper.linus_dashboard_config.excluded_integrations.includes(integration)) return acc;
+      if (excludedIntegrations.size > 0) {
+        if (excludedIntegrations.has(entity.platform)) return acc;
       }
 
       // // Exclusion des entités Linus Brain (entités de contrôle, pas des vraies entités à afficher)
@@ -720,10 +761,10 @@ class Helper {
       if (!this.#domains[domainTag]) this.#domains[domainTag] = [];
 
       // Exclusion par domaine
-      if (Helper.linus_dashboard_config?.excluded_domains?.includes(domain)) return acc;
+      if (excludedDomains.has(domain)) return acc;
 
       // Exclusion par classe de dispositif
-      if (device_class && Helper.linus_dashboard_config?.excluded_device_classes?.includes(device_class)) return acc;
+      if (device_class && excludedDeviceClasses.has(device_class)) return acc;
 
       // Use Map.get() for O(1) lookups (faster than Object property access)
       const area = entity.area_id ? areasById.get(entity.area_id) : {} as StrategyArea;
@@ -872,6 +913,44 @@ class Helper {
     }, {} as Record<string, StrategyFloor>);
     PerformanceProfiler.end(floorKey, { floorCount: floors.length });
 
+    // Build pre-computed indexes for O(1) lookups (computed once, not cached)
+    const precomputeKey = PerformanceProfiler.start('Helper.initialize.precompute');
+
+    // Phase 1: Pre-sort areas and floors once (avoid re-sorting on every getter access)
+    this.#orderedAreasList = Object.values(this.#areas).sort((a, b) => {
+      if (a.order !== undefined && b.order !== undefined) return a.order - b.order;
+      if (a.order !== undefined) return -1;
+      if (b.order !== undefined) return 1;
+      return a.name.localeCompare(b.name);
+    });
+
+    this.#orderedFloorsList = Object.values(this.#floors).sort((a, b) => {
+      if (a.order !== undefined && b.order !== undefined) return a.order - b.order;
+      if (a.order !== undefined) return -1;
+      if (b.order !== undefined) return 1;
+      if (a.level !== undefined && b.level !== undefined) return a.level - b.level;
+      return (a.name ?? '').localeCompare(b.name ?? '');
+    });
+
+    // Phase 2: Build area_id → slug index for O(1) lookups
+    this.#areaIdToSlugMap.clear();
+    for (const [slug, area] of Object.entries(this.#areas)) {
+      this.#areaIdToSlugMap.set(area.area_id, slug);
+    }
+
+    // Note: Exclusion Sets (#excludedEntityIds, etc.) were already built before entity processing
+
+    PerformanceProfiler.end(precomputeKey, {
+      orderedAreas: this.#orderedAreasList.length,
+      orderedFloors: this.#orderedFloorsList.length,
+      areaIdToSlug: this.#areaIdToSlugMap.size,
+      excludedEntities: this.#excludedEntityIds.size,
+      excludedAreas: this.#excludedAreaIds.size,
+      excludedDevices: this.#excludedDeviceIds.size,
+      excludedFloors: this.#excludedFloorIds.size,
+      excludedLabels: this.#excludedLabelIds.size,
+    });
+
     // Sort custom and default views of the strategy options by order first and then by title.
     this.#strategyOptions.views = Object.fromEntries(
       Object.entries(this.#strategyOptions.views).sort(([, a], [, b]) => {
@@ -919,15 +998,26 @@ class Helper {
       }
     }
 
-    // Preload common components for faster subsequent loads
-    const { ComponentRegistry } = await import("./utils/componentRegistry");
-    const preloadKey = PerformanceProfiler.start('Helper.initialize.preload');
-    await ComponentRegistry.preloadCommon();
-    PerformanceProfiler.end(preloadKey);
+    // Defer component preload and entity resolver initialization (fire-and-forget).
+    // These are only needed during generateView(), not generateDashboard().
+    // Awaiting them here would block the critical path unnecessarily.
+    this.#deferredInitPromise = (async () => {
+      try {
+        const { ComponentRegistry } = await import("./utils/componentRegistry");
+        const preloadKey = PerformanceProfiler.start('Helper.initialize.preload');
+        await ComponentRegistry.preloadCommon();
+        PerformanceProfiler.end(preloadKey);
+      } catch (e) {
+        Helper.logError('Deferred preload failed (non-critical)', e);
+      }
 
-    // Initialize entity resolver for Linus Brain / Magic Areas hybrid support
-    const { EntityResolver } = await import("./utils/entityResolver");
-    this.#entityResolver = new EntityResolver(info.hass);
+      try {
+        const { EntityResolver } = await import("./utils/entityResolver");
+        this.#entityResolver = new EntityResolver(info.hass);
+      } catch (e) {
+        Helper.logError('EntityResolver init failed', e);
+      }
+    })();
 
     this.#initialized = true;
 
@@ -1947,46 +2037,50 @@ class Helper {
 
   /**
    * Check if a floor is excluded based on configuration.
+   * Uses pre-built Set for O(1) lookup.
    * 
    * @param floor_id - The floor ID to check
    * @returns true if the floor should be excluded, false otherwise
    */
   static isFloorExcluded(floor_id: string | undefined): boolean {
     if (!floor_id) return false;
-    return Helper.linus_dashboard_config?.excluded_targets?.floor_id?.includes(floor_id) ?? false;
+    return this.#excludedFloorIds.has(floor_id);
   }
 
   /**
    * Check if an area is excluded based on configuration.
+   * Uses pre-built Set for O(1) lookup.
    * 
    * @param area_id - The area ID to check
    * @returns true if the area should be excluded, false otherwise
    */
   static isAreaExcluded(area_id: string | undefined): boolean {
     if (!area_id) return false;
-    return Helper.linus_dashboard_config?.excluded_targets?.area_id?.includes(area_id) ?? false;
+    return this.#excludedAreaIds.has(area_id);
   }
 
   /**
    * Check if an entity is excluded based on configuration.
+   * Uses pre-built Set for O(1) lookup.
    * 
    * @param entity_id - The entity ID to check
    * @returns true if the entity should be excluded, false otherwise
    */
   static isEntityExcluded(entity_id: string | undefined): boolean {
     if (!entity_id) return false;
-    return Helper.linus_dashboard_config?.excluded_targets?.entity_id?.includes(entity_id) ?? false;
+    return this.#excludedEntityIds.has(entity_id);
   }
 
   /**
    * Check if a device is excluded based on configuration.
+   * Uses pre-built Set for O(1) lookup.
    * 
    * @param device_id - The device ID to check
    * @returns true if the device should be excluded, false otherwise
    */
   static isDeviceExcluded(device_id: string | undefined): boolean {
     if (!device_id) return false;
-    return Helper.linus_dashboard_config?.excluded_targets?.device_id?.includes(device_id) ?? false;
+    return this.#excludedDeviceIds.has(device_id);
   }
 }
 

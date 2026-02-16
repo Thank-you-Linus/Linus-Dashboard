@@ -68,20 +68,18 @@ class LinusStrategy extends HTMLTemplateElement {
 
     // Process extra_views and embed their cards
     if (Helper.strategyOptions.extra_views) {
-      for (const extraView of Helper.strategyOptions.extra_views) {
-        // Check if view requires admin access
+      // Filter out admin-only views for non-admin users
+      const currentUser = info.hass?.user;
+      const filteredViews = Helper.strategyOptions.extra_views.filter((extraView) => {
         const requireAdmin = (extraView as any).require_admin;
-        if (requireAdmin) {
-          // Check if current user is admin
-          const currentUser = info.hass?.user;
-          if (!currentUser || !currentUser.is_admin) {
-            // Skip this view if user is not admin
-            // Skip view requiring admin access
-            continue;
-          }
+        if (requireAdmin && (!currentUser || !currentUser.is_admin)) {
+          return false;
         }
+        return true;
+      });
 
-        // Process embedded views in extra_views
+      // Load all embedded dashboards in parallel
+      const embedPromises = filteredViews.map(async (extraView) => {
         const firstCard = extraView.cards?.[0];
         if (firstCard?.type === "linus.embed_view") {
           try {
@@ -111,8 +109,11 @@ class LinusStrategy extends HTMLTemplateElement {
             Helper.logError(`Failed to process embedded view "${extraView.title}"`, e);
           }
         }
-        views.push(extraView);
-      }
+        return extraView;
+      });
+
+      const resolvedViews = await Promise.all(embedPromises);
+      views.push(...resolvedViews);
     }
 
     PerformanceProfiler.end(perfKey);
@@ -241,6 +242,9 @@ class LinusStrategy extends HTMLTemplateElement {
    * @return {Promise<LovelaceViewConfig>}
    */
   static async generateView(info: generic.ViewInfo): Promise<LovelaceViewConfig> {
+    // Ensure deferred initialization (component preload + entity resolver) is complete
+    await Helper.awaitDeferredInit();
+
     const { viewId, floor, area } = info.view.strategy?.options ?? {};
     let view: LovelaceViewConfig = {};
 

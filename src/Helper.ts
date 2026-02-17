@@ -2020,6 +2020,7 @@ class Helper {
     const filterVar = template.filter.split('=')[0].trim();
 
     // If as_icon is true, return an mdi icon with the count, and if count > 9, use the "9-plus" icon
+    // Returns nothing when count is 0 (no badge displayed)
     if (as_icon) {
       return `
         {% set entities = [${stateStrings}] %}
@@ -2027,7 +2028,7 @@ class Helper {
         {% set count = ${filterVar} | length %}
         {% if count > 9 %}
           ${template.icon_max}
-        {% else %}
+        {% elif count > 0 %}
           ${template.icon?.replace('{count}', '{{ count }}')}
         {% endif %}
       `;

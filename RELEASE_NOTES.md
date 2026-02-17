@@ -1,81 +1,67 @@
-# 🎉 Beta Release 1.5.0-beta.2
+# 🧪 Beta Release
 
-This incremental beta release adds camera integration features and Home Assistant labels management.
+> **This is a pre-release version for testing.**  
+> Please report any issues on [GitHub Issues](https://github.com/Thank-you-Linus/Linus-Dashboard/issues)
 
 ---
 
-## 🇬🇧 English
+## ✨ What's New
 
-### ✨ New Features
+_No new features in this release_
 
-- **CameraPopup with live camera feed** - View live camera streams directly in aggregate popups when clicking on camera entities. The popup displays the camera feed with controls for navigation and interaction.
+## 🐛 Bug Fixes
 
-- **TagsView and TagsChip for Home Assistant labels** - New interface for managing Home Assistant labels (tags) with a dedicated view and chip components. Quickly organize and filter your entities using the native Home Assistant labeling system.
+- **Badge icon visibility** - Badge icons are now properly hidden when the count reaches zero, keeping your interface clean and preventing visual clutter from empty notification indicators.
+- **Security view real-time updates** - The security view now uses Jinja2 templates for real-time state updates, ensuring that alarm status, door/window sensors, and security device states refresh instantly without manual page reloads.
+- **Duplicate cover entities** - Fixed an issue where cover entities (blinds, shutters, garage doors) were appearing multiple times in chips and badges, which could cause confusion and layout issues.
+- **UNDISCLOSED entity handling** - UNDISCLOSED entities are now properly filtered from global popups, and cover icon colors now display correctly with the appropriate state-based styling.
+- **Floor-level aggregate chips** - Aggregate chips now correctly use floor scope instead of area scope, providing accurate summaries for multi-area floors and improving consistency in entity grouping.
 
+## ⚡ Improvements
 
-### 🐛 Bug Fixes
+- **Performance optimization** - Deferred component preloading and parallelized embedded dashboard/resource registration significantly improve initial page load times and overall dashboard responsiveness, especially on systems with many custom cards or complex configurations.
 
-- **CI workflow improvements** - Fixed release workflow to properly handle pre-releases created via GitHub UI and prevent duplicate workflows for beta/alpha tags
+<details>
+<summary>🇫🇷 <b>Version française</b></summary>
 
-- **Badge scope correction** - Fixed badge rendering in AreaView and FloorView to use correct entity scope, ensuring badges display accurate information
+- **Optimisation des performances** - Le préchargement différé des composants et la parallélisation du chargement des dashboards intégrés/ressources améliorent significativement les temps de chargement initial et la réactivité globale du tableau de bord, en particulier sur les systèmes avec de nombreuses cartes personnalisées ou des configurations complexes.
 
+</details>
 
-### ⚡ Improvements
+---
 
-- **Enhanced aggregate popup UX** - Cleaner status display with improved visual hierarchy and better entity grouping
-
-- **Optimized sensor organization** - Refined sensor constants and reduced Area/Floor chips for better performance and cleaner interface
-
-
-### 🧪 For Beta Testers
+## 🧪 For Beta Testers
 
 **What to test:**
-- [ ] Test CameraPopup in aggregate views - Click on camera entities in area/floor badges and verify live feed displays correctly
-- [ ] Test TagsView and TagsChip - Create, edit, and filter entities using Home Assistant labels
-- [ ] Verify badge popups show correct entity information in AreaView and FloorView
-- [ ] Test aggregate popup navigation and status display improvements
-- [ ] Check overall dashboard performance and responsiveness
+- [ ] **Badge icons**: Verify that badge icons disappear when notification counts reach zero (test with notifications, updates, alerts)
+- [ ] **Security view**: Check that alarm panels and security sensors update in real-time without page refresh
+- [ ] **Cover entities**: Confirm that blinds, shutters, and garage doors appear only once in chips and badges (no duplicates)
+- [ ] **Global popups**: Verify that UNDISCLOSED entities don't appear in popups and cover icons show correct colors
+- [ ] **Floor aggregates**: Test that floor-level chips show correct entity counts across multiple areas
+
+<details>
+<summary>🇫🇷 <b>Quoi tester</b></summary>
+
+- [ ] **Icônes de badge** : Vérifier que les icônes de badge disparaissent lorsque les compteurs de notification atteignent zéro (tester avec notifications, mises à jour, alertes)
+- [ ] **Vue sécurité** : Vérifier que les panneaux d'alarme et capteurs de sécurité se mettent à jour en temps réel sans rechargement de page
+- [ ] **Entités de couverture** : Confirmer que les stores, volets et portes de garage n'apparaissent qu'une seule fois dans les chips et badges (pas de doublons)
+- [ ] **Popups globales** : Vérifier que les entités UNDISCLOSED n'apparaissent pas dans les popups et que les icônes de couverture affichent les bonnes couleurs
+- [ ] **Agrégats d'étage** : Tester que les chips au niveau de l'étage affichent les bons nombres d'entités sur plusieurs zones
+
+</details>
 
 **Known Issues:**
 - None currently
 
-
 ---
 
-## 🇫🇷 Français
+<details>
+<summary>📊 <b>Technical Details</b></summary>
 
-### ✨ Nouvelles fonctionnalités
+### Contributors
+- @Juicy
 
-- **CameraPopup avec flux caméra en direct** - Visualisez les flux caméra en direct directement dans les popups agrégés lors du clic sur les entités caméra. Le popup affiche le flux avec des contrôles pour la navigation et l'interaction.
-
-- **TagsView et TagsChip pour la gestion des étiquettes Home Assistant** - Nouvelle interface pour gérer les étiquettes (tags) Home Assistant avec une vue dédiée et des composants de puce. Organisez et filtrez rapidement vos entités en utilisant le système d'étiquetage natif de Home Assistant.
-
-
-### 🐛 Corrections de bugs
-
-- **Améliorations du workflow CI** - Correction du workflow de publication pour gérer correctement les pré-versions créées via l'interface GitHub et prévenir les workflows dupliqués pour les tags beta/alpha
-
-- **Correction du scope des badges** - Correction de l'affichage des badges dans AreaView et FloorView pour utiliser le scope d'entité correct, garantissant que les badges affichent les bonnes informations
-
-
-### ⚡ Améliorations
-
-- **UX des popups agrégés améliorée** - Affichage du statut plus propre avec une hiérarchie visuelle améliorée et un meilleur regroupement des entités
-
-- **Organisation optimisée des capteurs** - Constantes de capteurs affinées et réduction des puces Area/Floor pour de meilleures performances et une interface plus épurée
-
-
-### 🧪 Pour les Beta Testeurs
-
-**Quoi tester :**
-- [ ] Tester CameraPopup dans les vues agrégées - Cliquer sur les entités caméra dans les badges area/floor et vérifier que le flux en direct s'affiche correctement
-- [ ] Tester TagsView et TagsChip - Créer, modifier et filtrer les entités en utilisant les étiquettes Home Assistant
-- [ ] Vérifier que les popups de badges affichent les bonnes informations d'entité dans AreaView et FloorView
-- [ ] Tester la navigation et l'affichage du statut amélioré des popups agrégés
-- [ ] Vérifier les performances globales et la réactivité du tableau de bord
-
-**Problèmes connus :**
-- Aucun actuellement
+</details>
 
 
 ---
@@ -85,7 +71,7 @@ This incremental beta release adds camera integration features and Home Assistan
 **Via HACS (Recommended):**
 1. Open HACS → Integrations
 2. Search for "Linus Dashboard"
-3. Click Update
+3. Click Update (if already installed) or Install
 4. Restart Home Assistant
 5. Clear browser cache (Ctrl+Shift+R or Cmd+Shift+R)
 
@@ -102,16 +88,4 @@ This incremental beta release adds camera integration features and Home Assistan
 - 📖 [Documentation](https://github.com/Thank-you-Linus/Linus-Dashboard)
 - 🐛 [Report Issues](https://github.com/Thank-you-Linus/Linus-Dashboard/issues)
 - 💬 [Discord Community](https://discord.gg/your-discord-link)
-
----
-
-## 📊 Technical Details
-
-### All Commits
-- fix(ci): skip release workflow for prereleases created via GitHub UI (22e1d08)
-- feat: add CameraPopup with live camera feed in aggregate popups (2e71248)
-- feat: add TagsView and TagsChip for Home Assistant labels management (b2a3488)
-
-### Contributors
-- @Juicy
 

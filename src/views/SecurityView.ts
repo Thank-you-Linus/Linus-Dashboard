@@ -90,7 +90,8 @@ class SecurityView {
     }
 
     // Create chips for security domains
-    // Only show content (badge) if there are active entities (count > 0)
+    // Content (badge) uses Jinja2 templates for real-time updates
+    // Template shows nothing when count is 0, so always enable show_content
     for (const domainTag of SECURITY_EXPOSED_CHIPS) {
       const { domain, device_class } = parseDomainTag(domainTag);
 
@@ -116,20 +117,12 @@ class SecurityView {
         continue;
       }
 
-      // Check if there are any active entities
-      const states = entity_ids.map(id => Helper.getEntityState(id)).filter(s => s);
-      const hasActiveEntities = states.some(state =>
-        state.state === "on" || state.state === "open" || state.state === "opening" ||
-        state.state === "playing" || state.state === "heat" || state.state === "cool" ||
-        state.state === "auto"
-      );
-
-      // Only show content (badge) if there are active entities
+      // Always show_content: true - the Jinja2 template handles showing nothing when count is 0
       const chip = new AggregateChip({
         domain,
         device_class,
         scope: "global",
-        show_content: hasActiveEntities,
+        show_content: true,
         tapActionMode: "popup"
       }).getChip();
 
@@ -434,17 +427,14 @@ class SecurityView {
       });
 
       // Check if there are any active entities
-      const states = entity_ids.map(id => Helper.getEntityState(id)).filter(s => s);
-      const activeCount = states.filter(state =>
-        state.state === "on" || state.state === "open" || state.state === "opening" ||
-        state.state === "playing" || state.state === "heat" || state.state === "cool" ||
-        state.state === "auto"
-      ).length;
-
       // Create aggregate card with popup
+      // All values use Jinja2 templates for real-time updates
       const icon = Helper.getIcon(domain, device_class, entity_ids);
       const icon_color = Helper.getIconColor(domain, device_class, entity_ids);
       const secondary = Helper.getLastChangedTemplate({ domain, device_class });
+
+      // Badge icon uses template that returns nothing when count is 0
+      const badgeContent = Helper.getContent(domain, device_class, entity_ids, true);
 
       const cardConfig: any = {
         type: "custom:mushroom-template-card",
@@ -455,15 +445,9 @@ class SecurityView {
         icon_color,
         icon,
         badge_color: "black",
+        badge_icon: badgeContent,
         tap_action: popupAction
       };
-
-      // Only add badge_icon if there are active entities (count > 0)
-      // This prevents showing "mdi:numeric-0" icon when no devices are active
-      if (activeCount > 0) {
-        const badgeContent = Helper.getContent(domain, device_class, entity_ids, true);
-        cardConfig.badge_icon = badgeContent;
-      }
 
       securityAggregateCards.push(cardConfig);
     }
@@ -507,6 +491,7 @@ class SecurityView {
 
     // Helper function to create aggregate sensor cards with popups
     // priorityColor: 'red', 'orange', 'blue', 'grey' for visual hierarchy
+    // All values use Jinja2 templates for real-time updates
     const createAggregateSensorCards = (sensorTags: string[], priorityColor?: string): LovelaceCardConfig[] => {
       const cards: LovelaceCardConfig[] = [];
 
@@ -520,10 +505,6 @@ class SecurityView {
         // Get entities
         const entity_ids = Helper.getEntityIds({ domain, device_class });
         if (entity_ids.length === 0) continue;
-
-        // Check if there are any active entities
-        const states = entity_ids.map(id => Helper.getEntityState(id)).filter(s => s);
-        const activeCount = states.filter(state => state.state === "on").length;
 
         // Create popup action
         const popupAction = PopupFactory.createPopup({
@@ -539,14 +520,27 @@ class SecurityView {
           device_class
         });
 
-        // Get card properties
+        // Get card properties - all use Jinja2 templates for reactivity
         const icon = Helper.getIcon(domain, device_class, entity_ids);
-        let icon_color = Helper.getIconColor(domain, device_class, entity_ids);
         const secondary = Helper.getLastChangedTemplate({ domain, device_class });
+        const badgeContent = Helper.getContent(domain, device_class, entity_ids, true);
 
-        // Override icon_color with priorityColor if active and priorityColor is set
-        if (activeCount > 0 && priorityColor) {
-          icon_color = priorityColor;
+        // Build icon_color template: use priorityColor when active, otherwise use standard color
+        let icon_color: string;
+        if (priorityColor) {
+          const stateChecks = entity_ids.map(id => `is_state('${id}', 'on')`).join(' or ');
+          icon_color = `{% if ${stateChecks} %}${priorityColor}{% else %}${Helper.getIconColor(domain, device_class, entity_ids)}{% endif %}`;
+        } else {
+          icon_color = Helper.getIconColor(domain, device_class, entity_ids);
+        }
+
+        // Build badge_color template: use priorityColor when active, otherwise black
+        let badge_color: string;
+        if (priorityColor) {
+          const stateChecks = entity_ids.map(id => `is_state('${id}', 'on')`).join(' or ');
+          badge_color = `{% if ${stateChecks} %}${priorityColor}{% else %}black{% endif %}`;
+        } else {
+          badge_color = "black";
         }
 
         const cardConfig: any = {
@@ -557,32 +551,29 @@ class SecurityView {
           secondary,
           icon_color,
           icon,
-          badge_color: activeCount > 0 && priorityColor ? priorityColor : "black",
+          badge_color,
+          badge_icon: badgeContent,
           tap_action: popupAction
         };
 
-        // Only add badge_icon if there are active entities (count > 0)
-        // This prevents showing "mdi:numeric-0" icon when no sensors are active
-        if (activeCount > 0) {
-          const badgeContent = Helper.getContent(domain, device_class, entity_ids, true);
-          cardConfig.badge_icon = badgeContent;
-
-          // Add pulse animation for critical sensors (smoke, gas, CO) when active
-          const isCriticalSensor = device_class === "smoke" || device_class === "gas" || device_class === "carbon_monoxide";
-          if (isCriticalSensor) {
-            cardConfig.card_mod = {
-              style: `
-                ha-card {
-                  animation: pulse 2s ease-in-out infinite;
-                  border-left: 4px solid var(--red-color, red) !important;
-                }
-                @keyframes pulse {
-                  0%, 100% { opacity: 1; }
-                  50% { opacity: 0.7; }
-                }
-              `
-            };
-          }
+        // Add dynamic pulse animation for critical sensors (smoke, gas, CO)
+        const isCriticalSensor = device_class === "smoke" || device_class === "gas" || device_class === "carbon_monoxide";
+        if (isCriticalSensor) {
+          const stateChecks = entity_ids.map(id => `is_state('${id}', 'on')`).join(' or ');
+          cardConfig.card_mod = {
+            style: `
+              ha-card {
+                {% if ${stateChecks} %}
+                animation: pulse 2s ease-in-out infinite;
+                border-left: 4px solid var(--red-color, red) !important;
+                {% endif %}
+              }
+              @keyframes pulse {
+                0%, 100% { opacity: 1; }
+                50% { opacity: 0.7; }
+              }
+            `
+          };
         }
 
         cards.push(cardConfig);

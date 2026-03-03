@@ -1775,7 +1775,7 @@ class Helper {
     const domainIcons = Helper.icons[domain as keyof IconResources];
     if (!domainIcons) {
       // Fallback to STANDARD_DOMAIN_ICONS if Helper.icons doesn't have this domain
-      return STANDARD_DOMAIN_ICONS[domain] || "mdi:help-circle-circle";
+      return STANDARD_DOMAIN_ICONS[domain] || "mdi:help-circle";
     }
 
     const states = entity_ids?.length ? Helper.getStateStrings(entity_ids) : [];
@@ -1796,15 +1796,18 @@ class Helper {
       return "mdi:thermometer"; // Default temperature icon if no states are available
     }
 
-    // If device_class is explicitly null, use domain default icon with states
-    if (device_class === null || device_class === '_') {
-      if (domainIcons.state && states.length) {
+    // If device_class is not specified, use domain default icon with states
+    if (!device_class || device_class === '_') {
+      // Access the default resource entry (_) which holds domain-level icons
+      const defaultResource = domainIcons._ || domainIcons;
+
+      if (defaultResource.state && states.length) {
         let stateIconTemplate = `{% set entities = [${states}] %}{% set state = entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | map(attribute='state') | list %}`
 
-        for (const [stateKey, icon] of Object.entries(domainIcons.state)) {
+        for (const [stateKey, icon] of Object.entries(defaultResource.state)) {
           stateIconTemplate += `{% if state | select('eq', '${stateKey}') | list | count > 0 %}${icon}{% else %}`;
         }
-        stateIconTemplate += `${domainIcons.default || STANDARD_DOMAIN_ICONS[domain] || "mdi:help-circle"}` + "{% endif %}".repeat(Object.keys(domainIcons.state).length);
+        stateIconTemplate += `${defaultResource.default || STANDARD_DOMAIN_ICONS[domain] || "mdi:help-circle"}` + "{% endif %}".repeat(Object.keys(defaultResource.state).length);
 
         return stateIconTemplate;
       }
@@ -1828,7 +1831,7 @@ class Helper {
         }
       }
 
-      return typeof domainIcons.default === "string" ? domainIcons.default : (STANDARD_DOMAIN_ICONS[domain] || "mdi:help-circle");
+      return typeof defaultResource.default === "string" ? defaultResource.default : (STANDARD_DOMAIN_ICONS[domain] || "mdi:help-circle");
     }
 
     if (device_class && domainIcons[device_class as keyof IconResources[keyof IconResources]]) {
@@ -1847,18 +1850,21 @@ class Helper {
       return deviceClassIcons?.default || "mdi:help-circle";
     }
 
-    if (domainIcons.state && states.length) {
+    // Final fallback: use domain default resource
+    const fallbackResource = domainIcons._ || domainIcons;
+
+    if (fallbackResource.state && states.length) {
       let stateIconTemplate = `{% set entities = [${states}] %}{% set state = entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | map(attribute='state') | list %}`
 
-      for (const [stateKey, icon] of Object.entries(domainIcons.state)) {
+      for (const [stateKey, icon] of Object.entries(fallbackResource.state)) {
         stateIconTemplate += `{% if state | select('eq', '${stateKey}') | list | count > 0 %}${icon}{% else %}`;
       }
-      stateIconTemplate += `${domainIcons.default || "mdi:help-circle"}` + "{% endif %}".repeat(Object.keys(domainIcons.state).length);
+      stateIconTemplate += `${fallbackResource.default || STANDARD_DOMAIN_ICONS[domain] || "mdi:help-circle"}` + "{% endif %}".repeat(Object.keys(fallbackResource.state).length);
 
       return stateIconTemplate;
     }
 
-    return typeof domainIcons.default === "string" ? domainIcons.default : "mdi:help-circle"; // Default icon for domain
+    return typeof fallbackResource.default === "string" ? fallbackResource.default : (STANDARD_DOMAIN_ICONS[domain] || "mdi:help-circle"); // Default icon for domain
   }
 
   /**

@@ -215,6 +215,7 @@
                     "state_closed": "fermé(s)",
                     "state_locked": "verrouillé(s)",
                     "state_unlocked": "déverrouillé(s)",
+                    "state_available": "disponible(s)",
                     "average": "Moyenne",
                     "total": "Total",
                     "view_all": "Voir plus",

@@ -118,8 +118,8 @@ class AggregatePopup extends AbstractPopup {
     const statisticsDomains = ["sensor"];
     const needsStatistics = statisticsDomains.includes(domain);
 
-    // Check if domain is read-only (binary_sensor and sensor don't have control buttons)
-    const readOnlyDomains = ["binary_sensor", "sensor"];
+    // Check if domain is read-only (binary_sensor, sensor, and camera don't have control buttons)
+    const readOnlyDomains = ["binary_sensor", "sensor", "camera"];
     const isReadOnly = readOnlyDomains.includes(domain);
 
     // 1. First line: Status + Navigation button (horizontal)

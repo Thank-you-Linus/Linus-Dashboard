@@ -215,6 +215,7 @@
                     "state_closed": "closed",
                     "state_locked": "locked",
                     "state_unlocked": "unlocked",
+                    "state_available": "available",
                     "average": "Average",
                     "total": "Total",
                     "view_all": "See More",

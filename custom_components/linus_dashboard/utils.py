@@ -25,7 +25,7 @@ async def init_resource(hass: HomeAssistant, url: str, ver: str) -> bool:
     await resources.async_get_info()
 
     # Extract base URL without query parameters for matching
-    base_url = url.split("?")[0]
+    base_url = url.split("?", maxsplit=1)[0]
     versioned_url = f"{url}?v={ver}"
 
     # Find all versions of this resource

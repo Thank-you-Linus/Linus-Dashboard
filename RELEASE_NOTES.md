@@ -1,91 +1,78 @@
-# 🧪 Beta Release
-
-> **This is a pre-release version for testing.**  
-> Please report any issues on [GitHub Issues](https://github.com/Thank-you-Linus/Linus-Dashboard/issues)
+# Release 1.5.0
 
 ---
 
-## ✨ What's New
+## 🇬🇧 English
 
-_No new features in this release_
+### ✨ New Features
 
-## 🐛 Bug Fixes
+- **17 supplemental domains for exclusion options** - Added support for 17 new entity domains in exclusion settings, giving users finer control over which entities appear in their dashboard views
+- **Camera popup with live feed** - New CameraPopup component displays live camera feeds directly within aggregate popups, providing quick visual monitoring without leaving the dashboard
+- **Tags view and TagsChip** - New dedicated TagsView and TagsChip components for managing Home Assistant labels, allowing users to organize and filter entities by tags
+- **SecurityView enhancements with siren domain** - Overhauled security view with aggregate cards, siren domain support, and Jinja2 templates for real-time security status updates
+- **Floor-level exclusion support** - Added `floor_id` support to `excluded_targets`, enabling users to exclude entire floors from dashboard views and improving popup navigation
 
-- **Badge icon visibility** - Badge icons are now properly hidden when the count reaches zero, keeping your interface clean and preventing visual clutter from empty notification indicators.
-- **Security view real-time updates** - The security view now uses Jinja2 templates for real-time state updates, ensuring that alarm status, door/window sensors, and security device states refresh instantly without manual page reloads.
-- **Duplicate cover entities** - Fixed an issue where cover entities (blinds, shutters, garage doors) were appearing multiple times in chips and badges, which could cause confusion and layout issues.
-- **UNDISCLOSED entity handling** - UNDISCLOSED entities are now properly filtered from global popups, and cover icon colors now display correctly with the appropriate state-based styling.
-- **Floor-level aggregate chips** - Aggregate chips now correctly use floor scope instead of area scope, providing accurate summaries for multi-area floors and improving consistency in entity grouping.
+### 🐛 Bug Fixes
 
-## ⚡ Improvements
+- **Badge popup hierarchy corrected** - Badge popups now follow proper hierarchical grouping (Floor -> Area -> Entity) for consistent navigation
+- **Correct badge scope in views** - AreaView and FloorView now use the correct scope for badges, fixing mismatched entity displays
+- **Version read from manifest.json** - Version is now correctly read from `manifest.json` instead of being hardcoded, with debug logging cleaned up (fixes #106)
 
-- **Performance optimization** - Deferred component preloading and parallelized embedded dashboard/resource registration significantly improve initial page load times and overall dashboard responsiveness, especially on systems with many custom cards or complex configurations.
+### ⚡ Improvements
 
-<details>
-<summary>🇫🇷 <b>Version française</b></summary>
-
-- **Optimisation des performances** - Le préchargement différé des composants et la parallélisation du chargement des dashboards intégrés/ressources améliorent significativement les temps de chargement initial et la réactivité globale du tableau de bord, en particulier sur les systèmes avec de nombreuses cartes personnalisées ou des configurations complexes.
-
-</details>
-
----
-
-## 🧪 For Beta Testers
-
-**What to test:**
-- [ ] **Badge icons**: Verify that badge icons disappear when notification counts reach zero (test with notifications, updates, alerts)
-- [ ] **Security view**: Check that alarm panels and security sensors update in real-time without page refresh
-- [ ] **Cover entities**: Confirm that blinds, shutters, and garage doors appear only once in chips and badges (no duplicates)
-- [ ] **Global popups**: Verify that UNDISCLOSED entities don't appear in popups and cover icons show correct colors
-- [ ] **Floor aggregates**: Test that floor-level chips show correct entity counts across multiple areas
-
-<details>
-<summary>🇫🇷 <b>Quoi tester</b></summary>
-
-- [ ] **Icônes de badge** : Vérifier que les icônes de badge disparaissent lorsque les compteurs de notification atteignent zéro (tester avec notifications, mises à jour, alertes)
-- [ ] **Vue sécurité** : Vérifier que les panneaux d'alarme et capteurs de sécurité se mettent à jour en temps réel sans rechargement de page
-- [ ] **Entités de couverture** : Confirmer que les stores, volets et portes de garage n'apparaissent qu'une seule fois dans les chips et badges (pas de doublons)
-- [ ] **Popups globales** : Vérifier que les entités UNDISCLOSED n'apparaissent pas dans les popups et que les icônes de couverture affichent les bonnes couleurs
-- [ ] **Agrégats d'étage** : Tester que les chips au niveau de l'étage affichent les bons nombres d'entités sur plusieurs zones
-
-</details>
-
-**Known Issues:**
-- None currently
+- **Deferred component preload** - Component preloading is now deferred, and embedded dashboards and resource registration run in parallel, resulting in faster initial load times
+- **Aggregate popup UX improvements** - Cleaner status display in aggregate popups for improved readability
+- **Sensor constants reorganization** - Sensor constants have been organized and Area/Floor chips simplified for better maintainability
+- **SecurityView layout cleanup** - Improved SecurityView layout with stats card removed for a cleaner interface
+- **Exclusion utility methods** - New shared exclusion utility methods reduce code duplication across components
 
 ---
 
-<details>
-<summary>📊 <b>Technical Details</b></summary>
+## 🇫🇷 Français
+
+### ✨ Nouvelles fonctionnalités
+
+- **17 domaines supplementaires pour les options d'exclusion** - Ajout du support de 17 nouveaux domaines d'entites dans les parametres d'exclusion, offrant un controle plus precis sur les entites affichees dans le tableau de bord
+- **Popup camera avec flux en direct** - Le nouveau composant CameraPopup affiche les flux camera en direct directement dans les popups agreges, permettant une surveillance visuelle rapide sans quitter le tableau de bord
+- **Vue Tags et TagsChip** - Nouveaux composants TagsView et TagsChip pour gerer les etiquettes Home Assistant, permettant d'organiser et filtrer les entites par tags
+- **Ameliorations SecurityView avec support du domaine sirene** - Vue securite revisitee avec des cartes agregees, le support du domaine sirene et des templates Jinja2 pour les mises a jour de statut de securite en temps reel
+- **Support d'exclusion au niveau des etages** - Ajout du support `floor_id` dans `excluded_targets`, permettant d'exclure des etages entiers des vues du tableau de bord et ameliorant la navigation dans les popups
+
+### 🐛 Corrections de bugs
+
+- **Hierarchie des popups de badges corrigee** - Les popups de badges suivent desormais un regroupement hierarchique correct (Etage -> Zone -> Entite) pour une navigation coherente
+- **Portee correcte des badges dans les vues** - AreaView et FloorView utilisent maintenant la bonne portee pour les badges, corrigeant les affichages d'entites inadaptes
+- **Version lue depuis manifest.json** - La version est maintenant correctement lue depuis `manifest.json` au lieu d'etre codee en dur, avec un nettoyage des logs de debogage (corrige #106)
+
+### ⚡ Améliorations
+
+- **Prechargement differe des composants** - Le prechargement des composants est maintenant differe, et les tableaux de bord embarques ainsi que l'enregistrement des ressources s'executent en parallele, resultant en des temps de chargement initiaux plus rapides
+- **Amelioration de l'UX des popups agreges** - Affichage de statut plus clair dans les popups agreges pour une meilleure lisibilite
+- **Reorganisation des constantes de capteurs** - Les constantes de capteurs ont ete organisees et les chips Area/Floor simplifies pour une meilleure maintenabilite
+- **Nettoyage de la mise en page SecurityView** - Mise en page SecurityView amelioree avec suppression de la carte de statistiques pour une interface plus epuree
+- **Methodes utilitaires d'exclusion** - Nouvelles methodes utilitaires d'exclusion partagees reduisant la duplication de code entre les composants
+
+---
+
+## 📊 Technical Details
+
+### All Commits
+
+- feat: add 17 supplemental domains to exclusion options (bc5fd50)
+- feat: add CameraPopup with live camera feed in aggregate popups (2e71248)
+- feat: add TagsView and TagsChip for Home Assistant labels management (b2a3488)
+- feat: add SecurityView enhancements and siren domain support (676c597)
+- feat: add siren domain and improve SecurityView with aggregate cards (bb38903)
+- feat: add floor_id support to excluded_targets and fix popup navigation (27567fa)
+- fix: harmonize badge popups with hierarchical Floor -> Area -> Entity grouping (47f2744)
+- fix: use correct scope for badges in AreaView and FloorView (1e4c532)
+- fix: read version from manifest.json and clean up debug logging (ff3acbd)
+- perf: defer component preload, parallelize embedded dashboards and resource registration (439838d)
+- refactor: improve aggregate popup UX with cleaner status display (1994f36)
+- refactor: organize sensor constants and reduce Area/Floor chips (66e3e1a)
+- refactor: improve SecurityView layout and remove stats card (0bfb5b0)
+- refactor: add exclusion utility methods to reduce code duplication (2976850)
 
 ### Contributors
-- @Juicy
 
-</details>
-
-
----
-
-## 📦 Installation
-
-**Via HACS (Recommended):**
-1. Open HACS → Integrations
-2. Search for "Linus Dashboard"
-3. Click Update (if already installed) or Install
-4. Restart Home Assistant
-5. Clear browser cache (Ctrl+Shift+R or Cmd+Shift+R)
-
-**Manual Installation:**
-1. Download the `linus_dashboard.zip` file from this release
-2. Extract to `custom_components/linus_dashboard/`
-3. Restart Home Assistant
-4. Clear browser cache
-
----
-
-## 🔗 Links
-
-- 📖 [Documentation](https://github.com/Thank-you-Linus/Linus-Dashboard)
-- 🐛 [Report Issues](https://github.com/Thank-you-Linus/Linus-Dashboard/issues)
-- 💬 [Discord Community](https://discord.gg/your-discord-link)
-
+- @Julien-Decoen

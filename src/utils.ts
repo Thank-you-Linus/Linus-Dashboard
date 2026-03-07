@@ -700,7 +700,7 @@ export const getStateTranslationKey = memoize(function getStateTranslationKey(st
  * @returns {string} - The floor name.
  */
 export const getFloorName = memoize(function getFloorName(floor: StrategyFloor): string {
-    return floor.floor_id === UNDISCLOSED ? Helper.localize("ui.components.area-picker.unassigned_areas") : floor.name
+    return floor.floor_id === UNDISCLOSED ? Helper.localize("ui.panel.lovelace.strategy.areas.other_areas") : floor.name
 }, { name: 'getFloorName', maxSize: 50 });
 
 /**

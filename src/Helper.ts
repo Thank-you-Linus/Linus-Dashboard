@@ -637,6 +637,16 @@ class Helper {
 
     const [entities, devices, areas, floors, labelsList, entity_component_icons, services_icons, linus_dashboard_config] = homeAssistantRegistries as [any[], any[], any[], any[], any[], { resources: any }, { resources: any }, LinusDashboardConfig];
 
+    // Preserve HA ordering: the array index returned by config/area_registry/list and
+    // config/floor_registry/list reflects the user-defined order (drag & drop in HA Settings).
+    // Assign it to the `order` field so the existing sort logic uses it correctly.
+    areas.forEach((area: any, index: number) => {
+      area.order = index;
+    });
+    floors.forEach((floor: any, index: number) => {
+      floor.order = index;
+    });
+
     this.#icons = merge(entity_component_icons.resources, services_icons.resources);
     this.#linus_dashboard_config = linus_dashboard_config;
 
@@ -645,14 +655,6 @@ class Helper {
       acc[label.label_id] = label;
       return acc;
     }, {} as Record<string, LabelRegistryEntry>);
-
-    // Log received config for debugging
-    console.warn('[Linus Dashboard] 📦 Received config from backend:', {
-      debug: linus_dashboard_config.debug,
-      debug_type: typeof linus_dashboard_config.debug,
-      has_debug_field: 'debug' in linus_dashboard_config,
-      excluded_targets: linus_dashboard_config.excluded_targets
-    });
 
     Helper.logDebug('Registries loaded', {
       entities: entities.length,
@@ -666,15 +668,9 @@ class Helper {
     // Use backend debug setting if available, otherwise fall back to local config
     if (typeof linus_dashboard_config.debug !== 'undefined') {
       this.#debug = linus_dashboard_config.debug;
-      console.warn(
-        `[Linus Dashboard] 🔍 Debug mode ${this.#debug ? '✅ ENABLED' : '❌ DISABLED'} (from backend auto-detection)`
-      );
     } else {
       // Fallback to local config for backward compatibility
       this.#debug = this.#strategyOptions.debug;
-      console.warn(
-        `[Linus Dashboard] 🔍 Debug mode ${this.#debug ? '✅ ENABLED' : '❌ DISABLED'} (from local fallback - backend didn't provide debug field)`
-      );
     }
 
     // Enable profiling in debug mode

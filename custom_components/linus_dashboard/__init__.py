@@ -58,7 +58,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Register all static paths and resources for bundled JS files.
     # Phase 1: Check file existence and register static paths in parallel (I/O-bound).
     # Phase 2: Register lovelace resources sequentially (shared storage, not parallelizable).
+    #
+    # mushroom-loader.js MUST be first: it patches customElements.define to be idempotent,
+    # preventing DOMException when HACS (or any other source) tries to re-register elements
+    # that our bundled libs already defined.
     js_files = [
+        "custom-elements-guard.js",
         "browser_mod.js",
         "lovelace-mushroom/mushroom.js",
         "lovelace-card-mod/card-mod.js",
@@ -66,6 +71,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "stack-in-card/stack-in-card.js",
         "linus-strategy.js",
     ]
+    static_only: set[str] = set()
 
     base_path = Path(__file__).parent / "www"
     manifest_version = VERSION
@@ -89,7 +95,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Phase 2: Register lovelace resources sequentially (shared ResourceStorageCollection)
     for js_file in registered:
-        if js_file is None:
+        if js_file is None or js_file in static_only:
             continue
         js_url = f"/{DOMAIN}_files/www/{js_file}"
         versioned_url = f"{js_url}?v={manifest_version}"

@@ -282,44 +282,26 @@ class ActivityDetectionPopup extends AbstractPopup {
 
         // === Activity Details (ONLY if Linus Brain) ===
         if (isLinusBrain && activityEntity) {
-            const activityState = Helper.getEntityState(activityEntity);
+            // Use a Jinja2 template so values update reactively while the popup is open
+            const activityDetailsTemplate = `
+{%- set timeout = state_attr('${activityEntity}', 'seconds_until_timeout') | int(0) -%}
+{%- set active = state_attr('${activityEntity}', 'active_presence_entities') | default([]) -%}
+{%- set ns = namespace(parts=[]) -%}
+{%- if timeout > 0 -%}{%- set ns.parts = ns.parts + ['⏱️ ' ~ timeout ~ 's'] -%}{%- endif -%}
+{%- if active | length > 0 -%}
+  {%- set ns2 = namespace(names=[]) -%}
+  {%- for e in active -%}{%- set ns2.names = ns2.names + [state_attr(e, 'friendly_name') or e] -%}{%- endfor -%}
+  {%- set ns.parts = ns.parts + ['👥 ' ~ ns2.names | join(', ')] -%}
+{%- endif -%}
+{{ ns.parts | join(' • ') }}`.trim();
 
-            if (activityState?.attributes) {
-                // === Activity Details Markdown (Horizontal Format) ===
-                const attrs = activityState.attributes;
-                const markdownParts: string[] = [];
-
-                // Build horizontal markdown based on available attributes
-                if (attrs.seconds_until_timeout !== undefined && attrs.seconds_until_timeout > 0) {
-                    markdownParts.push(`⏱️ ${attrs.seconds_until_timeout}s`);
+            cards.push({
+                type: "markdown",
+                content: activityDetailsTemplate,
+                card_mod: {
+                    style: "ha-card { box-shadow: none; padding: 8px 16px; }"
                 }
-
-                // Show active sensor names instead of count
-                if (attrs.active_presence_entities !== undefined && Array.isArray(attrs.active_presence_entities)) {
-                    const activeEntities = attrs.active_presence_entities;
-                    if (activeEntities.length > 0) {
-                        // Get friendly names of active sensors
-                        const sensorNames = activeEntities.map(entityId => {
-                            const state = Helper.getEntityState(entityId);
-                            const friendlyName = state?.attributes?.friendly_name || entityId;
-                            // Extract short name (remove area prefix if present)
-                            return friendlyName.replace(new RegExp(`^${areaName}\\s+`, 'i'), '');
-                        }).join(', ');
-                        markdownParts.push(`👥 ${sensorNames}`);
-                    }
-                }
-
-                // Add markdown card if we have content (horizontal single line)
-                if (markdownParts.length > 0) {
-                    cards.push({
-                        type: "markdown",
-                        content: markdownParts.join(' • '),
-                        card_mod: {
-                            style: "ha-card { box-shadow: none; padding: 8px 16px; }"
-                        }
-                    });
-                }
-            }
+            });
         }
 
         // === HISTORY SECTION (ONLY if Linus Brain) ===
@@ -399,25 +381,24 @@ class ActivityDetectionPopup extends AbstractPopup {
 
             // Add entity cards for each sensor (compact)
             sortedEntities.forEach(entity => {
-                const _state = Helper.getEntityState(entity);
-                const isActive = isEntityActive(entity);
                 const isMediaPlayer = entity.startsWith('media_player.');
 
-                // Color logic:
-                // - Media players: blue when active, grey when inactive
-                // - Binary sensors: red when active, grey when inactive
-                let iconColor: string | undefined;
-                if (isMediaPlayer) {
-                    iconColor = isActive ? "blue" : "grey";
-                } else {
-                    iconColor = isActive ? "red" : "grey";
-                }
+                // Use template card so icon_color updates reactively when state changes
+                const iconColorTemplate = isMediaPlayer
+                    ? `{{ 'blue' if is_state('${entity}', 'playing') else 'grey' }}`
+                    : `{{ 'red' if is_state('${entity}', 'on') else 'grey' }}`;
+
+                const entityState = Helper.getEntityState(entity);
+                const friendlyName = entityState?.attributes?.friendly_name || entity;
 
                 cards.push({
-                    type: "custom:mushroom-entity-card",
+                    type: "custom:mushroom-template-card",
                     entity: entity,
-                    secondary_info: "last-changed",
-                    icon_color: iconColor,
+                    primary: friendlyName,
+                    secondary: `{{ relative_time(states['${entity}'].last_changed) }}`,
+                    icon: `{{ state_attr('${entity}', 'icon') }}`,
+                    icon_color: iconColorTemplate,
+                    layout: "horizontal",
                     card_mod: {
                         style: "ha-card { box-shadow: none; margin: 2px 0; }"
                     }

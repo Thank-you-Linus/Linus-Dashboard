@@ -55,7 +55,7 @@ class AreaScenesChips {
         chips.push({
           type: "template",
           entity: scene?.entity_id,
-          icon: scene?.attributes.icon,
+          icon: `{{ state_attr('${scene?.entity_id}', 'icon') }}`,
           content: TOD_ORDER[index],
           tap_action: {
             action: "call-service",
@@ -71,7 +71,7 @@ class AreaScenesChips {
         chips.push({
           type: "template",
           entity: scene?.entity_id,
-          icon: scene?.attributes.icon,
+          icon: `{{ state_attr('${scene?.entity_id}', 'icon') }}`,
           content: TOD_ORDER[index],
           tap_action: {
             action: "call-service",

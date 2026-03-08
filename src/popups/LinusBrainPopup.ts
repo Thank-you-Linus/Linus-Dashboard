@@ -48,24 +48,13 @@ class LinusBrainPopup extends AbstractPopup {
 
         // Cloud Health
         if (cloudHealthState && cloudHealthState.state !== "unavailable") {
-            const healthValue = cloudHealthState.state;
-            let healthColor = "green";
-            let healthIcon = "mdi:check-circle";
-            
-            if (healthValue === "disconnected") {
-                healthColor = "red";
-                healthIcon = "mdi:close-circle";
-            } else if (healthValue === "degraded") {
-                healthColor = "orange";
-                healthIcon = "mdi:alert-circle";
-            }
-
             statusChips.push({
                 type: "custom:mushroom-template-card",
+                entity: cloudHealthEntity,
                 primary: "Cloud",
-                secondary: healthValue.charAt(0).toUpperCase() + healthValue.slice(1),
-                icon: healthIcon,
-                icon_color: healthColor,
+                secondary: `{{ states('${cloudHealthEntity}') | capitalize }}`,
+                icon: `{% set s = states('${cloudHealthEntity}') %}{{ 'mdi:close-circle' if s == 'disconnected' else ('mdi:alert-circle' if s == 'degraded' else 'mdi:check-circle') }}`,
+                icon_color: `{% set s = states('${cloudHealthEntity}') %}{{ 'red' if s == 'disconnected' else ('orange' if s == 'degraded' else 'green') }}`,
                 layout: "vertical",
                 tap_action: { action: "more-info", entity: cloudHealthEntity },
                 card_mod: {
@@ -93,15 +82,13 @@ class LinusBrainPopup extends AbstractPopup {
 
         // Errors
         if (errorsState && errorsState.state !== "unavailable") {
-            const errorCount = parseInt(errorsState.state) || 0;
-            const successRate = errorsState.attributes?.success_rate || "N/A";
-            
             statusChips.push({
                 type: "custom:mushroom-template-card",
+                entity: errorsEntity,
                 primary: "Errors",
-                secondary: `${errorCount} (${successRate}% success)`,
-                icon: errorCount > 0 ? "mdi:alert" : "mdi:check",
-                icon_color: errorCount > 5 ? "red" : errorCount > 0 ? "orange" : "green",
+                secondary: `{{ states('${errorsEntity}') }} ({{ state_attr('${errorsEntity}', 'success_rate') | default('N/A') }}% success)`,
+                icon: `{{ 'mdi:alert' if states('${errorsEntity}') | int(0) > 0 else 'mdi:check' }}`,
+                icon_color: `{% set c = states('${errorsEntity}') | int(0) %}{{ 'red' if c > 5 else ('orange' if c > 0 else 'green') }}`,
                 layout: "vertical",
                 tap_action: { action: "more-info", entity: errorsEntity },
                 card_mod: {

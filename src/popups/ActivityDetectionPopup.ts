@@ -380,25 +380,15 @@ class ActivityDetectionPopup extends AbstractPopup {
                 });
 
             // Add entity cards for each sensor (compact)
+            // tile card: auto-resolves entity icon + applies color reactively (colored=active, grey=inactive)
             sortedEntities.forEach(entity => {
                 const isMediaPlayer = entity.startsWith('media_player.');
 
-                // Use template card so icon_color updates reactively when state changes
-                const iconColorTemplate = isMediaPlayer
-                    ? `{{ 'blue' if is_state('${entity}', 'playing') else 'grey' }}`
-                    : `{{ 'red' if is_state('${entity}', 'on') else 'grey' }}`;
-
-                const entityState = Helper.getEntityState(entity);
-                const friendlyName = entityState?.attributes?.friendly_name || entity;
-
                 cards.push({
-                    type: "custom:mushroom-template-card",
+                    type: "tile",
                     entity: entity,
-                    primary: friendlyName,
-                    secondary: `{{ relative_time(states['${entity}'].last_changed) }}`,
-                    icon: `{{ state_attr('${entity}', 'icon') }}`,
-                    icon_color: iconColorTemplate,
-                    layout: "horizontal",
+                    color: isMediaPlayer ? "blue" : "red",
+                    state_content: "last-changed",
                     card_mod: {
                         style: "ha-card { box-shadow: none; margin: 2px 0; }"
                     }
@@ -510,6 +500,7 @@ class ActivityDetectionPopup extends AbstractPopup {
                 service: "browser_mod.popup",
                 data: {
                     title: `${areaName} - ${Helper.localize("component.linus_dashboard.entity.text.activity_detection_popup.state.popup_title")}`,
+                    initial_style: "classic",
                     content: {
                         type: "vertical-stack",
                         cards: cards

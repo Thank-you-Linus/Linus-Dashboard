@@ -1,6 +1,8 @@
 {
   "name": "Linus Dashboard",
-  "image": "mcr.microsoft.com/devcontainers/python:1-3.13-bookworm",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
 
   "features": {
     "ghcr.io/devcontainers/features/node:1": {
@@ -9,9 +11,17 @@
     "ghcr.io/devcontainers/features/github-cli:1": {}
   },
 
+  "mounts": [
+    {
+      "source": "${localWorkspaceFolder}/../sapiens",
+      "target": "/workspaces/sapiens",
+      "type": "bind"
+    }
+  ],
+
   "onCreateCommand": [
     "bash", "-c",
-    "sudo apt-get update && sudo apt-get install -y ffmpeg libpcap-dev && python -m venv ha-env && ./ha-env/bin/pip install -U pip setuptools wheel && ./ha-env/bin/pip install -r requirements.txt && npm install"
+    "rm -rf ha-env && uv venv ha-env && uv pip install --python ha-env/bin/python -r requirements.txt && npm install"
   ],
 
   "postStartCommand": [

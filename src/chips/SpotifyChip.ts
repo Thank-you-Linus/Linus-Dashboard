@@ -52,7 +52,7 @@ class SpotifyChip extends AbstractChip {
                     cards: [
                       {
                         type: "custom:mushroom-media-player-card",
-                        entity: "media_player.spotify_juicy",
+                        entity: entityId,
                         icon: "mdi:spotify",
                         icon_color: "green",
                         use_media_info: true,
@@ -140,7 +140,7 @@ class SpotifyChip extends AbstractChip {
                       }
                     ],
                     card_mod: {
-                      style: "ha-card {\n  {% if not is_state('media_player.spotify_juicy', 'off') and not is_state('media_player.spotify_juicy', 'idle') %}\n    background: url( '{{ state_attr(\"media_player.spotify_juicy\", \"entity_picture\") }}' ), linear-gradient(to left, transparent, rgb(var(--rgb-card-background-color)) 100%);\n\n    {% if state_attr('media_player.spotify_juicy', 'media_content_type') == 'tvshow' %}\n      background-size: auto 100%, cover;\n    {% else %}\n      background-size: 130% auto, cover;\n    {% endif %}\n\n    background-position: top right;\n    background-repeat: no-repeat;\n    background-blend-mode: saturation;\n  {% endif %}\n}\n"
+                      style: `ha-card {\n  {% if not is_state('${entityId}', 'off') and not is_state('${entityId}', 'idle') %}\n    background: url( '{{ state_attr("${entityId}", "entity_picture") }}' ), linear-gradient(to left, transparent, rgb(var(--rgb-card-background-color)) 100%);\n\n    {% if state_attr('${entityId}', 'media_content_type') == 'tvshow' %}\n      background-size: auto 100%, cover;\n    {% else %}\n      background-size: 130% auto, cover;\n    {% endif %}\n\n    background-position: top right;\n    background-repeat: no-repeat;\n    background-blend-mode: saturation;\n  {% endif %}\n}\n`
                     }
                   }
                 })

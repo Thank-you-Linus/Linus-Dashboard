@@ -3,15 +3,14 @@ import merge from "lodash.merge";
 
 import { configurationDefaults } from "./configurationDefaults";
 import { generic } from "./types/strategy/generic";
-import { DEVICE_CLASSES, MAGIC_AREAS_DOMAIN, MAGIC_AREAS_NAME, LINUS_BRAIN_DOMAIN, SENSOR_STATE_CLASS_TOTAL, SENSOR_STATE_CLASS_TOTAL_INCREASING, UNDISCLOSED, colorMapping, ALL_HOME_ASSISTANT_DOMAINS, STANDARD_DOMAIN_ICONS } from "./variables";
-import { getEntityDomain, getGlobalEntitiesExceptUndisclosed, getMAEntity, getMagicAreaSlug, groupEntitiesByDomain, slugify } from "./utils";
+import { DEVICE_CLASSES, LINUS_BRAIN_DOMAIN, SENSOR_STATE_CLASS_TOTAL, SENSOR_STATE_CLASS_TOTAL_INCREASING, UNDISCLOSED, colorMapping, ALL_HOME_ASSISTANT_DOMAINS, STANDARD_DOMAIN_ICONS } from "./variables";
+import { getEntityDomain, getGlobalEntitiesExceptUndisclosed, groupEntitiesByDomain, slugify } from "./utils";
 import { createDomainTag } from "./utils/domainTagHelper";
 import { IconResources } from "./types/homeassistant/data/frontend";
 import { LinusDashboardConfig } from "./types/homeassistant/data/linus_dashboard";
 import { LabelRegistryEntry } from "./types/homeassistant/data/label_registry";
 import { PerformanceProfiler } from "./utils/performanceProfiler";
 
-import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
 import StrategyDevice = generic.StrategyDevice;
 import StrategyEntity = generic.StrategyEntity;
 import StrategyFloor = generic.StrategyFloor;
@@ -139,14 +138,6 @@ class Helper {
   static #strategyOptions: generic.StrategyConfig;
 
   /**
-   * The magic areas devices.
-   *
-   * @type {Record<string, MagicAreaRegistryEntry>}
-   * @private
-   */
-  static #magicAreasDevices: Record<string, MagicAreaRegistryEntry> = {};
-
-  /**
    * The entity resolver for Linus Brain / Magic Areas hybrid support.
    *
    * @type {EntityResolver}
@@ -188,6 +179,20 @@ class Helper {
   static #linus_dashboard_config: LinusDashboardConfig;
 
   /**
+   * Per-domain active-state configuration used by getIcon() Path B.
+   * Defines which states count as "active" (show on-icon) for aggregate chips.
+   * Kept as a static field so it is allocated once, not on every getIcon() call.
+   */
+  static readonly #DOMAIN_ACTIVE_STATES: Record<string, { activeStates: string[]; on: string; off: string }> = {
+    light:        { activeStates: ['on'],                                                       on: "mdi:lightbulb-on",   off: "mdi:lightbulb-off"      },
+    switch:       { activeStates: ['on'],                                                       on: "mdi:toggle-switch",  off: "mdi:toggle-switch-off"   },
+    fan:          { activeStates: ['on'],                                                       on: "mdi:fan",            off: "mdi:fan-off"             },
+    media_player: { activeStates: ['playing', 'paused', 'on'],                                 on: "mdi:cast-connected", off: "mdi:cast-off"            },
+    climate:      { activeStates: ['heat', 'cool', 'auto', 'heat_cool', 'dry', 'fan_only'],    on: "mdi:thermostat",     off: "mdi:thermostat-box"      },
+    cover:        { activeStates: ['open', 'opening'],                                         on: "mdi:window-open",    off: "mdi:window-closed"       },
+  };
+
+  /**
    * Class constructor.
    *
    * This class shouldn't be instantiated directly.
@@ -210,17 +215,7 @@ class Helper {
   }
 
   /**
-   * Custom strategy configuration.
-   *
-   * @returns {Record<string, MagicAreaRegistryEntry>}
-   * @static
-   */
-  static get magicAreasDevices(): Record<string, MagicAreaRegistryEntry> {
-    return this.#magicAreasDevices;
-  }
-
-  /**
-   * Get the entity resolver instance for Linus Brain / Magic Areas hybrid support.
+   * Get the entity resolver instance for Linus Brain support.
    *
    * @returns {EntityResolver} The entity resolver.
    * @static
@@ -772,7 +767,7 @@ class Helper {
 
       acc[entity.entity_id] = enrichedEntity;
 
-      if (entity.platform !== MAGIC_AREAS_DOMAIN && entity.platform !== LINUS_BRAIN_DOMAIN) {
+      if (entity.platform !== LINUS_BRAIN_DOMAIN) {
         const areaId = entity.area_id ?? deviceAreaMap.get(entity.device_id ?? "") ?? UNDISCLOSED;
         if (!entitiesByAreaId.has(areaId)) {
           entitiesByAreaId.set(areaId, []);
@@ -787,7 +782,7 @@ class Helper {
         entitiesByDeviceId.get(entity.device_id)!.push(enrichedEntity);
       }
 
-      if (entity.platform !== MAGIC_AREAS_DOMAIN && entity.platform !== LINUS_BRAIN_DOMAIN) this.#domains[domainTag].push(enrichedEntity);
+      if (entity.platform !== LINUS_BRAIN_DOMAIN) this.#domains[domainTag].push(enrichedEntity);
 
       return acc;
     }, {} as Record<string, StrategyEntity>);
@@ -816,26 +811,11 @@ class Helper {
 
       acc[device.id] = enrichedDevice;
 
-      if (device.manufacturer !== MAGIC_AREAS_NAME) {
-        const areaId = device.area_id ?? UNDISCLOSED;
-        if (!devicesByAreaId.has(areaId)) {
-          devicesByAreaId.set(areaId, []);
-        }
-        devicesByAreaId.get(areaId)!.push(enrichedDevice);
+      const areaId = device.area_id ?? UNDISCLOSED;
+      if (!devicesByAreaId.has(areaId)) {
+        devicesByAreaId.set(areaId, []);
       }
-
-      if (device.manufacturer === MAGIC_AREAS_NAME) {
-        const magicAreaSlug = getMagicAreaSlug(device as MagicAreaRegistryEntry);
-        this.#magicAreasDevices[magicAreaSlug] = {
-          ...device,
-          area_name: device.name!,
-          slug: magicAreaSlug,
-          entities: entitiesInDevice.reduce((entities: Record<string, StrategyEntity>, entity) => {
-            entities[entity.translation_key!] = entity;
-            return entities;
-          }, {})
-        };
-      }
+      devicesByAreaId.get(areaId)!.push(enrichedDevice);
 
       return acc;
     }, {} as Record<string, StrategyDevice>);
@@ -858,16 +838,12 @@ class Helper {
       const areaEntities = areaEntitiesArray.map(entity => entity.entity_id);
       const slug = area.area_id === UNDISCLOSED ? area.area_id : slugify(area.name);
 
-      // Keep Object.values().find() for magicAreaDevice (only called once per area)
-      const magicAreaDevice = Object.values(this.#devices).find(device => device.manufacturer === MAGIC_AREAS_NAME && device.name === area.name);
-
       const enrichedArea = {
         ...area,
         floor_id: area?.floor_id || UNDISCLOSED,
         slug,
         domains: groupEntitiesByDomain(areaEntities) ?? {},
         devices: (devicesByAreaId.get(area.area_id) || []).map(device => device.id),
-        ...(magicAreaDevice && { magicAreaDevice }),
         entities: areaEntities,
       };
 
@@ -1167,14 +1143,9 @@ class Helper {
     const areaSlugs = Array.isArray(area_slug) ? area_slug : [area_slug];
 
     for (const slug of areaSlugs) {
-      const magic_entity = getMAEntity(slug, "sensor", device_class);
-
       let entities: string[] | undefined;
 
-      if (magic_entity) {
-        // Si on a une magic area, on utilise son entité
-        entities = [magic_entity.entity_id];
-      } else if (slug === "global") {
+      if (slug === "global") {
         // Mode global : récupérer toutes les entités sauf undisclosed
         entities = getGlobalEntitiesExceptUndisclosed('sensor', device_class);
       } else {
@@ -1588,17 +1559,9 @@ class Helper {
         }
         // Handle device_class with a specific value
         else if (device_class) {
-          // For binary_sensor, sensor, and cover, do NOT use Magic Areas aggregate entities
-          // We want to always show individual entities, not aggregated values
-          const useMagicArea = domain !== "binary_sensor" && domain !== "sensor" && domain !== "cover";
-          const magic_entity = useMagicArea ? getMAEntity(slug, domain, device_class) : null;
-
           let entities: string[] | undefined;
 
-          if (magic_entity) {
-            // Si on a une magic area, on utilise son entité
-            entities = [magic_entity.entity_id];
-          } else if (slug === "global") {
+          if (slug === "global") {
             // Mode global : récupérer toutes les entités sauf undisclosed
             entities = getGlobalEntitiesExceptUndisclosed(domain, device_class);
           } else {
@@ -1635,12 +1598,9 @@ class Helper {
           // Then, retrieve entities WITH device_class
           if (domainTags.length > 0) {
             for (const domainTag of domainTags) {
-              const magic_entity = getMAEntity(slug, domain, domainTag.split(":")[1]);
-              const entities = magic_entity
-                ? [magic_entity.entity_id]
-                : slug === "global"
-                  ? getGlobalEntitiesExceptUndisclosed(domain, domainTag.split(":")[1])
-                  : this.#areas[slug]?.domains?.[domainTag];
+              const entities = slug === "global"
+                ? getGlobalEntitiesExceptUndisclosed(domain, domainTag.split(":")[1])
+                : this.#areas[slug]?.domains?.[domainTag];
               if (entities) results.push(...entities.map(transformer));
             }
           }
@@ -1797,33 +1757,27 @@ class Helper {
       // Access the default resource entry (_) which holds domain-level icons
       const defaultResource = domainIcons._ || domainIcons;
 
-      if (defaultResource.state && states.length) {
-        let stateIconTemplate = `{% set entities = [${states}] %}{% set state = entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | map(attribute='state') | list %}`
-
-        for (const [stateKey, icon] of Object.entries(defaultResource.state)) {
-          stateIconTemplate += `{% if state | select('eq', '${stateKey}') | list | count > 0 %}${icon}{% else %}`;
-        }
-        stateIconTemplate += `${defaultResource.default || STANDARD_DOMAIN_ICONS[domain] || "mdi:help-circle"}` + "{% endif %}".repeat(Object.keys(defaultResource.state).length);
-
-        return stateIconTemplate;
-      }
-
-      // Fallback: create a simple state-aware template using STANDARD_DOMAIN_ICONS
       if (states.length) {
-        // Map of state-aware icon patterns for common domains
-        const stateAwareIcons: Record<string, { activeStates: string[]; on: string; off: string }> = {
-          light: { activeStates: ['on'], on: "mdi:lightbulb-on", off: "mdi:lightbulb-off" },
-          switch: { activeStates: ['on'], on: "mdi:toggle-switch", off: "mdi:toggle-switch-off" },
-          fan: { activeStates: ['on'], on: "mdi:fan", off: "mdi:fan-off" },
-          media_player: { activeStates: ['playing', 'on'], on: "mdi:speaker-play", off: "mdi:speaker-off" },
-          climate: { activeStates: ['heat', 'cool', 'auto', 'heat_cool', 'dry', 'fan_only'], on: "mdi:thermostat", off: "mdi:thermostat-box" },
-          cover: { activeStates: ['open', 'opening'], on: "mdi:window-open", off: "mdi:window-closed" },
-        };
+        const statePrefix = `{% set entities = [${states}] %}{% set state = entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | map(attribute='state') | list %}`;
+        const iconConfig = Helper.#DOMAIN_ACTIVE_STATES[domain];
 
-        const iconConfig = stateAwareIcons[domain];
         if (iconConfig) {
+          // Path B — known domain: show on-icon if at least one entity is in an active state.
+          // This is always preferred over Path A for known domains because the HA icon registry
+          // only maps inactive states (e.g. 'off', 'closed'), which would incorrectly fire even
+          // when other entities are still active.
           const stateChecks = iconConfig.activeStates.map(s => `'${s}'`).join(', ');
-          return `{% set entities = [${states}] %}{% set state = entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | map(attribute='state') | list %}{% if state | select('in', [${stateChecks}]) | list | count > 0 %}${iconConfig.on}{% else %}${iconConfig.off}{% endif %}`;
+          return `${statePrefix}{% if state | select('in', [${stateChecks}]) | list | count > 0 %}${iconConfig.on}{% else %}${iconConfig.off}{% endif %}`;
+        }
+
+        if (defaultResource.state) {
+          // Path A — unknown domain: fall back to HA icon registry state map.
+          let template = statePrefix;
+          for (const [stateKey, icon] of Object.entries(defaultResource.state)) {
+            template += `{% if state | select('eq', '${stateKey}') | list | count > 0 %}${icon}{% else %}`;
+          }
+          template += `${defaultResource.default || STANDARD_DOMAIN_ICONS[domain] || "mdi:help-circle"}` + "{% endif %}".repeat(Object.keys(defaultResource.state).length);
+          return template;
         }
       }
 

@@ -1,6 +1,6 @@
 import { Helper } from "../Helper";
 import { TemplateChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
-import { MAGIC_AREAS_DOMAIN, LINUS_BRAIN_DOMAIN } from "../variables";
+import { LINUS_BRAIN_DOMAIN } from "../variables";
 
 /**
  * Configuration for creating a smart control chip
@@ -52,10 +52,10 @@ export function createSmartControlChip(config: SmartControlChipConfig): Template
     area_slug: undefined, // Get all entities from all areas (excluding global/undisclosed)
   }).filter(id => id && typeof id === 'string' && id.includes('.')); // Filter out invalid entity IDs
 
-  // Exclude Magic Areas and Linus Brain entities
+  // Exclude Linus Brain entities
   const entity_ids = all_entity_ids.filter(id => {
     const entity = Helper.entities[id];
-    return entity && entity.platform !== MAGIC_AREAS_DOMAIN && entity.platform !== LINUS_BRAIN_DOMAIN;
+    return entity && entity.platform !== LINUS_BRAIN_DOMAIN;
   });
 
   // If no entities found, don't create chip

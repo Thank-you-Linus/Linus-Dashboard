@@ -1,6 +1,6 @@
 import { cards } from "../types/strategy/cards";
 import { Helper } from "../Helper";
-import { getDomainTranslationKey, getMAEntity } from "../utils";
+import { getDomainTranslationKey } from "../utils";
 import { TemplateCardConfig } from "../types/lovelace-mushroom/cards/template-card-config";
 
 import { AbstractCard } from "./AbstractCard";
@@ -26,8 +26,7 @@ class AggregateCard extends AbstractCard {
     area_slug,
     tap_action
   }: cards.AggregateCardOptions): TemplateCardConfig {
-    const magicEntity = getMAEntity(magic_device_id, domain, device_class);
-    const entity_id = magicEntity?.entity_id ? [magicEntity?.entity_id] : Helper.getEntityIds({ domain, device_class, area_slug });
+    const entity_id = Helper.getEntityIds({ domain, device_class, area_slug });
 
 
     const icon = Helper.getIcon(domain, device_class, entity_id);

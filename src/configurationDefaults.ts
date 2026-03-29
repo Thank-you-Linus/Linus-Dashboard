@@ -9,8 +9,6 @@ import { ToggleSceneChip } from "./chips/ToggleSceneChip";
 import { SceneSettings } from "./popups/SceneSettingsPopup";
 import { UNDISCLOSED } from "./variables";
 
-import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
-
 /**
  * Default configuration for the mushroom strategy.
  */
@@ -48,7 +46,7 @@ export const configurationDefaults: StrategyDefaults = {
     },
     light: {
       showControls: true,
-      extraControls: (device: MagicAreaRegistryEntry) => {
+      extraControls: (device: any) => {
         const { adaptive_lighting_range, minimum_brightness, maximum_brightness, maximum_lighting_level } = device?.entities ?? {}
         const chips = [];
 
@@ -79,7 +77,7 @@ export const configurationDefaults: StrategyDefaults = {
       showControls: true,
       hidden: false,
       order: 2,
-      extraControls: (device: MagicAreaRegistryEntry) => {
+      extraControls: (device: any) => {
         const chips = [];
         // Add control switch if available
         if (device?.entities.climate_control?.entity_id) {
@@ -92,7 +90,7 @@ export const configurationDefaults: StrategyDefaults = {
       showControls: true,
       hidden: false,
       order: 3,
-      extraControls: (device: MagicAreaRegistryEntry) => {
+      extraControls: (device: any) => {
         const chips = [];
         // Add control switch if available
         if (device?.entities.media_player_control?.entity_id) {
@@ -108,7 +106,7 @@ export const configurationDefaults: StrategyDefaults = {
     },
     scene: {
       showControls: false,
-      extraControls: (device: MagicAreaRegistryEntry) => {
+      extraControls: (device: any) => {
         const chips = [];
         if (device?.entities.all_lights?.entity_id) {
           chips.push(new ToggleSceneChip(device).getChip());

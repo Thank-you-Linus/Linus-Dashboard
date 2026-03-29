@@ -94,7 +94,6 @@ class ControllerCard {
         // Always use AggregateChip when showControls is true
         const chipOptions = {
           show_content: true,
-          magic_device_id: this.#area_slug,
           domain: this.#domain,
           ...this.#defaultConfig.controlChipOptions,
         };

@@ -15,13 +15,10 @@ import { AbstractPopup } from "./AbstractPopup";
  */
 class AggregateListPopup extends AbstractPopup {
 
-  getDefaultConfig({ domain, device_class, area_slug }: { domain: string, area_slug: string; device_class: string }): PopupActionConfig {
-
-    const device = Helper.magicAreasDevices[area_slug ?? "global"]
-    const magicEntity = Helper.getEntityState(device?.entities[`aggregate_${device_class}`]?.entity_id)
+  getDefaultConfig({ domain, device_class, area_slug: _area_slug }: { domain: string, area_slug: string; device_class: string }): PopupActionConfig {
 
     const groupedCards: (TitleCardConfig | StackCardConfig)[] = [];
-    const is_binary_sensor = ["motion", "window", "door", "health"].includes(device_class)
+    const _is_binary_sensor = ["motion", "window", "door", "health"].includes(device_class)
 
     for (const floor of Helper.orderedFloors) {
       // Skip excluded floors
@@ -46,20 +43,6 @@ class AggregateListPopup extends AbstractPopup {
       for (const [i, area] of floor.areas_slug.map(area_slug => Helper.areas[area_slug]).entries()) {
         // Skip excluded areas
         if (Helper.isAreaExcluded(area?.area_id)) continue;
-
-        const _entity = Helper.magicAreasDevices[area.slug]?.entities[`aggregate_${device_class}`]
-
-        // Get a card for the area.
-        // if (entity && !Helper.strategyOptions.areas[area.area_slug]?.hidden) {
-
-        //   areaCards.push({
-        //     type: "tile",
-        //     entity: entity?.entity_id,
-        //     primary: getAreaName(area),
-        //     state_content: is_binary_sensor ? 'last-changed' : 'state',
-        //     color: is_binary_sensor ? 'red' : false,
-        //   });
-        // }
 
         // Horizontally group every two area cards if all cards are created.
         if (i === floor.areas_slug.length - 1) {
@@ -86,25 +69,6 @@ class AggregateListPopup extends AbstractPopup {
           "content": {
             "type": "vertical-stack",
             "cards": [
-              ...(magicEntity ? [
-                {
-                  type: "custom:mushroom-entity-card",
-                  entity: magicEntity.entity_id,
-                  color: is_binary_sensor ? 'red' : false,
-                  secondary_info: is_binary_sensor ? 'last-changed' : 'state',
-                },
-                {
-                  "type": "history-graph",
-                  "hours_to_show": 10,
-                  "show_names": false,
-                  "entities": [
-                    {
-                      "entity": magicEntity.entity_id,
-                      "name": " "
-                    }
-                  ]
-                },
-              ] : []),
               ...groupedCards,
             ]
           }

@@ -96,3 +96,5 @@ todo
 
 # SAPIENS - ignore symlink to global config
 .sapiens/core
+.claude/*
+.opencode/*

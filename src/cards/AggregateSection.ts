@@ -1,6 +1,6 @@
 import { StackCardConfig } from "../types/homeassistant/lovelace/cards/types";
 import { LovelaceCardConfig } from "../types/homeassistant/data/lovelace";
-import { getAggregateEntity, getAreaName, getFloorName, getStateContent } from "../utils";
+import { getAreaName, getFloorName, getStateContent } from "../utils";
 import { Helper } from "../Helper";
 import { TemplateCardConfig } from "../types/lovelace-mushroom/cards/template-card-config";
 import { UNDISCLOSED } from "../variables";
@@ -62,16 +62,12 @@ class AggregateSection {
 
     const cards: LovelaceCardConfig[] = [];
 
-    const globalEntities = getAggregateEntity(Helper.magicAreasDevices["global"], domains, deviceClasses)[0] ?? false
+    // No global aggregate entity available without Magic Areas
+    const globalEntityId = false;
 
-    if (globalEntities) {
-      cards.push({
-        type: "tile",
-        entity: globalEntities.entity_id,
-        state_content: getStateContent(globalEntities.entity_id),
-        color: globalEntities.entity_id.startsWith('binary_sensor.') ? 'red' : false,
-        icon_tap_action: this.#domain === "light" ? "more-info" : "toggle",
-      });
+    if (globalEntityId) {
+      // This block is intentionally unreachable now (Magic Areas removed).
+      // Kept as a placeholder for potential future global aggregate support.
     }
 
 
@@ -102,7 +98,13 @@ class AggregateSection {
         if (Helper.strategyOptions.areas[area?.slug]?.hidden) continue
 
         if (area.slug !== UNDISCLOSED) {
-          const areaEntities = getAggregateEntity(Helper.magicAreasDevices[area.slug], domains, deviceClasses).map((e: { entity_id: string }) => e.entity_id).filter(Boolean)
+          // Get entities for this area/domain combination (no Magic Areas needed)
+          const deviceClassArray: (string | undefined)[] = deviceClasses ? (Array.isArray(deviceClasses) ? deviceClasses : [deviceClasses]) : [undefined];
+          const areaEntities = domains.flatMap(domain =>
+            deviceClassArray.flatMap((device_class: string | undefined) =>
+              Helper.getEntityIds({ domain, device_class, area_slug: area.slug })
+            )
+          ).filter(Boolean);
 
           for (const areaEntity of areaEntities) {
             areaCards.push({

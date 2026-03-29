@@ -1,15 +1,11 @@
 import { Helper } from "./Helper";
-import { EntityRegistryEntry } from "./types/homeassistant/data/entity_registry";
 import { generic } from "./types/strategy/generic";
 import { ActionConfig, LovelaceCardConfig } from "./types/homeassistant/data/lovelace";
 import {
     DEVICE_CLASSES,
     AGGREGATE_DOMAINS,
-    LIGHT_DOMAIN,
-    GROUP_DOMAINS,
     UNDISCLOSED,
     AREA_CARDS_DOMAINS,
-    LIGHT_GROUPS
 } from "./variables";
 import { LovelaceChipConfig } from "./types/lovelace-mushroom/utils/lovelace/chip/types";
 import { chips } from "./types/strategy/chips";
@@ -29,7 +25,6 @@ import { PerformanceProfiler } from "./utils/performanceProfiler";
 import StrategyEntity = generic.StrategyEntity;
 import StrategyArea = generic.StrategyArea;
 import StrategyFloor = generic.StrategyFloor;
-import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
 
 /**
  * Groups the elements of an array based on a provided function
@@ -67,15 +62,6 @@ export const slugify = memoize(function slugify(text: string | null, separator =
 }, { name: 'slugify', maxSize: 200 });
 
 /**
- * Get the slug for a magic area device.
- * @param {MagicAreaRegistryEntry} device - The magic area device.
- * @returns {string} - The slug for the device.
- */
-export const getMagicAreaSlug = memoize(function getMagicAreaSlug(device: MagicAreaRegistryEntry): string {
-    return slugify(device.name ?? "".replace('-', '_'));
-}, { name: 'getMagicAreaSlug', maxSize: 100 });
-
-/**
  * Get the state content for an entity.
  * @param {string} entity_id - The entity ID.
  * @returns {string} - The state content.
@@ -96,47 +82,6 @@ export function navigateTo(path: string): ActionConfig {
     }
 }
 
-
-/**
- * Retourne les entités agrégées pour un device magic area, un ou plusieurs domaines et device_classes.
- * @param {any} device - Le device magic area.
- * @param {string | string[]} domains - Un ou plusieurs domaines.
- * @param {string | string[]} [device_classes] - Un ou plusieurs device_classes.
- * @returns {any[]} - Les entités agrégées trouvées.
- */
-export function getAggregateEntity(device: any, domains: string | string[], device_classes?: string | string[]): any[] {
-    if (!device || !device.entities) return [];
-    const domainsArr = Array.isArray(domains) ? domains : [domains];
-    const deviceClassesArr = device_classes ? (Array.isArray(device_classes) ? device_classes : [device_classes]) : [undefined];
-    const aggregateEntities: any[] = [];
-    for (const domain of domainsArr) {
-        for (const device_class of deviceClassesArr) {
-            if (device_class) {
-                const key = `aggregate_${device_class}`;
-                if (device.entities[key]) aggregateEntities.push(device.entities[key]);
-            } else if (device.entities[domain]) {
-                aggregateEntities.push(device.entities[domain]);
-            }
-        }
-    }
-    return aggregateEntities.filter(Boolean);
-}
-
-/**
- * Get a magic area entity.
- * @param {string} magic_device_id - The magic device ID.
- * @param {string} domain - The domain.
- * @param {string} [device_class] - The device class.
- * @returns {EntityRegistryEntry | undefined} - The magic area entity.
- */
-export const getMAEntity = memoize(function getMAEntity(magic_device_id: string, domain: string, device_class?: string): EntityRegistryEntry | undefined {
-    const magicAreaDevice = Helper.magicAreasDevices[magic_device_id];
-
-    if (domain === LIGHT_DOMAIN) return magicAreaDevice?.entities?.[''] ?? magicAreaDevice?.entities?.['all_lights']
-    if (GROUP_DOMAINS.includes(domain)) return magicAreaDevice?.entities?.[`${domain}_group${device_class ? `_${device_class}` : ''}` as 'cover_group']
-    if (device_class && [...DEVICE_CLASSES.binary_sensor, ...DEVICE_CLASSES.sensor].includes(device_class)) return magicAreaDevice?.entities?.[`aggregate_${device_class}` as 'aggregate_motion']
-    return magicAreaDevice?.entities?.[domain] ?? undefined
-}, { name: 'getMAEntity', maxSize: 300 }) as (magic_device_id: string, domain: string, device_class?: string) => EntityRegistryEntry | undefined;
 
 /**
  * Get the domain of an entity.
@@ -260,18 +205,6 @@ function shouldCreateItem(params: {
  * Resolve Magic Areas entity for domain/device_class if available.
  *
  * @param magic_device_id - The magic device ID
- * @param domain - The domain
- * @param device_class - Optional device class
- * @returns Magic Areas entity or undefined
- */
-function resolveMagicAreasEntity(
-    magic_device_id: string,
-    domain: string,
-    device_class?: string
-): EntityRegistryEntry | undefined {
-    return getMAEntity(magic_device_id, domain, device_class);
-}
-
 /**
  * Create a single chip or card for a domain/device_class.
  * Handles dynamic import, fallback creation, and error handling.
@@ -282,13 +215,11 @@ function resolveMagicAreasEntity(
 async function createSingleItem(params: {
     domain: string;
     device_class?: string;
-    magic_device_id: string;
     area_slug?: string | string[];
     itemOptions?: any;
-    magicAreasEntity?: EntityRegistryEntry;
     isChip: boolean;
 }): Promise<LovelaceChipConfig | LovelaceCardConfig | null> {
-    const { domain, device_class, magic_device_id, area_slug, itemOptions, magicAreasEntity, isChip } = params;
+    const { domain, device_class, area_slug, itemOptions, isChip } = params;
 
     const className = Helper.sanitizeClassName(device_class ?? domain + (isChip ? "Chip" : "Card"));
 
@@ -296,8 +227,7 @@ async function createSingleItem(params: {
         // Try to import specific chip/card class
         const itemModule = await import(`./${isChip ? "chips" : "cards"}/${className}`);
         const item = new itemModule[className](
-            { ...itemOptions, device_class, magic_device_id, area_slug },
-            magicAreasEntity
+            { ...itemOptions, device_class, area_slug }
         );
         return isChip ? item.getChip() : item.getCard();
     } catch {
@@ -311,7 +241,6 @@ async function createSingleItem(params: {
                 domain,
                 device_class,
                 area_slug,
-                magic_device_id
             });
             return item.getChip();
         } else {
@@ -320,7 +249,6 @@ async function createSingleItem(params: {
                 domain,
                 device_class,
                 area_slug,
-                magic_device_id,
                 tap_action: navigateTo(domain === "binary_sensor" || domain === "sensor" ? device_class ?? domain : domain)
             });
             return item.getCard();
@@ -332,7 +260,7 @@ async function createSingleItem(params: {
  * Create items (chips or cards) from a list.
  * @param {string[]} itemList - The list of items.
  * @param {Partial<chips.AggregateChipOptions> | Partial<generic.StrategyEntity>} [itemOptions] - The item options.
- * @param {string} [magic_device_id="global"] - The magic device ID.
+ * @param {string} [area_slug_or_global="global"] - The area slug or "global".
  * @param {string | string[]} [area_slug] - The area slug.
  * @param {boolean} isChip - Flag to determine if creating chips or cards.
  * @returns {Promise<LovelaceChipConfig[] | LovelaceCardConfig[]>} - The created items.
@@ -340,13 +268,13 @@ async function createSingleItem(params: {
 async function createItemsFromList(
     itemList: string[],
     itemOptions?: Partial<chips.AggregateChipOptions> | Partial<generic.StrategyEntity>,
-    magic_device_id = "global",
+    area_slug_or_global = "global",
     area_slug?: string | string[],
     isChip = true
 ): Promise<LovelaceChipConfig[] | LovelaceCardConfig[]> {
     const items: (LovelaceChipConfig | LovelaceCardConfig)[] = [];
     const area_slugs = area_slug ? Array.isArray(area_slug) ? area_slug : [area_slug] : [];
-    const domains = magic_device_id === "global"
+    const domains = area_slug_or_global === "global"
         ? Object.keys(Helper.domains)
         : area_slugs.flatMap(area_slug => Object.keys(Helper.areas[area_slug]?.domains ?? {}));
 
@@ -355,22 +283,17 @@ async function createItemsFromList(
         const { domain, device_class } = parseDomainTag(itemType);
 
         // Validate if item should be created (eliminates duplicate code)
-        if (!shouldCreateItem({ domain, device_class, magic_device_id, area_slugs, domains })) {
+        if (!shouldCreateItem({ domain, device_class, magic_device_id: area_slug_or_global, area_slugs, domains })) {
             continue;
         }
-
-        // Resolve Magic Areas entity if available
-        const magicAreasEntity = resolveMagicAreasEntity(magic_device_id, domain, device_class);
 
         // Create the item
         try {
             const item = await createSingleItem({
                 domain,
                 device_class,
-                magic_device_id,
                 area_slug,
                 itemOptions,
-                magicAreasEntity,
                 isChip
             });
 
@@ -388,34 +311,34 @@ async function createItemsFromList(
  * Create chips from a list.
  * @param {string[]} chipsList - The list of chips.
  * @param {Partial<chips.AggregateChipOptions>} [chipOptions] - The chip options.
- * @param {string} [magic_device_id="global"] - The magic device ID.
+ * @param {string} [area_slug_or_global="global"] - The area slug or "global".
  * @param {string | string[]} [area_slug] - The area slug.
  * @returns {Promise<LovelaceChipConfig[]>} - The created chips.
  */
 export async function createChipsFromList(
     chipsList: string[],
     chipOptions?: Partial<chips.AggregateChipOptions>,
-    magic_device_id = "global",
+    area_slug_or_global = "global",
     area_slug?: string | string[]
 ): Promise<LovelaceChipConfig[]> {
-    return createItemsFromList(chipsList, chipOptions, magic_device_id, area_slug, true) as Promise<LovelaceChipConfig[]>;
+    return createItemsFromList(chipsList, chipOptions, area_slug_or_global, area_slug, true) as Promise<LovelaceChipConfig[]>;
 }
 
 /**
  * Create cards from a list.
  * @param {string[]} cardsList - The list of cards.
  * @param {Partial<generic.StrategyEntity>} [cardOptions] - The card options.
- * @param {string} [magic_device_id="global"] - The magic device ID.
+ * @param {string} [area_slug_or_global="global"] - The area slug or "global".
  * @param {string | string[]} [area_slug] - The area slug.
  * @returns {Promise<LovelaceCardConfig[]>} - The created cards.
  */
 export async function createCardsFromList(
     cardsList: string[],
     cardOptions?: Partial<generic.StrategyEntity>,
-    magic_device_id = "global",
+    area_slug_or_global = "global",
     area_slug?: string | string[]
 ): Promise<LovelaceCardConfig[]> {
-    return createItemsFromList(cardsList, cardOptions, magic_device_id, area_slug, false) as Promise<LovelaceCardConfig[]>;
+    return createItemsFromList(cardsList, cardOptions, area_slug_or_global, area_slug, false) as Promise<LovelaceCardConfig[]>;
 }
 
 /**
@@ -777,29 +700,12 @@ export const getGlobalEntitiesExceptUndisclosed = memoize(function getGlobalEnti
 
 /**
  * Add light groups to entities.
- * @param {generic.StrategyArea} area - The area.
+ * Previously used Magic Areas light groups; now returns entities unchanged.
+ * @param {generic.StrategyArea} area - The area (unused, kept for API compatibility).
  * @param {generic.StrategyEntity[]} entities - The entities.
- * @returns {generic.StrategyEntity[]} - The entities with light groups added.
+ * @returns {generic.StrategyEntity[]} - The entities unchanged.
  */
 export function addLightGroupsToEntities(area: generic.StrategyArea, entities: generic.StrategyEntity[]) {
-    const lightGroups = LIGHT_GROUPS
-        .map(type => getMAEntity(area.slug, type))
-        .filter(Boolean);
-
-    for (const lightGroup of lightGroups) {
-        if (!lightGroup) continue;
-        const lightGroupState = Helper.getEntityState(lightGroup.entity_id);
-        if (lightGroupState.attributes.entity_id?.length) {
-            entities.unshift(lightGroup as generic.StrategyEntity);
-            lightGroupState.attributes.entity_id.forEach((entity_id: string) => {
-                const index = entities.findIndex(entity => entity.entity_id === entity_id);
-                if (index !== -1) {
-                    entities.splice(index, 1);
-                }
-            });
-        }
-    }
-
     return entities;
 }
 

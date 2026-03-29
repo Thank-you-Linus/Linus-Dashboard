@@ -1,5 +1,3 @@
-export const MAGIC_AREAS_DOMAIN = "magic_areas";
-export const MAGIC_AREAS_NAME = "Magic Areas";
 export const LINUS_BRAIN_DOMAIN = "linus_brain";
 
 export const UNAVAILABLE = "unavailable";

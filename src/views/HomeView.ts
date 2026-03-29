@@ -155,17 +155,6 @@ class HomeView {
       Helper.logError("An error occurred while creating the Linus Brain chip!", e);
     }
 
-    // MagicAreas chip.
-    try {
-      const magicAreasChip = await ChipFactory.createChip("MagicAreasChip", {});
-      // Only add if chip has icon (checks if MagicAreas is installed)
-      if (magicAreasChip && (magicAreasChip as any).icon && (magicAreasChip as any).icon !== "") {
-        chips.push(magicAreasChip);
-      }
-    } catch (e) {
-      Helper.logError("An error occurred while creating the Magic Areas chip!", e);
-    }
-
     // Refresh chip - allows manual refresh of registries
     const refreshChip = new RefreshChip();
     chips.push(refreshChip.getChip());

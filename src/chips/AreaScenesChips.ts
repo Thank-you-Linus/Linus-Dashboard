@@ -2,11 +2,10 @@
 import { Helper } from "../Helper";
 import { generic } from "../types/strategy/generic";
 
-import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
 import StrategyArea = generic.StrategyArea;
 
 import { LovelaceChipConfig, TemplateChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
-import { MAGIC_AREAS_DOMAIN, TOD_ORDER } from "../variables";
+import { TOD_ORDER } from "../variables";
 import { slugify } from "../utils";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
@@ -28,26 +27,11 @@ class AreaScenesChips {
    * @type {ConditionalChipConfig}
    *
    */
-  getDefaultConfig(device: MagicAreaRegistryEntry, area: StrategyArea): TemplateChipConfig[] {
+  getDefaultConfig(device: any, area: StrategyArea): TemplateChipConfig[] {
 
     const selects = TOD_ORDER.map(tod => Helper.getEntityState(device?.entities[`scene_${tod as 'morning'}`]?.entity_id)).filter(Boolean)
 
     const chips = [] as TemplateChipConfig[]
-
-    if (selects.find(scene => scene?.state == "Adaptive lighting")) {
-      chips.push({
-        type: "template",
-        icon: "mdi:theme-light-dark",
-        content: "AD",
-        tap_action: {
-          action: "call-service",
-          service: `${MAGIC_AREAS_DOMAIN}.area_light_adapt`,
-          data: {
-            area: slugify(device.name),
-          }
-        },
-      })
-    }
 
     selects.forEach((scene, index) => {
       if (scene?.state === "Scène instantanée") {
@@ -96,7 +80,7 @@ class AreaScenesChips {
    *
    * @param {chips.TemplateChipOptions} options The chip options.
    */
-  constructor(device: MagicAreaRegistryEntry, area: StrategyArea) {
+  constructor(device: any, area: StrategyArea) {
 
     this.config = this.getDefaultConfig(device, area);
 

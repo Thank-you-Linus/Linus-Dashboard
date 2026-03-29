@@ -99,8 +99,12 @@ jobs:
     runs-on: "ubuntu-latest"
     needs: [python-lint, typescript-check, build-and-test]
     if: always()
+    permissions:
+      pull-requests: write
+      issues: write
     steps:
       - name: "Post results comment"
+        continue-on-error: true
         uses: actions/github-script@v8
         with:
           script: |

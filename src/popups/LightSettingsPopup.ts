@@ -1,13 +1,9 @@
 import { Helper } from "../Helper";
-import { generic } from "../types/strategy/generic";
-
-import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
-
 import { PopupActionConfig } from "../types/homeassistant/data/lovelace";
 import { slugify } from "../utils";
-import { MAGIC_AREAS_DOMAIN } from "../variables";
 
 import { AbstractPopup } from "./AbstractPopup";
+
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**
@@ -17,7 +13,7 @@ import { AbstractPopup } from "./AbstractPopup";
  */
 class LightSettings extends AbstractPopup {
 
-  getDefaultConfig(device: MagicAreaRegistryEntry): PopupActionConfig {
+  getDefaultConfig(device: any): PopupActionConfig {
 
     const { aggregate_illuminance, adaptive_lighting_range, minimum_brightness, maximum_brightness, maximum_lighting_level } = device?.entities ?? {}
 
@@ -95,11 +91,7 @@ class LightSettings extends AbstractPopup {
                     icon: "mdi:pencil",
                     layout: "vertical",
                     tap_action: {
-                      action: "call-service",
-                      service: `${MAGIC_AREAS_DOMAIN}.area_lux_for_lighting_max`,
-                      data: {
-                        area: device?.name
-                      }
+                      action: "none",
                     },
                   },
                 ],
@@ -204,7 +196,7 @@ class LightSettings extends AbstractPopup {
    *
    * @param {PopupActionConfig} options The chip options.
    */
-  constructor(device: MagicAreaRegistryEntry) {
+  constructor(device: any) {
     super();
 
     const defaultConfig = this.getDefaultConfig(device)

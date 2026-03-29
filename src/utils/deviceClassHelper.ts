@@ -87,7 +87,7 @@ export function createDeviceClassChips(
       scope: contextType,
       ...(contextType === "floor"
         ? { floor_id: contextData.floor_id }
-        : { area_slug: contextData.area_slug, magic_device_id: contextData.magic_device_id }
+        : { area_slug: contextData.area_slug }
       )
     }).getChip());
   } else {
@@ -100,7 +100,7 @@ export function createDeviceClassChips(
           scope: contextType,
           ...(contextType === "floor" 
             ? { floor_id: contextData.floor_id } 
-            : { area_slug: contextData.area_slug, magic_device_id: contextData.magic_device_id }
+            : { area_slug: contextData.area_slug }
           )
         }).getChip());
       }
@@ -139,8 +139,7 @@ export function createStandardExtraControls(
     } else if (area) {
       // Area context: create device_class-specific chips
       chips.push(...createDeviceClassChips(domain, { 
-        area_slug: device.slug,
-        magic_device_id: area.magicAreaDevice?.id 
+        area_slug: device.slug
       }, "area"));
       
       // Add control chip if specified (e.g., switch_control, media_player_control)
@@ -150,7 +149,6 @@ export function createStandardExtraControls(
           const { ControlChip } = require("../chips/ControlChip");
           chips.push(new ControlChip({
             area_slug: device.slug,
-            magic_device_id: area.magicAreaDevice?.id,
           }).getChip());
         }
       }

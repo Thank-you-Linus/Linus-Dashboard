@@ -32,8 +32,6 @@ export interface AggregateChipOptions extends chips.ChipOptions {
   device_class?: string | null;
   /** Optional floor ID for floor scope */
   floor_id?: string | null;
-  /** DEPRECATED: Use area_slug from ChipOptions base */
-  magic_device_id?: string;
   /** Tap action mode: "popup" (default) opens popup on tap, "navigation" navigates to view on tap */
   tapActionMode?: "popup" | "navigation";
 }
@@ -81,11 +79,6 @@ class AggregateChip extends AbstractChip {
   constructor(options: AggregateChipOptions) {
     super();
 
-    // BACKWARD COMPATIBILITY: Support old magic_device_id parameter
-    if (options.magic_device_id && !options.area_slug) {
-      options.area_slug = options.magic_device_id;
-    }
-
     // AUTO-DETECT DEFAULTS based on domain
     const defaults = this.getDefaultsForDomain(options.domain);
 
@@ -96,7 +89,7 @@ class AggregateChip extends AbstractChip {
     const tapActionMode = options.tapActionMode ?? "popup";
 
     // Apply defaults for missing parameters
-    const config: Required<Omit<AggregateChipOptions, 'features' | 'device_class' | 'floor_id' | 'magic_device_id' | 'tapActionMode' | keyof chips.ChipOptions>> & AggregateChipOptions = {
+    const config: Required<Omit<AggregateChipOptions, 'features' | 'device_class' | 'floor_id' | 'tapActionMode' | keyof chips.ChipOptions>> & AggregateChipOptions = {
       ...options,
       scope,
       tapActionMode,

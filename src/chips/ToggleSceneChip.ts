@@ -1,56 +1,41 @@
-import { generic } from "../types/strategy/generic";
-
-import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
-
 import { TemplateChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
-import { MAGIC_AREAS_DOMAIN } from "../variables";
 
 import { AbstractChip } from "./AbstractChip";
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**
- * Climate Chip class.
+ * Toggle Scene Chip class.
  *
- * Used to create a chip to indicate climate level.
+ * Previously used Magic Areas area_scene_toggle service.
+ * Magic Areas support has been removed; this chip is now a no-op stub.
  */
 class ToggleSceneChip extends AbstractChip {
   /**
    * Default configuration of the chip.
    *
-   * @type {ConditionalChipConfig}
+   * @type {TemplateChipConfig}
    *
    */
-  getDefaultConfig(device: MagicAreaRegistryEntry): TemplateChipConfig {
+  getDefaultConfig(_device: any): TemplateChipConfig {
     return {
       type: "template",
-      entity: device?.entities.light_control?.entity_id,
       icon: "mdi:recycle-variant",
-      // icon_color: "{% if is_state(config.entity, 'on') %}green{% else %}red{% endif %}",
-      tap_action: {
-        action: "call-service",
-        service: `${MAGIC_AREAS_DOMAIN}.area_scene_toggle`,
-        data: {
-          area: device?.name,
-        }
-      },
-      hold_action: {
-        action: "more-info"
-      }
-    }
+      tap_action: { action: "none" },
+      hold_action: { action: "more-info" }
+    };
   }
 
   /**
    * Class Constructor.
    *
-   * @param {chips.TemplateChipOptions} options The chip options.
+   * @param {any} device The device options (unused, kept for backward compatibility).
    */
-  constructor(device: MagicAreaRegistryEntry) {
+  constructor(device: any) {
     super();
 
-    const defaultConfig = this.getDefaultConfig(device)
+    const defaultConfig = this.getDefaultConfig(device);
 
     this.config = Object.assign(this.config, defaultConfig);
-
   }
 }
 

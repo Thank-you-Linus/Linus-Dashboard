@@ -179,6 +179,20 @@ class Helper {
   static #linus_dashboard_config: LinusDashboardConfig;
 
   /**
+   * Per-domain active-state configuration used by getIcon() Path B.
+   * Defines which states count as "active" (show on-icon) for aggregate chips.
+   * Kept as a static field so it is allocated once, not on every getIcon() call.
+   */
+  static readonly #DOMAIN_ACTIVE_STATES: Record<string, { activeStates: string[]; on: string; off: string }> = {
+    light:        { activeStates: ['on'],                                                       on: "mdi:lightbulb-on",   off: "mdi:lightbulb-off"      },
+    switch:       { activeStates: ['on'],                                                       on: "mdi:toggle-switch",  off: "mdi:toggle-switch-off"   },
+    fan:          { activeStates: ['on'],                                                       on: "mdi:fan",            off: "mdi:fan-off"             },
+    media_player: { activeStates: ['playing', 'paused', 'on'],                                 on: "mdi:cast-connected", off: "mdi:cast-off"            },
+    climate:      { activeStates: ['heat', 'cool', 'auto', 'heat_cool', 'dry', 'fan_only'],    on: "mdi:thermostat",     off: "mdi:thermostat-box"      },
+    cover:        { activeStates: ['open', 'opening'],                                         on: "mdi:window-open",    off: "mdi:window-closed"       },
+  };
+
+  /**
    * Class constructor.
    *
    * This class shouldn't be instantiated directly.
@@ -1743,33 +1757,27 @@ class Helper {
       // Access the default resource entry (_) which holds domain-level icons
       const defaultResource = domainIcons._ || domainIcons;
 
-      if (defaultResource.state && states.length) {
-        let stateIconTemplate = `{% set entities = [${states}] %}{% set state = entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | map(attribute='state') | list %}`
-
-        for (const [stateKey, icon] of Object.entries(defaultResource.state)) {
-          stateIconTemplate += `{% if state | select('eq', '${stateKey}') | list | count > 0 %}${icon}{% else %}`;
-        }
-        stateIconTemplate += `${defaultResource.default || STANDARD_DOMAIN_ICONS[domain] || "mdi:help-circle"}` + "{% endif %}".repeat(Object.keys(defaultResource.state).length);
-
-        return stateIconTemplate;
-      }
-
-      // Fallback: create a simple state-aware template using STANDARD_DOMAIN_ICONS
       if (states.length) {
-        // Map of state-aware icon patterns for common domains
-        const stateAwareIcons: Record<string, { activeStates: string[]; on: string; off: string }> = {
-          light: { activeStates: ['on'], on: "mdi:lightbulb-on", off: "mdi:lightbulb-off" },
-          switch: { activeStates: ['on'], on: "mdi:toggle-switch", off: "mdi:toggle-switch-off" },
-          fan: { activeStates: ['on'], on: "mdi:fan", off: "mdi:fan-off" },
-          media_player: { activeStates: ['playing', 'on'], on: "mdi:speaker-play", off: "mdi:speaker-off" },
-          climate: { activeStates: ['heat', 'cool', 'auto', 'heat_cool', 'dry', 'fan_only'], on: "mdi:thermostat", off: "mdi:thermostat-box" },
-          cover: { activeStates: ['open', 'opening'], on: "mdi:window-open", off: "mdi:window-closed" },
-        };
+        const statePrefix = `{% set entities = [${states}] %}{% set state = entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | map(attribute='state') | list %}`;
+        const iconConfig = Helper.#DOMAIN_ACTIVE_STATES[domain];
 
-        const iconConfig = stateAwareIcons[domain];
         if (iconConfig) {
+          // Path B — known domain: show on-icon if at least one entity is in an active state.
+          // This is always preferred over Path A for known domains because the HA icon registry
+          // only maps inactive states (e.g. 'off', 'closed'), which would incorrectly fire even
+          // when other entities are still active.
           const stateChecks = iconConfig.activeStates.map(s => `'${s}'`).join(', ');
-          return `{% set entities = [${states}] %}{% set state = entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | map(attribute='state') | list %}{% if state | select('in', [${stateChecks}]) | list | count > 0 %}${iconConfig.on}{% else %}${iconConfig.off}{% endif %}`;
+          return `${statePrefix}{% if state | select('in', [${stateChecks}]) | list | count > 0 %}${iconConfig.on}{% else %}${iconConfig.off}{% endif %}`;
+        }
+
+        if (defaultResource.state) {
+          // Path A — unknown domain: fall back to HA icon registry state map.
+          let template = statePrefix;
+          for (const [stateKey, icon] of Object.entries(defaultResource.state)) {
+            template += `{% if state | select('eq', '${stateKey}') | list | count > 0 %}${icon}{% else %}`;
+          }
+          template += `${defaultResource.default || STANDARD_DOMAIN_ICONS[domain] || "mdi:help-circle"}` + "{% endif %}".repeat(Object.keys(defaultResource.state).length);
+          return template;
         }
       }
 

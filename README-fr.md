@@ -100,7 +100,7 @@ Il organise automatiquement vos appareils en sections intelligentes, regroupées
 - ⚡ **Installation en 5 Minutes**
   Branchez, utilisez et profitez. Aucun YAML requis.
 
-Que vous utilisiez déjà [hass-magic_areas](https://github.com/jseidl/hass-magic_areas) ou que vous débutiez avec Home Assistant, Linus Dashboard est la solution idéale pour une interface propre, organisée et intuitive.
+Que vous débutiez avec Home Assistant, Linus Dashboard est la solution idéale pour une interface propre, organisée et intuitive.
 
 > **Envie de découvrir tout le potentiel de l'automatisation et de la personnalisation de votre maison connectée ?**
 > Explorez [thankyou-linus.com](https://thankyou-linus.com/) pour en savoir plus sur Linus et bien plus encore.
@@ -265,9 +265,6 @@ Avec Home Assistant 2025.1+, vous pouvez glisser-déposer les pièces directemen
 **Q: Ai-je besoin de Linus Brain ?**
 **Non** - Linus Dashboard fonctionne de manière autonome. Linus Brain est une mise à niveau optionnelle pour la détection d'activité par IA et l'automatisation avancée.
 [Comparer les fonctionnalités →](https://thankyou-linus.com/)
-
-**Q: Est-ce que Linus fonctionne avec Magic Areas ?**
-**Oui !** Linus détecte automatiquement les entités Magic Areas et les intègre magnifiquement. Que vous utilisiez Magic Areas ou simplement les zones natives de HA, Linus s'adapte automatiquement.
 
 ### Dépannage
 

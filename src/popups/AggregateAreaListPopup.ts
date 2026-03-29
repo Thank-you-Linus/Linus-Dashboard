@@ -17,20 +17,15 @@ class AggregateAreaListPopup extends AbstractPopup {
 
   getDefaultConfig({ domain, device_class, area_slug }: { area_slug?: string; device_class: string; domain: string }): PopupActionConfig {
 
-    const device = Helper.magicAreasDevices[area_slug ?? "global"]
-    const magicEntity = Helper.getEntityState(device?.entities[`aggregate_${device_class}`]?.entity_id)
-
     const groupedCards: (TitleCardConfig | StackCardConfig)[] = [];
     const is_binary_sensor = ["motion", "window", "door", "health"].includes(device_class)
 
-
     const areaCards: (TemplateCardConfig)[] = [];
 
-    for (const [i, entity_id] of magicEntity?.attributes.entity_id?.entries() ?? []) {
+    const entityIds = Helper.getEntityIds({ area_slug: area_slug ?? "global", domain, device_class });
 
-      // Get a card for the area.
+    for (const [i, entity_id] of entityIds.entries()) {
       if (entity_id) {
-
         areaCards.push({
           type: "tile",
           entity: entity_id,
@@ -39,8 +34,7 @@ class AggregateAreaListPopup extends AbstractPopup {
         });
       }
 
-      // Horizontally group every two area cards if all cards are created.
-      if (i === magicEntity.attributes.entity_id.length - 1) {
+      if (i === entityIds.length - 1) {
         for (let i = 0; i < areaCards.length; i += 2) {
           groupedCards.push({
             type: "horizontal-stack",
@@ -48,7 +42,6 @@ class AggregateAreaListPopup extends AbstractPopup {
           } as StackCardConfig);
         }
       }
-
     }
 
     return {
@@ -60,25 +53,6 @@ class AggregateAreaListPopup extends AbstractPopup {
           "content": {
             "type": "vertical-stack",
             "cards": [
-              ...(magicEntity ? [
-                {
-                  type: "custom:mushroom-entity-card",
-                  entity: magicEntity.entity_id,
-                  color: is_binary_sensor ? 'red' : false,
-                  secondary_info: is_binary_sensor ? 'last-changed' : 'state',
-                },
-                {
-                  "type": "history-graph",
-                  "hours_to_show": 10,
-                  "show_names": false,
-                  "entities": [
-                    {
-                      "entity": magicEntity.entity_id,
-                      "name": " "
-                    }
-                  ]
-                }
-              ] : []),
               ...groupedCards,
             ]
           }

@@ -14,14 +14,13 @@ import type { FloorRegistryEntry } from "../types/homeassistant/data/floor_regis
 import { generic } from "../types/strategy/generic";
 import { LinusDashboardConfig } from "../types/homeassistant/data/linus_dashboard";
 import { createDomainTag } from "../utils/domainTagHelper";
-import { getMagicAreaSlug, groupEntitiesByDomain, slugify } from "../utils";
-import { UNDISCLOSED, MAGIC_AREAS_NAME } from "../variables";
+import { groupEntitiesByDomain, slugify } from "../utils";
+import { UNDISCLOSED } from "../variables";
 
 import StrategyEntity = generic.StrategyEntity;
 import StrategyArea = generic.StrategyArea;
 import StrategyFloor = generic.StrategyFloor;
 import StrategyDevice = generic.StrategyDevice;
-import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
 
 /**
  * Extended DashBoardInfo with loaded registries
@@ -51,7 +50,6 @@ export class RegistryManager {
   private static areas: Record<string, StrategyArea> = {};
   private static floors: Record<string, StrategyFloor> = {};
   private static hassStates: HassEntities;
-  private static magicAreasDevices: Record<string, MagicAreaRegistryEntry> = {};
   private static linusDashboardConfig: LinusDashboardConfig;
   private static strategyOptions: generic.StrategyConfig;
   private static entityResolver: any;
@@ -73,7 +71,7 @@ export class RegistryManager {
     await this.#initializeAreas(info);
     await this.#initializeFloors(info);
 
-    // Initialize EntityResolver (for Linus Brain / Magic Areas hybrid support)
+    // Initialize EntityResolver
     const { EntityResolver } = await import("../utils/entityResolver");
     this.entityResolver = new EntityResolver(info.hass as any);
 
@@ -119,35 +117,6 @@ export class RegistryManager {
         { ...device, floor_id: null, entities: [] } as StrategyDevice
       ])
     );
-
-    // Initialize Magic Areas devices
-    this.magicAreasDevices = {};
-    for (const [device_id, device] of Object.entries(this.devices)) {
-      if (device.manufacturer === MAGIC_AREAS_NAME) {
-        const area_slug = getMagicAreaSlug(device as any);
-        if (area_slug) {
-          // Get all entities for this device
-          const deviceEntities = Object.values(this.entities).filter(
-            entity => entity.device_id === device_id
-          );
-
-          // Create entities map by translation_key
-          const entitiesMap = deviceEntities.reduce((acc, entity) => {
-            if (entity.translation_key) {
-              acc[entity.translation_key] = entity;
-            }
-            return acc;
-          }, {} as Record<string, EntityRegistryEntry>);
-
-          this.magicAreasDevices[area_slug] = {
-            ...device,
-            area_name: device.name || area_slug,
-            slug: area_slug,
-            entities: entitiesMap,
-          };
-        }
-      }
-    }
   }
 
   /**
@@ -296,13 +265,6 @@ export class RegistryManager {
    */
   static getHassStates(): HassEntities {
     return this.hassStates;
-  }
-
-  /**
-   * Get Magic Areas devices
-   */
-  static getMagicAreasDevices(): Record<string, MagicAreaRegistryEntry> {
-    return this.magicAreasDevices;
   }
 
   /**

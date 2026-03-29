@@ -55,25 +55,15 @@ abstract class SecurityDetailsView {
   async createViewCards(): Promise<(StackCardConfig | TitleCardConfig)[]> {
     const viewCards: LovelaceCardConfig[] = [];
 
-    const globalDevice = Helper.magicAreasDevices["global"];
+    const motionEntities = Helper.getEntityIds({ domain: "binary_sensor", device_class: "motion" });
+    const doorEntities = Helper.getEntityIds({ domain: "binary_sensor", device_class: "door" });
+    const windowEntities = Helper.getEntityIds({ domain: "binary_sensor", device_class: "window" });
 
-    if (!globalDevice) {
-      if (Helper.debug) console.warn("Security view : Global device not found");
-      return [];
-    }
-
-    const {
-      aggregate_motion,
-      aggregate_door,
-      aggregate_window,
-    } = globalDevice?.entities;
-
-
-    if (aggregate_motion?.entity_id) {
+    if (motionEntities.length > 0) {
       viewCards.push(new AggregateSection('binary_sensor', { device_class: 'motion', title: Helper.localize("component.binary_sensor.entity_component.motion.name") }).createCard())
     }
 
-    if (aggregate_door?.entity_id || aggregate_window?.entity_id) {
+    if (doorEntities.length > 0 || windowEntities.length > 0) {
       viewCards.push(new AggregateSection('binary_sensor', { device_class: ['door', 'window'], title: Helper.localize("component.binary_sensor.entity_component.opening.name") }).createCard())
     }
 

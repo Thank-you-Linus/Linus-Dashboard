@@ -152,12 +152,6 @@ export namespace generic {
     entities: string[];
   }
 
-  export interface MagicAreaRegistryEntry extends DeviceRegistryEntry {
-    entities: Record<string, EntityRegistryEntry>;
-    area_name: string;
-    slug: string;
-  }
-
   /**
    * Strategy Entity.
    *
@@ -184,7 +178,6 @@ export namespace generic {
     type?: string;
     devices: string[];
     entities: string[];
-    magicAreaDevice?: StrategyDevice;
   }
 
   /**

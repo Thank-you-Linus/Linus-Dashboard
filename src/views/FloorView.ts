@@ -7,7 +7,6 @@ import { LovelaceViewConfig } from "../types/homeassistant/data/lovelace";
 import { generic } from "../types/strategy/generic";
 import { AREA_EXPOSED_CHIPS } from "../variables";
 import { LovelaceChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
-import { AreaStateChip } from "../chips/AreaStateChip";
 import { RefreshChip } from "../chips/RefreshChip";
 import { createFloorScopeChips, processEntitiesForAreaOrFloorView } from "../utils";
 
@@ -64,11 +63,6 @@ class FloorView {
     }
 
     const chips: LovelaceChipConfig[] = [];
-    const device = Helper.magicAreasDevices[this.floor.floor_id];
-
-    if (device) {
-      chips.push(new AreaStateChip({ floor: this.floor, showContent: true }).getChip());
-    }
 
     // Domain aggregate chips with floor scope (shows only entities on this floor)
     const floorChips = createFloorScopeChips(AREA_EXPOSED_CHIPS, this.floor.floor_id, {

@@ -88,7 +88,6 @@ class AggregateView extends AbstractView {
         };
 
         // OPTIMIZATION: Single lookup instead of repeated access
-        const magic_device = Helper.magicAreasDevices["global"];
         const deviceClasses = this.#device_class
           ? [this.#device_class]
           : DEVICE_CLASSES[this.#domain as keyof typeof DEVICE_CLASSES] ?? [];
@@ -99,7 +98,7 @@ class AggregateView extends AbstractView {
         const controlChips = await Promise.all(
           deviceClasses.map(async (device_class: string) => {
             try {
-              const chip = new chipModule({ ...chipOptions, device_class }, magic_device);
+              const chip = new chipModule({ ...chipOptions, device_class }, undefined);
               return chip.getChip();
             } catch (e) {
               if (Helper.debug) {

@@ -1,12 +1,8 @@
 
 import { PopupActionConfig } from "../types/homeassistant/data/lovelace";
-import { slugify } from "../utils";
-import { MAGIC_AREAS_DOMAIN, TOD_ORDER } from "../variables";
-import { generic } from "../types/strategy/generic";
+import { TOD_ORDER } from "../variables";
 
 import { AbstractPopup } from "./AbstractPopup";
-
-import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
 
 // noinspection JSUnusedGlobalSymbols Class is dynamically imported.
 /**
@@ -16,7 +12,7 @@ import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
  */
 class SceneSettings extends AbstractPopup {
 
-  getDefaultConfig(device: MagicAreaRegistryEntry): PopupActionConfig {
+  getDefaultConfig(device: any): PopupActionConfig {
 
     const { scene_morning, scene_daytime, scene_evening, scene_night } = device?.entities ?? {}
     const selectControl = [scene_morning, scene_daytime, scene_evening, scene_night].filter(Boolean)
@@ -70,12 +66,7 @@ class SceneSettings extends AbstractPopup {
                         icon: "mdi:pencil",
                         layout: "vertical",
                         tap_action: {
-                          action: "call-service",
-                          service: `${MAGIC_AREAS_DOMAIN}.snapshot_lights_as_tod_scene`,
-                          data: {
-                            area: slugify(device.name),
-                            tod
-                          }
+                          action: "none",
                         },
                       },
                     }
@@ -125,7 +116,7 @@ class SceneSettings extends AbstractPopup {
    *
    * @param {chips.PopupActionConfig} options The chip options.
    */
-  constructor(device: MagicAreaRegistryEntry) {
+  constructor(device: any) {
     super();
 
     const defaultConfig = this.getDefaultConfig(device)

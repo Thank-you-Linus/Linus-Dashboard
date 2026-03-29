@@ -100,9 +100,7 @@ Key features:
 - ⚡ **Install in 5 Minutes**
   Just plug, play, and enjoy. No YAML required.
 
-Whether you're using hass-magic_areas or just starting with Home Assistant, Linus Dashboard is the ideal solution for a clean, organized, and intuitive interface.
-
-Whether you're using [hass-magic_areas](https://github.com/jseidl/hass-magic_areas) or just starting with Home Assistant, Linus Dashboard is the ideal solution for a clean, organized, and intuitive interface.
+Whether you're starting with Home Assistant, Linus Dashboard is the ideal solution for a clean, organized, and intuitive interface.
 
 > **Curious about what more automation and customization can do for your smart home?**
 > Explore [thankyou-linus.com](https://thankyou-linus.com/) to discover the full potential of Linus Dashboard and beyond.
@@ -302,9 +300,6 @@ With Home Assistant 2025.1+, you can drag & drop rooms directly in HA settings (
 **Q: Do I need Linus Brain?**
 **No** - Linus Dashboard works standalone. Linus Brain is an optional upgrade for advanced AI activity detection and automation.
 [Compare features →](https://thankyou-linus.com/)
-
-**Q: Does Linus work with Magic Areas?**
-**Yes!** Linus auto-detects Magic Areas entities and integrates them beautifully. Whether you're using Magic Areas or just native HA areas, Linus adapts automatically.
 
 ### Troubleshooting
 

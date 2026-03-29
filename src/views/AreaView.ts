@@ -125,29 +125,6 @@ class AreaView {
       Helper.logError("An error occurred while creating the Linus Brain area chip!", e);
     }
 
-    // MagicAreas area-specific chip.
-    try {
-      // Check if Magic Areas is configured for this area
-      const magicAreaDevice = Object.values(Helper.devices).find(
-        device => device.manufacturer === "Magic Areas" && device.area_id === this.area.slug
-      );
-      
-      if (magicAreaDevice) {
-        chips.push({
-          type: "template",
-          icon: "mdi:magic-staff",
-          icon_color: "amber",
-          content: "Magic Areas",
-          tap_action: {
-            action: "navigate",
-            navigation_path: `/config/devices/device/${magicAreaDevice.id}`
-          },
-        });
-      }
-    } catch (e) {
-      Helper.logError("An error occurred while creating the Magic Areas area chip!", e);
-    }
-
     return chips
       .filter(chip => chip && chip.type) // Filter out undefined or invalid chips
       .map(chip => ({

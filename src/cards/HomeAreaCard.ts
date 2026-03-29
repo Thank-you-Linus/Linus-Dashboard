@@ -9,6 +9,7 @@ import { getAreaName, getMAEntity } from "../utils";
 import { EntityRegistryEntry } from "../types/homeassistant/data/entity_registry";
 import { ConditionalChip } from "../chips/ConditionalChip";
 import { UNAVAILABLE, UNDISCLOSED } from "../variables";
+import { buildMediaActiveConditions } from "../utils/activityBadgeTemplates";
 import { EntityCardConfig } from "../types/lovelace-mushroom/cards/entity-card-config";
 
 import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
@@ -117,15 +118,11 @@ class HomeAreaCard {
       device_class: "occupancy",
       area_slug: this.area.slug
     });
-    const media_entities = Helper.getEntityIds({
-      domain: "media_player",
-      area_slug: this.area.slug
-    });
+    const { isMediaActive } = buildMediaActiveConditions(this.area.slug);
 
     const isOn = '| selectattr("state","eq", "on") | list | count > 0';
     const isMotion = motion_entities.length > 0 ? `[${motion_entities.map(e => `states['${e}']`).join(', ')}] ${isOn}` : 'false';
     const isOccupancy = occupancy_entities.length > 0 ? `[${occupancy_entities.map(e => `states['${e}']`).join(', ')}] ${isOn}` : 'false';
-    const isMediaPlaying = media_entities.length > 0 ? `[${media_entities.map(e => `states['${e}']`).join(', ')}] | selectattr("state","eq", "playing") | list | count > 0` : 'false';
 
     // Priority: motion > occupancy > media_player
     const badge_icon = `
@@ -133,7 +130,7 @@ class HomeAreaCard {
         mdi:motion-sensor
       {% elif ${isOccupancy} %}
         mdi:home-account
-      {% elif ${isMediaPlaying} %}
+      {% elif ${isMediaActive} %}
         mdi:play-circle
       {% else %}
         
@@ -143,7 +140,7 @@ class HomeAreaCard {
     const badge_color = `
       {% if ${isMotion} or ${isOccupancy} %}
         red
-      {% elif ${isMediaPlaying} %}
+      {% elif ${isMediaActive} %}
         blue
       {% else %}
         grey

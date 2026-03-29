@@ -3,6 +3,7 @@ import { generic } from "../types/strategy/generic";
 import { TemplateChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
 import { AREA_STATE_ICONS, DEVICE_ICONS } from "../variables";
 import { Helper } from "../Helper";
+import { buildMediaActiveConditions } from "../utils/activityBadgeTemplates";
 
 import { AbstractChip } from "./AbstractChip";
 
@@ -176,14 +177,14 @@ class AreaStateChip extends AbstractChip {
     const motion_entities = Helper.getEntityIds({ domain: "binary_sensor", device_class: "motion", area_slug: floor ? floor.areas_slug : area?.slug });
     const occupancy_entities = Helper.getEntityIds({ domain: "binary_sensor", device_class: "occupancy", area_slug: floor ? floor.areas_slug : area?.slug });
     const presence_entities = Helper.getEntityIds({ domain: "binary_sensor", device_class: "presence", area_slug: floor ? floor.areas_slug : area?.slug });
-    const media_player_entities = Helper.getEntityIds({ domain: "media_player", area_slug: floor ? floor.areas_slug : area?.slug });
 
     const isOn = '| selectattr("state","eq", "on") | list | count > 0';
     const isSomeone = `[${[...motion_entities, ...presence_entities, ...occupancy_entities]?.map(e => `states['${e}']`)}] ${isOn}`;
     const isMotion = `[${motion_entities?.map(e => `states['${e}']`)}] ${isOn}`;
     const isPresence = `[${presence_entities?.map(e => `states['${e}']`)}] ${isOn}`;
     const isOccupancy = `[${occupancy_entities?.map(e => `states['${e}']`)}] ${isOn}`;
-    const isMediaPlaying = `[${media_player_entities?.map(e => `states['${e}']`)}] | selectattr("state","eq", "playing") | list | count > 0`;
+    const areaSlugs = floor ? floor.areas_slug : area?.slug;
+    const { isMediaActive: isMediaPlaying } = buildMediaActiveConditions(areaSlugs as string | string[]);
 
     // No entity available - return undefined to skip chip creation
     if (!area_state_entity) {

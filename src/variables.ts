@@ -29,6 +29,7 @@ export const DEVICE_CLASSES = {
     "tv",
     "speaker",
     "receiver",
+    "soundbar",
   ],
   sensor: [
     "temperature",
@@ -118,6 +119,18 @@ export const DEVICE_CLASSES = {
     "window",
   ],
 };
+
+/**
+ * Media player device classes that represent screen-based players.
+ * These show the activity indicator whenever the device is on (not off/standby).
+ */
+export const MEDIA_SCREEN_CLASSES = ["tv", "receiver", "soundbar"] as const;
+
+/**
+ * States in which a screen-based media player is considered inactive.
+ * The activity badge is hidden when ALL screen players are in these states.
+ */
+export const MEDIA_SCREEN_INACTIVE_STATES = ["off", "standby", "unavailable", "unknown"] as const;
 
 export const AREA_CARDS_DOMAINS = [LIGHT_DOMAIN, "switch", "climate", "fan", "vacuum", "media_player", "camera", "cover", "lock", "scene", "plant", "binary_sensor", "sensor", "siren"];
 
@@ -317,12 +330,13 @@ export const colorMapping: Record<string, Record<string, string | Record<number,
     ])
   ),
   fan: { '_': { state: { on: "cyan" } } },
-  media_player: Object.fromEntries(
-    ['_', ...DEVICE_CLASSES.media_player].map(deviceClass => [
-      deviceClass,
-      { state: { playing: "light-blue", paused: "grey", stopped: "grey" } }
-    ])
-  ),
+  media_player: {
+    '_':      { state: { playing: "light-blue", paused: "grey" } },
+    speaker:  { state: { playing: "light-blue", paused: "grey" } },
+    tv:       { state: { on: "light-blue", playing: "light-blue", idle: "light-blue", paused: "light-blue" } },
+    receiver: { state: { on: "light-blue", playing: "light-blue", idle: "light-blue", paused: "light-blue" } },
+    soundbar: { state: { on: "light-blue", playing: "light-blue", idle: "light-blue", paused: "light-blue" } },
+  },
   switch: { '_': { state: { on: "yellow" } } },
   siren: { '_': { state: { on: "red" } } },
   binary_sensor: {

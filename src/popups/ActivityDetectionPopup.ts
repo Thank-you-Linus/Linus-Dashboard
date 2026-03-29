@@ -1,6 +1,11 @@
 import { Helper } from "../Helper";
 import { PopupActionConfig } from "../types/homeassistant/data/lovelace";
-import { getActivityIconTemplate, getActivityColorTemplateForPopup, formatMediaEntitiesForTemplate } from "../utils/activityBadgeTemplates";
+import {
+    getActivityIconTemplate,
+    getActivityColorTemplateForPopup,
+    MediaActivityConfig,
+} from "../utils/activityBadgeTemplates";
+import { MEDIA_SCREEN_CLASSES, MEDIA_SCREEN_INACTIVE_STATES } from "../variables";
 
 import { AbstractPopup } from "./AbstractPopup";
 
@@ -166,6 +171,16 @@ class ActivityDetectionPopup extends AbstractPopup {
             area_slug
         });
 
+        const screen_entities = (MEDIA_SCREEN_CLASSES as readonly string[]).flatMap(dc =>
+            Helper.getEntityIds({ domain: "media_player", device_class: dc, area_slug })
+        );
+        const audio_entities = media_player_entities.filter(e => !screen_entities.includes(e));
+
+        const mediaConfig: MediaActivityConfig = {
+            screenEntities: screen_entities,
+            audioEntities: audio_entities,
+        };
+
         // Get entities from Linus Brain presence detection group if it exists
         const presenceGroupEntity = `binary_sensor.linus_brain_presence_detection_${area_slug}`;
         const presenceGroupState = Helper.getEntityState(presenceGroupEntity);
@@ -229,16 +244,13 @@ class ActivityDetectionPopup extends AbstractPopup {
 
         // Chip 2: Activity (ONLY if Linus Brain)
         if (isLinusBrain && activityEntity) {
-            // Get media player entities for detection
-            const media_entities_str = formatMediaEntitiesForTemplate(media_player_entities);
-
             // Use shared templates to ensure synchronization with badge and activity chip
             statusChips.push({
                 type: "template",
                 entity: activityEntity,
                 content: Helper.localize("component.linus_dashboard.entity.text.activity_detection_popup.state.activity"),
-                icon: getActivityIconTemplate(activityEntity, media_entities_str),
-                icon_color: getActivityColorTemplateForPopup(activityEntity, media_entities_str),
+                icon: getActivityIconTemplate(activityEntity, mediaConfig),
+                icon_color: getActivityColorTemplateForPopup(activityEntity, mediaConfig),
                 tap_action: { action: "more-info", entity: activityEntity }
             });
         }
@@ -351,8 +363,12 @@ class ActivityDetectionPopup extends AbstractPopup {
                 const state = Helper.getEntityState(entity);
                 if (!state) return false;
 
-                // Media players: playing state is active
+                // Media players: screen devices active when not off/standby, audio only when playing
                 if (entity.startsWith('media_player.')) {
+                    const deviceClass = state.attributes?.device_class as string | undefined;
+                    if (deviceClass && (MEDIA_SCREEN_CLASSES as readonly string[]).includes(deviceClass)) {
+                        return !(MEDIA_SCREEN_INACTIVE_STATES as readonly string[]).includes(state.state);
+                    }
                     return state.state === 'playing';
                 }
 

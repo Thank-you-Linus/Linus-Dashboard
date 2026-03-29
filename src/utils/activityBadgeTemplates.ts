@@ -1,32 +1,124 @@
 /**
  * Activity Badge Templates Utility
- * 
+ *
  * Provides shared Jinja2 templates for activity detection badges and chips.
  * This ensures perfect synchronization between HomeAreaCard badge, ActivityDetectionChip,
  * and ActivityDetectionPopup chips.
- * 
- * IMPORTANT: This is the single source of truth for activity icons and colors.
- * Any changes to the activity detection logic should be made here.
+ *
+ * IMPORTANT: This is the single source of truth for activity logic.
+ * Any changes to activity detection should be made here.
  */
 
+import { Helper } from '../Helper';
+import { MEDIA_SCREEN_CLASSES, MEDIA_SCREEN_INACTIVE_STATES } from '../variables';
+
+// ─── Public interface ────────────────────────────────────────────────────────
+
 /**
- * Get the Jinja2 template for activity icon
- * 
- * Priority order (distinctive icons to avoid confusion with sensors):
- * 1. occupied -> mdi:account-check (green) - Person present AND active
- * 2. movement -> mdi:walk (orange) - Movement detected (distinct from motion-sensor)
- * 3. inactive -> mdi:sleep (grey/blue) - Present but inactive
- * 4. media_active -> mdi:television-play (red) - Media playing (distinct from cast/media_player)
- * 5. empty -> mdi:home-outline (grey) - Room empty
- * 
- * @param areaStateEntity - Entity ID of the area state sensor (e.g., 'sensor.linus_brain_activity_salon')
- * @param mediaEntitiesStr - Comma-separated string of media player entity IDs (e.g., "'media_player.tv', 'media_player.speakers'")
+ * Split media player entities by category for per-device-class activity logic.
+ *
+ * - screenEntities: tv, receiver, soundbar — active when NOT off/standby
+ * - audioEntities:  speaker + no device_class — active only when playing
+ */
+export interface MediaActivityConfig {
+  screenEntities: string[];
+  audioEntities: string[];
+}
+
+// ─── Central helper ──────────────────────────────────────────────────────────
+
+/**
+ * Build per-device-class Jinja2 conditions for media player activity.
+ *
+ * Screen devices (tv, receiver, soundbar): active when state is NOT in MEDIA_SCREEN_INACTIVE_STATES.
+ * Audio devices (speaker + no device_class): active only when state is "playing".
+ *
+ * @param areaSlugs - Area slug or array of area slugs to fetch entities for
+ * @returns Jinja2 condition strings + MediaActivityConfig for template callers
+ */
+export function buildMediaActiveConditions(areaSlugs: string | string[]): {
+  isScreenActive: string;
+  isAudioPlaying: string;
+  isMediaActive: string;
+  config: MediaActivityConfig;
+} {
+  const screenEntities: string[] = [];
+  for (const dc of MEDIA_SCREEN_CLASSES) {
+    screenEntities.push(
+      ...Helper.getEntityIds({ domain: 'media_player', device_class: dc, area_slug: areaSlugs }),
+    );
+  }
+
+  const allMedia = Helper.getEntityIds({ domain: 'media_player', area_slug: areaSlugs });
+  const audioEntities = allMedia.filter(e => !screenEntities.includes(e));
+
+  const inactiveList = MEDIA_SCREEN_INACTIVE_STATES.map(s => `"${s}"`).join(', ');
+
+  const isScreenActive =
+    screenEntities.length > 0
+      ? `[${screenEntities.map(e => `states['${e}']`).join(', ')}] | rejectattr("state", "in", [${inactiveList}]) | list | count > 0`
+      : 'false';
+
+  const isAudioPlaying =
+    audioEntities.length > 0
+      ? `[${audioEntities.map(e => `states['${e}']`).join(', ')}] | selectattr("state", "eq", "playing") | list | count > 0`
+      : 'false';
+
+  const hasEntities = screenEntities.length > 0 || audioEntities.length > 0;
+  const isMediaActive = hasEntities ? `(${isScreenActive}) or (${isAudioPlaying})` : 'false';
+
+  return { isScreenActive, isAudioPlaying, isMediaActive, config: { screenEntities, audioEntities } };
+}
+
+// ─── Jinja2 template builders ─────────────────────────────────────────────────
+
+/**
+ * Build the Jinja2 `{% set screen_active %}` and `{% set audio_active %}` lines
+ * used inside the 3 template functions below.
+ */
+function buildJinjaMediaVars(media: MediaActivityConfig): string {
+  const inactiveList = MEDIA_SCREEN_INACTIVE_STATES.map(s => `"${s}"`).join(', ');
+
+  const screenStr = media.screenEntities.map(e => `states['${e}']`).join(', ');
+  const audioStr = media.audioEntities.map(e => `'${e}'`).join(', ');
+
+  const screenCheck =
+    media.screenEntities.length > 0
+      ? `[${screenStr}] | rejectattr("state", "in", [${inactiveList}]) | list | count > 0`
+      : 'false';
+
+  const audioCheck =
+    media.audioEntities.length > 0
+      ? `[${audioStr}] | select('is_state', 'playing') | list | count > 0`
+      : 'false';
+
+  return [
+    `    {% set screen_active = ${screenCheck} %}`,
+    `    {% set audio_active = ${audioCheck} %}`,
+    `    {% set media_active = screen_active or audio_active %}`,
+  ].join('\n');
+}
+
+// ─── Exported template functions ─────────────────────────────────────────────
+
+/**
+ * Get the Jinja2 template for activity icon.
+ *
+ * Priority order:
+ * 1. occupied  → mdi:account-check  (green)  — person present AND active
+ * 2. movement  → mdi:walk           (orange) — movement detected
+ * 3. inactive  → mdi:sleep          (grey)   — present but inactive
+ * 4. media_active → mdi:television-play (red) — media device active
+ * 5. empty     → (none)             (grey)   — room empty
+ *
+ * @param areaStateEntity - Entity ID of the area state sensor
+ * @param media - Split media player entities by category
  * @returns Jinja2 template string for the icon
  */
-export function getActivityIconTemplate(areaStateEntity: string, mediaEntitiesStr: string): string {
+export function getActivityIconTemplate(areaStateEntity: string, media: MediaActivityConfig): string {
   return `
     {% set state = states('${areaStateEntity}') %}
-    {% set media_active = [${mediaEntitiesStr}] | select('is_state', 'playing') | list | count > 0 %}
+${buildJinjaMediaVars(media)}
     {% if state == 'occupied' %}
       mdi:account-check
     {% elif state == 'movement' %}
@@ -42,23 +134,23 @@ export function getActivityIconTemplate(areaStateEntity: string, mediaEntitiesSt
 }
 
 /**
- * Get the Jinja2 template for activity color
- * 
+ * Get the Jinja2 template for activity color.
+ *
  * Color mapping:
- * - occupied: green (someone is present and active)
- * - movement: orange (motion detected but no sustained occupancy)
- * - inactive: grey (occupied but no recent activity)
- * - media_active: red (media player is playing)
- * - empty: grey (no activity)
- * 
- * @param areaStateEntity - Entity ID of the area state sensor (e.g., 'sensor.linus_brain_activity_salon')
- * @param mediaEntitiesStr - Comma-separated string of media player entity IDs (e.g., "'media_player.tv', 'media_player.speakers'")
+ * - occupied:    green  (someone present and active)
+ * - movement:    orange (motion detected, no sustained occupancy)
+ * - inactive:    grey   (occupied but no recent activity)
+ * - media_active: red   (media device active)
+ * - empty:       grey   (no activity)
+ *
+ * @param areaStateEntity - Entity ID of the area state sensor
+ * @param media - Split media player entities by category
  * @returns Jinja2 template string for the color
  */
-export function getActivityColorTemplate(areaStateEntity: string, mediaEntitiesStr: string): string {
+export function getActivityColorTemplate(areaStateEntity: string, media: MediaActivityConfig): string {
   return `
     {% set state = states('${areaStateEntity}') %}
-    {% set media_active = [${mediaEntitiesStr}] | select('is_state', 'playing') | list | count > 0 %}
+${buildJinjaMediaVars(media)}
     {% if state == 'occupied' %}
       green
     {% elif state == 'movement' %}
@@ -74,25 +166,22 @@ export function getActivityColorTemplate(areaStateEntity: string, mediaEntitiesS
 }
 
 /**
- * Get the Jinja2 template for activity color (popup variant)
- * 
- * This variant uses 'blue' for inactive state instead of 'grey' for better visual distinction in popups.
- * 
- * Color mapping:
- * - occupied: green
- * - movement: orange
- * - inactive: blue (different from badge to stand out in popup)
- * - media_active: red
- * - empty: grey
- * 
+ * Get the Jinja2 template for activity color (popup variant).
+ *
+ * Identical to getActivityColorTemplate except "inactive" maps to "blue"
+ * for better visual distinction inside the activity popup.
+ *
  * @param areaStateEntity - Entity ID of the area state sensor
- * @param mediaEntitiesStr - Comma-separated string of media player entity IDs
+ * @param media - Split media player entities by category
  * @returns Jinja2 template string for the color (popup variant)
  */
-export function getActivityColorTemplateForPopup(areaStateEntity: string, mediaEntitiesStr: string): string {
+export function getActivityColorTemplateForPopup(
+  areaStateEntity: string,
+  media: MediaActivityConfig,
+): string {
   return `
     {% set state = states('${areaStateEntity}') %}
-    {% set media_active = [${mediaEntitiesStr}] | select('is_state', 'playing') | list | count > 0 %}
+${buildJinjaMediaVars(media)}
     {% if state == 'occupied' %}
       green
     {% elif state == 'movement' %}
@@ -107,14 +196,26 @@ export function getActivityColorTemplateForPopup(areaStateEntity: string, mediaE
   `;
 }
 
+// ─── Formatting helpers ───────────────────────────────────────────────────────
+
 /**
- * Get media entities string for Jinja2 templates
- * 
- * Helper function to format media player entity IDs for use in Jinja2 templates.
- * 
- * @param mediaEntities - Array of media player entity IDs
- * @returns Comma-separated string of quoted entity IDs (e.g., "'entity1', 'entity2'")
+ * Format audio entity IDs for Jinja2 `select('is_state', ...)` templates.
+ * Returns quoted entity ID strings: "'entity1', 'entity2'"
+ *
+ * @param entities - Array of media player entity IDs
+ * @returns Comma-separated quoted entity ID string
  */
-export function formatMediaEntitiesForTemplate(mediaEntities: string[]): string {
-  return mediaEntities.map(e => `'${e}'`).join(', ');
+export function formatMediaEntitiesForTemplate(entities: string[]): string {
+  return entities.map(e => `'${e}'`).join(', ');
+}
+
+/**
+ * Format screen entity IDs as HA state object references for Jinja2 `rejectattr` templates.
+ * Returns state object references: "states['entity1'], states['entity2']"
+ *
+ * @param entities - Array of media player entity IDs
+ * @returns Comma-separated state object reference string
+ */
+export function formatScreenEntitiesForTemplate(entities: string[]): string {
+  return entities.map(e => `states['${e}']`).join(', ');
 }

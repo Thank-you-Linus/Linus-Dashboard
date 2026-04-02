@@ -1,29 +1,30 @@
-# .sapiens/tools - Linus Dashboard project configuration
+# .sapiens/tools - Linus Dashboard project
 # Format: key=command (one per line, # for comments)
 
 # Project metadata
-type=typescript-react
+type=typescript
 pm=npm
 
 # Quality checks
-lint=npm run lint
+lint=npm run lint:check
 lint:fix=npm run lint
 types=npm run type-check
 test=npm run test
 test:watch=npm run test:watch
+coverage=npm run test:coverage
+build=npm run build
+build:prod=npm run build:prod
+
+# Smoke / CI
 test:smoke=npm run test:smoke
 test:ci=npm run test:ci
-coverage=npm run test:coverage
-build=npm run build:prod
 
 # Development
 install=npm install
 serve=npm run build:dev
-format=npm run lint
-clean=rm -rf dist
 
-# Release (existing scripts)
+# Release helpers
 release:check=npm run release:check
 release:validate=npm run release:validate
 release:changelog=npm run release:changelog
-release:rollback=npm run release:rollback
+release:notes=npm run release:notes

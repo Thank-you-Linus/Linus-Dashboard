@@ -2,6 +2,8 @@
   "$schema": "https://opencode.ai/config.json",
   "model": "{env:OPENCODE_MODEL}",
   "instructions": [
-    "../.sapiens/context/linus-dashboard.md"
+    "../.sapiens/context/*.md",
+    "../.sapiens/rules/*.md",
+    "../.sapiens/tools"
   ]
 }

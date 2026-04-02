@@ -34,7 +34,7 @@
       "settings": {
         "python.defaultInterpreterPath": "./ha-env/bin/python",
         "python.analysis.extraPaths": [
-          "./ha-env/lib/python3.13/site-packages",
+          "./ha-env/lib/python3.14/site-packages",
           "./custom_components"
         ],
         "python.analysis.typeCheckingMode": "basic",

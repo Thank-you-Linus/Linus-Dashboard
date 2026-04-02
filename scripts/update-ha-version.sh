@@ -384,6 +384,31 @@ EOF
             log_warning "Aucune ligne 'homeassistant==' trouvée dans requirements.txt"
         fi
 
+        # Sync aiohasupervisor depuis le manifest hassio de la nouvelle version Core
+        log_info "Résolution de la version aiohasupervisor requise par Core ${CORE_VERSION}..."
+        local hassio_manifest_url="https://raw.githubusercontent.com/home-assistant/core/${CORE_VERSION}/homeassistant/components/hassio/manifest.json"
+        local hassio_manifest=$(curl -sf "$hassio_manifest_url")
+
+        if [ -n "$hassio_manifest" ]; then
+            local aiohasupervisor_req=$(echo "$hassio_manifest" | grep -o '"aiohasupervisor==[^"]*"' | tr -d '"')
+            if [ -n "$aiohasupervisor_req" ]; then
+                local aiohasupervisor_version=$(echo "$aiohasupervisor_req" | cut -d'=' -f3)
+                if grep -q "^aiohasupervisor==" requirements.txt; then
+                    local old_aiohasupervisor=$(grep "^aiohasupervisor==" requirements.txt | cut -d'=' -f3)
+                    sed -i "s/^aiohasupervisor==.*/aiohasupervisor==${aiohasupervisor_version}/" requirements.txt
+                    log_success "aiohasupervisor mis à jour: ${old_aiohasupervisor} → ${aiohasupervisor_version}"
+                else
+                    # Ajouter juste avant homeassistant== (ordre alphabétique)
+                    sed -i "/^homeassistant==/i aiohasupervisor==${aiohasupervisor_version}" requirements.txt
+                    log_success "aiohasupervisor ajouté: ${aiohasupervisor_version}"
+                fi
+            else
+                log_warning "Impossible de trouver aiohasupervisor dans le manifest hassio"
+            fi
+        else
+            log_warning "Impossible de récupérer le manifest hassio pour Core ${CORE_VERSION}"
+        fi
+
         rm -f requirements.txt.backup
     else
         log_warning "Fichier requirements.txt introuvable, étape ignorée"
@@ -437,7 +462,7 @@ EOF
     log_info "  - package.json"
     log_info "  - package-lock.json"
     if [ -f "requirements.txt" ]; then
-        log_info "  - requirements.txt"
+        log_info "  - requirements.txt (homeassistant + aiohasupervisor)"
     fi
 
     echo ""

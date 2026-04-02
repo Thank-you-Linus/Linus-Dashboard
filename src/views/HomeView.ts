@@ -214,15 +214,6 @@ class HomeView {
       firstSection.cards.push(...Helper.strategyOptions.extra_cards);
     }
 
-    // Add "Areas" title heading
-    if (!Helper.strategyOptions.home_view.hidden.includes("areasTitle")) {
-      firstSection.cards.push({
-        type: "heading",
-        heading: `${Helper.localize("ui.components.area-picker.area")}s`,
-        heading_style: "title",
-      });
-    }
-
     // Always add first section
     groupedSections.push(firstSection);
 
@@ -230,7 +221,7 @@ class HomeView {
     for (const floor of floors) {
       // Skip excluded floors
       if (Helper.isFloorExcluded(floor.floor_id)) continue;
-      
+
       if (floor.areas_slug.length === 0) continue;
 
       const floorSection = {

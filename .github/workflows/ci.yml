@@ -15,8 +15,8 @@ jobs:
       - name: 'Checkout repository'
         uses: 'actions/checkout@v5'
 
-      - name: 'Set up Python'
-        uses: 'actions/setup-python@v6.1.0'
+      - name: "Set up Python"
+        uses: "actions/setup-python@v6.2.0"
         with:
           python-version: '3.14'
           cache: 'pip'

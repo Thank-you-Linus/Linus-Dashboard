@@ -19,6 +19,6 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
 USER vscode
 
-RUN uv python install 3.13
+RUN uv python install 3.14
 
 WORKDIR /workspaces

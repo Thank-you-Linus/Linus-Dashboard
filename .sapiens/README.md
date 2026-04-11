@@ -25,7 +25,7 @@ See `.sapiens/core/agents/` for details.
 ### Available Commands
 - `/implement-ticket TICKET-123` - Implement feature ticket
 - `/create-ticket` - Create structured ticket
-- `/quality-check [package]` - Run quality checks
+- `/sapiens/04-quality-check [package]` - Run quality checks
 - `/create-mr` - Create merge request
 - `/review-mr` - Review merge request
 

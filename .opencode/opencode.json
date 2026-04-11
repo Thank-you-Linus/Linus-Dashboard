@@ -2,8 +2,8 @@
   "$schema": "https://opencode.ai/config.json",
   "model": "github-copilot/claude-sonnet-4.6",
   "instructions": [
-    "../.sapiens/context/linus-dashboard.md",
-    "../.sapiens/rules/coding-standards.md",
+    "../.sapiens/context/*.md",
+    "../.sapiens/rules/*.md",
     "../.sapiens/tools"
   ]
 }

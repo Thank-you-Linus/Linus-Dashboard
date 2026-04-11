@@ -18,7 +18,24 @@
       "WebFetch(domain:github.com)",
       "Bash(python3:*)",
       "Bash(./ha-env/bin/ruff check:*)",
-      "Bash(ruff:*)"
+      "Bash(ruff:*)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:api.github.com)"
+    ]
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/sapiens-notifications.sh",
+            "timeout": 5,
+            "statusMessage": "SAPIENS notification"
+          }
+        ]
+      }
     ]
   }
 }

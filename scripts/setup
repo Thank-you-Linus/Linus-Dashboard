@@ -24,6 +24,39 @@ python -m pip install --upgrade pip
 echo "📚 Installing Python dependencies..."
 python -m pip install --requirement requirements.txt
 
+# Pre-install ALL HA component dependencies to avoid runtime install failures.
+# HA lazily installs component requirements at startup, which fails in our dev environment.
+# We scan every manifest.json in the installed HA package and install all requirements
+# upfront, so the server starts cleanly regardless of which components get loaded.
+echo "🔌 Pre-installing Home Assistant component dependencies..."
+python - << 'PYEOF'
+import glob, json, os, subprocess, sys
+
+ha_pattern = os.path.join(os.getcwd(), "ha-env", "lib", "python*", "site-packages", "homeassistant", "components")
+matches = glob.glob(ha_pattern)
+if not matches:
+    print("  ⚠️  HA not installed yet, skipping component dependency resolution.")
+    sys.exit(0)
+
+ha_components = matches[0]
+requirements = set()
+for comp in os.listdir(ha_components):
+    manifest = os.path.join(ha_components, comp, "manifest.json")
+    if os.path.exists(manifest):
+        try:
+            data = json.loads(open(manifest).read())
+            requirements.update(data.get("requirements", []))
+        except Exception:
+            pass
+
+print(f"  Installing {len(requirements)} component requirement(s) (already-installed packages will be skipped)...")
+result = subprocess.run([sys.executable, "-m", "pip", "install", "--quiet"] + sorted(requirements))
+if result.returncode != 0:
+    print("  ⚠️  Some requirements failed to install (non-fatal, may be platform-specific packages).")
+else:
+    print("  ✅ All component dependencies ready.")
+PYEOF
+
 # Note: Node.js dependencies will be installed by postStartCommand
 echo "✅ Python setup completed!"
 echo "   Node.js dependencies will be installed automatically after container startup."

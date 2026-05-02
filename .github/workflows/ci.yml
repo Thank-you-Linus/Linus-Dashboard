@@ -105,7 +105,7 @@ jobs:
     steps:
       - name: 'Post results comment'
         continue-on-error: true
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const pythonLintResult = '${{ needs.python-lint.result }}';

@@ -21,7 +21,7 @@ jobs:
           cache: "pip"
 
       - name: "Install Python dependencies"
-        run: python3 -m pip install -r requirements.txt
+        run: python3 -m pip install --break-system-packages -r requirements.txt
 
       - name: "Run Ruff linting"
         run: python3 -m ruff check .

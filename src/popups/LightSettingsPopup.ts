@@ -1,6 +1,7 @@
 import { Helper } from "../Helper";
 import { PopupActionConfig } from "../types/homeassistant/data/lovelace";
 import { slugify } from "../utils";
+import { MAGIC_AREAS_DOMAIN } from "../variables";
 
 import { AbstractPopup } from "./AbstractPopup";
 
@@ -15,9 +16,15 @@ class LightSettings extends AbstractPopup {
 
   getDefaultConfig(device: any): PopupActionConfig {
 
-    const { aggregate_illuminance, adaptive_lighting_range, minimum_brightness, maximum_brightness, maximum_lighting_level } = device?.entities ?? {}
+    // Resolve full MA device if only slug was provided (from ControllerCard extraControls)
+    const hasEntities = device?.entities && Object.keys(device.entities).length > 0;
+    const effectiveDevice = (!hasEntities && device?.slug)
+      ? Helper.magicAreasDevices[device.slug] || device
+      : device;
 
-    const device_slug = slugify(device?.name ?? "")
+    const { aggregate_illuminance, adaptive_lighting_range, minimum_brightness, maximum_brightness, maximum_lighting_level } = effectiveDevice?.entities ?? {}
+
+    const device_slug = slugify(effectiveDevice?.name ?? effectiveDevice?.slug ?? "")
 
     const OPTIONS_ADAPTIVE_LIGHTING_RANGE = {
       "": 1,
@@ -91,7 +98,11 @@ class LightSettings extends AbstractPopup {
                     icon: "mdi:pencil",
                     layout: "vertical",
                     tap_action: {
-                      action: "none",
+                      action: "call-service",
+                      service: `${MAGIC_AREAS_DOMAIN}.area_lux_for_lighting_max`,
+                      data: {
+                        area: effectiveDevice?.name || effectiveDevice?.slug
+                      }
                     },
                   },
                 ],

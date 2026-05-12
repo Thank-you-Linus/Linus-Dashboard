@@ -137,10 +137,10 @@ jobs:
 
   # Job 4: PR Comment with results
   pr-comment:
-    name: "Post PR Comment"
-    runs-on: "ubuntu-latest"
+    name: 'Post PR Comment'
+    runs-on: 'ubuntu-latest'
     needs: [python-lint, typescript-check, build-and-test]
-    if: always()
+    if: always() && github.actor != 'dependabot[bot]'
     steps:
       - name: "Post results comment"
         uses: actions/github-script@v7

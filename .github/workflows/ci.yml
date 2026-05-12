@@ -52,9 +52,7 @@ jobs:
         continue-on-error: true
         run: |
           echo "::group::ESLint Results"
-          npm run lint:check > eslint-report.txt 2>&1 || true
-          EXIT_CODE=$?
-          if [ $EXIT_CODE -eq 0 ]; then
+          if npm run lint:check > eslint-report.txt 2>&1; then
             echo "status=success" >> $GITHUB_OUTPUT
             echo "✅ ESLint passed"
           else
@@ -69,17 +67,20 @@ jobs:
         continue-on-error: true
         run: |
           echo "::group::TypeScript Check Results"
-          npm run type-check > typecheck-report.txt 2>&1 || true
-          ERROR_COUNT=$(grep -c "error TS" typecheck-report.txt || echo 0)
+          if npm run type-check > typecheck-report.txt 2>&1; then
+            ERROR_COUNT=0
+          else
+            ERROR_COUNT=$(grep -c "error TS" typecheck-report.txt || echo 0)
+          fi
           echo "count=$ERROR_COUNT" >> $GITHUB_OUTPUT
-          if [ $ERROR_COUNT -eq 0 ]; then
+          if [ "$ERROR_COUNT" -eq 0 ]; then
             echo "status=success" >> $GITHUB_OUTPUT
             echo "✅ No TypeScript errors"
           else
             echo "status=warning" >> $GITHUB_OUTPUT
             echo "⚠️ Found $ERROR_COUNT TypeScript errors"
             head -30 typecheck-report.txt || echo "Could not read report"
-            if [ $ERROR_COUNT -gt 30 ]; then
+            if [ "$ERROR_COUNT" -gt 30 ]; then
               echo "... and $(($ERROR_COUNT - 30)) more errors"
             fi
           fi

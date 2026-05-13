@@ -77,6 +77,7 @@ jobs:
       - name: "Deploy Playwright report to GitHub Pages"
         if: steps.pages.outputs.report_id != ''
         id: deployment
+        continue-on-error: true
         uses: actions/deploy-pages@v4
 
       - name: "Upload Playwright failure artifacts"

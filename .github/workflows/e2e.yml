@@ -1,0 +1,139 @@
+name: "E2E Diagnostics"
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - "main"
+  push:
+    branches:
+      - "main"
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+  actions: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  e2e:
+    name: "Playwright E2E"
+    runs-on: "ubuntu-latest"
+    timeout-minutes: 20
+
+    steps:
+      - name: "Checkout repository"
+        uses: actions/checkout@v6
+
+      - name: "Set up Node.js"
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: "Install dependencies"
+        run: npm ci
+
+      - name: "Build dashboard bundle"
+        run: npm run build
+
+      - name: "Install Playwright browsers"
+        run: npx playwright install --with-deps chromium
+
+      - name: "Run Playwright E2E tests"
+        run: npm run test:e2e
+
+      - name: "Prepare Playwright report for GitHub Pages"
+        id: pages
+        if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
+        run: |
+          if [ "${GITHUB_EVENT_NAME}" = "pull_request" ]; then
+            REPORT_ID="pr-${{ github.event.pull_request.number }}/${GITHUB_SHA}"
+          else
+            REPORT_ID="push/${GITHUB_SHA}"
+          fi
+
+          echo "report_id=$REPORT_ID" >> "$GITHUB_OUTPUT"
+
+          mkdir -p pages/playwright-report/$REPORT_ID
+          cp -R playwright-report/. pages/playwright-report/$REPORT_ID/
+
+          mkdir -p pages/playwright-report
+          cat > pages/playwright-report/index.html <<EOF
+          <!doctype html>
+          <meta charset="utf-8">
+          <meta http-equiv="refresh" content="0; url=./$REPORT_ID/">
+          <a href="./$REPORT_ID/">Open latest Playwright report</a>
+          EOF
+
+      - name: "Upload Playwright Pages artifact"
+        if: steps.pages.outputs.report_id != ''
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./pages
+
+      - name: "Deploy Playwright report to GitHub Pages"
+        if: steps.pages.outputs.report_id != ''
+        id: deployment
+        continue-on-error: true
+        uses: actions/deploy-pages@v4
+
+      - name: "Upload Playwright failure artifacts"
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-failure-artifacts
+          path: test-results/
+          retention-days: 7
+
+      - name: "Post PR report summary"
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        env:
+          PAGE_URL: ${{ steps.deployment.outputs.page_url }}
+        with:
+          script: |
+            const prNumber = context.payload.pull_request.number;
+            const headSha = context.payload.pull_request.head.sha;
+            const pageUrl = process.env.PAGE_URL || '';
+            const reportUrl = pageUrl ? `${pageUrl}playwright-report/pr-${prNumber}/${headSha}/` : `${context.payload.repository.html_url}/actions/runs/${context.runId}`;
+            const workflowUrl = `${context.payload.repository.html_url}/actions/runs/${context.runId}`;
+
+            const body = `## 🎥 Playwright E2E report\n\n` +
+              `Open the report directly in the browser: [Playwright HTML report](${reportUrl})\n\n` +
+              `### What is covered\n` +
+              `- dashboard generation completes without errors\n` +
+              `- entity ↔ area ↔ floor mappings stay valid\n` +
+              `- generated views exist for every area and floor\n` +
+              `- the visible summary matches the fixture counts\n\n` +
+              `### Debug artifacts\n` +
+              `- screenshots, videos, and traces are uploaded in the GitHub Actions run when the test fails\n\n` +
+              `### Workflow run\n` +
+              `- [Open the full GitHub Actions run](${workflowUrl})\n`;
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const marker = '## 🎥 Playwright E2E report';
+            const existing = comments.find((comment) => comment.user?.type === 'Bot' && comment.body?.includes(marker));
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }

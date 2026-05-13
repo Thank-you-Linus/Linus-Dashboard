@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Linus Dashboard E2E Test Harness</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background: #f0f2f5;
+      padding: 20px;
+      line-height: 1.6;
+    }
+
+    .test-container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      color: #004225;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #004225;
+    }
+
+    .status-bar {
+      background: #fff;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .status-item {
+      display: inline-block;
+      margin-right: 20px;
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    .status-success { background: #d4edda; color: #155724; }
+    .status-error { background: #f8d7da; color: #721c24; }
+    .status-info { background: #d1ecf1; color: #0c5460; }
+    .status-warning { background: #fff3cd; color: #856404; }
+
+    .section {
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .section h2 {
+      color: #333;
+      margin-bottom: 15px;
+      font-size: 18px;
+    }
+
+    .section h3 {
+      color: #555;
+      margin: 15px 0 10px 0;
+      font-size: 16px;
+    }
+
+    pre {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 4px;
+      overflow-x: auto;
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 13px;
+      border: 1px solid #e9ecef;
+    }
+
+    .error-message {
+      background: #f8d7da;
+      color: #721c24;
+      padding: 15px;
+      border-radius: 4px;
+      margin: 10px 0;
+      border-left: 4px solid #dc3545;
+    }
+
+    .success-message {
+      background: #d4edda;
+      color: #155724;
+      padding: 15px;
+      border-radius: 4px;
+      margin: 10px 0;
+      border-left: 4px solid #28a745;
+    }
+
+    .view-summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 15px;
+      margin-top: 15px;
+    }
+
+    .view-card {
+      background: #f8f9fa;
+      border: 1px solid #e9ecef;
+      border-radius: 6px;
+      padding: 15px;
+    }
+
+    .view-card h4 {
+      color: #004225;
+      margin-bottom: 8px;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .view-card .count {
+      font-size: 24px;
+      font-weight: bold;
+      color: #333;
+    }
+
+    .view-card .detail {
+      font-size: 12px;
+      color: #666;
+      margin-top: 5px;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 40px;
+      height: 40px;
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #004225;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 15px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .entity-tag {
+      display: inline-block;
+      background: #e9ecef;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      margin: 2px;
+      color: #495057;
+    }
+
+    .area-tag {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .floor-tag {
+      background: #d1ecf1;
+      color: #0c5460;
+    }
+
+    .domain-tag {
+      background: #fff3cd;
+      color: #856404;
+    }
+  </style>
+</head>
+<body>
+  <div class="test-container">
+    <h1>🏠 Linus Dashboard E2E Test Harness</h1>
+
+    <div class="status-bar" id="status-bar">
+      <span class="status-item status-info">⏳ Initializing...</span>
+    </div>
+
+    <div id="content">
+      <div class="loading">
+        <div class="spinner"></div>
+        <p>Loading Linus Strategy...</p>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    // Test results will be populated here
+    window.testResults = {
+      initialized: false,
+      dashboard: null,
+      views: [],
+      errors: [],
+      timing: {},
+      entityAreaMapping: null,
+    };
+
+    function updateStatus(message, type = 'info') {
+      const statusBar = document.getElementById('status-bar');
+      statusBar.innerHTML = `<span class="status-item status-${type}">${message}</span>`;
+    }
+
+    function showError(error) {
+      updateStatus('❌ Test Failed', 'error');
+      window.testResults.errors.push(error.toString());
+
+      const content = document.getElementById('content');
+      content.innerHTML = `
+        <div class="section">
+          <div class="error-message">
+            <strong>Error:</strong> ${error.message || error}
+          </div>
+          <h3>Stack Trace</h3>
+          <pre>${error.stack || 'No stack trace available'}</pre>
+        </div>
+      `;
+    }
+
+    function showSuccess(dashboard, timing, fixture) {
+      updateStatus('✅ Test Passed', 'success');
+      window.testResults.initialized = true;
+      window.testResults.dashboard = dashboard;
+      window.testResults.timing = timing;
+
+      // Generate summary
+      const views = dashboard.views || [];
+      const areaPaths = new Set((fixture?.areaRegistry || []).map(area => area.area_id));
+      const floorPaths = new Set((fixture?.floorRegistry || []).map(floor => floor.floor_id));
+      const domainViews = views.filter(v => v.path && v.subview && !areaPaths.has(v.path) && !floorPaths.has(v.path) && v.path !== 'unavailable');
+      const areaViews = views.filter(v => areaPaths.has(v.path));
+      const floorViews = views.filter(v => floorPaths.has(v.path));
+
+      const content = document.getElementById('content');
+      content.innerHTML = `
+        <div class="section">
+          <div class="success-message">
+            <strong>Dashboard generated successfully!</strong>
+            <br>Generated ${views.length} views in ${timing.duration}ms
+          </div>
+
+          <h3>View Summary</h3>
+          <div class="view-summary">
+            <div class="view-card">
+              <h4>Total Views</h4>
+              <div class="count">${views.length}</div>
+              <div class="detail">All generated views</div>
+            </div>
+            <div class="view-card">
+              <h4>Domain Views</h4>
+              <div class="count">${domainViews.length}</div>
+              <div class="detail">Per-domain subviews</div>
+            </div>
+            <div class="view-card">
+              <h4>Area Views</h4>
+              <div class="count">${areaViews.length}</div>
+              <div class="detail">Per-area subviews</div>
+            </div>
+            <div class="view-card">
+              <h4>Floor Views</h4>
+              <div class="count">${floorViews.length}</div>
+              <div class="detail">Per-floor subviews</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <h2>Generated Views</h2>
+          <pre>${JSON.stringify(views.map(v => ({
+            title: v.title,
+            path: v.path,
+            icon: v.icon,
+            subview: v.subview,
+            type: v.strategy?.options?.viewId || (v.strategy?.options?.area ? 'area' : v.strategy?.options?.floor ? 'floor' : 'unknown')
+          })), null, 2)}</pre>
+        </div>
+      `;
+    }
+
+    async function runTest() {
+      const startTime = performance.now();
+
+      try {
+        // Load the Linus Strategy bundle
+        updateStatus('📥 Loading bundle...', 'info');
+
+        // Import the strategy module
+        await import('/linus-strategy.js');
+        const LinusStrategy = customElements.get('ll-strategy-linus-strategy');
+
+        if (!LinusStrategy || !LinusStrategy.generateDashboard) {
+          throw new Error('LinusStrategy not found or missing generateDashboard method');
+        }
+
+        updateStatus('🔧 Initializing Helper...', 'info');
+
+        // Wait a bit for initialization
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        // Call generateDashboard with mock data
+        // The fixture data is injected via window.__HA_FIXTURE__ by the test server
+        const fixture = window.__HA_FIXTURE__;
+
+        if (!fixture) {
+          throw new Error('HA fixture not loaded. Server should inject window.__HA_FIXTURE__');
+        }
+
+        const mockHass = createMockHass(fixture);
+        const dashboardInfo = createDashboardInfo(mockHass);
+
+        updateStatus('🏗️ Generating dashboard...', 'info');
+
+        const dashboard = await LinusStrategy.generateDashboard(dashboardInfo);
+
+        const endTime = performance.now();
+        const duration = Math.round(endTime - startTime);
+
+        showSuccess(dashboard, { duration, startTime, endTime }, fixture);
+
+      } catch (error) {
+        showError(error);
+      }
+    }
+
+    // Helper function to create mock HomeAssistant
+    function createMockHass(fixture) {
+      const states = fixture.states || {};
+
+      return {
+        states,
+        user: { name: 'Test User', is_admin: true },
+        localize: (key, ...args) => {
+          const translations = {
+            'ui.components.weather.attributes.temperature': 'Temperature',
+            'state.default.on': 'On',
+            'state.default.off': 'Off',
+            'state.climate.cool': 'Cool',
+            'state.climate.heat': 'Heat',
+          };
+          return translations[key] || key.split('.').pop() || key;
+        },
+        callWS: async (msg) => {
+          switch (msg.type) {
+            case 'config/entity_registry/list':
+              return fixture.entityRegistry || [];
+            case 'config/device_registry/list':
+              return fixture.deviceRegistry || [];
+            case 'config/area_registry/list':
+              return fixture.areaRegistry || [];
+            case 'config/floor_registry/list':
+              return fixture.floorRegistry || [];
+            case 'config/label_registry/list':
+              return fixture.labelRegistry || [];
+            case 'frontend/get_icons':
+              return { resources: fixture.icons?.resources || {} };
+            case 'linus_dashboard/get_config':
+              return fixture.linusConfig || {};
+            default:
+              return null;
+          }
+        },
+        config: {
+          components: ['climate', 'light', 'media_player', 'sensor', 'binary_sensor', 'switch', 'cover', 'lock', 'camera', 'weather', 'fan', 'device_tracker'],
+        },
+      };
+    }
+
+    function createDashboardInfo(hass) {
+      return {
+        hass,
+        config: {
+          strategy: {
+            type: 'custom:linus-strategy',
+            options: {},
+          },
+          views: [],
+        },
+        narrow: false,
+      };
+    }
+
+    // Run the test when DOM is ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', runTest);
+    } else {
+      runTest();
+    }
+  </script>
+
+  <!-- Load the Linus Strategy bundle -->
+  <script src="/linus-strategy.js" type="module"></script>
+</body>
+</html>

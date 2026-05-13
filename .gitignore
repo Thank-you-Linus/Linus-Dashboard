@@ -52,6 +52,10 @@ yarn-debug.log*
 yarn-error.log*
 .npm
 
+# Playwright artifacts
+playwright-report/
+test-results/
+
 # Home Assistant configuration
 config/*
 !config/configuration.yaml

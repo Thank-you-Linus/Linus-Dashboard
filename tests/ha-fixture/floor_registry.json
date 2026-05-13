@@ -1,0 +1,20 @@
+{
+  "floors": [
+    {
+      "floor_id": "ground_floor",
+      "name": "Ground Floor",
+      "icon": "mdi:home-floor-0",
+      "level": 0,
+      "aliases": [],
+      "order": 0
+    },
+    {
+      "floor_id": "first_floor",
+      "name": "First Floor",
+      "icon": "mdi:home-floor-1",
+      "level": 1,
+      "aliases": [],
+      "order": 1
+    }
+  ]
+}

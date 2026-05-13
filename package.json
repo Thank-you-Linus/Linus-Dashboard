@@ -66,9 +66,9 @@
     "vitest": "^1.6.1"
   },
   "scripts": {
-    "build": "rspack build --config rspack.config.cjs",
-    "build:dev": "rspack build --config rspack.dev.config.cjs --watch",
-    "build:prod": "rspack build --config rspack.config.cjs --mode production",
+    "build": "node build-scripts/build.cjs --prod",
+    "build:dev": "node build-scripts/build.cjs --watch",
+    "build:prod": "node build-scripts/build.cjs --prod",
     "lint": "eslint src --ext .ts,.tsx --fix",
     "lint:check": "eslint src --ext .ts,.tsx",
     "type-check": "tsc --noEmit",

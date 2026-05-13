@@ -1,0 +1,16 @@
+{
+  "debug": false,
+  "excluded_targets": {
+    "entity_id": [],
+    "device_id": [],
+    "area_id": [],
+    "floor_id": [],
+    "label_id": []
+  },
+  "excluded_integrations": [],
+  "excluded_domains": [],
+  "excluded_device_classes": [],
+  "embedded_dashboards": [],
+  "favorite_cards": [],
+  "version": "1.5.1"
+}

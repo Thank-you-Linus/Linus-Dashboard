@@ -1,0 +1,11 @@
+{
+  "version": "1.0.0",
+  "created": "2025-05-13T08:30:00Z",
+  "description": "Multi-floor, multi-area Home Assistant fixture for Linus Dashboard E2E testing",
+  "home_assistant_version": "2025.4.x",
+  "areas_count": 5,
+  "floors_count": 2,
+  "entities_count": 28,
+  "devices_count": 12,
+  "labels_count": 3
+}

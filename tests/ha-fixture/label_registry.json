@@ -1,0 +1,25 @@
+{
+  "labels": [
+    {
+      "label_id": "utility",
+      "name": "Utility",
+      "icon": "mdi:tools",
+      "color": "#FF6B35",
+      "description": "Utility rooms and devices"
+    },
+    {
+      "label_id": "outside",
+      "name": "Outside",
+      "icon": "mdi:earth",
+      "color": "#4CAF50",
+      "description": "Outdoor areas and entities"
+    },
+    {
+      "label_id": "security",
+      "name": "Security",
+      "icon": "mdi:shield-check",
+      "color": "#F44336",
+      "description": "Security-related entities"
+    }
+  ]
+}

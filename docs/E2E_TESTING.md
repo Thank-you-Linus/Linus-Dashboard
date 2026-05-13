@@ -7,7 +7,23 @@ This repository now includes a Playwright-based regression harness that runs aga
 - dashboard generation still succeeds
 - the entity ↔ device ↔ area ↔ floor mapping stays valid
 - generated views keep their expected shape
+- the visible summary cards match the fixture counts
 - failures capture screenshots, video, and trace artifacts automatically
+
+## What you can inspect in the MR
+
+- the GitHub Actions comment now links to the workflow run and the uploaded artifacts
+- on CI, Playwright records videos so you can visually inspect what the test exercised
+- on failure, the HTML report, screenshots, trace, and video are uploaded as artifacts
+
+## Coverage matrix
+
+| User intent | Current test coverage | Proof in artifacts |
+|---|---|---|
+| Dashboard generates successfully | `should generate dashboard with views` | Video + HTML report |
+| Areas/floors are still mapped | area/floor assertions in `strategy.spec.ts` | HTML report + trace |
+| Summary matches the fixture | summary count assertions | Screenshot + HTML report |
+| Runtime is reasonable | timing assertion | Trace + logs |
 
 ## Fixture strategy
 

@@ -229,7 +229,7 @@
       `;
     }
 
-    function showSuccess(dashboard, timing) {
+    function showSuccess(dashboard, timing, fixture) {
       updateStatus('✅ Test Passed', 'success');
       window.testResults.initialized = true;
       window.testResults.dashboard = dashboard;
@@ -237,9 +237,11 @@
 
       // Generate summary
       const views = dashboard.views || [];
-      const domainViews = views.filter(v => v.path && !v.path.includes('_') && v.subview);
-      const areaViews = views.filter(v => ['living_room', 'kitchen', 'garage', 'bedroom', 'outdoor'].includes(v.path));
-      const floorViews = views.filter(v => ['ground_floor', 'first_floor'].includes(v.path));
+      const areaPaths = new Set((fixture?.areaRegistry || []).map(area => area.area_id));
+      const floorPaths = new Set((fixture?.floorRegistry || []).map(floor => floor.floor_id));
+      const domainViews = views.filter(v => v.path && v.subview && !areaPaths.has(v.path) && !floorPaths.has(v.path) && v.path !== 'unavailable');
+      const areaViews = views.filter(v => areaPaths.has(v.path));
+      const floorViews = views.filter(v => floorPaths.has(v.path));
 
       const content = document.getElementById('content');
       content.innerHTML = `
@@ -325,7 +327,7 @@
         const endTime = performance.now();
         const duration = Math.round(endTime - startTime);
 
-        showSuccess(dashboard, { duration, startTime, endTime });
+        showSuccess(dashboard, { duration, startTime, endTime }, fixture);
 
       } catch (error) {
         showError(error);

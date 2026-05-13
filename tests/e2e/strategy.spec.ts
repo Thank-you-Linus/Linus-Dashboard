@@ -85,8 +85,26 @@ test.describe('Linus Dashboard Strategy', () => {
     expect(results.dashboard.views).toBeDefined();
     expect(results.dashboard.views.length).toBeGreaterThan(0);
 
-    // Verify view structure
+    const fixture = loadFixture('v1.0.0');
     const views = results.dashboard.views;
+    const viewPaths = new Set(views.map((view: any) => view.path));
+
+    // The generated dashboard must cover every configured area, floor, and the unavailable bucket
+    for (const area of fixture.areaRegistry) {
+      const slug = area.slug || area.name.toLowerCase().replace(/\s+/g, '_');
+      expect(
+        viewPaths.has(area.area_id) || viewPaths.has(slug) || views.some((view: any) => view.title === area.name),
+        `Expected view for area: ${area.name}`,
+      ).toBe(true);
+    }
+
+    for (const floor of fixture.floorRegistry) {
+      expect(viewPaths.has(floor.floor_id), `Expected floor view: ${floor.floor_id}`).toBe(true);
+    }
+
+    expect(viewPaths.has('unavailable')).toBe(true);
+
+    // Verify view structure
     for (const view of views) {
       expect(view).toHaveProperty('title');
       expect(view).toHaveProperty('path');
@@ -183,17 +201,22 @@ test.describe('Linus Dashboard Strategy', () => {
 
     expect(results.initialized).toBe(true);
 
-    // Check that view summary is displayed
-    const viewSummary = await page.locator('.view-summary');
-    await expect(viewSummary).toBeVisible();
+    const fixture = loadFixture('v1.0.0');
 
-    // Check that counts are displayed
-    const totalViews = await page.locator('.view-card .count').first();
-    await expect(totalViews).toBeVisible();
+    const summaryCardCount = async (label: string) => {
+      const card = page.locator('.view-card').filter({ hasText: label }).first();
+      await expect(card).toBeVisible();
+      const countText = await card.locator('.count').textContent();
+      return parseInt(countText || '0', 10);
+    };
 
-    const countText = await totalViews.textContent();
-    const count = parseInt(countText || '0', 10);
-    expect(count).toBeGreaterThan(0);
+    const totalViews = await summaryCardCount('Total Views');
+    const areaViews = await summaryCardCount('Area Views');
+    const floorViews = await summaryCardCount('Floor Views');
+
+    expect(totalViews).toBe(results.dashboard.views.length);
+    expect(areaViews).toBeGreaterThanOrEqual(fixture.areaRegistry.length);
+    expect(floorViews).toBeGreaterThanOrEqual(fixture.floorRegistry.length);
   });
 });
 

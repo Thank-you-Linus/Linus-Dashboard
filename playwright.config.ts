@@ -37,8 +37,8 @@ export default defineConfig({
     /* Screenshot on failure */
     screenshot: 'only-on-failure',
 
-    /* Video on failure */
-    video: 'retain-on-failure',
+    /* Record videos on CI so the MR can show what was exercised */
+    video: process.env.CI ? 'on' : 'retain-on-failure',
 
     /* Headless mode for CI */
     headless: true,

@@ -31,14 +31,14 @@ export default defineConfig({
     /* Base URL to use in actions like `await page.goto('/')` */
     baseURL: 'http://localhost:8080',
 
-    /* Collect trace when retrying the failed test */
-    trace: 'on-first-retry',
+    /* Collect trace, screenshot, and video on failure */
+    trace: 'retain-on-failure',
 
     /* Screenshot on failure */
     screenshot: 'only-on-failure',
 
     /* Video on failure */
-    video: 'on-first-retry',
+    video: 'retain-on-failure',
 
     /* Headless mode for CI */
     headless: true,

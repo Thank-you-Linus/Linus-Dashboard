@@ -1,0 +1,11 @@
+{
+  "homeassistant": {
+    "name": "Linus Test Home",
+    "time_zone": "Europe/Brussels",
+    "country": "BE",
+    "language": "fr"
+  },
+  "lovelace": {
+    "mode": "storage"
+  }
+}

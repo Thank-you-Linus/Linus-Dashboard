@@ -6,6 +6,12 @@ on:
       - "main"
     types: [opened, synchronize, reopened]
 
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+  checks: read
+
 jobs:
   # Job 1: Python Linting
   python-lint:
@@ -150,38 +156,57 @@ jobs:
             const pythonLintResult = '${{ needs.python-lint.result }}';
             const typescriptResult = '${{ needs.typescript-check.result }}';
             const buildResult = '${{ needs.build-and-test.result }}';
-            
+            const headSha = context.payload.pull_request?.head?.sha || context.sha;
+
             const statusEmoji = (result) => {
               if (result === 'success') return '✅';
               if (result === 'failure') return '❌';
               if (result === 'skipped') return '⏭️';
+              if (result === 'pending') return '⏳';
               return '⚠️';
             };
-            
+
             const statusText = (result) => {
               if (result === 'success') return 'Passed';
               if (result === 'failure') return 'Failed';
               if (result === 'skipped') return 'Skipped';
+              if (result === 'pending') return 'Pending';
               return 'Warning';
             };
-            
+
+            const { data: checks } = await github.rest.checks.listForRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: headSha,
+            });
+
+            const playwrightRuns = checks.check_runs.filter((check) => check.name === 'Playwright E2E');
+            const playwrightLatest = playwrightRuns.sort((a, b) => new Date(b.started_at || b.created_at).getTime() - new Date(a.started_at || a.created_at).getTime())[0];
+            const playwrightResult = playwrightLatest ? (playwrightLatest.conclusion || playwrightLatest.status || 'pending') : 'pending';
+
             let body = `## 🔍 CI Check Results\n\n`;
             body += `| Check | Status | Details |\n`;
             body += `|-------|--------|----------|\n`;
             body += `| **Python Lint (Ruff)** | ${statusEmoji(pythonLintResult)} | ${statusText(pythonLintResult)} |\n`;
             body += `| **TypeScript & ESLint** | ${statusEmoji(typescriptResult)} | ${statusText(typescriptResult)} (non-blocking) |\n`;
-            body += `| **Build & Smoke Tests** | ${statusEmoji(buildResult)} | ${statusText(buildResult)} |\n\n`;
-            
+            body += `| **Build & Smoke Tests** | ${statusEmoji(buildResult)} | ${statusText(buildResult)} |\n`;
+            body += `| **Playwright E2E** | ${statusEmoji(playwrightResult)} | ${statusText(playwrightResult)} |\n\n`;
+
             if (buildResult === 'failure') {
               body += `### ❌ Build or Smoke Tests Failed\n\n`;
               body += `The build or smoke tests failed. This PR cannot be merged until the issue is resolved.\n\n`;
             }
-            
+
+            if (playwrightResult === 'failure') {
+              body += `### ❌ Playwright E2E Failed\n\n`;
+              body += `The Playwright E2E checks failed. This PR cannot be merged until they pass.\n\n`;
+            }
+
             if (pythonLintResult === 'failure') {
               body += `### ⚠️ Python Linting Issues\n\n`;
               body += `Run \`python3 -m ruff check . --fix\` to auto-fix issues.\n\n`;
             }
-            
+
             if (typescriptResult !== 'success') {
               body += `### ℹ️ TypeScript/ESLint Issues (Non-blocking)\n\n`;
               body += `TypeScript and ESLint checks found issues but are non-blocking.\n`;
@@ -189,12 +214,12 @@ jobs:
               body += `- Run \`npm run lint\` to auto-fix ESLint issues\n`;
               body += `- Run \`npm run type-check\` to see TypeScript errors\n\n`;
             }
-            
-            if (pythonLintResult === 'success' && buildResult === 'success') {
+
+            if (pythonLintResult === 'success' && buildResult === 'success' && playwrightResult === 'success') {
               body += `### ✅ All Required Checks Passed!\n\n`;
               body += `This PR is ready for review and can be merged.\n\n`;
             }
-            
+
             body += `---\n`;
             body += `*Automated CI check • [View workflow run](${context.payload.repository.html_url}/actions/runs/${context.runId})*`;
             

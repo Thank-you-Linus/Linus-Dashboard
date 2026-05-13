@@ -147,7 +147,7 @@ jobs:
     name: 'Post PR Comment'
     runs-on: 'ubuntu-latest'
     needs: [python-lint, typescript-check, build-and-test]
-    if: always() && !startsWith(github.head_ref, 'dependabot/')
+    if: github.event_name == 'pull_request' && always() && !startsWith(github.head_ref, 'dependabot/')
     steps:
       - name: "Post results comment"
         uses: actions/github-script@v7

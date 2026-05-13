@@ -80,7 +80,7 @@
     "test:ci": "bash scripts/ci-local.sh",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "test:e2e:server": "node tests/e2e/server.js",
+    "test:e2e:server": "node tests/e2e/server.cjs",
     "analyze:commits": "bash scripts/analyze-commits.sh",
     "release:check": "bash scripts/check-release-ready.sh",
     "release:validate": "bash scripts/validate-release-notes.sh",

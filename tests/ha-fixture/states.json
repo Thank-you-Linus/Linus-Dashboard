@@ -1,0 +1,388 @@
+{
+  "states": {
+    "climate.living_room": {
+      "entity_id": "climate.living_room",
+      "state": "cool",
+      "attributes": {
+        "hvac_modes": ["off", "heat", "cool", "heat_cool", "auto"],
+        "min_temp": 45,
+        "max_temp": 95,
+        "target_temp_step": 0.5,
+        "current_temperature": 72,
+        "temperature": 70,
+        "hvac_action": "cooling",
+        "friendly_name": "Living Room Thermostat",
+        "supported_features": 43
+      },
+      "last_changed": "2025-05-13T08:00:00Z",
+      "last_updated": "2025-05-13T08:30:00Z",
+      "context": {"id": "ctx_001"}
+    },
+    "media_player.living_room_tv": {
+      "entity_id": "media_player.living_room_tv",
+      "state": "playing",
+      "attributes": {
+        "source_list": ["HDMI 1", "HDMI 2", "Netflix", "YouTube"],
+        "volume_level": 0.35,
+        "is_volume_muted": false,
+        "media_content_type": "movie",
+        "media_title": "The Matrix",
+        "source": "Netflix",
+        "friendly_name": "Living Room TV",
+        "entity_picture": "/api/media_player_proxy/media_player.living_room_tv",
+        "supported_features": 152463
+      },
+      "last_changed": "2025-05-13T08:15:00Z",
+      "last_updated": "2025-05-13T08:30:00Z",
+      "context": {"id": "ctx_002"}
+    },
+    "light.living_room_main": {
+      "entity_id": "light.living_room_main",
+      "state": "on",
+      "attributes": {
+        "min_mireds": 153,
+        "max_mireds": 454,
+        "supported_color_modes": ["color_temp", "hs"],
+        "color_mode": "color_temp",
+        "brightness": 180,
+        "color_temp_kelvin": 3000,
+        "color_temp": 333,
+        "hs_color": [27.9, 59.4],
+        "xy_color": [0.474, 0.386],
+        "friendly_name": "Main Light",
+        "supported_features": 40
+      },
+      "last_changed": "2025-05-13T08:20:00Z",
+      "last_updated": "2025-05-13T08:30:00Z",
+      "context": {"id": "ctx_003"}
+    },
+    "light.living_room_ambient": {
+      "entity_id": "light.living_room_ambient",
+      "state": "off",
+      "attributes": {
+        "min_mireds": 153,
+        "max_mireds": 454,
+        "supported_color_modes": ["hs"],
+        "color_mode": null,
+        "brightness": null,
+        "hs_color": null,
+        "friendly_name": "Ambient Light",
+        "supported_features": 40
+      },
+      "last_changed": "2025-05-13T08:10:00Z",
+      "last_updated": "2025-05-13T08:10:00Z",
+      "context": {"id": "ctx_004"}
+    },
+    "sensor.living_room_temperature": {
+      "entity_id": "sensor.living_room_temperature",
+      "state": "72.5",
+      "attributes": {
+        "state_class": "measurement",
+        "unit_of_measurement": "°F",
+        "device_class": "temperature",
+        "friendly_name": "Living Room Temperature"
+      },
+      "last_changed": "2025-05-13T08:30:00Z",
+      "last_updated": "2025-05-13T08:30:00Z",
+      "context": {"id": "ctx_005"}
+    },
+    "binary_sensor.living_room_motion": {
+      "entity_id": "binary_sensor.living_room_motion",
+      "state": "off",
+      "attributes": {
+        "device_class": "motion",
+        "friendly_name": "Living Room Motion"
+      },
+      "last_changed": "2025-05-13T08:25:00Z",
+      "last_updated": "2025-05-13T08:25:00Z",
+      "context": {"id": "ctx_006"}
+    },
+    "climate.kitchen": {
+      "entity_id": "climate.kitchen",
+      "state": "off",
+      "attributes": {
+        "hvac_modes": ["off", "heat", "cool"],
+        "min_temp": 50,
+        "max_temp": 90,
+        "current_temperature": 74,
+        "temperature": 72,
+        "friendly_name": "Kitchen Climate",
+        "supported_features": 1
+      },
+      "last_changed": "2025-05-13T07:00:00Z",
+      "last_updated": "2025-05-13T08:30:00Z",
+      "context": {"id": "ctx_007"}
+    },
+    "sensor.kitchen_temperature": {
+      "entity_id": "sensor.kitchen_temperature",
+      "state": "73.8",
+      "attributes": {
+        "state_class": "measurement",
+        "unit_of_measurement": "°F",
+        "device_class": "temperature",
+        "friendly_name": "Kitchen Temperature"
+      },
+      "last_changed": "2025-05-13T08:30:00Z",
+      "last_updated": "2025-05-13T08:30:00Z",
+      "context": {"id": "ctx_008"}
+    },
+    "binary_sensor.kitchen_motion": {
+      "entity_id": "binary_sensor.kitchen_motion",
+      "state": "on",
+      "attributes": {
+        "device_class": "motion",
+        "friendly_name": "Kitchen Motion"
+      },
+      "last_changed": "2025-05-13T08:28:00Z",
+      "last_updated": "2025-05-13T08:28:00Z",
+      "context": {"id": "ctx_009"}
+    },
+    "switch.kitchen_coffee_maker": {
+      "entity_id": "switch.kitchen_coffee_maker",
+      "state": "on",
+      "attributes": {
+        "friendly_name": "Coffee Maker"
+      },
+      "last_changed": "2025-05-13T08:00:00Z",
+      "last_updated": "2025-05-13T08:00:00Z",
+      "context": {"id": "ctx_010"}
+    },
+    "cover.garage_door": {
+      "entity_id": "cover.garage_door",
+      "state": "closed",
+      "attributes": {
+        "device_class": "garage",
+        "friendly_name": "Garage Door",
+        "supported_features": 3
+      },
+      "last_changed": "2025-05-13T07:30:00Z",
+      "last_updated": "2025-05-13T07:30:00Z",
+      "context": {"id": "ctx_011"}
+    },
+    "binary_sensor.garage_door_sensor": {
+      "entity_id": "binary_sensor.garage_door_sensor",
+      "state": "off",
+      "attributes": {
+        "device_class": "garage_door",
+        "friendly_name": "Garage Door Sensor"
+      },
+      "last_changed": "2025-05-13T07:30:00Z",
+      "last_updated": "2025-05-13T07:30:00Z",
+      "context": {"id": "ctx_012"}
+    },
+    "device_tracker.tesla_model_3": {
+      "entity_id": "device_tracker.tesla_model_3",
+      "state": "home",
+      "attributes": {
+        "source_type": "gps",
+        "latitude": 40.7128,
+        "longitude": -74.0060,
+        "gps_accuracy": 5,
+        "friendly_name": "Tesla Model 3"
+      },
+      "last_changed": "2025-05-13T07:45:00Z",
+      "last_updated": "2025-05-13T08:30:00Z",
+      "context": {"id": "ctx_013"}
+    },
+    "sensor.tesla_battery": {
+      "entity_id": "sensor.tesla_battery",
+      "state": "78",
+      "attributes": {
+        "state_class": "measurement",
+        "unit_of_measurement": "%",
+        "device_class": "battery",
+        "friendly_name": "Tesla Battery",
+        "icon": "mdi:battery-80"
+      },
+      "last_changed": "2025-05-13T08:30:00Z",
+      "last_updated": "2025-05-13T08:30:00Z",
+      "context": {"id": "ctx_014"}
+    },
+    "climate.bedroom": {
+      "entity_id": "climate.bedroom",
+      "state": "heat",
+      "attributes": {
+        "hvac_modes": ["off", "heat", "cool", "auto"],
+        "min_temp": 45,
+        "max_temp": 95,
+        "current_temperature": 68,
+        "temperature": 70,
+        "hvac_action": "heating",
+        "friendly_name": "Bedroom Thermostat",
+        "supported_features": 43
+      },
+      "last_changed": "2025-05-13T06:00:00Z",
+      "last_updated": "2025-05-13T08:30:00Z",
+      "context": {"id": "ctx_015"}
+    },
+    "light.bedroom_main": {
+      "entity_id": "light.bedroom_main",
+      "state": "off",
+      "attributes": {
+        "supported_color_modes": ["brightness"],
+        "color_mode": null,
+        "brightness": null,
+        "friendly_name": "Bedroom Main Light",
+        "supported_features": 33
+      },
+      "last_changed": "2025-05-13T07:00:00Z",
+      "last_updated": "2025-05-13T07:00:00Z",
+      "context": {"id": "ctx_016"}
+    },
+    "fan.bedroom_ceiling": {
+      "entity_id": "fan.bedroom_ceiling",
+      "state": "off",
+      "attributes": {
+        "percentage": 0,
+        "preset_mode": null,
+        "preset_modes": ["auto", "smart", "breeze"],
+        "direction": "forward",
+        "oscillating": false,
+        "friendly_name": "Bedroom Ceiling Fan",
+        "supported_features": 15
+      },
+      "last_changed": "2025-05-13T07:00:00Z",
+      "last_updated": "2025-05-13T07:00:00Z",
+      "context": {"id": "ctx_017"}
+    },
+    "binary_sensor.bedroom_window": {
+      "entity_id": "binary_sensor.bedroom_window",
+      "state": "off",
+      "attributes": {
+        "device_class": "window",
+        "friendly_name": "Bedroom Window"
+      },
+      "last_changed": "2025-05-13T07:00:00Z",
+      "last_updated": "2025-05-13T07:00:00Z",
+      "context": {"id": "ctx_018"}
+    },
+    "camera.front_door": {
+      "entity_id": "camera.front_door",
+      "state": "recording",
+      "attributes": {
+        "brand": "Ring",
+        "model": "Video Doorbell Pro",
+        "frontend_stream_type": "hls",
+        "friendly_name": "Front Door Camera",
+        "entity_picture": "/api/camera_proxy/camera.front_door",
+        "supported_features": 2
+      },
+      "last_changed": "2025-05-13T08:00:00Z",
+      "last_updated": "2025-05-13T08:00:00Z",
+      "context": {"id": "ctx_019"}
+    },
+    "binary_sensor.front_door_motion": {
+      "entity_id": "binary_sensor.front_door_motion",
+      "state": "off",
+      "attributes": {
+        "device_class": "motion",
+        "friendly_name": "Front Door Motion"
+      },
+      "last_changed": "2025-05-13T08:15:00Z",
+      "last_updated": "2025-05-13T08:15:00Z",
+      "context": {"id": "ctx_020"}
+    },
+    "weather.home": {
+      "entity_id": "weather.home",
+      "state": "sunny",
+      "attributes": {
+        "temperature": 75,
+        "temperature_unit": "°F",
+        "humidity": 45,
+        "pressure": 30.12,
+        "pressure_unit": "inHg",
+        "wind_bearing": 180,
+        "wind_speed": 5,
+        "wind_speed_unit": "mph",
+        "visibility": 10,
+        "visibility_unit": "mi",
+        "precipitation_unit": "in",
+        "forecast": [],
+        "friendly_name": "Home Weather"
+      },
+      "last_changed": "2025-05-13T08:00:00Z",
+      "last_updated": "2025-05-13T08:30:00Z",
+      "context": {"id": "ctx_021"}
+    },
+    "sensor.outdoor_temperature": {
+      "entity_id": "sensor.outdoor_temperature",
+      "state": "74.2",
+      "attributes": {
+        "state_class": "measurement",
+        "unit_of_measurement": "°F",
+        "device_class": "temperature",
+        "friendly_name": "Outdoor Temperature"
+      },
+      "last_changed": "2025-05-13T08:30:00Z",
+      "last_updated": "2025-05-13T08:30:00Z",
+      "context": {"id": "ctx_022"}
+    },
+    "lock.front_door": {
+      "entity_id": "lock.front_door",
+      "state": "locked",
+      "attributes": {
+        "friendly_name": "Front Door Lock"
+      },
+      "last_changed": "2025-05-13T07:00:00Z",
+      "last_updated": "2025-05-13T07:00:00Z",
+      "context": {"id": "ctx_023"}
+    },
+    "binary_sensor.front_door": {
+      "entity_id": "binary_sensor.front_door",
+      "state": "off",
+      "attributes": {
+        "device_class": "door",
+        "friendly_name": "Front Door"
+      },
+      "last_changed": "2025-05-13T07:00:00Z",
+      "last_updated": "2025-05-13T07:00:00Z",
+      "context": {"id": "ctx_024"}
+    },
+    "sensor.energy_total": {
+      "entity_id": "sensor.energy_total",
+      "state": "1250.5",
+      "attributes": {
+        "state_class": "total_increasing",
+        "unit_of_measurement": "kWh",
+        "device_class": "energy",
+        "friendly_name": "Total Energy"
+      },
+      "last_changed": "2025-05-13T08:30:00Z",
+      "last_updated": "2025-05-13T08:30:00Z",
+      "context": {"id": "ctx_025"}
+    },
+    "sensor.power_usage": {
+      "entity_id": "sensor.power_usage",
+      "state": "2.4",
+      "attributes": {
+        "state_class": "measurement",
+        "unit_of_measurement": "kW",
+        "device_class": "power",
+        "friendly_name": "Power Usage"
+      },
+      "last_changed": "2025-05-13T08:30:00Z",
+      "last_updated": "2025-05-13T08:30:00Z",
+      "context": {"id": "ctx_026"}
+    },
+    "light.hallway": {
+      "entity_id": "light.hallway",
+      "state": "unavailable",
+      "attributes": {
+        "friendly_name": "Hallway Light"
+      },
+      "last_changed": "2025-05-13T06:00:00Z",
+      "last_updated": "2025-05-13T06:00:00Z",
+      "context": {"id": "ctx_027"}
+    },
+    "switch.unassigned_switch": {
+      "entity_id": "switch.unassigned_switch",
+      "state": "off",
+      "attributes": {
+        "friendly_name": "Unassigned Switch"
+      },
+      "last_changed": "2025-05-13T07:00:00Z",
+      "last_updated": "2025-05-13T07:00:00Z",
+      "context": {"id": "ctx_028"}
+    }
+  }
+}

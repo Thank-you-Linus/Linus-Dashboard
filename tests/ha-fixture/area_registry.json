@@ -1,0 +1,55 @@
+{
+  "areas": [
+    {
+      "area_id": "living_room",
+      "name": "Living Room",
+      "floor_id": "ground_floor",
+      "icon": "mdi:sofa",
+      "picture": null,
+      "labels": [],
+      "aliases": [],
+      "order": 0
+    },
+    {
+      "area_id": "kitchen",
+      "name": "Kitchen",
+      "floor_id": "ground_floor",
+      "icon": "mdi:fridge",
+      "picture": null,
+      "labels": [],
+      "aliases": [],
+      "order": 1
+    },
+    {
+      "area_id": "garage",
+      "name": "Garage",
+      "floor_id": "ground_floor",
+      "icon": "mdi:garage",
+      "picture": null,
+      "labels": ["utility"],
+      "aliases": [],
+      "order": 2
+    },
+    {
+      "area_id": "bedroom",
+      "name": "Master Bedroom",
+      "floor_id": "first_floor",
+      "icon": "mdi:bed-king",
+      "picture": null,
+      "labels": [],
+      "aliases": [],
+      "order": 3
+    },
+    {
+      "area_id": "outdoor",
+      "name": "Outdoor",
+      "floor_id": null,
+      "icon": "mdi:tree",
+      "picture": null,
+      "labels": ["outside", "security"],
+      "aliases": [],
+      "order": 4
+    }
+  ]
+}
+</invoke>

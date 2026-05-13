@@ -1,0 +1,67 @@
+{
+  "resources": {
+    "light": {
+      "_": {"default": "mdi:lightbulb", "on": "mdi:lightbulb-on", "off": "mdi:lightbulb-off"}
+    },
+    "switch": {
+      "_": {"default": "mdi:toggle-switch", "on": "mdi:toggle-switch", "off": "mdi:toggle-switch-off"}
+    },
+    "fan": {
+      "_": {"default": "mdi:fan", "on": "mdi:fan", "off": "mdi:fan-off"}
+    },
+    "climate": {
+      "_": {"default": "mdi:thermostat", "on": "mdi:thermostat", "off": "mdi:thermostat-box"}
+    },
+    "media_player": {
+      "_": {"default": "mdi:cast", "on": "mdi:cast-connected", "off": "mdi:cast-off", "playing": "mdi:play-circle", "paused": "mdi:pause-circle"}
+    },
+    "cover": {
+      "_": {"default": "mdi:garage", "on": "mdi:garage-open", "off": "mdi:garage"},
+      "garage": {"default": "mdi:garage", "on": "mdi:garage-open", "off": "mdi:garage"},
+      "door": {"default": "mdi:door", "on": "mdi:door-open", "off": "mdi:door-closed"},
+      "window": {"default": "mdi:window-closed", "on": "mdi:window-open", "off": "mdi:window-closed"}
+    },
+    "lock": {
+      "_": {"default": "mdi:lock", "on": "mdi:lock-open", "off": "mdi:lock"}
+    },
+    "camera": {
+      "_": {"default": "mdi:camera", "on": "mdi:camera", "off": "mdi:camera-off"}
+    },
+    "sensor": {
+      "_": {"default": "mdi:eye"},
+      "temperature": {"default": "mdi:thermometer"},
+      "humidity": {"default": "mdi:water-percent"},
+      "battery": {"default": "mdi:battery", "on": "mdi:battery-alert", "off": "mdi:battery"},
+      "power": {"default": "mdi:lightning-bolt"},
+      "energy": {"default": "mdi:lightning-bolt"},
+      "pressure": {"default": "mdi:gauge"}
+    },
+    "binary_sensor": {
+      "_": {"default": "mdi:radiobox-blank", "on": "mdi:radiobox-marked", "off": "mdi:radiobox-blank"},
+      "motion": {"default": "mdi:motion-sensor", "on": "mdi:motion-sensor", "off": "mdi:motion-sensor-off"},
+      "door": {"default": "mdi:door-closed", "on": "mdi:door-open", "off": "mdi:door-closed"},
+      "window": {"default": "mdi:window-closed", "on": "mdi:window-open", "off": "mdi:window-closed"},
+      "garage_door": {"default": "mdi:garage", "on": "mdi:garage-open", "off": "mdi:garage"},
+      "occupancy": {"default": "mdi:home", "on": "mdi:home", "off": "mdi:home-outline"}
+    },
+    "device_tracker": {
+      "_": {"default": "mdi:crosshairs-gps", "on": "mdi:crosshairs-gps", "off": "mdi:crosshairs-gps"}
+    },
+    "weather": {
+      "_": {"default": "mdi:weather-partly-cloudy"},
+      "sunny": {"default": "mdi:weather-sunny"},
+      "cloudy": {"default": "mdi:weather-cloudy"},
+      "rainy": {"default": "mdi:weather-rainy"},
+      "snowy": {"default": "mdi:weather-snowy"}
+    },
+    "scene": {
+      "_": {"default": "mdi:palette"}
+    },
+    "automation": {
+      "_": {"default": "mdi:robot"}
+    },
+    "script": {
+      "_": {"default": "mdi:script-text"}
+    }
+  }
+}

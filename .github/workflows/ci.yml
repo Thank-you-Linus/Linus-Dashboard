@@ -174,15 +174,44 @@ jobs:
               return 'Warning';
             };
 
-            const { data: checks } = await github.rest.checks.listForRef({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              ref: headSha,
-            });
+            const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-            const playwrightRuns = checks.check_runs.filter((check) => check.name === 'Playwright E2E');
-            const playwrightLatest = playwrightRuns.sort((a, b) => new Date(b.started_at || b.created_at).getTime() - new Date(a.started_at || a.created_at).getTime())[0];
-            const playwrightResult = playwrightLatest ? (playwrightLatest.conclusion || playwrightLatest.status || 'pending') : 'pending';
+            const waitForPlaywrightResult = async () => {
+              const deadline = Date.now() + 10 * 60 * 1000;
+
+              while (Date.now() < deadline) {
+                const { data: checks } = await github.rest.checks.listForRef({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  ref: headSha,
+                });
+
+                const playwrightRuns = checks.check_runs.filter((check) => check.name === 'Playwright E2E');
+                const playwrightLatest = playwrightRuns.sort((a, b) => new Date(b.started_at || b.created_at).getTime() - new Date(a.started_at || a.created_at).getTime())[0];
+
+                if (playwrightLatest && playwrightLatest.conclusion) {
+                  return playwrightLatest.conclusion;
+                }
+
+                if (playwrightLatest && ['completed', 'cancelled', 'neutral', 'success', 'failure', 'skipped', 'timed_out', 'action_required', 'stale'].includes(playwrightLatest.status)) {
+                  return playwrightLatest.conclusion || playwrightLatest.status || 'pending';
+                }
+
+                await sleep(15000);
+              }
+
+              const { data: finalChecks } = await github.rest.checks.listForRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: headSha,
+              });
+
+              const finalRuns = finalChecks.check_runs.filter((check) => check.name === 'Playwright E2E');
+              const finalLatest = finalRuns.sort((a, b) => new Date(b.started_at || b.created_at).getTime() - new Date(a.started_at || a.created_at).getTime())[0];
+              return finalLatest ? (finalLatest.conclusion || finalLatest.status || 'pending') : 'pending';
+            };
+
+            const playwrightResult = await waitForPlaywrightResult();
 
             let body = `## 🔍 CI Check Results\n\n`;
             body += `| Check | Status | Details |\n`;

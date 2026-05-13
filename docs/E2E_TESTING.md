@@ -12,10 +12,10 @@ This repository now includes a Playwright-based regression harness that runs aga
 
 ## What you can inspect in the MR
 
-- the GitHub Actions comment now links to the live Playwright HTML report on GitHub Pages
+- the GitHub Actions comment now links to the live Playwright HTML report on GitHub Pages when Pages is enabled
 - on CI, Playwright records videos so you can visually inspect what the test exercised
 - on failure, the screenshots, trace, and video are uploaded as debug artifacts in the workflow run
-- the report URL is stable per PR/commit, so you can open it directly in the browser
+- the report URL is stable per PR/commit once Pages is enabled, so you can open it directly in the browser
 
 ## Coverage matrix
 

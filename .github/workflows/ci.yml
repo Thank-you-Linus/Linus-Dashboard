@@ -144,7 +144,7 @@ jobs:
     if: always() && !startsWith(github.head_ref, 'dependabot/')
     steps:
       - name: "Post results comment"
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const pythonLintResult = '${{ needs.python-lint.result }}';

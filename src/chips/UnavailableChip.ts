@@ -36,29 +36,25 @@ class UnavailableChip extends AbstractChip {
     constructor(options: chips.ChipOptions = {}) {
         super();
 
-        this.#defaultConfig.content = Helper.getCountTemplate({ domain: "all", operator: "eq", value: UNAVAILABLE, area_slug: options?.area_slug, allowUnavailable: true });
-
-        this.#defaultConfig.icon = Helper.getFromDomainState({
+        const entityIds = Helper.getEntityIds({
             domain: "all",
-            operator: "eq",
-            value: UNAVAILABLE,
-            ifReturn: this.#defaultConfig.icon,
-            elseReturn: "mdi:alert-circle-check-outline",
-            area_slug: options?.area_slug,
-            allowUnavailable: true
+            ...(options?.area_slug && { area_slug: options.area_slug })
         });
 
-        this.#defaultConfig.icon_color = Helper.getFromDomainState({
-            domain: "all",
-            operator: "eq",
-            value: UNAVAILABLE,
-            ifReturn: this.#defaultConfig.icon_color,
-            elseReturn: "green",
-            area_slug: options?.area_slug,
-            allowUnavailable: true
-        });
+        // Build the states array once and reuse via {% set %} to avoid repeating
+        // the entity list in icon, icon_color, and content templates separately.
+        const states = entityIds.map(id => `states['${id}']`).join(',');
+        const entitiesExpr = `[${states}]`;
+        const countExpr = `${entitiesExpr} | selectattr('state','eq','${UNAVAILABLE}') | list | count`;
 
-        this.#defaultConfig.tap_action = navigateTo("unavailable")
+        this.#defaultConfig.content = `{% set count = ${countExpr} %}{% if count > 0 %}{{ count }}{% endif %}`;
+        this.#defaultConfig.icon = `{% if ${countExpr} > 0 %}mdi:alert-circle-outline{% else %}mdi:alert-circle-check-outline{% endif %}`;
+        this.#defaultConfig.icon_color = `{% if ${countExpr} > 0 %}orange{% else %}green{% endif %}`;
+
+        // Set entity_id for targeted Mushroom re-evaluation
+        (this.#defaultConfig as any).entity_id = entityIds;
+
+        this.#defaultConfig.tap_action = navigateTo("unavailable");
 
         this.config = Object.assign(this.config, this.#defaultConfig);
     }

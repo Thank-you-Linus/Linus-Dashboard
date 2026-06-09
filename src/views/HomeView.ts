@@ -293,40 +293,39 @@ class HomeView {
         }),
       ].filter(Boolean);
 
-      // Collect area cards first to check if floor should be displayed
-      const areaCards: any[] = [];
+      // Collect area cards in parallel (dynamic imports are cached by ComponentRegistry)
+      const areaCardPromises = floor.areas_slug
+        .map(area_slug => Helper.areas[area_slug])
+        .filter((area): area is NonNullable<typeof area> => {
+          if (!area) return false;
+          if (Helper.strategyOptions.areas[area.slug]?.hidden) return false;
+          if (Helper.isAreaExcluded(area.area_id)) return false;
+          return true;
+        })
+        .map(async (area) => {
+          type ModuleType = typeof import("../cards/HomeAreaCard");
+          let module: ModuleType;
+          const moduleName = Helper.strategyOptions.areas[area.slug]?.type ?? Helper.strategyOptions.areas["_"]?.type ?? "default";
 
-      for (const area of floor.areas_slug.map(area_slug => Helper.areas[area_slug]).values()) {
-        if (!area) continue;
-        type ModuleType = typeof import("../cards/HomeAreaCard");
-
-        let module: ModuleType;
-        const moduleName = Helper.strategyOptions.areas[area.slug]?.type ?? Helper.strategyOptions.areas["_"]?.type ?? "default";
-
-        // Load module by type in strategy options.
-        try {
-          module = await import((`../cards/${moduleName}`));
-        } catch (e) {
-          // Fallback to the default strategy card.
-          module = await import("../cards/HomeAreaCard");
-          if (Helper.strategyOptions.debug && moduleName !== "default") {
-            console.error(e);
+          try {
+            module = await import((`../cards/${moduleName}`));
+          } catch (e) {
+            module = await import("../cards/HomeAreaCard");
+            if (Helper.strategyOptions.debug && moduleName !== "default") {
+              console.error(e);
+            }
           }
-        }
 
-        // Get a card for the area.
-        if (!Helper.strategyOptions.areas[area.slug]?.hidden && !Helper.isAreaExcluded(area.area_id)) {
           const options = {
             ...Helper.strategyOptions.areas["_"],
             ...Helper.strategyOptions.areas[area.slug],
             area_slug: area.slug,
           };
 
-          areaCards.push({
-            ...new module.HomeAreaCard(options).getCard(),
-          });
-        }
-      }
+          return { ...new module.HomeAreaCard(options).getCard() };
+        });
+
+      const areaCards = await Promise.all(areaCardPromises);
 
       // Only display floor if it has visible area cards
       if (areaCards.length > 0) {

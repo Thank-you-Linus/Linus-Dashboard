@@ -17,6 +17,12 @@ help:
 # Start Home Assistant
 dev:
 	@echo "📄 Loading environment..."
+	@if [ ! -e config/custom_components ]; then \
+		echo "🔗 Linking custom_components into config..."; \
+		ln -s ../custom_components config/custom_components; \
+	else \
+		echo "🔗 config/custom_components already exists, skipping symlink"; \
+	fi
 	@echo "🐍 Activating Python virtual environment..."
 	@echo "🚀 Starting Home Assistant on http://localhost:8123"
 	@. ./.env 2>/dev/null || true; \

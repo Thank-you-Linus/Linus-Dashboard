@@ -4,8 +4,8 @@ homeassistant:
   debug: true
 
 # Composants essentiels (remplace default_config sans go2rtc)
-automation: !include automations.yaml
-script: !include scripts.yaml
+# automation: !include automations.yaml
+# script: !include scripts.yaml
 scene: !include scenes.yaml
 
 # Intégrations de base

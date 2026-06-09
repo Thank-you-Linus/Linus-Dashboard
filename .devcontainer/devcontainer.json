@@ -11,13 +11,13 @@
     "ghcr.io/devcontainers/features/github-cli:1": {}
   },
 
-  "mounts": [
-    {
-      "source": "${localWorkspaceFolder}/../sapiens",
-      "target": "/workspaces/sapiens",
-      "type": "bind"
-    }
-  ],
+  // "mounts": [
+  //   {
+  //     "source": "${localWorkspaceFolder}/../sapiens",
+  //     "target": "/workspaces/sapiens",
+  //     "type": "bind"
+  //   }
+  // ],
 
   "onCreateCommand": [
     "bash", "-c",

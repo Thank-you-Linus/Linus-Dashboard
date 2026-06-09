@@ -189,6 +189,7 @@ _Example: Energy dashboard embedded seamlessly in Linus_
 **New to Linus?** → [🚀 5-Minute Quick Start Guide](docs/QUICK_START.md)
 
 **Learn about features:**
+
 - [📊 Activity Detection Guide](docs/ACTIVITY_DETECTION.md) - Understand room occupancy tracking
 - [📖 Embedded Dashboards](docs/EMBEDDED_DASHBOARDS.md) - Integrate custom views
 - [📚 Full Documentation Map](docs/DOCUMENTATION_MAP.md) - Complete guide index
@@ -228,7 +229,8 @@ The project includes a complete development environment that sets up automatical
 1. **Open in VS Code**: Clone the repository and open in VS Code
 2. **Reopen in Container**: VS Code will prompt to reopen in dev container
 3. **Auto-setup**: Dependencies install automatically (Python 3.13, Node.js 20, Home Assistant)
-4. **Start developing**: `make dev` launches Home Assistant on http://localhost:8123
+4. **Copy .env.example**: Make a copy of `.env.example` as `.env`. Adjust any values as needed
+5. **Start developing**: `make dev` launches Home Assistant on http://localhost:8123
 
 ### Development Commands
 
@@ -310,13 +312,11 @@ With Home Assistant 2025.1+, you can drag & drop rooms directly in HA settings (
 **Follow these steps to resolve the issue**:
 
 1. **Clear your cache**:
-
    - For browsers: Clear your browser cache
    - For the Home Assistant mobile app: Clear the app cache via your device settings
    - If you're using a reverse proxy or a DNS service like Cloudflare: Clear the cache there as well
 
 2. **Force a refresh**:
-
    - On **Windows**: Press `CTRL + F5`
    - On **Mac**:
      - Hold `⇧ Shift` and click the Reload button

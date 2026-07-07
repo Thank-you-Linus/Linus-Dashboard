@@ -21,8 +21,8 @@ class SettingsPopup extends AbstractPopup {
 
     // Detect Linus Brain integration
     const detectionStatus = Helper.entityResolver?.getDetectionStatus();
-    const hasLinusBrain = detectionStatus?.hasLinusBrain || !!Helper.entities["sensor.linus_brain_rooms"];
-    const linusBrainRoomsSensor = Helper.entities["sensor.linus_brain_rooms"];
+    const hasLinusBrain = detectionStatus?.hasLinusBrain || !!Helper.entities["sensor.linus_brain_monitored_areas"];
+    const linusBrainRoomsSensor = Helper.entities["sensor.linus_brain_monitored_areas"];
     const linusBrainRoomsCount = linusBrainRoomsSensor ? Helper.getEntityState(linusBrainRoomsSensor.entity_id).state : "0";
 
     return {

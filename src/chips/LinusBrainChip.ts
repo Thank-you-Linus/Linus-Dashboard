@@ -19,7 +19,7 @@ class LinusBrainChip extends AbstractChip {
 
     const cloudHealthEntity = "sensor.linus_brain_cloud_health";
     const errorsEntity = "sensor.linus_brain_errors";
-    const roomsEntity = "sensor.linus_brain_rooms";
+    const roomsEntity = "sensor.linus_brain_monitored_areas";
 
     // Check if Linus Brain is installed
     const hasLinusBrain = !!Helper.entities[roomsEntity] || !!Helper.entities[cloudHealthEntity];

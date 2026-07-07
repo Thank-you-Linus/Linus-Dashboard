@@ -318,7 +318,7 @@ export class EntityResolver {
       return false;
     }
 
-    const linusBrainMainSensor = this.hass.states["sensor.linus_brain_rooms"];
+    const linusBrainMainSensor = this.hass.states["sensor.linus_brain_monitored_areas"];
     if (linusBrainMainSensor && linusBrainMainSensor.state !== "unavailable") {
       return true;
     }

@@ -171,7 +171,7 @@ describe('EntityResolver', () => {
 
       const resolver = new EntityResolver(makeHass({
         'sensor.magic_areas_area_state_salon': { state: 'occupied' },
-        'sensor.linus_brain_rooms': { state: '5' },
+        'sensor.linus_brain_monitored_areas': { state: '5' },
       }));
 
       const status = resolver.getDetectionStatus();

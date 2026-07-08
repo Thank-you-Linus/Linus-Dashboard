@@ -2,6 +2,7 @@
 # https://www.home-assistant.io/integrations/homeassistant/
 homeassistant:
   debug: true
+  packages: !include_dir_named packages
 
 # Composants essentiels (remplace default_config sans go2rtc)
 automation: !include automations.yaml

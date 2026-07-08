@@ -4,3 +4,4 @@ colorlog==6.9.0
 homeassistant==2026.4.0
 pip>=26.1.2
 ruff==0.15.20
+websockets>=13.0  # used by config/setup_fake_house_full.py (HA area/floor registry API)

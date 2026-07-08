@@ -58,6 +58,11 @@ config/*
 !config/scenes.yaml
 !config/.gitkeep
 
+# Fake house test environment (shareable so devs get the same HA test env)
+!config/packages/
+!config/packages/fake_house.yaml
+!config/setup_fake_house_full.py
+
 # Python virtual environment
 ha-env/
 venv/

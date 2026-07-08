@@ -1,0 +1,450 @@
+# Fake house for Linus Dashboard testing
+# Covers all domains that Magic Areas and Linus Dashboard use
+
+# ─────────────────────────────────────────────
+# BACKING ENTITIES (input_boolean / input_number / input_select)
+# ─────────────────────────────────────────────
+input_boolean:
+  # Lights
+  fake_salon_principal:
+  fake_salon_deco:
+  fake_salon_lampe:
+  fake_chambre:
+  fake_chambre_chevet:
+  fake_cuisine:
+  fake_cuisine_plan:
+  fake_bureau:
+  fake_bureau_bureau:
+  fake_salle_de_bain:
+  fake_entree:
+  # Covers (backing)
+  fake_salon_volet:
+  fake_chambre_volet:
+  fake_cuisine_volet:
+  fake_bureau_volet:
+  # Fans (backing)
+  fake_bureau_fan:
+  fake_sdb_fan:
+  # Climate heaters (backing for generic_thermostat)
+  fake_salon_heater:
+  fake_chambre_heater:
+  # Switches
+  fake_cuisine_lave_vaisselle:
+  fake_cuisine_hotte:
+
+input_number:
+  # Fan speeds
+  fake_bureau_fan_speed:
+    min: 0
+    max: 100
+    step: 25
+    initial: 0
+  fake_sdb_fan_speed:
+    min: 0
+    max: 100
+    step: 25
+    initial: 0
+
+input_select:
+  # Media players
+  fake_salon_tv:
+    options: ["off", "idle", "playing", "paused"]
+    initial: "off"
+  fake_salon_speaker:
+    options: ["off", "idle", "playing", "paused"]
+    initial: "off"
+  fake_chambre_speaker:
+    options: ["off", "idle", "playing", "paused"]
+    initial: "off"
+  fake_bureau_screen:
+    options: ["off", "idle", "playing", "paused"]
+    initial: "off"
+
+# ─────────────────────────────────────────────
+# TEMPLATE ENTITIES
+# ─────────────────────────────────────────────
+template:
+  - light:
+      # SALON
+      - name: "Salon Principal"
+        unique_id: "fake_light_salon_principal"
+        state: "{{ is_state('input_boolean.fake_salon_principal', 'on') }}"
+        turn_on:
+          - action: input_boolean.turn_on
+            target:
+              entity_id: input_boolean.fake_salon_principal
+        turn_off:
+          - action: input_boolean.turn_off
+            target:
+              entity_id: input_boolean.fake_salon_principal
+      - name: "Salon Deco"
+        unique_id: "fake_light_salon_deco"
+        state: "{{ is_state('input_boolean.fake_salon_deco', 'on') }}"
+        turn_on:
+          - action: input_boolean.turn_on
+            target:
+              entity_id: input_boolean.fake_salon_deco
+        turn_off:
+          - action: input_boolean.turn_off
+            target:
+              entity_id: input_boolean.fake_salon_deco
+      - name: "Salon Lampe"
+        unique_id: "fake_light_salon_lampe"
+        state: "{{ is_state('input_boolean.fake_salon_lampe', 'on') }}"
+        turn_on:
+          - action: input_boolean.turn_on
+            target:
+              entity_id: input_boolean.fake_salon_lampe
+        turn_off:
+          - action: input_boolean.turn_off
+            target:
+              entity_id: input_boolean.fake_salon_lampe
+      # CHAMBRE
+      - name: "Chambre Lumiere"
+        unique_id: "fake_light_chambre"
+        state: "{{ is_state('input_boolean.fake_chambre', 'on') }}"
+        turn_on:
+          - action: input_boolean.turn_on
+            target:
+              entity_id: input_boolean.fake_chambre
+        turn_off:
+          - action: input_boolean.turn_off
+            target:
+              entity_id: input_boolean.fake_chambre
+      - name: "Chambre Chevet"
+        unique_id: "fake_light_chambre_chevet"
+        state: "{{ is_state('input_boolean.fake_chambre_chevet', 'on') }}"
+        turn_on:
+          - action: input_boolean.turn_on
+            target:
+              entity_id: input_boolean.fake_chambre_chevet
+        turn_off:
+          - action: input_boolean.turn_off
+            target:
+              entity_id: input_boolean.fake_chambre_chevet
+      # CUISINE
+      - name: "Cuisine Lumiere"
+        unique_id: "fake_light_cuisine"
+        state: "{{ is_state('input_boolean.fake_cuisine', 'on') }}"
+        turn_on:
+          - action: input_boolean.turn_on
+            target:
+              entity_id: input_boolean.fake_cuisine
+        turn_off:
+          - action: input_boolean.turn_off
+            target:
+              entity_id: input_boolean.fake_cuisine
+      - name: "Cuisine Plan de Travail"
+        unique_id: "fake_light_cuisine_plan"
+        state: "{{ is_state('input_boolean.fake_cuisine_plan', 'on') }}"
+        turn_on:
+          - action: input_boolean.turn_on
+            target:
+              entity_id: input_boolean.fake_cuisine_plan
+        turn_off:
+          - action: input_boolean.turn_off
+            target:
+              entity_id: input_boolean.fake_cuisine_plan
+      # BUREAU
+      - name: "Bureau Lumiere"
+        unique_id: "fake_light_bureau"
+        state: "{{ is_state('input_boolean.fake_bureau', 'on') }}"
+        turn_on:
+          - action: input_boolean.turn_on
+            target:
+              entity_id: input_boolean.fake_bureau
+        turn_off:
+          - action: input_boolean.turn_off
+            target:
+              entity_id: input_boolean.fake_bureau
+      - name: "Bureau Lampe de Bureau"
+        unique_id: "fake_light_bureau_bureau"
+        state: "{{ is_state('input_boolean.fake_bureau_bureau', 'on') }}"
+        turn_on:
+          - action: input_boolean.turn_on
+            target:
+              entity_id: input_boolean.fake_bureau_bureau
+        turn_off:
+          - action: input_boolean.turn_off
+            target:
+              entity_id: input_boolean.fake_bureau_bureau
+      # SALLE DE BAIN
+      - name: "Salle de Bain"
+        unique_id: "fake_light_salle_de_bain"
+        state: "{{ is_state('input_boolean.fake_salle_de_bain', 'on') }}"
+        turn_on:
+          - action: input_boolean.turn_on
+            target:
+              entity_id: input_boolean.fake_salle_de_bain
+        turn_off:
+          - action: input_boolean.turn_off
+            target:
+              entity_id: input_boolean.fake_salle_de_bain
+      # ENTREE
+      - name: "Entree Lumiere"
+        unique_id: "fake_light_entree"
+        state: "{{ is_state('input_boolean.fake_entree', 'on') }}"
+        turn_on:
+          - action: input_boolean.turn_on
+            target:
+              entity_id: input_boolean.fake_entree
+        turn_off:
+          - action: input_boolean.turn_off
+            target:
+              entity_id: input_boolean.fake_entree
+
+# NOTE: temperature/humidity/illuminance sensors and motion/door binary_sensors
+# are provisioned as native HA "Random" helper entities (config_entries), not
+# templates, so they generate real random values on their own poll cycle.
+# Areas, floors and all entity->area assignments (for this whole package) are
+# also provisioned outside of YAML since they're runtime registry state.
+# Run config/setup_fake_house_full.py once after first boot to set it all up.
+
+# ─────────────────────────────────────────────
+# MEDIA PLAYERS (universal platform)
+# ─────────────────────────────────────────────
+media_player:
+  - platform: universal
+    name: "TV Salon"
+    unique_id: "fake_mp_tv_salon"
+    state_template: "{{ states('input_select.fake_salon_tv') }}"
+    commands:
+      turn_on:
+        action: input_select.select_option
+        target:
+          entity_id: input_select.fake_salon_tv
+        data:
+          option: "idle"
+      turn_off:
+        action: input_select.select_option
+        target:
+          entity_id: input_select.fake_salon_tv
+        data:
+          option: "off"
+  - platform: universal
+    name: "Enceinte Salon"
+    unique_id: "fake_mp_enceinte_salon"
+    state_template: "{{ states('input_select.fake_salon_speaker') }}"
+    commands:
+      turn_on:
+        action: input_select.select_option
+        target:
+          entity_id: input_select.fake_salon_speaker
+        data:
+          option: "idle"
+      turn_off:
+        action: input_select.select_option
+        target:
+          entity_id: input_select.fake_salon_speaker
+        data:
+          option: "off"
+  - platform: universal
+    name: "Enceinte Chambre"
+    unique_id: "fake_mp_enceinte_chambre"
+    state_template: "{{ states('input_select.fake_chambre_speaker') }}"
+    commands:
+      turn_on:
+        action: input_select.select_option
+        target:
+          entity_id: input_select.fake_chambre_speaker
+        data:
+          option: "idle"
+      turn_off:
+        action: input_select.select_option
+        target:
+          entity_id: input_select.fake_chambre_speaker
+        data:
+          option: "off"
+  - platform: universal
+    name: "Ecran Bureau"
+    unique_id: "fake_mp_ecran_bureau"
+    state_template: "{{ states('input_select.fake_bureau_screen') }}"
+    commands:
+      turn_on:
+        action: input_select.select_option
+        target:
+          entity_id: input_select.fake_bureau_screen
+        data:
+          option: "idle"
+      turn_off:
+        action: input_select.select_option
+        target:
+          entity_id: input_select.fake_bureau_screen
+        data:
+          option: "off"
+
+# ─────────────────────────────────────────────
+# COVERS (volets)
+# ─────────────────────────────────────────────
+cover:
+  - platform: template
+    covers:
+      volet_salon:
+        friendly_name: "Volet Salon"
+        unique_id: "fake_cover_salon"
+        value_template: "{{ is_state('input_boolean.fake_salon_volet', 'on') }}"
+        open_cover:
+          action: input_boolean.turn_on
+          target:
+            entity_id: input_boolean.fake_salon_volet
+        close_cover:
+          action: input_boolean.turn_off
+          target:
+            entity_id: input_boolean.fake_salon_volet
+        stop_cover:
+          action: input_boolean.turn_on
+          target:
+            entity_id: input_boolean.fake_salon_volet
+        position_template: "{{ 100 if is_state('input_boolean.fake_salon_volet', 'on') else 0 }}"
+      volet_chambre:
+        friendly_name: "Volet Chambre"
+        unique_id: "fake_cover_chambre"
+        value_template: "{{ is_state('input_boolean.fake_chambre_volet', 'on') }}"
+        open_cover:
+          action: input_boolean.turn_on
+          target:
+            entity_id: input_boolean.fake_chambre_volet
+        close_cover:
+          action: input_boolean.turn_off
+          target:
+            entity_id: input_boolean.fake_chambre_volet
+        stop_cover:
+          action: input_boolean.turn_on
+          target:
+            entity_id: input_boolean.fake_chambre_volet
+        position_template: "{{ 100 if is_state('input_boolean.fake_chambre_volet', 'on') else 0 }}"
+      volet_cuisine:
+        friendly_name: "Volet Cuisine"
+        unique_id: "fake_cover_cuisine"
+        value_template: "{{ is_state('input_boolean.fake_cuisine_volet', 'on') }}"
+        open_cover:
+          action: input_boolean.turn_on
+          target:
+            entity_id: input_boolean.fake_cuisine_volet
+        close_cover:
+          action: input_boolean.turn_off
+          target:
+            entity_id: input_boolean.fake_cuisine_volet
+        stop_cover:
+          action: input_boolean.turn_on
+          target:
+            entity_id: input_boolean.fake_cuisine_volet
+        position_template: "{{ 100 if is_state('input_boolean.fake_cuisine_volet', 'on') else 0 }}"
+      volet_bureau:
+        friendly_name: "Volet Bureau"
+        unique_id: "fake_cover_bureau"
+        value_template: "{{ is_state('input_boolean.fake_bureau_volet', 'on') }}"
+        open_cover:
+          action: input_boolean.turn_on
+          target:
+            entity_id: input_boolean.fake_bureau_volet
+        close_cover:
+          action: input_boolean.turn_off
+          target:
+            entity_id: input_boolean.fake_bureau_volet
+        stop_cover:
+          action: input_boolean.turn_on
+          target:
+            entity_id: input_boolean.fake_bureau_volet
+        position_template: "{{ 100 if is_state('input_boolean.fake_bureau_volet', 'on') else 0 }}"
+
+# ─────────────────────────────────────────────
+# FANS
+# ─────────────────────────────────────────────
+fan:
+  - platform: template
+    fans:
+      ventilateur_bureau:
+        friendly_name: "Ventilateur Bureau"
+        unique_id: "fake_fan_bureau"
+        value_template: "{{ is_state('input_boolean.fake_bureau_fan', 'on') }}"
+        turn_on:
+          action: input_boolean.turn_on
+          target:
+            entity_id: input_boolean.fake_bureau_fan
+        turn_off:
+          action: input_boolean.turn_off
+          target:
+            entity_id: input_boolean.fake_bureau_fan
+        percentage_template: "{{ states('input_number.fake_bureau_fan_speed') | int }}"
+        set_percentage:
+          action: input_number.set_value
+          target:
+            entity_id: input_number.fake_bureau_fan_speed
+          data:
+            value: "{{ percentage }}"
+      extraction_sdb:
+        friendly_name: "Extraction Salle de Bain"
+        unique_id: "fake_fan_sdb"
+        value_template: "{{ is_state('input_boolean.fake_sdb_fan', 'on') }}"
+        turn_on:
+          action: input_boolean.turn_on
+          target:
+            entity_id: input_boolean.fake_sdb_fan
+        turn_off:
+          action: input_boolean.turn_off
+          target:
+            entity_id: input_boolean.fake_sdb_fan
+        percentage_template: "{{ states('input_number.fake_sdb_fan_speed') | int }}"
+        set_percentage:
+          action: input_number.set_value
+          target:
+            entity_id: input_number.fake_sdb_fan_speed
+          data:
+            value: "{{ percentage }}"
+
+# ─────────────────────────────────────────────
+# CLIMATE (generic_thermostat)
+# ─────────────────────────────────────────────
+climate:
+  - platform: generic_thermostat
+    name: "Thermostat Salon"
+    unique_id: "fake_climate_salon"
+    heater: input_boolean.fake_salon_heater
+    target_sensor: sensor.temperature_salon
+    min_temp: 16
+    max_temp: 26
+    target_temp: 21
+    cold_tolerance: 0.5
+    hot_tolerance: 0.5
+  - platform: generic_thermostat
+    name: "Thermostat Chambre"
+    unique_id: "fake_climate_chambre"
+    heater: input_boolean.fake_chambre_heater
+    target_sensor: sensor.temperature_chambre
+    min_temp: 16
+    max_temp: 26
+    target_temp: 19
+    cold_tolerance: 0.5
+    hot_tolerance: 0.5
+
+# ─────────────────────────────────────────────
+# SWITCHES
+# ─────────────────────────────────────────────
+switch:
+  - platform: template
+    switches:
+      lave_vaisselle:
+        friendly_name: "Lave-vaisselle"
+        unique_id: "fake_switch_lave_vaisselle"
+        value_template: "{{ is_state('input_boolean.fake_cuisine_lave_vaisselle', 'on') }}"
+        turn_on:
+          action: input_boolean.turn_on
+          target:
+            entity_id: input_boolean.fake_cuisine_lave_vaisselle
+        turn_off:
+          action: input_boolean.turn_off
+          target:
+            entity_id: input_boolean.fake_cuisine_lave_vaisselle
+      hotte_cuisine:
+        friendly_name: "Hotte Cuisine"
+        unique_id: "fake_switch_hotte_cuisine"
+        value_template: "{{ is_state('input_boolean.fake_cuisine_hotte', 'on') }}"
+        turn_on:
+          action: input_boolean.turn_on
+          target:
+            entity_id: input_boolean.fake_cuisine_hotte
+        turn_off:
+          action: input_boolean.turn_off
+          target:
+            entity_id: input_boolean.fake_cuisine_hotte

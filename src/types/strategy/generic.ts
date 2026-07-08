@@ -153,6 +153,17 @@ export namespace generic {
   }
 
   /**
+   * Magic Areas Registry Entry.
+   *
+   * Represents a Magic Areas device with its entities mapped by translation_key.
+   */
+  export interface MagicAreaRegistryEntry extends DeviceRegistryEntry {
+    entities: Record<string, EntityRegistryEntry>;
+    area_name: string;
+    slug: string;
+  }
+
+  /**
    * Strategy Entity.
    *
    */

@@ -1,9 +1,12 @@
 import { Helper } from "./Helper";
+import { EntityRegistryEntry } from "./types/homeassistant/data/entity_registry";
 import { generic } from "./types/strategy/generic";
 import { ActionConfig, LovelaceCardConfig } from "./types/homeassistant/data/lovelace";
 import {
     DEVICE_CLASSES,
     AGGREGATE_DOMAINS,
+    LIGHT_DOMAIN,
+    GROUP_DOMAINS,
     UNDISCLOSED,
     AREA_CARDS_DOMAINS,
 } from "./variables";
@@ -60,6 +63,31 @@ export const slugify = memoize(function slugify(text: string | null, separator =
         .replace(/-/g, "_");
     return slug === "" ? "unknown" : slug;
 }, { name: 'slugify', maxSize: 200 });
+
+/**
+ * Get the slug for a magic area device.
+ * @param {generic.MagicAreaRegistryEntry} device - The magic area device.
+ * @returns {string} - The slug for the device.
+ */
+export const getMagicAreaSlug = memoize(function getMagicAreaSlug(device: generic.MagicAreaRegistryEntry): string {
+    return slugify(device.name ?? "").replace('-', '_');
+}, { name: 'getMagicAreaSlug', maxSize: 100 });
+
+/**
+ * Get a magic area entity.
+ * @param {string} magic_device_id - The magic device ID.
+ * @param {string} domain - The domain.
+ * @param {string} [device_class] - The device class.
+ * @returns {EntityRegistryEntry | undefined} - The magic area entity.
+ */
+export const getMAEntity = memoize(function getMAEntity(magic_device_id: string, domain: string, device_class?: string): EntityRegistryEntry | undefined {
+    const magicAreaDevice = Helper.magicAreasDevices[magic_device_id];
+
+    if (domain === LIGHT_DOMAIN) return magicAreaDevice?.entities?.[''] ?? magicAreaDevice?.entities?.['all_lights']
+    if (GROUP_DOMAINS.includes(domain)) return magicAreaDevice?.entities?.[`${domain}_group${device_class ? `_${device_class}` : ''}` as 'cover_group']
+    if (device_class && [...DEVICE_CLASSES.binary_sensor, ...DEVICE_CLASSES.sensor].includes(device_class)) return magicAreaDevice?.entities?.[`aggregate_${device_class}` as 'aggregate_motion']
+    return magicAreaDevice?.entities?.[domain] ?? undefined
+}, { name: 'getMAEntity', maxSize: 300 }) as (magic_device_id: string, domain: string, device_class?: string) => EntityRegistryEntry | undefined;
 
 /**
  * Get the state content for an entity.
@@ -700,12 +728,30 @@ export const getGlobalEntitiesExceptUndisclosed = memoize(function getGlobalEnti
 
 /**
  * Add light groups to entities.
- * Previously used Magic Areas light groups; now returns entities unchanged.
- * @param {generic.StrategyArea} area - The area (unused, kept for API compatibility).
+ * @param {generic.StrategyArea} area - The area.
  * @param {generic.StrategyEntity[]} entities - The entities.
- * @returns {generic.StrategyEntity[]} - The entities unchanged.
+ * @returns {generic.StrategyEntity[]} - The entities with light groups added.
  */
 export function addLightGroupsToEntities(area: generic.StrategyArea, entities: generic.StrategyEntity[]) {
+    const LIGHT_GROUPS = ["overhead_lights", "accent_lights", "task_lights", "sleep_lights"];
+    const lightGroups = LIGHT_GROUPS
+        .map(type => getMAEntity(area.slug, type))
+        .filter(Boolean);
+
+    for (const lightGroup of lightGroups) {
+        if (!lightGroup) continue;
+        const lightGroupState = Helper.getEntityState(lightGroup.entity_id);
+        if (lightGroupState.attributes.entity_id?.length) {
+            entities.unshift(lightGroup as generic.StrategyEntity);
+            lightGroupState.attributes.entity_id.forEach((entity_id: string) => {
+                const index = entities.findIndex(entity => entity.entity_id === entity_id);
+                if (index !== -1) {
+                    entities.splice(index, 1);
+                }
+            });
+        }
+    }
+
     return entities;
 }
 

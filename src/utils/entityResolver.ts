@@ -18,13 +18,27 @@ export interface EntityResolution {
 /**
  * Entity Resolver
  *
- * Resolves entities from Linus Brain when available, otherwise returns null.
+ * Resolves entities from Linus Brain when available, otherwise returns null
+ * (for the two entities Brain still owns) or a Linus Dashboard-native entity
+ * (for the two that moved here — see below).
  *
- * **Entities provided by Linus Brain:**
+ * **Entities still provided by Linus Brain (unchanged):**
  * - area_state → sensor.linus_brain_activity_{area}
- * - presence → binary_sensor.linus_brain_presence_detection_{area}
  * - light_control → switch.linus_brain_feature_automatic_lighting_{area}
- * - all_lights → light.linus_brain_all_lights_{area}
+ *
+ * **Entities now provided natively by Linus Dashboard (no Brain needed):**
+ * - presence → binary_sensor.linus_dashboard_presence_detection_area_{area}
+ * - all_lights → light.linus_dashboard_all_lights_area_{area}
+ *
+ * Presence and all_lights used to be Brain-only (`source: "linus_brain"` with
+ * a `null` fallback when Brain wasn't installed). They're mechanical
+ * aggregation (an OR-gate over motion/presence/occupancy sensors, a group of
+ * every light in the area) rather than anything AI-driven, so they moved to
+ * Dashboard to be available to every user, not just those with the
+ * (optional, experimental) Brain companion integration installed. No
+ * backward compatibility with the old `linus_brain_presence_detection_*` /
+ * `linus_brain_all_lights_*` entity_id is kept — clean cut, not a dual
+ * fallback (see PR description for the reasoning).
  */
 export class EntityResolver {
   private hasLinusBrain: boolean;
@@ -56,24 +70,33 @@ export class EntityResolver {
   }
 
   /**
-   * Resolves the presence detection binary sensor
+   * Resolves the presence detection binary sensor for an area
    *
-   * Priority: Linus Brain > null
+   * Source: Linus Dashboard native (binary_sensor.linus_dashboard_presence_detection_area_{area}).
+   * No Linus Brain fallback — see class docstring.
    *
    * @param area_slug - The area slug
    * @returns EntityResolution with the resolved entity
    */
   resolvePresenceSensor(area_slug: string): EntityResolution {
-    if (this.hasLinusBrain) {
-      const linusEntity = `binary_sensor.linus_brain_presence_detection_${area_slug}`;
-      if (this.hass.states[linusEntity]) {
-        const state = this.hass.states[linusEntity];
-        if (state.state !== "unavailable" && state.state !== "unknown") {
-          return { entity_id: linusEntity, source: "linus_brain" };
-        }
-      }
+    const entity_id = `binary_sensor.linus_dashboard_presence_detection_area_${area_slug}`;
+    if (this.hass.states[entity_id]) {
+      return { entity_id, source: "native" };
     }
+    return { entity_id: null, source: "native" };
+  }
 
+  /**
+   * Resolves the presence detection binary sensor for a floor
+   *
+   * @param floor_slug - The floor slug
+   * @returns EntityResolution with the resolved entity
+   */
+  resolvePresenceSensorForFloor(floor_slug: string): EntityResolution {
+    const entity_id = `binary_sensor.linus_dashboard_presence_detection_floor_${floor_slug}`;
+    if (this.hass.states[entity_id]) {
+      return { entity_id, source: "native" };
+    }
     return { entity_id: null, source: "native" };
   }
 
@@ -100,24 +123,33 @@ export class EntityResolver {
   }
 
   /**
-   * Resolves the all lights group entity
+   * Resolves the all-lights group entity for an area
    *
-   * Priority: Linus Brain > null
+   * Source: Linus Dashboard native (light.linus_dashboard_all_lights_area_{area}).
+   * No Linus Brain fallback — see class docstring.
    *
    * @param area_slug - The area slug
    * @returns EntityResolution with the resolved entity
    */
   resolveAllLights(area_slug: string): EntityResolution {
-    if (this.hasLinusBrain) {
-      const linusEntity = `light.linus_brain_all_lights_${area_slug}`;
-      if (this.hass.states[linusEntity]) {
-        const state = this.hass.states[linusEntity];
-        if (state.state !== "unavailable" && state.state !== "unknown") {
-          return { entity_id: linusEntity, source: "linus_brain" };
-        }
-      }
+    const entity_id = `light.linus_dashboard_all_lights_area_${area_slug}`;
+    if (this.hass.states[entity_id]) {
+      return { entity_id, source: "native" };
     }
+    return { entity_id: null, source: "native" };
+  }
 
+  /**
+   * Resolves the all-lights group entity for a floor
+   *
+   * @param floor_slug - The floor slug
+   * @returns EntityResolution with the resolved entity
+   */
+  resolveAllLightsForFloor(floor_slug: string): EntityResolution {
+    const entity_id = `light.linus_dashboard_all_lights_floor_${floor_slug}`;
+    if (this.hass.states[entity_id]) {
+      return { entity_id, source: "native" };
+    }
     return { entity_id: null, source: "native" };
   }
 

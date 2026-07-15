@@ -1,323 +1,409 @@
 {
-    "config": {
-        "abort": {
-            "single_instance_allowed": "Une seule configuration du tableau de bord Linus est autorisée."
-        },
-        "step": {
-            "user": {
-                "title": "Configuration de Linus Dashboard",
-                "description": "Bienvenue dans l'assistant de configuration de Linus Dashboard ! Ce tableau de bord intelligent organise automatiquement vos appareils par pièce et type pour une expérience Home Assistant moderne et intuitive."
-            }
-        }
+  "config": {
+    "abort": {
+      "single_instance_allowed": "Une seule configuration du tableau de bord Linus est autorisée."
     },
-    "options": {
-        "step": {
-            "init": {
-                "title": "Personnalisation du tableau de bord Linus",
-                "description": "Configurez votre tableau de bord Linus selon vos préférences. Vous pouvez sélectionner des entités météo et d'alarme, exclure certains domaines ou appareils, et personnaliser l'affichage. Pour plus d'informations, consultez la documentation : {docs_url}",
-                "data": {
-                    "alarm_entity_ids": "Alarmes à afficher",
-                    "weather_entity": "Entité météo",
-                    "hide_greeting": "Masquer le message de salutation",
-                    "embedded_dashboards": "Dashboards embarqués (sélectionnez les vues dans l'ordre souhaité)",
-                    "excluded_targets": "Cibles à exclure",
-                    "excluded_domains": "Domaines à exclure",
-                    "excluded_device_classes": "Classes de dispositifs à exclure",
-                    "excluded_integrations": "Intégrations à exclure"
-                },
-                "data_description": {
-                    "alarm_entity_ids": "Liste des alarmes à piloter dans le tableau de bord.",
-                    "weather_entity": "Entité météo utilisée pour afficher les conditions météorologiques.",
-                    "hide_greeting": "Cochez cette case pour masquer le message de salutation sur le tableau de bord.",
-                    "embedded_dashboards": "Sélectionnez des vues de dashboards externes à intégrer dans Linus Dashboard. Les vues apparaîtront dans le menu dans l'ordre de sélection.",
-                    "excluded_targets": "Cibles spécifiques qui seront exclues du tableau de bord.",
-                    "excluded_domains": "Domaines qui seront exclus du tableau de bord.",
-                    "excluded_device_classes": "Classes de dispositifs qui seront exclues du tableau de bord.",
-                    "excluded_integrations": "Intégrations à exclure du tableau de bord."
-                }
-            }
-        }
-    },
-    "entity": {
-        "button": {
-            "add_new_area": {
-                "name": "Zone non trouvée",
-                "state": {
-                    "on": "Ajouter une nouvelle zone",
-                    "off": "Cliquez ici pour aller à la page des zones"
-                }
-            }
-        },
-        "text": {
-            "area_states": {
-                "name": "État de la zone",
-                "state": {
-                    "presence_hold": "Maintien de présence",
-                    "sleep": "Sommeil",
-                    "extended": "Prolongé",
-                    "occupied": "Occupé",
-                    "clear": "Libre"
-                }
-            },
-            "area_state_popup": {
-                "name": "Capteurs utilisés pour la détection de présence :"
-            },
-            "greeting": {
-                "name": "Salutation",
-                "state": {
-                    "morning": "Bonjour,",
-                    "afternoon": "Bonne après-midi,",
-                    "evening": "Bonne soirée,",
-                    "night": "Bonne nuit,"
-                }
-            },
-            "reload_cache": {
-                "name": "Recharger le cache",
-                "state": {
-                    "restart": "Vider le cache",
-                    "confirm": "Êtes-vous sûr de vouloir vider le cache et recharger la page ?"
-                }
-            },
-            "settings_popup": {
-                "name": "Centre de contrôle",
-                "state": {
-                    "welcome_message": "Voici ce que Linus organise fièrement :",
-                    "reload_magic_areas": "Recharger Magic Areas",
-                    "reload_confirm": "Êtes-vous sûr de vouloir recharger Magic Areas ?",
-                    "reload_cache": "Recharger le cache",
-                    "dashboard_config": "Tableaux de bord",
-                    "areas": "pièces",
-                    "floors": "étages",
-                    "entities": "entités",
-                    "devices": "appareils",
-                    "logs": "Journaux",
-                    "magic_areas": "Intégrations Magic Areas",
-                    "linus_dashboard": "Intégrations Linus Dashboard",
-                    "restart": "Redémarrer HA",
-                    "restart_confirm": "Êtes-vous sûr de vouloir redémarrer Home Assistant ?",
-                    "github": "GitHub",
-                    "documentation": "Documentation",
-                    "issues": "Signaler un bug",
-                    "thank_you": "Merci d'utiliser Linus Dashboard",
-                    "star_message": "⭐ Aimez-vous Linus Dashboard ? Mettez une étoile sur GitHub !",
-                    "version_info": "Version"
-                }
-            },
-            "version_check": {
-                "name": "⚠️ Mise à jour Linus Dashboard requise",
-                "state": {
-                    "mismatch": "ℹ️ Différence de version détectée",
-                    "browser": "💻 Frontend (Dashboard)",
-                    "backend": "🔧 Backend (Custom Component)",
-                    "instructions": "🔄 Veuillez rafraîchir votre navigateur (CTRL+F5 ou SHIFT+F5) pour charger la dernière version.",
-                    "troubleshooting": "📖 Besoin d'aide ? Consultez notre guide de dépannage : https://github.com/Thank-you-Linus/Linus-Dashboard#-troubleshooting"
-                }
-            },
-            "activity_detection_popup": {
-                "name": "Détection d'activité",
-                "state": {
-                    "brightness": "Luminosité",
-                    "dark": "Sombre",
-                    "bright": "Lumineux",
-                    "activity": "Activité",
-                    "presence": "Présence",
-                    "duration": "Durée",
-                    "config": "Config",
-                    "history_title": "Dernières 24h",
-                    "history_subtitle": "Graphiques d'activité",
-                    "advanced_history": "Historique d'activité avancé",
-                    "coming_soon": "Bientôt disponible",
-                    "sensors_title": "Détecteurs d'activité",
-                    "active": "actif",
-                    "popup_title": "Détection d'activité",
-                    "no_sensors_title": "Aucun détecteur trouvé",
-                    "no_sensors_message": "Ajoutez des capteurs de mouvement, d'occupation ou de présence à cette pièce pour suivre l'activité.",
-                    "add_more_sensors": "Ajoutez plus de capteurs pour améliorer la précision de détection",
-                    "add_sensor_explanation": "Cliquez pour assigner des capteurs à cette pièce",
-                    "add_entity_button": "Ajouter une entité",
-                    "manage_area_entities": "Gérer les entités de cette pièce",
-                    "auto_detection_criteria": "ℹ️ **Détection automatique**\n\nLes entités apparaissent ici si elles sont assignées à cette pièce ET :\n✅ Capteurs binaires avec `device_class` = motion, occupancy ou presence\n✅ Lecteurs multimédias (media_player)\n\n**Pour ajouter des capteurs :**\n1. Cliquez sur le bouton ci-dessous pour ouvrir les paramètres d'entités\n2. Assignez vos capteurs à cette pièce\n3. Configurez le `device_class` si nécessaire\n4. **Cliquez sur le badge de rafraîchissement (🔄) en haut** pour mettre à jour la liste\n\n[📖 En savoir plus sur la détection d'activité](https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/docs/ACTIVITY_DETECTION.md)"
-                }
-            },
-            "lights_group_popup": {
-                "name": "Groupe de lumières",
-                "state": {
-                    "title": "Lumières",
-                    "individual_controls": "Contrôles individuels"
-                }
-            },
-            "covers_group_popup": {
-                "name": "Groupe de volets",
-                "state": {
-                    "title": "Volets",
-                    "individual_controls": "Contrôles individuels"
-                }
-            },
-            "fans_group_popup": {
-                "name": "Groupe de ventilateurs",
-                "state": {
-                    "title": "Ventilateurs",
-                    "individual_controls": "Contrôles individuels"
-                }
-            },
-            "switches_group_popup": {
-                "name": "Groupe d'interrupteurs",
-                "state": {
-                    "title": "Interrupteurs",
-                    "individual_controls": "Contrôles individuels"
-                }
-            },
-            "climates_group_popup": {
-                "name": "Groupe de climatisation",
-                "state": {
-                    "title": "Contrôle climatique",
-                    "individual_controls": "Contrôles individuels"
-                }
-            },
-            "media_players_group_popup": {
-                "name": "Groupe de lecteurs multimédia",
-                "state": {
-                    "title": "Lecteurs multimédia",
-                    "individual_controls": "Contrôles individuels"
-                }
-            },
-            "smart_control": {
-                "name": "Contrôle intelligent",
-                "state": {
-                    "state_on": "allumé(s)",
-                    "state_off": "éteint(s)",
-                    "title_light": "Toutes les lumières",
-                    "title_switch": "Tous les interrupteurs",
-                    "title_fan": "Tous les ventilateurs",
-                    "title_media_player": "Tous les lecteurs multimédia",
-                    "title_cover": "Tous les volets",
-                    "title_climate": "Tous les appareils climatiques",
-                    "action_on_light": "Tout allumer",
-                    "action_on_switch": "Tout allumer",
-                    "action_on_fan": "Tout allumer",
-                    "action_on_media_player": "Tout lire",
-                    "action_on_cover": "Tout ouvrir",
-                    "action_on_climate": "Tout allumer",
-                    "action_off_light": "Tout éteindre",
-                    "action_off_switch": "Tout éteindre",
-                    "action_off_fan": "Tout éteindre",
-                    "action_off_media_player": "Tout mettre en pause",
-                    "action_off_cover": "Tout fermer",
-                    "action_off_climate": "Tout éteindre"
-                }
-            },
-            "aggregate_popup": {
-                "name": "Contrôle Agrégé",
-                "state": {
-                    "state_on": "allumé(s)",
-                    "state_off": "éteint(s)",
-                    "state_open": "ouvert(s)",
-                    "state_closed": "fermé(s)",
-                    "state_locked": "verrouillé(s)",
-                    "state_unlocked": "déverrouillé(s)",
-                    "state_available": "disponible(s)",
-                    "average": "Moyenne",
-                    "total": "Total",
-                    "view_all": "Voir plus",
-                    "title_light": "Lumières",
-                    "title_switch": "Interrupteurs",
-                    "title_fan": "Ventilateurs",
-                    "title_media_player": "Lecteurs Multimédias",
-                    "title_cover": "Volets",
-                    "title_climate": "Climatisations",
-                    "action_on_light": "Tout Allumer",
-                    "action_on_switch": "Tout Allumer",
-                    "action_on_fan": "Tout Allumer",
-                    "action_on_media_player": "Tout Lire",
-                    "action_on_cover": "Tout Ouvrir",
-                    "action_on_climate": "Tout Allumer",
-                    "action_off_light": "Tout Éteindre",
-                    "action_off_switch": "Tout Éteindre",
-                    "action_off_fan": "Tout Éteindre",
-                    "action_off_media_player": "Tout Mettre en Pause",
-                    "action_off_cover": "Tout Fermer",
-                    "action_off_climate": "Tout Éteindre",
-                    "individual_controls": "Contrôles Individuels",
-                    "no_label": "Sans étiquette"
-                }
-            },
-            "cover_popup": {
-                "name": "Contrôle des Volets",
-                "state": {
-                    "open_all": "Tout Ouvrir",
-                    "close_all": "Tout Fermer"
-                }
-            },
-            "media_player_popup": {
-                "name": "Contrôle des Lecteurs",
-                "state": {
-                    "play_all": "Tout Lire",
-                    "pause_all": "Tout Mettre en Pause"
-                }
-            },
-            "security_view": {
-                "name": "Sécurité",
-                "state": {
-                    "quick_actions": "Actions Rapides",
-                    "lock_all": "Tout verrouiller",
-                    "turn_off_lights": "Éteindre lumières",
-                    "arm_disarm": "Armer/Désarmer",
-                    "no_alarm": "Pas d'alarme",
-                    "view_cameras": "Voir caméras",
-                    "no_camera": "Pas de caméra",
-                    "recent_activity": "Activité Récente",
-                    "statistics": "Statistiques",
-                    "status_ok": "Sécurité OK",
-                    "status_warning": "Attention",
-                    "status_alert": "Alerte Sécurité",
-                    "alarm_disarmed": "Désarmée",
-                    "alarm_armed_home": "Armée (Maison)",
-                    "alarm_armed_away": "Armée (Absent)",
-                    "alarm_armed_night": "Armée (Nuit)",
-                    "alarm_armed_vacation": "Armée (Vacances)",
-                    "alarm_armed_custom": "Armée (Personnalisé)",
-                    "alarm_triggered": "Déclenchée",
-                    "alarm_arming": "Armement en cours",
-                    "alarm_pending": "En attente",
-                    "alarm_label": "Alarme",
-                    "no_alarm_configured": "Aucune alarme configurée",
-                    "alarm_unavailable": "Alarme indisponible",
-                    "access_label": "Accès",
-                    "doors_closed": "portes fermées",
-                    "windows_closed": "fenêtres fermées",
-                    "locks_locked": "serrures verrouillées",
-                    "no_access_sensor": "Aucun capteur d'accès",
-                    "detection_label": "Détection",
-                    "sensors_active": "capteur(s) actif(s)",
-                    "no_activity": "Aucune activité",
-                    "cameras_label": "Caméras",
-                    "cameras_active": "actives",
-                    "no_recent_activity": "Aucune activité récente",
-                    "no_security_sensor": "Aucun capteur de sécurité configuré",
-                    "no_stats_available": "Aucune statistique disponible",
-                    "access_sensors": "accès",
-                    "closed": "fermés",
-                    "locks": "serrures",
-                    "locked": "verrouillées",
-                    "cameras": "caméras",
-                    "detectors": "détecteurs",
-                    "active": "actifs",
-                    "low_battery": "capteur(s) batterie faible",
-                    "confirm_lock_all": "Verrouiller toutes les serrures ?",
-                    "confirm_turn_off_lights": "Éteindre toutes les lumières ?",
-                    "confirm_arm_alarm": "Armer/Désarmer l'alarme ?",
-                    "cancel": "Annuler",
-                    "confirm": "Confirmer"
-                }
-            },
-            "tags_view": {
-                "name": "Étiquettes",
-                "state": {
-                    "title": "Étiquettes",
-                    "entities": "entités",
-                    "no_entities": "Aucune entité avec cette étiquette"
-                }
-            }
-        }
+    "step": {
+      "user": {
+        "title": "Configuration de Linus Dashboard",
+        "description": "Bienvenue dans l'assistant de configuration de Linus Dashboard ! Ce tableau de bord intelligent organise automatiquement vos appareils par pièce et type pour une expérience Home Assistant moderne et intuitive."
+      }
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Personnalisation du tableau de bord Linus",
+        "description": "Configurez votre tableau de bord Linus selon vos préférences. Vous pouvez sélectionner des entités météo et d'alarme, exclure certains domaines ou appareils, et personnaliser l'affichage. Pour plus d'informations, consultez la documentation : {docs_url}",
+        "data": {
+          "alarm_entity_ids": "Alarmes à afficher",
+          "weather_entity": "Entité météo",
+          "hide_greeting": "Masquer le message de salutation",
+          "embedded_dashboards": "Dashboards embarqués (sélectionnez les vues dans l'ordre souhaité)",
+          "excluded_targets": "Cibles à exclure",
+          "excluded_domains": "Domaines à exclure",
+          "excluded_device_classes": "Classes de dispositifs à exclure",
+          "excluded_integrations": "Intégrations à exclure"
+        },
+        "data_description": {
+          "alarm_entity_ids": "Liste des alarmes à piloter dans le tableau de bord.",
+          "weather_entity": "Entité météo utilisée pour afficher les conditions météorologiques.",
+          "hide_greeting": "Cochez cette case pour masquer le message de salutation sur le tableau de bord.",
+          "embedded_dashboards": "Sélectionnez des vues de dashboards externes à intégrer dans Linus Dashboard. Les vues apparaîtront dans le menu dans l'ordre de sélection.",
+          "excluded_targets": "Cibles spécifiques qui seront exclues du tableau de bord.",
+          "excluded_domains": "Domaines qui seront exclus du tableau de bord.",
+          "excluded_device_classes": "Classes de dispositifs qui seront exclues du tableau de bord.",
+          "excluded_integrations": "Intégrations à exclure du tableau de bord."
+        }
+      }
+    }
+  },
+  "entity": {
+    "button": {
+      "add_new_area": {
+        "name": "Zone non trouvée",
+        "state": {
+          "on": "Ajouter une nouvelle zone",
+          "off": "Cliquez ici pour aller à la page des zones"
+        }
+      }
+    },
+    "text": {
+      "area_states": {
+        "name": "État de la zone",
+        "state": {
+          "presence_hold": "Maintien de présence",
+          "sleep": "Sommeil",
+          "extended": "Prolongé",
+          "occupied": "Occupé",
+          "clear": "Libre"
+        }
+      },
+      "area_state_popup": {
+        "name": "Capteurs utilisés pour la détection de présence :"
+      },
+      "greeting": {
+        "name": "Salutation",
+        "state": {
+          "morning": "Bonjour,",
+          "afternoon": "Bonne après-midi,",
+          "evening": "Bonne soirée,",
+          "night": "Bonne nuit,"
+        }
+      },
+      "reload_cache": {
+        "name": "Recharger le cache",
+        "state": {
+          "restart": "Vider le cache",
+          "confirm": "Êtes-vous sûr de vouloir vider le cache et recharger la page ?"
+        }
+      },
+      "settings_popup": {
+        "name": "Centre de contrôle",
+        "state": {
+          "welcome_message": "Voici ce que Linus organise fièrement :",
+          "reload_magic_areas": "Recharger Magic Areas",
+          "reload_confirm": "Êtes-vous sûr de vouloir recharger Magic Areas ?",
+          "reload_cache": "Recharger le cache",
+          "dashboard_config": "Tableaux de bord",
+          "areas": "pièces",
+          "floors": "étages",
+          "entities": "entités",
+          "devices": "appareils",
+          "logs": "Journaux",
+          "magic_areas": "Intégrations Magic Areas",
+          "linus_dashboard": "Intégrations Linus Dashboard",
+          "restart": "Redémarrer HA",
+          "restart_confirm": "Êtes-vous sûr de vouloir redémarrer Home Assistant ?",
+          "github": "GitHub",
+          "documentation": "Documentation",
+          "issues": "Signaler un bug",
+          "thank_you": "Merci d'utiliser Linus Dashboard",
+          "star_message": "⭐ Aimez-vous Linus Dashboard ? Mettez une étoile sur GitHub !",
+          "version_info": "Version"
+        }
+      },
+      "version_check": {
+        "name": "⚠️ Mise à jour Linus Dashboard requise",
+        "state": {
+          "mismatch": "ℹ️ Différence de version détectée",
+          "browser": "💻 Frontend (Dashboard)",
+          "backend": "🔧 Backend (Custom Component)",
+          "instructions": "🔄 Veuillez rafraîchir votre navigateur (CTRL+F5 ou SHIFT+F5) pour charger la dernière version.",
+          "troubleshooting": "📖 Besoin d'aide ? Consultez notre guide de dépannage : https://github.com/Thank-you-Linus/Linus-Dashboard#-troubleshooting"
+        }
+      },
+      "activity_detection_popup": {
+        "name": "Détection d'activité",
+        "state": {
+          "brightness": "Luminosité",
+          "dark": "Sombre",
+          "bright": "Lumineux",
+          "activity": "Activité",
+          "presence": "Présence",
+          "duration": "Durée",
+          "config": "Config",
+          "history_title": "Dernières 24h",
+          "history_subtitle": "Graphiques d'activité",
+          "advanced_history": "Historique d'activité avancé",
+          "coming_soon": "Bientôt disponible",
+          "sensors_title": "Détecteurs d'activité",
+          "active": "actif",
+          "popup_title": "Détection d'activité",
+          "no_sensors_title": "Aucun détecteur trouvé",
+          "no_sensors_message": "Ajoutez des capteurs de mouvement, d'occupation ou de présence à cette pièce pour suivre l'activité.",
+          "add_more_sensors": "Ajoutez plus de capteurs pour améliorer la précision de détection",
+          "add_sensor_explanation": "Cliquez pour assigner des capteurs à cette pièce",
+          "add_entity_button": "Ajouter une entité",
+          "manage_area_entities": "Gérer les entités de cette pièce",
+          "auto_detection_criteria": "ℹ️ **Détection automatique**\n\nLes entités apparaissent ici si elles sont assignées à cette pièce ET :\n✅ Capteurs binaires avec `device_class` = motion, occupancy ou presence\n✅ Lecteurs multimédias (media_player)\n\n**Pour ajouter des capteurs :**\n1. Cliquez sur le bouton ci-dessous pour ouvrir les paramètres d'entités\n2. Assignez vos capteurs à cette pièce\n3. Configurez le `device_class` si nécessaire\n4. **Cliquez sur le badge de rafraîchissement (🔄) en haut** pour mettre à jour la liste\n\n[📖 En savoir plus sur la détection d'activité](https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/docs/ACTIVITY_DETECTION.md)"
+        }
+      },
+      "lights_group_popup": {
+        "name": "Groupe de lumières",
+        "state": {
+          "title": "Lumières",
+          "individual_controls": "Contrôles individuels"
+        }
+      },
+      "covers_group_popup": {
+        "name": "Groupe de volets",
+        "state": {
+          "title": "Volets",
+          "individual_controls": "Contrôles individuels"
+        }
+      },
+      "fans_group_popup": {
+        "name": "Groupe de ventilateurs",
+        "state": {
+          "title": "Ventilateurs",
+          "individual_controls": "Contrôles individuels"
+        }
+      },
+      "switches_group_popup": {
+        "name": "Groupe d'interrupteurs",
+        "state": {
+          "title": "Interrupteurs",
+          "individual_controls": "Contrôles individuels"
+        }
+      },
+      "climates_group_popup": {
+        "name": "Groupe de climatisation",
+        "state": {
+          "title": "Contrôle climatique",
+          "individual_controls": "Contrôles individuels"
+        }
+      },
+      "media_players_group_popup": {
+        "name": "Groupe de lecteurs multimédia",
+        "state": {
+          "title": "Lecteurs multimédia",
+          "individual_controls": "Contrôles individuels"
+        }
+      },
+      "smart_control": {
+        "name": "Contrôle intelligent",
+        "state": {
+          "state_on": "allumé(s)",
+          "state_off": "éteint(s)",
+          "title_light": "Toutes les lumières",
+          "title_switch": "Tous les interrupteurs",
+          "title_fan": "Tous les ventilateurs",
+          "title_media_player": "Tous les lecteurs multimédia",
+          "title_cover": "Tous les volets",
+          "title_climate": "Tous les appareils climatiques",
+          "action_on_light": "Tout allumer",
+          "action_on_switch": "Tout allumer",
+          "action_on_fan": "Tout allumer",
+          "action_on_media_player": "Tout lire",
+          "action_on_cover": "Tout ouvrir",
+          "action_on_climate": "Tout allumer",
+          "action_off_light": "Tout éteindre",
+          "action_off_switch": "Tout éteindre",
+          "action_off_fan": "Tout éteindre",
+          "action_off_media_player": "Tout mettre en pause",
+          "action_off_cover": "Tout fermer",
+          "action_off_climate": "Tout éteindre"
+        }
+      },
+      "aggregate_popup": {
+        "name": "Contrôle Agrégé",
+        "state": {
+          "state_on": "allumé(s)",
+          "state_off": "éteint(s)",
+          "state_open": "ouvert(s)",
+          "state_closed": "fermé(s)",
+          "state_locked": "verrouillé(s)",
+          "state_unlocked": "déverrouillé(s)",
+          "state_available": "disponible(s)",
+          "average": "Moyenne",
+          "total": "Total",
+          "view_all": "Voir plus",
+          "title_light": "Lumières",
+          "title_switch": "Interrupteurs",
+          "title_fan": "Ventilateurs",
+          "title_media_player": "Lecteurs Multimédias",
+          "title_cover": "Volets",
+          "title_climate": "Climatisations",
+          "action_on_light": "Tout Allumer",
+          "action_on_switch": "Tout Allumer",
+          "action_on_fan": "Tout Allumer",
+          "action_on_media_player": "Tout Lire",
+          "action_on_cover": "Tout Ouvrir",
+          "action_on_climate": "Tout Allumer",
+          "action_off_light": "Tout Éteindre",
+          "action_off_switch": "Tout Éteindre",
+          "action_off_fan": "Tout Éteindre",
+          "action_off_media_player": "Tout Mettre en Pause",
+          "action_off_cover": "Tout Fermer",
+          "action_off_climate": "Tout Éteindre",
+          "individual_controls": "Contrôles Individuels",
+          "no_label": "Sans étiquette"
+        }
+      },
+      "cover_popup": {
+        "name": "Contrôle des Volets",
+        "state": {
+          "open_all": "Tout Ouvrir",
+          "close_all": "Tout Fermer"
+        }
+      },
+      "media_player_popup": {
+        "name": "Contrôle des Lecteurs",
+        "state": {
+          "play_all": "Tout Lire",
+          "pause_all": "Tout Mettre en Pause"
+        }
+      },
+      "security_view": {
+        "name": "Sécurité",
+        "state": {
+          "quick_actions": "Actions Rapides",
+          "lock_all": "Tout verrouiller",
+          "turn_off_lights": "Éteindre lumières",
+          "arm_disarm": "Armer/Désarmer",
+          "no_alarm": "Pas d'alarme",
+          "view_cameras": "Voir caméras",
+          "no_camera": "Pas de caméra",
+          "recent_activity": "Activité Récente",
+          "statistics": "Statistiques",
+          "status_ok": "Sécurité OK",
+          "status_warning": "Attention",
+          "status_alert": "Alerte Sécurité",
+          "alarm_disarmed": "Désarmée",
+          "alarm_armed_home": "Armée (Maison)",
+          "alarm_armed_away": "Armée (Absent)",
+          "alarm_armed_night": "Armée (Nuit)",
+          "alarm_armed_vacation": "Armée (Vacances)",
+          "alarm_armed_custom": "Armée (Personnalisé)",
+          "alarm_triggered": "Déclenchée",
+          "alarm_arming": "Armement en cours",
+          "alarm_pending": "En attente",
+          "alarm_label": "Alarme",
+          "no_alarm_configured": "Aucune alarme configurée",
+          "alarm_unavailable": "Alarme indisponible",
+          "access_label": "Accès",
+          "doors_closed": "portes fermées",
+          "windows_closed": "fenêtres fermées",
+          "locks_locked": "serrures verrouillées",
+          "no_access_sensor": "Aucun capteur d'accès",
+          "detection_label": "Détection",
+          "sensors_active": "capteur(s) actif(s)",
+          "no_activity": "Aucune activité",
+          "cameras_label": "Caméras",
+          "cameras_active": "actives",
+          "no_recent_activity": "Aucune activité récente",
+          "no_security_sensor": "Aucun capteur de sécurité configuré",
+          "no_stats_available": "Aucune statistique disponible",
+          "access_sensors": "accès",
+          "closed": "fermés",
+          "locks": "serrures",
+          "locked": "verrouillées",
+          "cameras": "caméras",
+          "detectors": "détecteurs",
+          "active": "actifs",
+          "low_battery": "capteur(s) batterie faible",
+          "confirm_lock_all": "Verrouiller toutes les serrures ?",
+          "confirm_turn_off_lights": "Éteindre toutes les lumières ?",
+          "confirm_arm_alarm": "Armer/Désarmer l'alarme ?",
+          "cancel": "Annuler",
+          "confirm": "Confirmer"
+        }
+      },
+      "tags_view": {
+        "name": "Étiquettes",
+        "state": {
+          "title": "Étiquettes",
+          "entities": "entités",
+          "no_entities": "Aucune entité avec cette étiquette"
+        }
+      }
+    },
+    "binary_sensor": {
+      "presence_detection": {
+        "name": "Détection de présence {name}"
+      },
+      "presence_detection_global": {
+        "name": "Détection de présence (Maison entière)"
+      },
+      "binary_sensor_group": {
+        "name": "{device_class} - {name}"
+      },
+      "binary_sensor_group_global": {
+        "name": "{device_class} (Maison entière)"
+      }
+    },
+    "light": {
+      "area_lights": {
+        "name": "Toutes les lumières - {name}"
+      },
+      "area_lights_global": {
+        "name": "Toutes les lumières (Maison entière)"
+      }
+    },
+    "switch": {
+      "switch_group": {
+        "name": "Tous les interrupteurs - {name}"
+      },
+      "switch_group_global": {
+        "name": "Tous les interrupteurs (Maison entière)"
+      }
+    },
+    "fan": {
+      "fan_group": {
+        "name": "Tous les ventilateurs - {name}"
+      },
+      "fan_group_global": {
+        "name": "Tous les ventilateurs (Maison entière)"
+      }
+    },
+    "cover": {
+      "cover_group": {
+        "name": "Tous les volets - {name}"
+      },
+      "cover_group_global": {
+        "name": "Tous les volets (Maison entière)"
+      }
+    },
+    "siren": {
+      "siren_group": {
+        "name": "Toutes les sirènes - {name}"
+      },
+      "siren_group_global": {
+        "name": "Toutes les sirènes (Maison entière)"
+      }
+    },
+    "sensor": {
+      "numeric_temperature": {
+        "name": "Température - {name}"
+      },
+      "numeric_temperature_global": {
+        "name": "Température (Maison entière)"
+      },
+      "numeric_humidity": {
+        "name": "Humidité - {name}"
+      },
+      "numeric_humidity_global": {
+        "name": "Humidité (Maison entière)"
+      },
+      "numeric_illuminance": {
+        "name": "Luminosité - {name}"
+      },
+      "numeric_illuminance_global": {
+        "name": "Luminosité (Maison entière)"
+      },
+      "numeric_battery": {
+        "name": "Batterie (min) - {name}"
+      },
+      "numeric_battery_global": {
+        "name": "Batterie (min) (Maison entière)"
+      },
+      "unavailable": {
+        "name": "Entités indisponibles - {name}"
+      },
+      "unavailable_global": {
+        "name": "Entités indisponibles (Maison entière)"
+      }
+    }
+  }
 }

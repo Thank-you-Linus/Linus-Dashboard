@@ -1,323 +1,409 @@
 {
-    "config": {
-        "abort": {
-            "single_instance_allowed": "Only a single configuration of Linus Dashboard is allowed."
-        },
-        "step": {
-            "user": {
-                "title": "Linus Dashboard Setup",
-                "description": "Welcome to Linus Dashboard configuration! This smart dashboard automatically organizes your devices by room and type for a modern and intuitive Home Assistant experience."
-            }
-        }
+  "config": {
+    "abort": {
+      "single_instance_allowed": "Only a single configuration of Linus Dashboard is allowed."
     },
-    "options": {
-        "step": {
-            "init": {
-                "title": "Customize Linus Dashboard",
-                "description": "Configure your Linus Dashboard according to your preferences. You can select weather and alarm entities, exclude certain domains or devices, and customize the display. For more information, visit the documentation: {docs_url}",
-                "data": {
-                    "alarm_entity_ids": "Alarms to display",
-                    "weather_entity": "Weather entity",
-                    "hide_greeting": "Hide greeting message",
-                    "embedded_dashboards": "Embedded dashboards (select views in desired order)",
-                    "excluded_targets": "Targets to exclude",
-                    "excluded_domains": "Domains to exclude",
-                    "excluded_device_classes": "Device classes to exclude",
-                    "excluded_integrations": "Integrations to exclude"
-                },
-                "data_description": {
-                    "alarm_entity_ids": "List of alarms to control in the dashboard.",
-                    "weather_entity": "Weather entity used to display weather conditions.",
-                    "hide_greeting": "Check this box to hide the greeting message on the dashboard.",
-                    "embedded_dashboards": "Select external dashboard views to embed in Linus Dashboard. Views will appear in the menu in the order selected.",
-                    "excluded_targets": "Specific targets that will be excluded from the dashboard.",
-                    "excluded_domains": "Domains that will be excluded from the dashboard.",
-                    "excluded_device_classes": "Device classes that will be excluded from the dashboard.",
-                    "excluded_integrations": "Integrations to exclude from the dashboard."
-                }
-            }
-        }
-    },
-    "entity": {
-        "button": {
-            "add_new_area": {
-                "name": "Area not found",
-                "state": {
-                    "on": "Add a new area",
-                    "off": "Click here to go to the areas page"
-                }
-            }
-        },
-        "text": {
-            "area_states": {
-                "name": "Area States",
-                "state": {
-                    "presence_hold": "Presence Hold",
-                    "sleep": "Sleep",
-                    "extended": "Extended",
-                    "occupied": "Occupied",
-                    "clear": "Clear"
-                }
-            },
-            "area_state_popup": {
-                "name": "Sensors used for presence detection:"
-            },
-            "greeting": {
-                "name": "Greeting",
-                "state": {
-                    "morning": "Good morning,",
-                    "afternoon": "Good afternoon,",
-                    "evening": "Good evening,",
-                    "night": "Good night,"
-                }
-            },
-            "reload_cache": {
-                "name": "Reload Cache",
-                "state": {
-                    "restart": "Clear cache",
-                    "confirm": "Are you sure you want to clear the cache and reload the page?"
-                }
-            },
-            "settings_popup": {
-                "name": "Control center",
-                "state": {
-                    "welcome_message": "Here's what Linus proudly organizes:",
-                    "reload_magic_areas": "Reload Magic Areas",
-                    "reload_confirm": "Are you sure you want to reload Magic Areas?",
-                    "reload_cache": "Reload Cache",
-                    "dashboard_config": "Dashboards",
-                    "areas": "areas",
-                    "floors": "floors",
-                    "entities": "entities",
-                    "devices": "devices",
-                    "logs": "Logs",
-                    "magic_areas": "Magic Areas integrations",
-                    "linus_dashboard": "Linus Dashboard integrations",
-                    "restart": "Restart HA",
-                    "restart_confirm": "Are you sure you want to restart Home Assistant?",
-                    "github": "GitHub",
-                    "documentation": "Documentation",
-                    "issues": "Report a bug",
-                    "thank_you": "Thank you for using Linus Dashboard",
-                    "star_message": "⭐ Love Linus Dashboard? Star us on GitHub!",
-                    "version_info": "Version"
-                }
-            },
-            "version_check": {
-                "name": "⚠️ Linus Dashboard Update Required",
-                "state": {
-                    "mismatch": "ℹ️ Version mismatch detected",
-                    "browser": "💻 Frontend (Dashboard)",
-                    "backend": "🔧 Backend (Custom Component)",
-                    "instructions": "🔄 Please refresh your browser (CTRL+F5 or SHIFT+F5) to load the latest version.",
-                    "troubleshooting": "📖 Need help? Check our troubleshooting guide: https://github.com/Thank-you-Linus/Linus-Dashboard#-troubleshooting"
-                }
-            },
-            "activity_detection_popup": {
-                "name": "Activity Detection",
-                "state": {
-                    "brightness": "Brightness",
-                    "dark": "Dark",
-                    "bright": "Bright",
-                    "activity": "Activity",
-                    "presence": "Presence",
-                    "duration": "Duration",
-                    "config": "Config",
-                    "history_title": "Last 24h",
-                    "history_subtitle": "Activity graphs",
-                    "advanced_history": "Advanced Activity History",
-                    "coming_soon": "Coming Soon",
-                    "sensors_title": "Activity Detectors",
-                    "active": "active",
-                    "popup_title": "Activity Detection",
-                    "no_sensors_title": "No detectors found",
-                    "no_sensors_message": "Add motion, occupancy, or presence sensors to this area to track activity.",
-                    "add_more_sensors": "Add more sensors to improve detection accuracy",
-                    "add_sensor_explanation": "Click to assign sensors to this area",
-                    "add_entity_button": "Add Entity",
-                    "manage_area_entities": "Manage area entities",
-                    "auto_detection_criteria": "ℹ️ **Auto-detection**\n\nEntities appear here if they are assigned to this area AND:\n✅ Binary sensors with `device_class` = motion, occupancy, or presence\n✅ Media players\n\n**To add sensors:**\n1. Click the button below to open entity settings\n2. Assign your sensors to this area\n3. Configure the `device_class` if needed\n4. **Click the refresh badge (🔄) at the top** to update the list\n\n[📖 Learn more about Activity Detection](https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/docs/ACTIVITY_DETECTION.md)"
-                }
-            },
-            "lights_group_popup": {
-                "name": "Lights Group",
-                "state": {
-                    "title": "Lights",
-                    "individual_controls": "Individual Controls"
-                }
-            },
-            "covers_group_popup": {
-                "name": "Covers Group",
-                "state": {
-                    "title": "Covers",
-                    "individual_controls": "Individual Controls"
-                }
-            },
-            "fans_group_popup": {
-                "name": "Fans Group",
-                "state": {
-                    "title": "Fans",
-                    "individual_controls": "Individual Controls"
-                }
-            },
-            "switches_group_popup": {
-                "name": "Switches Group",
-                "state": {
-                    "title": "Switches",
-                    "individual_controls": "Individual Controls"
-                }
-            },
-            "climates_group_popup": {
-                "name": "Climates Group",
-                "state": {
-                    "title": "Climate Control",
-                    "individual_controls": "Individual Controls"
-                }
-            },
-            "media_players_group_popup": {
-                "name": "Media Players Group",
-                "state": {
-                    "title": "Media Players",
-                    "individual_controls": "Individual Controls"
-                }
-            },
-            "smart_control": {
-                "name": "Smart Control",
-                "state": {
-                    "state_on": "on",
-                    "state_off": "off",
-                    "title_light": "All Lights",
-                    "title_switch": "All Switches",
-                    "title_fan": "All Fans",
-                    "title_media_player": "All Media Players",
-                    "title_cover": "All Covers",
-                    "title_climate": "All Climate Devices",
-                    "action_on_light": "Turn All On",
-                    "action_on_switch": "Turn All On",
-                    "action_on_fan": "Turn All On",
-                    "action_on_media_player": "Play All",
-                    "action_on_cover": "Open All",
-                    "action_on_climate": "Turn All On",
-                    "action_off_light": "Turn All Off",
-                    "action_off_switch": "Turn All Off",
-                    "action_off_fan": "Turn All Off",
-                    "action_off_media_player": "Pause All",
-                    "action_off_cover": "Close All",
-                    "action_off_climate": "Turn All Off"
-                }
-            },
-            "aggregate_popup": {
-                "name": "Aggregate Control",
-                "state": {
-                    "state_on": "on",
-                    "state_off": "off",
-                    "state_open": "open",
-                    "state_closed": "closed",
-                    "state_locked": "locked",
-                    "state_unlocked": "unlocked",
-                    "state_available": "available",
-                    "average": "Average",
-                    "total": "Total",
-                    "view_all": "See More",
-                    "title_light": "Lights",
-                    "title_switch": "Switches",
-                    "title_fan": "Fans",
-                    "title_media_player": "Media Players",
-                    "title_cover": "Covers",
-                    "title_climate": "Climate Devices",
-                    "action_on_light": "Turn All On",
-                    "action_on_switch": "Turn All On",
-                    "action_on_fan": "Turn All On",
-                    "action_on_media_player": "Play All",
-                    "action_on_cover": "Open All",
-                    "action_on_climate": "Turn All On",
-                    "action_off_light": "Turn All Off",
-                    "action_off_switch": "Turn All Off",
-                    "action_off_fan": "Turn All Off",
-                    "action_off_media_player": "Pause All",
-                    "action_off_cover": "Close All",
-                    "action_off_climate": "Turn All Off",
-                    "individual_controls": "Individual Controls",
-                    "no_label": "No label"
-                }
-            },
-            "cover_popup": {
-                "name": "Cover Control",
-                "state": {
-                    "open_all": "Open All",
-                    "close_all": "Close All"
-                }
-            },
-            "media_player_popup": {
-                "name": "Media Player Control",
-                "state": {
-                    "play_all": "Play All",
-                    "pause_all": "Pause All"
-                }
-            },
-            "security_view": {
-                "name": "Security",
-                "state": {
-                    "quick_actions": "Quick Actions",
-                    "lock_all": "Lock All",
-                    "turn_off_lights": "Turn Off Lights",
-                    "arm_disarm": "Arm/Disarm",
-                    "no_alarm": "No Alarm",
-                    "view_cameras": "View Cameras",
-                    "no_camera": "No Camera",
-                    "recent_activity": "Recent Activity",
-                    "statistics": "Statistics",
-                    "status_ok": "Security OK",
-                    "status_warning": "Attention",
-                    "status_alert": "Security Alert",
-                    "alarm_disarmed": "Disarmed",
-                    "alarm_armed_home": "Armed (Home)",
-                    "alarm_armed_away": "Armed (Away)",
-                    "alarm_armed_night": "Armed (Night)",
-                    "alarm_armed_vacation": "Armed (Vacation)",
-                    "alarm_armed_custom": "Armed (Custom)",
-                    "alarm_triggered": "Triggered",
-                    "alarm_arming": "Arming",
-                    "alarm_pending": "Pending",
-                    "alarm_label": "Alarm",
-                    "no_alarm_configured": "No alarm configured",
-                    "alarm_unavailable": "Alarm unavailable",
-                    "access_label": "Access",
-                    "doors_closed": "doors closed",
-                    "windows_closed": "windows closed",
-                    "locks_locked": "locks locked",
-                    "no_access_sensor": "No access sensor",
-                    "detection_label": "Detection",
-                    "sensors_active": "sensor(s) active",
-                    "no_activity": "No activity",
-                    "cameras_label": "Cameras",
-                    "cameras_active": "active",
-                    "no_recent_activity": "No recent activity",
-                    "no_security_sensor": "No security sensor configured",
-                    "no_stats_available": "No statistics available",
-                    "access_sensors": "access",
-                    "closed": "closed",
-                    "locks": "locks",
-                    "locked": "locked",
-                    "cameras": "cameras",
-                    "detectors": "detectors",
-                    "active": "active",
-                    "low_battery": "low battery sensor(s)",
-                    "confirm_lock_all": "Lock all locks?",
-                    "confirm_turn_off_lights": "Turn off all lights?",
-                    "confirm_arm_alarm": "Arm/Disarm alarm?",
-                    "cancel": "Cancel",
-                    "confirm": "Confirm"
-                }
-            },
-            "tags_view": {
-                "name": "Tags",
-                "state": {
-                    "title": "Tags",
-                    "entities": "entities",
-                    "no_entities": "No entities with this label"
-                }
-            }
-        }
+    "step": {
+      "user": {
+        "title": "Linus Dashboard Setup",
+        "description": "Welcome to Linus Dashboard configuration! This smart dashboard automatically organizes your devices by room and type for a modern and intuitive Home Assistant experience."
+      }
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Customize Linus Dashboard",
+        "description": "Configure your Linus Dashboard according to your preferences. You can select weather and alarm entities, exclude certain domains or devices, and customize the display. For more information, visit the documentation: {docs_url}",
+        "data": {
+          "alarm_entity_ids": "Alarms to display",
+          "weather_entity": "Weather entity",
+          "hide_greeting": "Hide greeting message",
+          "embedded_dashboards": "Embedded dashboards (select views in desired order)",
+          "excluded_targets": "Targets to exclude",
+          "excluded_domains": "Domains to exclude",
+          "excluded_device_classes": "Device classes to exclude",
+          "excluded_integrations": "Integrations to exclude"
+        },
+        "data_description": {
+          "alarm_entity_ids": "List of alarms to control in the dashboard.",
+          "weather_entity": "Weather entity used to display weather conditions.",
+          "hide_greeting": "Check this box to hide the greeting message on the dashboard.",
+          "embedded_dashboards": "Select external dashboard views to embed in Linus Dashboard. Views will appear in the menu in the order selected.",
+          "excluded_targets": "Specific targets that will be excluded from the dashboard.",
+          "excluded_domains": "Domains that will be excluded from the dashboard.",
+          "excluded_device_classes": "Device classes that will be excluded from the dashboard.",
+          "excluded_integrations": "Integrations to exclude from the dashboard."
+        }
+      }
+    }
+  },
+  "entity": {
+    "button": {
+      "add_new_area": {
+        "name": "Area not found",
+        "state": {
+          "on": "Add a new area",
+          "off": "Click here to go to the areas page"
+        }
+      }
+    },
+    "text": {
+      "area_states": {
+        "name": "Area States",
+        "state": {
+          "presence_hold": "Presence Hold",
+          "sleep": "Sleep",
+          "extended": "Extended",
+          "occupied": "Occupied",
+          "clear": "Clear"
+        }
+      },
+      "area_state_popup": {
+        "name": "Sensors used for presence detection:"
+      },
+      "greeting": {
+        "name": "Greeting",
+        "state": {
+          "morning": "Good morning,",
+          "afternoon": "Good afternoon,",
+          "evening": "Good evening,",
+          "night": "Good night,"
+        }
+      },
+      "reload_cache": {
+        "name": "Reload Cache",
+        "state": {
+          "restart": "Clear cache",
+          "confirm": "Are you sure you want to clear the cache and reload the page?"
+        }
+      },
+      "settings_popup": {
+        "name": "Control center",
+        "state": {
+          "welcome_message": "Here's what Linus proudly organizes:",
+          "reload_magic_areas": "Reload Magic Areas",
+          "reload_confirm": "Are you sure you want to reload Magic Areas?",
+          "reload_cache": "Reload Cache",
+          "dashboard_config": "Dashboards",
+          "areas": "areas",
+          "floors": "floors",
+          "entities": "entities",
+          "devices": "devices",
+          "logs": "Logs",
+          "magic_areas": "Magic Areas integrations",
+          "linus_dashboard": "Linus Dashboard integrations",
+          "restart": "Restart HA",
+          "restart_confirm": "Are you sure you want to restart Home Assistant?",
+          "github": "GitHub",
+          "documentation": "Documentation",
+          "issues": "Report a bug",
+          "thank_you": "Thank you for using Linus Dashboard",
+          "star_message": "⭐ Love Linus Dashboard? Star us on GitHub!",
+          "version_info": "Version"
+        }
+      },
+      "version_check": {
+        "name": "⚠️ Linus Dashboard Update Required",
+        "state": {
+          "mismatch": "ℹ️ Version mismatch detected",
+          "browser": "💻 Frontend (Dashboard)",
+          "backend": "🔧 Backend (Custom Component)",
+          "instructions": "🔄 Please refresh your browser (CTRL+F5 or SHIFT+F5) to load the latest version.",
+          "troubleshooting": "📖 Need help? Check our troubleshooting guide: https://github.com/Thank-you-Linus/Linus-Dashboard#-troubleshooting"
+        }
+      },
+      "activity_detection_popup": {
+        "name": "Activity Detection",
+        "state": {
+          "brightness": "Brightness",
+          "dark": "Dark",
+          "bright": "Bright",
+          "activity": "Activity",
+          "presence": "Presence",
+          "duration": "Duration",
+          "config": "Config",
+          "history_title": "Last 24h",
+          "history_subtitle": "Activity graphs",
+          "advanced_history": "Advanced Activity History",
+          "coming_soon": "Coming Soon",
+          "sensors_title": "Activity Detectors",
+          "active": "active",
+          "popup_title": "Activity Detection",
+          "no_sensors_title": "No detectors found",
+          "no_sensors_message": "Add motion, occupancy, or presence sensors to this area to track activity.",
+          "add_more_sensors": "Add more sensors to improve detection accuracy",
+          "add_sensor_explanation": "Click to assign sensors to this area",
+          "add_entity_button": "Add Entity",
+          "manage_area_entities": "Manage area entities",
+          "auto_detection_criteria": "ℹ️ **Auto-detection**\n\nEntities appear here if they are assigned to this area AND:\n✅ Binary sensors with `device_class` = motion, occupancy, or presence\n✅ Media players\n\n**To add sensors:**\n1. Click the button below to open entity settings\n2. Assign your sensors to this area\n3. Configure the `device_class` if needed\n4. **Click the refresh badge (🔄) at the top** to update the list\n\n[📖 Learn more about Activity Detection](https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/docs/ACTIVITY_DETECTION.md)"
+        }
+      },
+      "lights_group_popup": {
+        "name": "Lights Group",
+        "state": {
+          "title": "Lights",
+          "individual_controls": "Individual Controls"
+        }
+      },
+      "covers_group_popup": {
+        "name": "Covers Group",
+        "state": {
+          "title": "Covers",
+          "individual_controls": "Individual Controls"
+        }
+      },
+      "fans_group_popup": {
+        "name": "Fans Group",
+        "state": {
+          "title": "Fans",
+          "individual_controls": "Individual Controls"
+        }
+      },
+      "switches_group_popup": {
+        "name": "Switches Group",
+        "state": {
+          "title": "Switches",
+          "individual_controls": "Individual Controls"
+        }
+      },
+      "climates_group_popup": {
+        "name": "Climates Group",
+        "state": {
+          "title": "Climate Control",
+          "individual_controls": "Individual Controls"
+        }
+      },
+      "media_players_group_popup": {
+        "name": "Media Players Group",
+        "state": {
+          "title": "Media Players",
+          "individual_controls": "Individual Controls"
+        }
+      },
+      "smart_control": {
+        "name": "Smart Control",
+        "state": {
+          "state_on": "on",
+          "state_off": "off",
+          "title_light": "All Lights",
+          "title_switch": "All Switches",
+          "title_fan": "All Fans",
+          "title_media_player": "All Media Players",
+          "title_cover": "All Covers",
+          "title_climate": "All Climate Devices",
+          "action_on_light": "Turn All On",
+          "action_on_switch": "Turn All On",
+          "action_on_fan": "Turn All On",
+          "action_on_media_player": "Play All",
+          "action_on_cover": "Open All",
+          "action_on_climate": "Turn All On",
+          "action_off_light": "Turn All Off",
+          "action_off_switch": "Turn All Off",
+          "action_off_fan": "Turn All Off",
+          "action_off_media_player": "Pause All",
+          "action_off_cover": "Close All",
+          "action_off_climate": "Turn All Off"
+        }
+      },
+      "aggregate_popup": {
+        "name": "Aggregate Control",
+        "state": {
+          "state_on": "on",
+          "state_off": "off",
+          "state_open": "open",
+          "state_closed": "closed",
+          "state_locked": "locked",
+          "state_unlocked": "unlocked",
+          "state_available": "available",
+          "average": "Average",
+          "total": "Total",
+          "view_all": "See More",
+          "title_light": "Lights",
+          "title_switch": "Switches",
+          "title_fan": "Fans",
+          "title_media_player": "Media Players",
+          "title_cover": "Covers",
+          "title_climate": "Climate Devices",
+          "action_on_light": "Turn All On",
+          "action_on_switch": "Turn All On",
+          "action_on_fan": "Turn All On",
+          "action_on_media_player": "Play All",
+          "action_on_cover": "Open All",
+          "action_on_climate": "Turn All On",
+          "action_off_light": "Turn All Off",
+          "action_off_switch": "Turn All Off",
+          "action_off_fan": "Turn All Off",
+          "action_off_media_player": "Pause All",
+          "action_off_cover": "Close All",
+          "action_off_climate": "Turn All Off",
+          "individual_controls": "Individual Controls",
+          "no_label": "No label"
+        }
+      },
+      "cover_popup": {
+        "name": "Cover Control",
+        "state": {
+          "open_all": "Open All",
+          "close_all": "Close All"
+        }
+      },
+      "media_player_popup": {
+        "name": "Media Player Control",
+        "state": {
+          "play_all": "Play All",
+          "pause_all": "Pause All"
+        }
+      },
+      "security_view": {
+        "name": "Security",
+        "state": {
+          "quick_actions": "Quick Actions",
+          "lock_all": "Lock All",
+          "turn_off_lights": "Turn Off Lights",
+          "arm_disarm": "Arm/Disarm",
+          "no_alarm": "No Alarm",
+          "view_cameras": "View Cameras",
+          "no_camera": "No Camera",
+          "recent_activity": "Recent Activity",
+          "statistics": "Statistics",
+          "status_ok": "Security OK",
+          "status_warning": "Attention",
+          "status_alert": "Security Alert",
+          "alarm_disarmed": "Disarmed",
+          "alarm_armed_home": "Armed (Home)",
+          "alarm_armed_away": "Armed (Away)",
+          "alarm_armed_night": "Armed (Night)",
+          "alarm_armed_vacation": "Armed (Vacation)",
+          "alarm_armed_custom": "Armed (Custom)",
+          "alarm_triggered": "Triggered",
+          "alarm_arming": "Arming",
+          "alarm_pending": "Pending",
+          "alarm_label": "Alarm",
+          "no_alarm_configured": "No alarm configured",
+          "alarm_unavailable": "Alarm unavailable",
+          "access_label": "Access",
+          "doors_closed": "doors closed",
+          "windows_closed": "windows closed",
+          "locks_locked": "locks locked",
+          "no_access_sensor": "No access sensor",
+          "detection_label": "Detection",
+          "sensors_active": "sensor(s) active",
+          "no_activity": "No activity",
+          "cameras_label": "Cameras",
+          "cameras_active": "active",
+          "no_recent_activity": "No recent activity",
+          "no_security_sensor": "No security sensor configured",
+          "no_stats_available": "No statistics available",
+          "access_sensors": "access",
+          "closed": "closed",
+          "locks": "locks",
+          "locked": "locked",
+          "cameras": "cameras",
+          "detectors": "detectors",
+          "active": "active",
+          "low_battery": "low battery sensor(s)",
+          "confirm_lock_all": "Lock all locks?",
+          "confirm_turn_off_lights": "Turn off all lights?",
+          "confirm_arm_alarm": "Arm/Disarm alarm?",
+          "cancel": "Cancel",
+          "confirm": "Confirm"
+        }
+      },
+      "tags_view": {
+        "name": "Tags",
+        "state": {
+          "title": "Tags",
+          "entities": "entities",
+          "no_entities": "No entities with this label"
+        }
+      }
+    },
+    "binary_sensor": {
+      "presence_detection": {
+        "name": "Presence Detection {name}"
+      },
+      "presence_detection_global": {
+        "name": "Presence Detection (Whole House)"
+      },
+      "binary_sensor_group": {
+        "name": "{device_class} - {name}"
+      },
+      "binary_sensor_group_global": {
+        "name": "{device_class} (Whole House)"
+      }
+    },
+    "light": {
+      "area_lights": {
+        "name": "All Lights - {name}"
+      },
+      "area_lights_global": {
+        "name": "All Lights (Whole House)"
+      }
+    },
+    "switch": {
+      "switch_group": {
+        "name": "All Switches - {name}"
+      },
+      "switch_group_global": {
+        "name": "All Switches (Whole House)"
+      }
+    },
+    "fan": {
+      "fan_group": {
+        "name": "All Fans - {name}"
+      },
+      "fan_group_global": {
+        "name": "All Fans (Whole House)"
+      }
+    },
+    "cover": {
+      "cover_group": {
+        "name": "All Covers - {name}"
+      },
+      "cover_group_global": {
+        "name": "All Covers (Whole House)"
+      }
+    },
+    "siren": {
+      "siren_group": {
+        "name": "All Sirens - {name}"
+      },
+      "siren_group_global": {
+        "name": "All Sirens (Whole House)"
+      }
+    },
+    "sensor": {
+      "numeric_temperature": {
+        "name": "Temperature - {name}"
+      },
+      "numeric_temperature_global": {
+        "name": "Temperature (Whole House)"
+      },
+      "numeric_humidity": {
+        "name": "Humidity - {name}"
+      },
+      "numeric_humidity_global": {
+        "name": "Humidity (Whole House)"
+      },
+      "numeric_illuminance": {
+        "name": "Illuminance - {name}"
+      },
+      "numeric_illuminance_global": {
+        "name": "Illuminance (Whole House)"
+      },
+      "numeric_battery": {
+        "name": "Battery (min) - {name}"
+      },
+      "numeric_battery_global": {
+        "name": "Battery (min) (Whole House)"
+      },
+      "unavailable": {
+        "name": "Unavailable Entities - {name}"
+      },
+      "unavailable_global": {
+        "name": "Unavailable Entities (Whole House)"
+      }
+    }
+  }
 }

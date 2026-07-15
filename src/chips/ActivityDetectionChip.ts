@@ -17,24 +17,25 @@ class ActivityDetectionChip extends AbstractChip {
 
     const resolver = Helper.entityResolver;
 
-    // Check for Linus Brain presence detection
-    const presenceSensorResolution = resolver.resolvePresenceSensor(area_slug);
-    const presenceSensorEntity = presenceSensorResolution.entity_id;
-    const isLinusBrain = presenceSensorResolution.source === "linus_brain";
+    // Check for Linus Brain activity/context entity. Previously this
+    // derived "is Brain installed" from resolvePresenceSensor()'s source —
+    // that stopped working once presence detection moved to a Dashboard-
+    // native entity (resolvePresenceSensor no longer ever returns
+    // "linus_brain"). Check resolveAreaState's own source directly instead,
+    // since that's the entity actually being displayed below and it's still
+    // Brain-only.
+    const areaStateResolution = resolver.resolveAreaState(area_slug);
+    const areaStateEntity = areaStateResolution.entity_id;
+    const isLinusBrain = areaStateResolution.source === "linus_brain";
 
     // Linus Brain configuration - Use activity entity chip directly
-    if (isLinusBrain && presenceSensorEntity) {
-      const areaStateResolution = resolver.resolveAreaState(area_slug);
-      const areaStateEntity = areaStateResolution.entity_id;
-
-      if (areaStateEntity) {
-        return {
-          type: "entity",
-          entity: areaStateEntity,
-          content_info: "none",
-          tap_action: new ActivityDetectionPopup(area_slug).getPopup(),
-        };
-      }
+    if (isLinusBrain && areaStateEntity) {
+      return {
+        type: "entity",
+        entity: areaStateEntity,
+        content_info: "none",
+        tap_action: new ActivityDetectionPopup(area_slug).getPopup(),
+      };
     }
 
     // Without Linus Brain - static activity search icon

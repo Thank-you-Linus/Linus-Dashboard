@@ -28,6 +28,7 @@ from custom_components.linus_dashboard.const import (
     CONF_EXCLUDED_INTEGRATIONS,
     CONF_EXCLUDED_TARGETS,
     CONF_HIDE_GREETING,
+    CONF_HIDE_GROUPS_FROM_VOICE_ASSISTANTS,
     CONF_WEATHER_ENTITY,
     CONF_WEATHER_ENTITY_ID,
     DOMAIN,
@@ -37,7 +38,15 @@ from custom_components.linus_dashboard.const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS: list[Platform] = [Platform.SENSOR]
+PLATFORMS: list[Platform] = [
+    Platform.SENSOR,
+    Platform.BINARY_SENSOR,
+    Platform.LIGHT,
+    Platform.SWITCH,
+    Platform.FAN,
+    Platform.COVER,
+    Platform.SIREN,
+]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -127,12 +136,64 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     _register_panel(hass, DOMAIN, "yaml", dashboard_config, False)  # noqa: FBT003
 
-    # Forward sensor platform for aggregate sensors
+    # Forward platforms (aggregate sensors + area/floor/global group entities)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    if entry.options.get(CONF_HIDE_GROUPS_FROM_VOICE_ASSISTANTS, True):
+        await _async_hide_group_entities_from_voice_assistants(hass, entry)
 
     # Store the entry
     hass.data[DOMAIN][entry.entry_id] = DOMAIN
     return True
+
+
+async def _async_hide_group_entities_from_voice_assistants(
+    hass: HomeAssistant, entry: ConfigEntry
+) -> None:
+    """
+    Mark every entity this integration created as not exposed to voice
+    assistants (independent of entity_registry_visible_default, which only
+    controls UI visibility — the two are separate HA settings).
+
+    Best-effort: the exposed_entities API has moved across HA versions, so
+    this is wrapped defensively rather than treated as a hard dependency —
+    losing voice-assistant exclusion isn't worth failing config entry setup
+    over. Verify against the pinned HA version if this starts logging
+    warnings.
+    """
+    try:
+        from homeassistant.components.homeassistant.exposed_entities import (
+            async_expose_entity,
+            async_listed_assistants,
+        )
+    except ImportError:
+        _LOGGER.warning(
+            "exposed_entities API not available on this Home Assistant version; "
+            "skipping voice assistant exposure for Linus Dashboard group entities"
+        )
+        return
+
+    from homeassistant.helpers import entity_registry as er
+
+    entity_reg = er.async_get(hass)
+    entries = er.async_entries_for_config_entry(entity_reg, entry.entry_id)
+
+    try:
+        assistants = async_listed_assistants(hass)
+    except Exception:  # noqa: BLE001 - defensive, see docstring
+        assistants = ("conversation", "cloud.alexa", "cloud.google_assistant")
+
+    for entity_entry in entries:
+        for assistant in assistants:
+            try:
+                async_expose_entity(hass, assistant, entity_entry.entity_id, False)
+            except Exception as err:  # noqa: BLE001 - defensive, see docstring
+                _LOGGER.debug(
+                    "Could not hide %s from %s: %s",
+                    entity_entry.entity_id,
+                    assistant,
+                    err,
+                )
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

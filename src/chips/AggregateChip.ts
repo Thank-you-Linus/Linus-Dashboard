@@ -373,19 +373,25 @@ class AggregateChip extends AbstractChip {
     switch (options.domain) {
       case "light": {
         const lightResolution = resolver.resolveAllLights(options.area_slug);
-        // Return entity for both Linus Brain AND Magic Areas
+        // Resolves to the Linus Dashboard-native light group by default
         return lightResolution.entity_id;
       }
 
       case "climate":
-        // Linus Brain doesn't provide climate groups yet
+        // No climate group entity yet (deliberately deferred — see plan:
+        // climate/media_player need real HVAC-mode/target-temp aggregation
+        // semantics, not just on/off forwarding).
         return null;
 
       case "cover":
       case "fan":
       case "media_player":
       case "switch":
-        // Linus Brain doesn't have these domain groups yet
+        // switch/fan/cover group entities now exist
+        // (switch.linus_dashboard_all_switches_area_*, etc.) but this chip
+        // isn't wired to resolve them yet — follow-up, not covered by this
+        // change (which only adds the entities, not this chip's consumption
+        // of them).
         return null;
 
       default:

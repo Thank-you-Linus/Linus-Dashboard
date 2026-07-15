@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Full bootstrap for the fake house test environment: areas, floors, native
+"""
+Full bootstrap for the fake house test environment: areas, floors, native
 "Random" sensor/binary_sensor helpers, and area assignment for every fake
 house entity.
 
@@ -41,7 +42,9 @@ import urllib.request
 import websockets
 
 HA_URL = os.environ.get("HA_URL", "http://homeassistant:8123")
-HA_WS_URL = HA_URL.replace("https://", "wss://").replace("http://", "ws://") + "/api/websocket"
+HA_WS_URL = (
+    HA_URL.replace("https://", "wss://").replace("http://", "ws://") + "/api/websocket"
+)
 TOKEN = os.environ.get("HA_TOKEN") or (sys.argv[1] if len(sys.argv) > 1 else None)
 
 if not TOKEN:
@@ -66,17 +69,94 @@ FLOORS = [
 
 # ── Random helper entities (sensor / binary_sensor) ────────────────────
 RANDOM_SENSORS = [
-    {"name": "Temperature Salon", "device_class": "temperature", "unit_of_measurement": "°C", "minimum": 18, "maximum": 26, "area": "salon"},
-    {"name": "Temperature Chambre", "device_class": "temperature", "unit_of_measurement": "°C", "minimum": 16, "maximum": 24, "area": "chambre"},
-    {"name": "Temperature Cuisine", "device_class": "temperature", "unit_of_measurement": "°C", "minimum": 18, "maximum": 28, "area": "cuisine"},
-    {"name": "Temperature Bureau", "device_class": "temperature", "unit_of_measurement": "°C", "minimum": 17, "maximum": 25, "area": "bureau"},
-    {"name": "Humidity Salon", "device_class": "humidity", "unit_of_measurement": "%", "minimum": 35, "maximum": 65, "area": "salon"},
-    {"name": "Humidity Chambre", "device_class": "humidity", "unit_of_measurement": "%", "minimum": 40, "maximum": 70, "area": "chambre"},
-    {"name": "Humidity Cuisine", "device_class": "humidity", "unit_of_measurement": "%", "minimum": 45, "maximum": 80, "area": "cuisine"},
-    {"name": "Humidity Bureau", "device_class": "humidity", "unit_of_measurement": "%", "minimum": 30, "maximum": 60, "area": "bureau"},
-    {"name": "Humidity Salle de Bain", "device_class": "humidity", "unit_of_measurement": "%", "minimum": 50, "maximum": 95, "area": "salle_de_bain"},
-    {"name": "Illuminance Salon", "device_class": "illuminance", "unit_of_measurement": "lx", "minimum": 0, "maximum": 800, "area": "salon"},
-    {"name": "Illuminance Bureau", "device_class": "illuminance", "unit_of_measurement": "lx", "minimum": 0, "maximum": 800, "area": "bureau"},
+    {
+        "name": "Temperature Salon",
+        "device_class": "temperature",
+        "unit_of_measurement": "°C",
+        "minimum": 18,
+        "maximum": 26,
+        "area": "salon",
+    },
+    {
+        "name": "Temperature Chambre",
+        "device_class": "temperature",
+        "unit_of_measurement": "°C",
+        "minimum": 16,
+        "maximum": 24,
+        "area": "chambre",
+    },
+    {
+        "name": "Temperature Cuisine",
+        "device_class": "temperature",
+        "unit_of_measurement": "°C",
+        "minimum": 18,
+        "maximum": 28,
+        "area": "cuisine",
+    },
+    {
+        "name": "Temperature Bureau",
+        "device_class": "temperature",
+        "unit_of_measurement": "°C",
+        "minimum": 17,
+        "maximum": 25,
+        "area": "bureau",
+    },
+    {
+        "name": "Humidity Salon",
+        "device_class": "humidity",
+        "unit_of_measurement": "%",
+        "minimum": 35,
+        "maximum": 65,
+        "area": "salon",
+    },
+    {
+        "name": "Humidity Chambre",
+        "device_class": "humidity",
+        "unit_of_measurement": "%",
+        "minimum": 40,
+        "maximum": 70,
+        "area": "chambre",
+    },
+    {
+        "name": "Humidity Cuisine",
+        "device_class": "humidity",
+        "unit_of_measurement": "%",
+        "minimum": 45,
+        "maximum": 80,
+        "area": "cuisine",
+    },
+    {
+        "name": "Humidity Bureau",
+        "device_class": "humidity",
+        "unit_of_measurement": "%",
+        "minimum": 30,
+        "maximum": 60,
+        "area": "bureau",
+    },
+    {
+        "name": "Humidity Salle de Bain",
+        "device_class": "humidity",
+        "unit_of_measurement": "%",
+        "minimum": 50,
+        "maximum": 95,
+        "area": "salle_de_bain",
+    },
+    {
+        "name": "Illuminance Salon",
+        "device_class": "illuminance",
+        "unit_of_measurement": "lx",
+        "minimum": 0,
+        "maximum": 800,
+        "area": "salon",
+    },
+    {
+        "name": "Illuminance Bureau",
+        "device_class": "illuminance",
+        "unit_of_measurement": "lx",
+        "minimum": 0,
+        "maximum": 800,
+        "area": "bureau",
+    },
 ]
 
 RANDOM_BINARY_SENSORS = [
@@ -122,13 +202,15 @@ OTHER_ENTITY_AREAS = {
 
 
 def api(method, path, body=None):
+    # HA_URL is developer-controlled (env var / CLI default), never external
+    # input, so the http(s)-only scheme here is not attacker-influenced.
     url = f"{HA_URL}{path}"
     data = json.dumps(body).encode() if body is not None else None
-    req = urllib.request.Request(url, data=data, method=method)
+    req = urllib.request.Request(url, data=data, method=method)  # noqa: S310
     req.add_header("Authorization", f"Bearer {TOKEN}")
     req.add_header("Content-Type", "application/json")
     try:
-        with urllib.request.urlopen(req) as resp:
+        with urllib.request.urlopen(req) as resp:  # noqa: S310
             raw = resp.read()
             return resp.status, (json.loads(raw) if raw else None)
     except urllib.error.HTTPError as e:
@@ -165,7 +247,11 @@ def create_random_entity(entity_type, name, extra_fields):
         print(f"FAIL start flow for {name}:", flow)
         return False
     flow_id = flow["flow_id"]
-    status, step = api("POST", f"/api/config/config_entries/flow/{flow_id}", {"next_step_id": entity_type})
+    status, step = api(
+        "POST",
+        f"/api/config/config_entries/flow/{flow_id}",
+        {"next_step_id": entity_type},
+    )
     if status != 200:
         print(f"FAIL menu step for {name}:", step)
         return False
@@ -179,15 +265,12 @@ def create_random_entity(entity_type, name, extra_fields):
 
 
 def slug(name):
-    return (
-        name.lower()
-        .replace(" ", "_")
-        .replace("é", "e")
-        .replace("è", "e")
-    )
+    return name.lower().replace(" ", "_").replace("é", "e").replace("è", "e")
 
 
 class WS:
+    """Thin wrapper auto-incrementing the `id` field HA's websocket API requires on every message."""
+
     def __init__(self, ws):
         self.ws = ws
         self.msg_id = 1
@@ -224,7 +307,11 @@ async def bootstrap_ws():
             })
             if resp.get("success"):
                 got_id = resp["result"]["area_id"]
-                status = "OK" if got_id == area["area_id"] else f"WARNING: got id '{got_id}', expected '{area['area_id']}'"
+                status = (
+                    "OK"
+                    if got_id == area["area_id"]
+                    else f"WARNING: got id '{got_id}', expected '{area['area_id']}'"
+                )
                 print(f"CREATED: area {area['name']} -> {got_id} ({status})")
             else:
                 print(f"FAIL creating area {area['name']}:", resp)
@@ -261,7 +348,9 @@ async def bootstrap_ws():
                     "area_id": area_id,
                     "floor_id": fid,
                 })
-                print(f"{'OK' if resp.get('success') else 'FAIL'}: area {area_id} -> floor {floor['name']}")
+                print(
+                    f"{'OK' if resp.get('success') else 'FAIL'}: area {area_id} -> floor {floor['name']}"
+                )
 
         print("\n--- Entity area assignment ---")
         assignments = dict(OTHER_ENTITY_AREAS)
@@ -273,10 +362,13 @@ async def bootstrap_ws():
         for entity_id, area_id in assignments.items():
             resp = await ws.call({
                 "type": "config/entity_registry/update",
-                "entity_id": entity_id, "area_id": area_id,
+                "entity_id": entity_id,
+                "area_id": area_id,
             })
-            print(f"{'OK' if resp.get('success') else 'FAIL'}: {entity_id} -> {area_id}"
-                  + ("" if resp.get("success") else f" ({resp})"))
+            print(
+                f"{'OK' if resp.get('success') else 'FAIL'}: {entity_id} -> {area_id}"
+                + ("" if resp.get("success") else f" ({resp})")
+            )
 
 
 def bootstrap_random_entities():
@@ -286,15 +378,23 @@ def bootstrap_random_entities():
         if s["name"] in existing:
             print(f"SKIP (exists): {s['name']}")
             continue
-        create_random_entity("sensor", s["name"], {
-            "minimum": s["minimum"], "maximum": s["maximum"],
-            "device_class": s["device_class"], "unit_of_measurement": s["unit_of_measurement"],
-        })
+        create_random_entity(
+            "sensor",
+            s["name"],
+            {
+                "minimum": s["minimum"],
+                "maximum": s["maximum"],
+                "device_class": s["device_class"],
+                "unit_of_measurement": s["unit_of_measurement"],
+            },
+        )
     for b in RANDOM_BINARY_SENSORS:
         if b["name"] in existing:
             print(f"SKIP (exists): {b['name']}")
             continue
-        create_random_entity("binary_sensor", b["name"], {"device_class": b["device_class"]})
+        create_random_entity(
+            "binary_sensor", b["name"], {"device_class": b["device_class"]}
+        )
 
 
 def main():

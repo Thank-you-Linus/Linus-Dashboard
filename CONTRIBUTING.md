@@ -89,6 +89,16 @@ scripts/setup
 scripts/develop
 ```
 
+### 🏠 Fake House Test Environment
+
+Home Assistant automatically loads a fake house (`config/packages/fake_house.yaml`): lights, covers, a thermostat, media players, switches, and sensors/motion/door entities that generate real random values on their own — enough to exercise every area of the dashboard without a real HA install.
+
+One-time setup after your first `scripts/develop` / `make dev` boot:
+1. Create the admin account in the browser onboarding flow.
+2. Create a long-lived access token (**Profile → Security → Tokens**).
+3. Add it to `.env` as `HA_TOKEN=...`.
+4. Run `make fake-house` — creates the areas, floors and random sensor entities, and assigns every fake house entity to its room. Safe to re-run any time.
+
 ### 📁 Project Structure
 
 ```
@@ -238,6 +248,16 @@ scripts/setup
 # Lancer Home Assistant en mode développement
 scripts/develop
 ```
+
+### 🏠 Environnement de test "fake house"
+
+Home Assistant charge automatiquement une fausse maison (`config/packages/fake_house.yaml`) : lumières, volets, un thermostat, des media players, des interrupteurs, ainsi que des capteurs/détecteurs de mouvement/porte dont la valeur change réellement toute seule — de quoi tester chaque recoin du dashboard sans installation HA réelle.
+
+Configuration unique après le premier démarrage via `scripts/develop` / `make dev` :
+1. Créer le compte admin dans l'écran d'onboarding du navigateur.
+2. Créer un jeton d'accès longue durée (**Profil → Sécurité → Jetons**).
+3. L'ajouter dans `.env` sous `HA_TOKEN=...`.
+4. Lancer `make fake-house` — crée les pièces, les étages et les capteurs aléatoires, et assigne chaque entité de la fake house à sa pièce. Peut être relancé à tout moment sans risque.
 
 ### 📁 Structure du projet
 

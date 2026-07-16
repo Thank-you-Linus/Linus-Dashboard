@@ -1,6 +1,6 @@
 # Linus Dashboard - Minimal Development Commands
 
-.PHONY: help dev build build-watch build-prod lint install
+.PHONY: help dev build build-watch build-prod lint install fake-house
 
 # Default help
 help:
@@ -12,6 +12,7 @@ help:
 	@echo "   build-prod  Build frontend (production)"
 	@echo "   lint        Run linting and formatting"
 	@echo "   install     Install dependencies"
+	@echo "   fake-house  Provision the fake house test entities (run once, needs HA_TOKEN in .env)"
 	@echo ""
 
 # Start Home Assistant
@@ -42,4 +43,12 @@ lint:
 install:
 	./ha-env/bin/pip install -r requirements.txt
 	npm install
+
+# Provision the fake house test entities (areas, floors, random sensors).
+# One-time setup: start `make dev`, create the admin account in the browser,
+# then create a long-lived access token (Profile -> Security -> Tokens) and
+# put it in .env as HA_TOKEN. Safe to re-run any time (idempotent).
+fake-house:
+	@set -a; . ./.env 2>/dev/null || true; set +a; \
+	HA_URL=$${HA_URL:-http://localhost:8123} ./ha-env/bin/python config/setup_fake_house_full.py
 

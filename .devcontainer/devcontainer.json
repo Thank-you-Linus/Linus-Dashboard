@@ -26,7 +26,7 @@
 
   "postStartCommand": [
     "bash", "-c",
-    "echo '🚀 Linus Dashboard ready!' && echo '   Start: make dev' && echo '   URL: http://localhost:8123'"
+    "echo '🚀 Linus Dashboard ready!' && echo '   Start: make dev' && echo '   URL: http://localhost:8123' && chmod +x scripts/fake-house-watch && (nohup scripts/fake-house-watch >/tmp/fake-house-watch.log 2>&1 & disown)"
   ],
 
   "customizations": {

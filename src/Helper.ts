@@ -11,6 +11,8 @@ import { LinusDashboardConfig } from "./types/homeassistant/data/linus_dashboard
 import { LabelRegistryEntry } from "./types/homeassistant/data/label_registry";
 import { PerformanceProfiler } from "./utils/performanceProfiler";
 
+const DEVICE_CLASS_DOMAINS = new Set(Object.keys(DEVICE_CLASSES));
+
 import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
 import StrategyDevice = generic.StrategyDevice;
 import StrategyEntity = generic.StrategyEntity;
@@ -363,6 +365,12 @@ class Helper {
       areaIndexMap.set(area.slug, idx);
     });
 
+    // Pre-build index for O(1) original-order lookups (avoids O(n) indexOf per comparison)
+    const originalIndexMap = new Map<string, number>();
+    for (let i = 0; i < entity_ids.length; i++) {
+      originalIndexMap.set(entity_ids[i]!, i);
+    }
+
     // Sort with multi-tier comparison
     return [...entity_ids].sort((entityIdA, entityIdB) => {
       // Tier 1: Unavailable entities go last
@@ -413,8 +421,8 @@ class Helper {
         return nameCompare;
       }
 
-      // Tier 5: Preserve original order (stable sort)
-      return entity_ids.indexOf(entityIdA) - entity_ids.indexOf(entityIdB);
+      // Tier 5: Preserve original order (stable sort) — O(1) via pre-built index
+      return (originalIndexMap.get(entityIdA) ?? 0) - (originalIndexMap.get(entityIdB) ?? 0);
     });
   }
 
@@ -761,7 +769,7 @@ class Helper {
 
       let device_class;
 
-      if (Object.keys(DEVICE_CLASSES).includes(domain)) {
+      if (DEVICE_CLASS_DOMAINS.has(domain)) {
         const entityState = Helper.getEntityState(entity.entity_id);
         if (entityState?.attributes?.device_class) device_class = entityState.attributes.device_class;
       }
@@ -1701,18 +1709,17 @@ class Helper {
 
   static getLastChangedTemplate({ domain, device_class, area_slug }: { domain: string, device_class?: string, area_slug?: string | string[] }): string {
 
-
     const states = this.getStateStrings(this.getEntityIds({
       domain,
       ...(device_class && { device_class }),
       ...(area_slug && { area_slug })
     }));
 
-    // Force re-evaluation every minute by including current minute in template
-    // This triggers Home Assistant to recalculate the relative_time every minute
     // NOTE: relative_time() returns English text only (Home Assistant limitation)
     // See: https://github.com/home-assistant/core/issues/97358
-    return `{% set current_time = now().strftime('%Y-%m-%d %H:%M') %}{% set entities = [${states}] %}{{ relative_time(entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | map(attribute='last_changed') | max) }}`;
+    // Removed now().strftime() trick — it forced ALL template cards to re-evaluate every minute.
+    // The template still updates on state changes (which update last_changed).
+    return `{% set entities = [${states}] %}{% set valid = entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | list %}{% if valid %}{{ relative_time(valid | map(attribute='last_changed') | max) }}{% endif %}`;
   }
 
   static getLastChangedEntityIdTemplate({ domain, device_class, area_slug }: { domain: string, device_class?: string, area_slug?: string | string[] }): string {

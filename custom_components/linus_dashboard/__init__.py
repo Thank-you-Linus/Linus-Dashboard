@@ -15,6 +15,7 @@ from homeassistant.components.websocket_api.decorators import (
 )
 from homeassistant.components.websocket_api.messages import result_message
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 
@@ -35,6 +36,8 @@ from custom_components.linus_dashboard.const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -124,6 +127,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     _register_panel(hass, DOMAIN, "yaml", dashboard_config, False)  # noqa: FBT003
 
+    # Forward sensor platform for aggregate sensors
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
     # Store the entry
     hass.data[DOMAIN][entry.entry_id] = DOMAIN
     return True
@@ -132,6 +138,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     _LOGGER.info("Unloading Linus Dashboard entry")
+
+    # Unload sensor platform
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if not unload_ok:
+        return False
 
     # Retrieve and remove the panel name
     panel_url = hass.data[DOMAIN].pop(entry.entry_id, None)

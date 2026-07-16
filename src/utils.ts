@@ -25,6 +25,8 @@ import { CardFactory } from "./factories/CardFactory";
 import { memoize } from "./utils/memoization";
 import { PerformanceProfiler } from "./utils/performanceProfiler";
 
+const DEVICE_CLASS_DOMAINS = new Set(Object.keys(DEVICE_CLASSES));
+
 import StrategyEntity = generic.StrategyEntity;
 import StrategyArea = generic.StrategyArea;
 import StrategyFloor = generic.StrategyFloor;
@@ -139,7 +141,7 @@ export function groupEntitiesByDomain(entity_ids: string[]): Record<string, stri
         if (!domain) return acc;
 
         let device_class
-        if (Object.keys(DEVICE_CLASSES).includes(domain)) {
+        if (DEVICE_CLASS_DOMAINS.has(domain)) {
             const entityState = Helper.getEntityState(entity_id);
             if (entityState?.attributes?.device_class) {
                 device_class = entityState.attributes.device_class;
@@ -911,6 +913,19 @@ export async function processEntitiesForAreaOrFloorView({
     const domainCardsMap: Record<string, EntityCardConfig[]> = {};
     const miscellaneousEntities: string[] = [];
 
+    // Pre-compute which base domains have device_class variants (O(n) instead of O(n²))
+    const domainsWithVariants = new Set<string>();
+    for (const tag of exposedDomainIds) {
+        const colonIdx = tag.indexOf(':');
+        if (colonIdx > 0) {
+            domainsWithVariants.add(tag.substring(0, colonIdx));
+        }
+    }
+
+    // Pre-compute excluded sets for O(1) lookup in inner loop
+    const excludedDomains = new Set(Helper.linus_dashboard_config?.excluded_domains ?? []);
+    const excludedDeviceClasses = new Set(Helper.linus_dashboard_config?.excluded_device_classes ?? []);
+
     for (const area of areas) {
         if (!area) continue;
 
@@ -927,17 +942,15 @@ export async function processEntitiesForAreaOrFloorView({
         }
 
         for (const domainTag of exposedDomainIds) {
-            if (Helper.linus_dashboard_config?.excluded_domains?.includes(domainTag)) continue;
-            if (Helper.linus_dashboard_config?.excluded_device_classes?.includes(domainTag)) continue;
+            if (excludedDomains.has(domainTag)) continue;
+            if (excludedDeviceClasses.has(domainTag)) continue;
             if (domainTag === "default") continue;
 
             // Parse domain tag to extract base domain and device_class
             const { domain, device_class } = parseDomainTag(domainTag);
 
-            // Check if there are device_class specific domains for this base domain
-            const hasDeviceClassDomains = exposedDomainIds.some(
-                tag => tag !== domainTag && tag.startsWith(`${domain}:`)
-            );
+            // Use pre-computed set instead of O(n) .some() on every iteration
+            const hasDeviceClassDomains = domainsWithVariants.has(domain);
 
             // If this is a base domain (no device_class) and device_class specific domains exist,
             // we should ONLY get entities without device_class to avoid duplicates

@@ -112,12 +112,26 @@ class AggregateChip extends AbstractChip {
     const linusBrainEntity = this.getLinusBrainEntity(config);
 
     // 3. Configure chip appearance
-    this.#defaultConfig.icon = Helper.getIcon(config.domain, config.device_class, allEntities);
-    this.#defaultConfig.icon_color = Helper.getIconColor(config.domain, config.device_class, allEntities);
+    const sensorId = this.getAggregateSensorId(config);
 
+    if (sensorId) {
+      // Server-side aggregate: trivial single-entity template reads
+      (this.#defaultConfig as any).entity_id = [sensorId];
+      this.#defaultConfig.icon = `{{ state_attr('${sensorId}', 'icon') }}`;
+      this.#defaultConfig.icon_color = `{{ state_attr('${sensorId}', 'color') }}`;
 
-    if (config.show_content) {
-      this.#defaultConfig.content = Helper.getContent(config.domain, config.device_class, allEntities);
+      if (config.show_content) {
+        this.#defaultConfig.content = `{% set count = states('${sensorId}') | int(0) %}{% if count > 0 %}{{ count }}{% endif %}`;
+      }
+    } else {
+      // Fallback: inline template approach (area scope or sensor unavailable)
+      (this.#defaultConfig as any).entity_id = allEntities;
+      this.#defaultConfig.icon = Helper.getIcon(config.domain, config.device_class, allEntities);
+      this.#defaultConfig.icon_color = Helper.getIconColor(config.domain, config.device_class, allEntities);
+
+      if (config.show_content) {
+        this.#defaultConfig.content = Helper.getContent(config.domain, config.device_class, allEntities);
+      }
     }
 
     // 4. Configure tap/hold actions based on tapActionMode
@@ -380,6 +394,31 @@ class AggregateChip extends AbstractChip {
       default:
         return null;
     }
+  }
+
+  /**
+   * Get the server-side aggregate sensor ID for this chip's configuration.
+   * Returns null for area scope (stays client-side) or if sensor doesn't exist.
+   */
+  private getAggregateSensorId(config: AggregateChipOptions): string | null {
+    if (config.scope === "area") return null;
+
+    const parts = ["linus_dashboard", config.domain];
+    if (config.device_class && config.device_class !== '_') {
+      parts.push(config.device_class);
+    }
+    if (config.scope === "floor" && config.floor_id) {
+      parts.push(config.floor_id);
+    }
+    parts.push("active");
+
+    const sensorId = `sensor.${parts.join("_")}`;
+    const sensorState = Helper.getEntityState(sensorId);
+    if (!sensorState || sensorState.state === "unavailable") {
+      return null;
+    }
+
+    return sensorId;
   }
 }
 

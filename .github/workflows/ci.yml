@@ -36,6 +36,73 @@ jobs:
       - name: "Check Ruff formatting"
         run: python3 -m ruff format . --check
 
+  # Job 1b: Fake house bootstrap smoke test — catches breakage early if a
+  # future HA version changes the onboarding/auth API shape that
+  # config/bootstrap_ha_onboarding.py depends on (there's no REST/websocket
+  # API stability guarantee for it upstream), or if setup_fake_house_full.py
+  # regresses. Runs the exact same commands a contributor's `make
+  # bootstrap && make fake-house` would, against a throwaway HA instance.
+  fake-house-smoke-test:
+    name: "Fake House Bootstrap Smoke Test"
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: "Checkout repository"
+        uses: "actions/checkout@v7"
+
+      - name: "Set up Python"
+        uses: "actions/setup-python@v6.3.0"
+        with:
+          python-version: "3.14"
+          cache: "pip"
+
+      - name: "Install Python dependencies"
+        run: python3 -m pip install --break-system-packages -r requirements.txt
+
+      - name: "Start Home Assistant"
+        run: |
+          nohup hass --config ./config > /tmp/ha.log 2>&1 &
+          echo $! > /tmp/ha.pid
+
+      - name: "Wait for Home Assistant"
+        run: |
+          timeout 120 bash -c 'until curl -sf http://localhost:8123/api/onboarding >/dev/null; do sleep 3; done'
+
+      - name: "Bootstrap admin account + HA_TOKEN"
+        run: |
+          HA_URL=http://localhost:8123 ENV_FILE=/tmp/ci.env python3 config/bootstrap_ha_onboarding.py
+
+      - name: "Re-run bootstrap (idempotency check)"
+        run: |
+          HA_URL=http://localhost:8123 ENV_FILE=/tmp/ci.env python3 config/bootstrap_ha_onboarding.py \
+            | grep -q "already has a working HA_TOKEN" \
+            || (echo "❌ second run did not take the already-onboarded fast path" && exit 1)
+
+      - name: "Provision the fake house"
+        run: |
+          set -a; . /tmp/ci.env; set +a
+          HA_URL=http://localhost:8123 python3 config/setup_fake_house_full.py
+
+      - name: "Verify key entities exist and are not unavailable"
+        run: |
+          TOKEN=$(grep '^HA_TOKEN=' /tmp/ci.env | cut -d= -f2-)
+          fail=0
+          for eid in light.salon_principal cover.volet_chambre climate.thermostat_salon \
+                     sensor.temperature_salon binary_sensor.motion_salon media_player.tv_salon; do
+            state=$(curl -s http://localhost:8123/api/states/$eid \
+              -H "Authorization: Bearer $TOKEN" | python3 -c "import json,sys; print(json.load(sys.stdin).get('state','MISSING'))" 2>/dev/null || echo "MISSING")
+            if [ "$state" = "MISSING" ] || [ "$state" = "unavailable" ]; then
+              echo "❌ $eid -> $state"
+              fail=1
+            else
+              echo "✅ $eid -> $state"
+            fi
+          done
+          exit $fail
+
+      - name: "Dump Home Assistant logs on failure"
+        if: failure()
+        run: cat /tmp/ha.log || true
+
   # Job 2: TypeScript & ESLint (non-blocking)
   typescript-check:
     name: "TypeScript & ESLint"

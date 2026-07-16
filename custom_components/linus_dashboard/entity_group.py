@@ -138,8 +138,14 @@ def scan_domain_members(
     filtered to a single device_class), grouped by area and by floor.
 
     Always excludes this integration's own entities (entity.platform == DOMAIN),
-    disabled entities, entities without a current state, and anything matched
-    by the configured exclusions.
+    any *other* group entity (anything whose own state already carries an
+    `entity_id` attribute — the same ATTR_ENTITY_ID convention this
+    integration, Linus Brain, and HA's native `group:` entities all use to
+    mark "I am a group of other entities" — so a foreign group never gets
+    scanned in as if it were a raw leaf, which would double-count its
+    members and skew averaged attributes like brightness), disabled
+    entities, entities without a current state, and anything matched by the
+    configured exclusions.
     """
     entity_reg = er.async_get(hass)
     device_reg = dr.async_get(hass)
@@ -178,6 +184,10 @@ def scan_domain_members(
 
         state_obj = hass.states.get(entity_id)
         if not state_obj:
+            continue
+
+        # Foreign group exclusion: see docstring above.
+        if ATTR_ENTITY_ID in state_obj.attributes:
             continue
 
         entity_device_class = state_obj.attributes.get("device_class")

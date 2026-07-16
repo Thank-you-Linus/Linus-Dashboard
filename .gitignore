@@ -44,6 +44,7 @@ dmypy.json
 .env
 .env.local
 .env.*.local
+.ha_admin_credentials
 
 # Node.js
 node_modules/

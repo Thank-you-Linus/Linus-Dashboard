@@ -227,13 +227,15 @@ The project includes a complete development environment that sets up automatical
 
 1. **Open in VS Code**: Clone the repository and open in VS Code
 2. **Reopen in Container**: VS Code will prompt to reopen in dev container
-3. **Auto-setup**: Dependencies install automatically (Python 3.13, Node.js 20, Home Assistant)
-4. **Start developing**: `make dev` launches Home Assistant on http://localhost:8123
+3. **Auto-setup**: Dependencies install automatically (Python 3.14, Node.js 20, Home Assistant)
+4. **Start developing**: `make dev` launches Home Assistant on http://localhost:8123 — a background process then creates the admin account and populates a fake test house on its own, no browser onboarding needed (see [CONTRIBUTING.md](CONTRIBUTING.md#-fake-house-test-environment))
 
 ### Development Commands
 
 ```bash
 make dev         # Start Home Assistant development server
+make bootstrap    # Create the HA admin account + token via the API (no browser)
+make fake-house  # Provision the fake house test entities (bootstraps first if needed)
 make build       # Build frontend (development)
 make build-prod  # Build frontend (production)
 make build-watch # Build frontend in watch mode

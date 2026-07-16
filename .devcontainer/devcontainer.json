@@ -11,21 +11,15 @@
     "ghcr.io/devcontainers/features/github-cli:1": {}
   },
 
-  // "mounts": [
-  //   {
-  //     "source": "${localWorkspaceFolder}/../sapiens",
-  //     "target": "/workspaces/sapiens",
-  //     "type": "bind"
-  //   }
-  // ],
-
   "onCreateCommand": [
-    "bash", "-c",
+    "bash",
+    "-c",
     "rm -rf ha-env && uv venv ha-env && uv pip install --python ha-env/bin/python -r requirements.txt && npm install"
   ],
 
   "postStartCommand": [
-    "bash", "-c",
+    "bash",
+    "-c",
     "echo '🚀 Linus Dashboard ready!' && echo '   Start: make dev' && echo '   URL: http://localhost:8123'"
   ],
 

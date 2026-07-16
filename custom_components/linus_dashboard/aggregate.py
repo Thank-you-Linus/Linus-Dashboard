@@ -18,7 +18,10 @@ DOMAIN_ICONS: dict[str, tuple[str, str]] = {
     "media_player": ("mdi:cast-connected", "mdi:cast-off"),
     "climate": ("mdi:thermostat", "mdi:thermostat-box"),
     "cover": ("mdi:window-open", "mdi:window-closed"),
-    "binary_sensor": ("mdi:checkbox-marked-circle", "mdi:checkbox-blank-circle-outline"),
+    "binary_sensor": (
+        "mdi:checkbox-marked-circle",
+        "mdi:checkbox-blank-circle-outline",
+    ),
     "siren": ("mdi:alarm-light", "mdi:alarm-light-off"),
 }
 
@@ -67,17 +70,13 @@ BINARY_SENSOR_COLORS: dict[str, dict[str, str]] = {
 }
 
 
-def compute_active_count(
-    entity_states: dict[str, str], domain: str
-) -> int:
+def compute_active_count(entity_states: dict[str, str], domain: str) -> int:
     """Count entities in active states."""
     active_states = DOMAIN_ACTIVE_STATES.get(domain, ["on"])
     return sum(1 for state in entity_states.values() if state in active_states)
 
 
-def compute_active_entity_ids(
-    entity_states: dict[str, str], domain: str
-) -> list[str]:
+def compute_active_entity_ids(entity_states: dict[str, str], domain: str) -> list[str]:
     """Get list of entity IDs that are currently active."""
     active_states = DOMAIN_ACTIVE_STATES.get(domain, ["on"])
     return [eid for eid, state in entity_states.items() if state in active_states]

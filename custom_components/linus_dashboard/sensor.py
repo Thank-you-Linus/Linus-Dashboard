@@ -120,9 +120,9 @@ async def _build_aggregate_sensors(
 
         domain_entities.setdefault(domain, []).append(entity_id)
         if device_class:
-            device_class_entities.setdefault(
-                (domain, device_class), []
-            ).append(entity_id)
+            device_class_entities.setdefault((domain, device_class), []).append(
+                entity_id
+            )
 
         if floor_id:
             floor_domain_entities.setdefault((domain, floor_id), []).append(entity_id)
@@ -228,9 +228,7 @@ class LinusDashboardAggregateSensor(SensorEntity):
         parts.append("active")
 
         self._attr_unique_id = "_".join(parts)
-        self._attr_name = " ".join(
-            p.replace("_", " ").title() for p in parts[1:]
-        )
+        self._attr_name = " ".join(p.replace("_", " ").title() for p in parts[1:])
         self._attr_native_value: int = 0
         self._attr_extra_state_attributes: dict[str, Any] = {}
 
@@ -293,9 +291,7 @@ class LinusDashboardAggregateSensor(SensorEntity):
         active_count = compute_active_count(entity_states, self._domain)
         active_ids = compute_active_entity_ids(entity_states, self._domain)
         icon = compute_icon(self._domain, active_count)
-        color = compute_color(
-            self._domain, self._device_class_filter, entity_states
-        )
+        color = compute_color(self._domain, self._device_class_filter, entity_states)
 
         self._attr_native_value = active_count
         self._attr_extra_state_attributes = {

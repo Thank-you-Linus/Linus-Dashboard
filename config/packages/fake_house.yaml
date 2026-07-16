@@ -70,6 +70,16 @@ input_number:
     max: 100
     step: 25
     initial: 0
+  # Light brightness — every other fake light is plain on/off, which meant
+  # the light group's brightness/color aggregation (light.py) had nothing to
+  # aggregate in this test environment. salon_principal gets a real
+  # brightness_template so that path is actually exercised, not just
+  # code-reviewed.
+  fake_salon_principal_brightness:
+    min: 0
+    max: 255
+    step: 1
+    initial: 180
 
 input_select:
   # Media players
@@ -95,6 +105,7 @@ template:
       - name: "Salon Principal"
         unique_id: "fake_light_salon_principal"
         state: "{{ is_state('input_boolean.fake_salon_principal', 'on') }}"
+        level: "{{ states('input_number.fake_salon_principal_brightness') | int }}"
         turn_on:
           - action: input_boolean.turn_on
             target:
@@ -103,6 +114,19 @@ template:
           - action: input_boolean.turn_off
             target:
               entity_id: input_boolean.fake_salon_principal
+        # HA's template light calls set_level *instead of* turn_on when
+        # brightness is passed to turn_on (not both) — set_level is fully
+        # responsible for turning the light on in that case, turn_on above
+        # only ever runs for a bare on/off call.
+        set_level:
+          - action: input_boolean.turn_on
+            target:
+              entity_id: input_boolean.fake_salon_principal
+          - action: input_number.set_value
+            target:
+              entity_id: input_number.fake_salon_principal_brightness
+            data:
+              value: "{{ brightness }}"
       - name: "Salon Deco"
         unique_id: "fake_light_salon_deco"
         state: "{{ is_state('input_boolean.fake_salon_deco', 'on') }}"

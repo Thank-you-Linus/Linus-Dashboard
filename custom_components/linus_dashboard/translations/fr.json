@@ -321,88 +321,88 @@
     },
     "binary_sensor": {
       "presence_detection": {
-        "name": "Détection de présence {name}"
+        "name": "Détection de présence"
       },
       "presence_detection_global": {
-        "name": "Détection de présence (Maison entière)"
+        "name": "Détection de présence"
       },
       "binary_sensor_group": {
-        "name": "{device_class} - {name}"
+        "name": "{device_class}"
       },
       "binary_sensor_group_global": {
-        "name": "{device_class} (Maison entière)"
+        "name": "{device_class}"
       }
     },
     "light": {
       "area_lights": {
-        "name": "Toutes les lumières - {name}"
+        "name": "Toutes les lumières"
       },
       "area_lights_global": {
-        "name": "Toutes les lumières (Maison entière)"
+        "name": "Toutes les lumières"
       }
     },
     "switch": {
       "switch_group": {
-        "name": "Tous les interrupteurs - {name}"
+        "name": "Tous les interrupteurs"
       },
       "switch_group_global": {
-        "name": "Tous les interrupteurs (Maison entière)"
+        "name": "Tous les interrupteurs"
       }
     },
     "fan": {
       "fan_group": {
-        "name": "Tous les ventilateurs - {name}"
+        "name": "Tous les ventilateurs"
       },
       "fan_group_global": {
-        "name": "Tous les ventilateurs (Maison entière)"
+        "name": "Tous les ventilateurs"
       }
     },
     "cover": {
       "cover_group": {
-        "name": "Tous les volets - {name}"
+        "name": "Tous les volets"
       },
       "cover_group_global": {
-        "name": "Tous les volets (Maison entière)"
+        "name": "Tous les volets"
       }
     },
     "siren": {
       "siren_group": {
-        "name": "Toutes les sirènes - {name}"
+        "name": "Toutes les sirènes"
       },
       "siren_group_global": {
-        "name": "Toutes les sirènes (Maison entière)"
+        "name": "Toutes les sirènes"
       }
     },
     "sensor": {
       "numeric_temperature": {
-        "name": "Température - {name}"
+        "name": "Température"
       },
       "numeric_temperature_global": {
-        "name": "Température (Maison entière)"
+        "name": "Température"
       },
       "numeric_humidity": {
-        "name": "Humidité - {name}"
+        "name": "Humidité"
       },
       "numeric_humidity_global": {
-        "name": "Humidité (Maison entière)"
+        "name": "Humidité"
       },
       "numeric_illuminance": {
-        "name": "Luminosité - {name}"
+        "name": "Luminosité"
       },
       "numeric_illuminance_global": {
-        "name": "Luminosité (Maison entière)"
+        "name": "Luminosité"
       },
       "numeric_battery": {
-        "name": "Batterie (min) - {name}"
+        "name": "Batterie (min)"
       },
       "numeric_battery_global": {
-        "name": "Batterie (min) (Maison entière)"
+        "name": "Batterie (min)"
       },
       "unavailable": {
-        "name": "Entités indisponibles - {name}"
+        "name": "Entités indisponibles"
       },
       "unavailable_global": {
-        "name": "Entités indisponibles (Maison entière)"
+        "name": "Entités indisponibles"
       }
     }
   }

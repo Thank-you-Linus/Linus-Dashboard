@@ -321,88 +321,88 @@
     },
     "binary_sensor": {
       "presence_detection": {
-        "name": "Presence Detection {name}"
+        "name": "Presence Detection"
       },
       "presence_detection_global": {
-        "name": "Presence Detection (Whole House)"
+        "name": "Presence Detection"
       },
       "binary_sensor_group": {
-        "name": "{device_class} - {name}"
+        "name": "{device_class}"
       },
       "binary_sensor_group_global": {
-        "name": "{device_class} (Whole House)"
+        "name": "{device_class}"
       }
     },
     "light": {
       "area_lights": {
-        "name": "All Lights - {name}"
+        "name": "All Lights"
       },
       "area_lights_global": {
-        "name": "All Lights (Whole House)"
+        "name": "All Lights"
       }
     },
     "switch": {
       "switch_group": {
-        "name": "All Switches - {name}"
+        "name": "All Switches"
       },
       "switch_group_global": {
-        "name": "All Switches (Whole House)"
+        "name": "All Switches"
       }
     },
     "fan": {
       "fan_group": {
-        "name": "All Fans - {name}"
+        "name": "All Fans"
       },
       "fan_group_global": {
-        "name": "All Fans (Whole House)"
+        "name": "All Fans"
       }
     },
     "cover": {
       "cover_group": {
-        "name": "All Covers - {name}"
+        "name": "All Covers"
       },
       "cover_group_global": {
-        "name": "All Covers (Whole House)"
+        "name": "All Covers"
       }
     },
     "siren": {
       "siren_group": {
-        "name": "All Sirens - {name}"
+        "name": "All Sirens"
       },
       "siren_group_global": {
-        "name": "All Sirens (Whole House)"
+        "name": "All Sirens"
       }
     },
     "sensor": {
       "numeric_temperature": {
-        "name": "Temperature - {name}"
+        "name": "Temperature"
       },
       "numeric_temperature_global": {
-        "name": "Temperature (Whole House)"
+        "name": "Temperature"
       },
       "numeric_humidity": {
-        "name": "Humidity - {name}"
+        "name": "Humidity"
       },
       "numeric_humidity_global": {
-        "name": "Humidity (Whole House)"
+        "name": "Humidity"
       },
       "numeric_illuminance": {
-        "name": "Illuminance - {name}"
+        "name": "Illuminance"
       },
       "numeric_illuminance_global": {
-        "name": "Illuminance (Whole House)"
+        "name": "Illuminance"
       },
       "numeric_battery": {
-        "name": "Battery (min) - {name}"
+        "name": "Battery (min)"
       },
       "numeric_battery_global": {
-        "name": "Battery (min) (Whole House)"
+        "name": "Battery (min)"
       },
       "unavailable": {
-        "name": "Unavailable Entities - {name}"
+        "name": "Unavailable Entities"
       },
       "unavailable_global": {
-        "name": "Unavailable Entities (Whole House)"
+        "name": "Unavailable Entities"
       }
     }
   }

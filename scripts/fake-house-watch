@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+# Waits for Home Assistant to be reachable, then bootstraps the admin
+# account + HA_TOKEN (via the same API HA's onboarding wizard uses — see
+# config/bootstrap_ha_onboarding.py) and provisions the fake house test
+# entities, fully unattended. Meant to be launched in the background (see
+# .devcontainer/devcontainer.json's postStartCommand) so a fresh devcontainer
+# ends up with a populated fake house without anyone opening a browser.
+#
+# Also safe to leave running across restarts: bootstrap no-ops immediately
+# once .env has a working HA_TOKEN, and setup_fake_house_full.py no-ops
+# per-entity for anything that already exists.
+
+set -uo pipefail
+cd "$(dirname "$0")/.."
+
+HA_URL="${HA_URL:-http://localhost:8123}"
+MAX_WAIT="${FAKE_HOUSE_WATCH_MAX_WAIT:-3600}"  # give up after 1 hour
+INTERVAL=10
+elapsed=0
+
+echo "[fake-house-watch] waiting for HA at $HA_URL (up to ${MAX_WAIT}s)..."
+
+while [ "$elapsed" -lt "$MAX_WAIT" ]; do
+  if curl -sf "$HA_URL/api/onboarding" >/dev/null 2>&1; then
+    echo "[fake-house-watch] HA is up — bootstrapping account/token and provisioning the fake house..."
+    if HA_URL="$HA_URL" ./ha-env/bin/python config/bootstrap_ha_onboarding.py \
+      && set -a && . ./.env && set +a \
+      && HA_URL="$HA_URL" ./ha-env/bin/python config/setup_fake_house_full.py; then
+      echo "[fake-house-watch] done."
+      exit 0
+    fi
+    echo "[fake-house-watch] a step failed, will retry."
+  fi
+  sleep "$INTERVAL"
+  elapsed=$((elapsed + INTERVAL))
+done
+
+echo "[fake-house-watch] gave up after ${MAX_WAIT}s — run 'make fake-house' manually once HA is reachable."

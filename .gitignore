@@ -44,6 +44,7 @@ dmypy.json
 .env
 .env.local
 .env.*.local
+.ha_admin_credentials
 
 # Node.js
 node_modules/
@@ -56,7 +57,15 @@ yarn-error.log*
 config/*
 !config/configuration.yaml
 !config/scenes.yaml
+!config/automations.yaml
+!config/scripts.yaml
 !config/.gitkeep
+
+# Fake house test environment (shareable so devs get the same HA test env)
+!config/packages/
+!config/packages/fake_house.yaml
+!config/setup_fake_house_full.py
+!config/bootstrap_ha_onboarding.py
 
 # Python virtual environment
 ha-env/

@@ -11,7 +11,17 @@ scene: !include scenes.yaml
 # Intégrations de base
 frontend:
 config:
+# HA derrière Traefik (proxy inverse) : sans ça, 400 Bad Request /
+# X-Forwarded-For from an untrusted proxy sur toutes les requêtes.
+# trusted_proxies doit couvrir le réseau où arrive la requête proxifiée —
+# c'est ha-test_default (réseau par défaut du docker-compose de ha-test),
+# pas hermes-agent-rfax_default : vérifié via les logs HA
+# ("untrusted proxy 172.20.0.1" -> gateway de ha-test_default).
 http:
+  use_x_forwarded_for: true
+  trusted_proxies:
+    - 172.20.0.0/16
+    - 172.19.0.0/16
 conversation:
 history:
 logbook:

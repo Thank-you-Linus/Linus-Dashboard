@@ -21,8 +21,8 @@ class SettingsPopup extends AbstractPopup {
 
     // Detect Linus Brain integration
     const detectionStatus = Helper.entityResolver?.getDetectionStatus();
-    const hasLinusBrain = detectionStatus?.hasLinusBrain || !!Helper.entities["sensor.linus_brain_rooms"];
-    const linusBrainRoomsSensor = Helper.entities["sensor.linus_brain_rooms"];
+    const hasLinusBrain = detectionStatus?.hasLinusBrain || !!Helper.entities["sensor.linus_brain_monitored_areas"];
+    const linusBrainRoomsSensor = Helper.entities["sensor.linus_brain_monitored_areas"];
     const linusBrainRoomsCount = linusBrainRoomsSensor ? Helper.getEntityState(linusBrainRoomsSensor.entity_id).state : "0";
 
     return {
@@ -199,6 +199,52 @@ class SettingsPopup extends AbstractPopup {
                     style: `ha-card { box-shadow: none; margin: 2px; }`
                   }
                 }
+                ].filter(Boolean)
+              },
+              // Magic Areas quick actions
+              (detectionStatus?.hasMagicAreas || Object.keys(Helper.magicAreasDevices).length > 0) && {
+                type: "horizontal-stack",
+                cards: [
+                  {
+                    type: "custom:mushroom-template-card",
+                    primary: Helper.localize("component.linus_dashboard.entity.text.settings_popup.state.reload_magic_areas"),
+                    icon: "mdi:refresh",
+                    icon_color: "blue",
+                    layout: "vertical",
+                    tap_action: {
+                      action: "call-service",
+                      service: "homeassistant.reload_config_entry",
+                      target: { "device_id": Object.values(Helper.magicAreasDevices).map((area) => area?.id) },
+                      confirmation: {
+                        text: Helper.localize("component.linus_dashboard.entity.text.settings_popup.state.reload_confirm")
+                      }
+                    },
+                    card_mod: {
+                      style: `ha-card { box-shadow: none; margin: 2px; }`
+                    }
+                  },
+                  {
+                    type: "custom:mushroom-template-card",
+                    primary: Helper.localize("component.linus_dashboard.entity.text.settings_popup.state.magic_areas"),
+                    icon: "mdi:magic-staff",
+                    icon_color: "amber",
+                    layout: "vertical",
+                    tap_action: {
+                      action: "fire-dom-event",
+                      browser_mod: {
+                        service: "browser_mod.sequence",
+                        data: {
+                          sequence: [
+                            { service: "browser_mod.close_popup", data: {} },
+                            { service: "browser_mod.navigate", data: { path: `/config/integrations/integration/magic_areas` } }
+                          ]
+                        }
+                      }
+                    },
+                    card_mod: {
+                      style: `ha-card { box-shadow: none; margin: 2px; }`
+                    }
+                  },
                 ].filter(Boolean)
               },
               // Configuration Home Assistant

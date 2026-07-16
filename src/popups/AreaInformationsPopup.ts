@@ -1,5 +1,10 @@
 import { Helper } from "../Helper";
+import { generic } from "../types/strategy/generic";
+
+import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
+
 import { PopupActionConfig } from "../types/homeassistant/data/lovelace";
+import { slugify } from "../utils";
 
 import { AbstractPopup } from "./AbstractPopup";
 
@@ -11,13 +16,17 @@ import { AbstractPopup } from "./AbstractPopup";
  */
 class AreaInformations extends AbstractPopup {
 
-    getDefaultConfig(device: any, minimalist: boolean): PopupActionConfig {
+    getDefaultConfig(device: MagicAreaRegistryEntry, minimalist: boolean): PopupActionConfig {
 
         const { area_state } = device?.entities ?? {}
 
         const { friendly_name, adjoining_areas, features, states: _states, presence_sensors, on_states } = Helper.getEntityState(area_state?.entity_id)?.attributes ?? {}
 
+        // Use the proper entity_id from the MA device when available, fallback to hardcoded pattern
+        const presenceHoldEntityId = device?.entities?.presence_hold?.entity_id || `switch.magic_areas_presence_hold_${slugify(device?.name)}`;
         presence_sensors?.sort((a: string, b: string) => {
+            if (a === presenceHoldEntityId) return -1;
+            if (b === presenceHoldEntityId) return 1;
             const aState = Helper.getEntityState(a);
             const bState = Helper.getEntityState(b);
             const lastChangeA = new Date(aState?.last_changed).getTime();
@@ -226,7 +235,7 @@ class AreaInformations extends AbstractPopup {
      *
      * @param {chips.PopupActionConfig} options The chip options.
      */
-    constructor(device: any, minimalist = false) {
+    constructor(device: MagicAreaRegistryEntry, minimalist = false) {
         super();
 
         const defaultConfig = this.getDefaultConfig(device, minimalist)

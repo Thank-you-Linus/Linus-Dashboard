@@ -17,10 +17,10 @@ class LinusBrainPopup extends AbstractPopup {
 
         // Get global Linus Brain entities
         const cloudHealthEntity = "sensor.linus_brain_cloud_health";
-        const lastSyncEntity = "sensor.linus_brain_sync";
+        const lastSyncEntity = "sensor.linus_brain_last_sync";
         const errorsEntity = "sensor.linus_brain_errors";
-        const roomsEntity = "sensor.linus_brain_rooms";
-        const ruleEngineEntity = "sensor.linus_brain_rule_engine_stats";
+        const roomsEntity = "sensor.linus_brain_monitored_areas";
+        const ruleEngineEntity = "sensor.linus_brain_rule_engine";
         const syncButtonEntity = "button.linus_brain_sync";
 
         // Get states

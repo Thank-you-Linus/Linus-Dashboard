@@ -775,9 +775,15 @@ class AggregatePopup extends AbstractPopup {
       ? [Helper.floors[targetFloorId]].filter(Boolean)
       : Helper.orderedFloors;
 
-    // For global scope: exclude UNDISCLOSED floor entirely (keep popups clean)
+    // For global scope: exclude UNDISCLOSED floor to keep popups clean, but only
+    // when a real floor also exists. Homes without any floor configured in HA
+    // only have UNDISCLOSED — filtering it out unconditionally left those popups
+    // empty even though their areas/entities exist.
     if (scope === "global") {
-      floors = floors.filter(f => f.floor_id !== UNDISCLOSED);
+      const hasRealFloors = floors.some(f => f.floor_id !== UNDISCLOSED);
+      if (hasRealFloors) {
+        floors = floors.filter(f => f.floor_id !== UNDISCLOSED);
+      }
     }
 
     // Helper to process a single floor
@@ -850,13 +856,12 @@ class AggregatePopup extends AbstractPopup {
       }
     };
 
-    // Process regular floors
+    // Process floors. UNDISCLOSED never gets a floor separator, even when kept
+    // above for a floor-less home — there's nothing else to distinguish it from.
     for (const floor of floors) {
-      processFloor(floor, scope === "global");
+      const isUndisclosed = floor.floor_id === UNDISCLOSED;
+      processFloor(floor, scope === "global" && !isUndisclosed);
     }
-
-    // UNDISCLOSED floor is intentionally skipped for global scope to keep popups clean
-    // UNDISCLOSED entities are filtered out at the entity retrieval level
 
     return cards;
   }

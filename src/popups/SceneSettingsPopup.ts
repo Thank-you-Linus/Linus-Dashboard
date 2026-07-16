@@ -1,6 +1,8 @@
 
+import { Helper } from "../Helper";
 import { PopupActionConfig } from "../types/homeassistant/data/lovelace";
-import { TOD_ORDER } from "../variables";
+import { slugify } from "../utils";
+import { MAGIC_AREAS_DOMAIN, TOD_ORDER } from "../variables";
 
 import { AbstractPopup } from "./AbstractPopup";
 
@@ -14,7 +16,13 @@ class SceneSettings extends AbstractPopup {
 
   getDefaultConfig(device: any): PopupActionConfig {
 
-    const { scene_morning, scene_daytime, scene_evening, scene_night } = device?.entities ?? {}
+    // Resolve full MA device if only slug was provided (from ControllerCard extraControls)
+    const hasEntities = device?.entities && Object.keys(device.entities).length > 0;
+    const effectiveDevice = (!hasEntities && device?.slug)
+      ? Helper.magicAreasDevices[device.slug] || device
+      : device;
+
+    const { scene_morning, scene_daytime, scene_evening, scene_night } = effectiveDevice?.entities ?? {}
     const selectControl = [scene_morning, scene_daytime, scene_evening, scene_night].filter(Boolean)
 
     return {
@@ -32,19 +40,19 @@ class SceneSettings extends AbstractPopup {
                   cards: [
                     {
                       type: "entities",
-                      entities: [device?.entities[('scene_' + tod) as "scene_morning"]?.entity_id]
+                      entities: [effectiveDevice?.entities[('scene_' + tod) as "scene_morning"]?.entity_id]
                     },
                     {
                       type: "conditional",
                       conditions: [
                         {
-                          entity: device?.entities[('scene_' + tod) as "scene_morning"]?.entity_id,
+                          entity: effectiveDevice?.entities[('scene_' + tod) as "scene_morning"]?.entity_id,
                           state: "on"
                         }
                       ],
                       card: {
                         type: "tile",
-                        entity: device?.entities[('scene_' + tod) as "scene_morning"]?.entity_id,
+                        entity: effectiveDevice?.entities[('scene_' + tod) as "scene_morning"]?.entity_id,
                         show_entity_picture: true,
                         tap_action: {
                           action: "toggle"
@@ -55,7 +63,7 @@ class SceneSettings extends AbstractPopup {
                       type: "conditional",
                       conditions: [
                         {
-                          entity: device?.entities[('scene_' + tod) as "scene_morning"]?.entity_id,
+                          entity: effectiveDevice?.entities[('scene_' + tod) as "scene_morning"]?.entity_id,
                           state: "unavailable"
                         }
                       ],
@@ -66,7 +74,12 @@ class SceneSettings extends AbstractPopup {
                         icon: "mdi:pencil",
                         layout: "vertical",
                         tap_action: {
-                          action: "none",
+                          action: "call-service",
+                          service: `${MAGIC_AREAS_DOMAIN}.snapshot_lights_as_tod_scene`,
+                          data: {
+                            area: slugify(effectiveDevice.name || effectiveDevice.slug),
+                            tod
+                          }
                         },
                       },
                     }

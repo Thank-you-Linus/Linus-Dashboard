@@ -377,15 +377,18 @@ class AggregateChip extends AbstractChip {
         return lightResolution.entity_id;
       }
 
-      case "climate":
-        // Linus Brain doesn't provide climate groups yet
-        return null;
+      case "climate": {
+        // Try Magic Areas climate_group entity
+        const climateResolution = resolver.resolveClimateGroup(options.area_slug);
+        return climateResolution.entity_id;
+      }
 
       case "cover":
       case "fan":
       case "media_player":
       case "switch":
-        // Linus Brain doesn't have these domain groups yet
+        // Linus Brain doesn't have these domain group entities yet
+        // Magic Areas doesn't provide group entities for these domains either
         return null;
 
       default:

@@ -81,11 +81,13 @@ async def _build_aggregate_sensors(
         if domain not in DOMAIN_ACTIVE_STATES:
             continue
 
-        state_obj = hass.states.get(entity_id)
-        if not state_obj:
-            continue
-
-        device_class = state_obj.attributes.get("device_class")
+        # Determine device_class from the entity registry (populated and
+        # persistent very early in startup) rather than the live state. Gating
+        # membership on hass.states here races with entity/state restoration on
+        # a cold boot: entities whose state hasn't been posted yet get skipped,
+        # producing empty (or partially-populated) aggregates that never recover
+        # until a reload. Live states are read later in _update_state instead.
+        device_class = entity_entry.device_class or entity_entry.original_device_class
         if device_class and device_class in excluded_device_classes:
             continue
 

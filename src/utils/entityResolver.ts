@@ -4,13 +4,13 @@ import { Helper } from "../Helper";
 /**
  * Entity Resolution Result
  *
- * Represents the result of resolving an entity from Linus Brain.
+ * Represents the result of resolving an entity from Linus Brain, Magic Areas, or native HA.
  */
 export interface EntityResolution {
   /** The resolved entity ID, or null if not found */
   entity_id: string | null;
   /** The source of the entity */
-  source: "linus_brain" | "native";
+  source: "linus_brain" | "magic_areas" | "native";
   /** Fallback entity ID if the primary one is not available */
   fallback?: string;
 }
@@ -39,18 +39,25 @@ export interface EntityResolution {
  * backward compatibility with the old `linus_brain_presence_detection_*` /
  * `linus_brain_all_lights_*` entity_id is kept — clean cut, not a dual
  * fallback (see PR description for the reasoning).
+ *
+ * **Entities kept from Magic Areas (fallback, when Brain doesn't provide them):**
+ * - area_state, light_control, all_lights, climate_group
+ * - All aggregates (aggregate_*), groups (climate_group)
+ * - TOD scene services, presence_hold
  */
 export class EntityResolver {
   private hasLinusBrain: boolean;
+  private hasMagicAreas: boolean;
 
   constructor(private hass: HomeAssistant) {
+    this.hasMagicAreas = this.detectMagicAreas();
     this.hasLinusBrain = this.detectLinusBrain();
   }
 
   /**
    * Resolves the area state entity
    *
-   * Priority: Linus Brain > null
+   * Priority: Linus Brain > Magic Areas > native
    *
    * @param area_slug - The area slug (e.g., "salon", "kitchen")
    * @returns EntityResolution with the resolved entity
@@ -61,8 +68,19 @@ export class EntityResolver {
       if (this.hass.states[linusEntity]) {
         const state = this.hass.states[linusEntity];
         if (state.state !== "unavailable" && state.state !== "unknown") {
-          return { entity_id: linusEntity, source: "linus_brain" };
+          return {
+            entity_id: linusEntity,
+            source: "linus_brain",
+            fallback: Helper.magicAreasDevices[area_slug]?.entities?.area_state?.entity_id
+          };
         }
+      }
+    }
+
+    if (this.hasMagicAreas) {
+      const magicEntity = Helper.magicAreasDevices[area_slug]?.entities?.area_state?.entity_id;
+      if (magicEntity) {
+        return { entity_id: magicEntity, source: "magic_areas" };
       }
     }
 
@@ -103,7 +121,7 @@ export class EntityResolver {
   /**
    * Resolves the automatic light control switch
    *
-   * Priority: Linus Brain > null
+   * Priority: Linus Brain > Magic Areas > native
    *
    * @param area_slug - The area slug
    * @returns EntityResolution with the resolved entity
@@ -114,8 +132,19 @@ export class EntityResolver {
       if (this.hass.states[linusEntity]) {
         const state = this.hass.states[linusEntity];
         if (state.state !== "unavailable" && state.state !== "unknown") {
-          return { entity_id: linusEntity, source: "linus_brain" };
+          return {
+            entity_id: linusEntity,
+            source: "linus_brain",
+            fallback: Helper.magicAreasDevices[area_slug]?.entities?.light_control?.entity_id
+          };
         }
+      }
+    }
+
+    if (this.hasMagicAreas) {
+      const magicEntity = Helper.magicAreasDevices[area_slug]?.entities?.light_control?.entity_id;
+      if (magicEntity) {
+        return { entity_id: magicEntity, source: "magic_areas" };
       }
     }
 
@@ -125,8 +154,8 @@ export class EntityResolver {
   /**
    * Resolves the all-lights group entity for an area
    *
-   * Source: Linus Dashboard native (light.linus_dashboard_all_lights_area_{area}).
-   * No Linus Brain fallback — see class docstring.
+   * Priority: Linus Dashboard native (light.linus_dashboard_all_lights_area_{area})
+   * > Magic Areas > native. No Linus Brain branch — see class docstring.
    *
    * @param area_slug - The area slug
    * @returns EntityResolution with the resolved entity
@@ -136,11 +165,21 @@ export class EntityResolver {
     if (this.hass.states[entity_id]) {
       return { entity_id, source: "native" };
     }
+
+    if (this.hasMagicAreas) {
+      const magicEntity = Helper.magicAreasDevices[area_slug]?.entities?.all_lights?.entity_id;
+      if (magicEntity) {
+        return { entity_id: magicEntity, source: "magic_areas" };
+      }
+    }
+
     return { entity_id: null, source: "native" };
   }
 
   /**
    * Resolves the all-lights group entity for a floor
+   *
+   * Linus Dashboard native only — Magic Areas has no floor concept.
    *
    * @param floor_slug - The floor slug
    * @returns EntityResolution with the resolved entity
@@ -156,10 +195,65 @@ export class EntityResolver {
   /**
    * Resolves the climate group entity
    *
-   * @param _area_slug - The area slug (unused, kept for API compatibility)
-   * @returns EntityResolution with null (no Linus Brain climate group)
+   * Priority: Linus Brain (future) > Magic Areas > native
+   *
+   * @param area_slug - The area slug
+   * @returns EntityResolution with the resolved entity
    */
-  resolveClimateGroup(_area_slug: string): EntityResolution {
+  resolveClimateGroup(area_slug: string): EntityResolution {
+    if (this.hasMagicAreas) {
+      return this.resolveMagicAreasEntity(area_slug, "climate_group");
+    }
+
+    return { entity_id: null, source: "native" };
+  }
+
+  /**
+   * Resolves the climate control switch entity
+   *
+   * Priority: Magic Areas > native
+   *
+   * @param area_slug - The area slug
+   * @returns EntityResolution with the resolved entity
+   */
+  resolveClimateControlSwitch(area_slug: string): EntityResolution {
+    if (this.hasMagicAreas) {
+      return this.resolveMagicAreasEntity(area_slug, "climate_control");
+    }
+
+    return { entity_id: null, source: "native" };
+  }
+
+  /**
+   * Resolves the media player control switch entity
+   *
+   * Priority: Magic Areas > native
+   *
+   * @param area_slug - The area slug
+   * @returns EntityResolution with the resolved entity
+   */
+  resolveMediaPlayerControlSwitch(area_slug: string): EntityResolution {
+    if (this.hasMagicAreas) {
+      return this.resolveMagicAreasEntity(area_slug, "media_player_control");
+    }
+
+    return { entity_id: null, source: "native" };
+  }
+
+  /**
+   * Resolves Magic Areas entities that don't have Linus Brain equivalents
+   *
+   * @param area_slug - The area slug
+   * @param entity_type - The entity type key (e.g., "aggregate_health", "climate_group")
+   * @returns EntityResolution with the Magic Areas entity
+   */
+  resolveMagicAreasEntity(area_slug: string, entity_type: string): EntityResolution {
+    const entity = Helper.magicAreasDevices[area_slug]?.entities?.[entity_type];
+
+    if (entity?.entity_id) {
+      return { entity_id: entity.entity_id, source: "magic_areas" };
+    }
+
     return { entity_id: null, source: "native" };
   }
 
@@ -192,7 +286,51 @@ export class EntityResolver {
       };
     }
 
+    if (resolution.source === "magic_areas") {
+      return {
+        state: stateEntity.state,
+        source: "magic_areas"
+      };
+    }
+
     return null;
+  }
+
+  /**
+   * Detects if Magic Areas integration is installed and enabled
+   *
+   * Checks for any enabled MA device entity, trying area_state first,
+   * then falling back to any other entity on the device.
+   *
+   * @returns true if Magic Areas is detected and has at least one enabled entity
+   */
+  private detectMagicAreas(): boolean {
+    if (Object.keys(Helper.magicAreasDevices).length === 0) {
+      return false;
+    }
+
+    for (const magicDevice of Object.values(Helper.magicAreasDevices)) {
+      // Primary check: area_state entity
+      const areaStateEntity = magicDevice.entities?.area_state?.entity_id;
+      if (areaStateEntity) {
+        const state = this.hass.states[areaStateEntity];
+        if (state && state.state !== "unavailable") {
+          return true;
+        }
+      }
+
+      // Fallback: any other entity on this MA device
+      for (const entity of Object.values(magicDevice.entities)) {
+        if (entity?.entity_id) {
+          const state = this.hass.states[entity.entity_id];
+          if (state && state.state !== "unavailable") {
+            return true;
+          }
+        }
+      }
+    }
+
+    return false;
   }
 
   /**
@@ -210,7 +348,7 @@ export class EntityResolver {
       return false;
     }
 
-    const linusBrainMainSensor = this.hass.states["sensor.linus_brain_rooms"];
+    const linusBrainMainSensor = this.hass.states["sensor.linus_brain_monitored_areas"];
     if (linusBrainMainSensor && linusBrainMainSensor.state !== "unavailable") {
       return true;
     }
@@ -231,13 +369,21 @@ export class EntityResolver {
    */
   getDetectionStatus(): {
     hasLinusBrain: boolean;
-    hasMagicAreas: false;
-    mode: "linus_brain" | "none";
+    hasMagicAreas: boolean;
+    mode: "linus_brain" | "magic_areas" | "hybrid" | "none";
   } {
+    const mode = this.hasLinusBrain && this.hasMagicAreas
+      ? "hybrid"
+      : this.hasLinusBrain
+        ? "linus_brain"
+        : this.hasMagicAreas
+          ? "magic_areas"
+          : "none";
+
     return {
       hasLinusBrain: this.hasLinusBrain,
-      hasMagicAreas: false,
-      mode: this.hasLinusBrain ? "linus_brain" : "none",
+      hasMagicAreas: this.hasMagicAreas,
+      mode
     };
   }
 }

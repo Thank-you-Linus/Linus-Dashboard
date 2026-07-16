@@ -3,11 +3,19 @@ Sensor platform for Linus Dashboard.
 
 Three families of sensors:
 1. Generic hidden diagnostic aggregate sensors (`LinusDashboardAggregateSensor`)
-   — pure rendering caches for the frontend's domain chips. Only `climate`
-   and `media_player` remain here: every other domain in DOMAIN_ACTIVE_STATES
-   moved to a dedicated, visible group entity (light.py, switch.py, fan.py,
-   cover.py, siren.py, binary_sensor.py) whose own entity_id/total/
-   active_entity_ids attributes make this generic count redundant for them.
+   — pure rendering caches for AggregateChip's floor/global-scope fast path
+   (`getAggregateSensorId()` in src/chips/AggregateChip.ts), covering every
+   domain/device_class in DOMAIN_ACTIVE_STATES at global and floor scope only
+   (AggregateChip never queries these at area scope — it renders area-scope
+   chips client-side instead, from the raw entities directly). Several
+   domains (light, switch, fan, cover, siren, binary_sensor) *also* now have
+   a dedicated, visible group entity (light.py, switch.py, fan.py, cover.py,
+   siren.py, binary_sensor.py) with richer attributes, including at area
+   scope — this generic system and those dedicated entities currently
+   overlap in what they compute for those domains at floor/global scope.
+   Left as-is rather than de-duplicated in this pass: AggregateChip would
+   need to prefer the dedicated group entity over this hidden sensor first,
+   which is a frontend change out of scope here — follow-up.
 2. Numeric sensor aggregates (`LinusDashboardNumericAggregateSensor`) — sum,
    average or minimum (depending on state_class/device_class) of a `sensor`
    domain device_class across a zone/floor/global, e.g. average temperature.
@@ -17,10 +25,11 @@ Three families of sensors:
    of unavailable/unknown entities per zone/floor/global, across every
    domain (not just the ones covered by (1)/(2)).
 
-All three follow the same nested hierarchy as the group entities in the other
-platform files: floor aggregates read the area-scope sensors' own computed
-values (not raw entities again), global reads floor-scope sensors. See
-entity_group.py for the shared scanning/self-exclusion logic this reuses.
+(2) and (3) follow the same nested hierarchy as the group entities in the
+other platform files: floor aggregates read the area-scope sensors' own
+computed values (not raw entities again), global reads floor-scope sensors.
+See entity_group.py for the shared scanning/self-exclusion logic this reuses.
+(1) only has global and floor tiers — see above.
 """
 
 import logging
@@ -43,6 +52,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later, async_track_state_change_event
 
 from .aggregate import (
+    DOMAIN_ACTIVE_STATES,
     compute_active_count,
     compute_active_entity_ids,
     compute_color,
@@ -61,10 +71,6 @@ from .entity_group import ExclusionConfig, resolve_floors_for_areas, scan_domain
 _LOGGER = logging.getLogger(__name__)
 
 DEBOUNCE_SECONDS = 0.1
-
-# Domains still handled by the generic hidden counting sensor. Every other
-# domain in DOMAIN_ACTIVE_STATES now has a dedicated group entity elsewhere.
-GENERIC_COUNTED_DOMAINS = ("climate", "media_player")
 
 # device_class list for numeric aggregate sensors. Deliberately short and
 # fixed for v1 rather than "every sensor device_class encountered" — avoids
@@ -103,8 +109,9 @@ async def _build_aggregate_sensors(
     config_entry: ConfigEntry,
 ) -> list["LinusDashboardAggregateSensor"]:
     """
-    Build the generic hidden counting sensor for climate/media_player, at
-    global, floor and area scope.
+    Build the generic hidden counting sensor for every domain/device_class in
+    DOMAIN_ACTIVE_STATES, at global and floor scope (no area scope — see
+    module docstring, AggregateChip never queries this system at area scope).
     """
     ent_reg = er.async_get(hass)
     dev_reg = dr.async_get(hass)
@@ -120,9 +127,14 @@ async def _build_aggregate_sensors(
     excluded_floor_ids = set(excluded_targets.get("floor_id") or [])
     excluded_integrations = set(options.get("excluded_integrations") or [])
 
+    # Domain-level buckets serve chips without a device_class; the device_class
+    # buckets serve device_class-scoped chips (binary_sensor/sensor/cover). An
+    # entity always joins its domain bucket and additionally its device_class
+    # bucket when it has one, so both frontend lookups resolve to a sensor.
     domain_entities: dict[str, list[str]] = {}
     floor_domain_entities: dict[tuple[str, str], list[str]] = {}
-    area_domain_entities: dict[tuple[str, str], list[str]] = {}
+    device_class_entities: dict[tuple[str, str], list[str]] = {}
+    floor_device_class_entities: dict[tuple[str, str, str], list[str]] = {}
 
     for entity_entry in ent_reg.entities.values():
         if entity_entry.hidden_by or entity_entry.disabled_by:
@@ -140,14 +152,16 @@ async def _build_aggregate_sensors(
         domain = entity_id.split(".")[0]
         if domain in excluded_domains:
             continue
-        if domain not in GENERIC_COUNTED_DOMAINS:
+        if domain not in DOMAIN_ACTIVE_STATES:
             continue
 
-        state_obj = hass.states.get(entity_id)
-        if not state_obj:
-            continue
-
-        device_class = state_obj.attributes.get("device_class")
+        # Determine device_class from the entity registry (populated and
+        # persistent very early in startup) rather than the live state. Gating
+        # membership on hass.states here races with entity/state restoration on
+        # a cold boot: entities whose state hasn't been posted yet get skipped,
+        # producing empty (or partially-populated) aggregates that never recover
+        # until a reload. Live states are read later in _update_state instead.
+        device_class = entity_entry.device_class or entity_entry.original_device_class
         if device_class and device_class in excluded_device_classes:
             continue
 
@@ -173,10 +187,17 @@ async def _build_aggregate_sensors(
             continue
 
         domain_entities.setdefault(domain, []).append(entity_id)
-        area_domain_entities.setdefault((domain, area_id), []).append(entity_id)
+        if device_class:
+            device_class_entities.setdefault((domain, device_class), []).append(
+                entity_id
+            )
 
         if floor_id:
             floor_domain_entities.setdefault((domain, floor_id), []).append(entity_id)
+            if device_class:
+                floor_device_class_entities.setdefault(
+                    (domain, device_class, floor_id), []
+                ).append(entity_id)
 
     sensors: list[LinusDashboardAggregateSensor] = []
 
@@ -187,6 +208,19 @@ async def _build_aggregate_sensors(
                     hass=hass,
                     domain=domain,
                     device_class_filter=None,
+                    scope_id=None,
+                    tracked_entity_ids=entity_ids,
+                    config_entry=config_entry,
+                )
+            )
+
+    for (domain, device_class), entity_ids in device_class_entities.items():
+        if entity_ids:
+            sensors.append(
+                LinusDashboardAggregateSensor(
+                    hass=hass,
+                    domain=domain,
+                    device_class_filter=device_class,
                     scope_id=None,
                     tracked_entity_ids=entity_ids,
                     config_entry=config_entry,
@@ -206,14 +240,18 @@ async def _build_aggregate_sensors(
                 )
             )
 
-    for (domain, area_id), entity_ids in area_domain_entities.items():
+    for (
+        domain,
+        device_class,
+        floor_id,
+    ), entity_ids in floor_device_class_entities.items():
         if entity_ids:
             sensors.append(
                 LinusDashboardAggregateSensor(
                     hass=hass,
                     domain=domain,
-                    device_class_filter=None,
-                    scope_id=area_id,
+                    device_class_filter=device_class,
+                    scope_id=floor_id,
                     tracked_entity_ids=entity_ids,
                     config_entry=config_entry,
                 )

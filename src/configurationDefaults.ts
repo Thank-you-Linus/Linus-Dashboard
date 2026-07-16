@@ -1,6 +1,7 @@
 import { generic } from "./types/strategy/generic";
 
 import StrategyDefaults = generic.StrategyDefaults;
+import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
 
 import { ControlChip } from "./chips/ControlChip";
 import { SettingsChip } from "./chips/SettingsChip";
@@ -46,8 +47,7 @@ export const configurationDefaults: StrategyDefaults = {
     },
     light: {
       showControls: true,
-      extraControls: (device: any) => {
-        const { adaptive_lighting_range, minimum_brightness, maximum_brightness, maximum_lighting_level } = device?.entities ?? {}
+      extraControls: (device: MagicAreaRegistryEntry) => {
         const chips = [];
 
         // Use EntityResolver to get light control switch (Linus Brain or Magic Areas)
@@ -65,8 +65,14 @@ export const configurationDefaults: StrategyDefaults = {
           }
         }
 
+        // Look up MA device for MA-specific settings (adaptive lighting, etc.)
+        // ControllerCard passes { slug, entities: {} } — resolve full MA device by slug
+        const maDevice = device.slug ? Helper.magicAreasDevices[device.slug] : null;
+        const effectiveDevice = maDevice || device;
+        const { adaptive_lighting_range, minimum_brightness, maximum_brightness, maximum_lighting_level } = effectiveDevice?.entities ?? {}
+
         if (adaptive_lighting_range && minimum_brightness && maximum_brightness && maximum_lighting_level) {
-          chips.push(new SettingsChip({ tap_action: new LightSettings(device).getPopup() }).getChip());
+          chips.push(new SettingsChip({ tap_action: new LightSettings(effectiveDevice).getPopup() }).getChip());
         }
         return chips
       },
@@ -77,11 +83,15 @@ export const configurationDefaults: StrategyDefaults = {
       showControls: true,
       hidden: false,
       order: 2,
-      extraControls: (device: any) => {
+      extraControls: (device: MagicAreaRegistryEntry) => {
         const chips = [];
-        // Add control switch if available
-        if (device?.entities.climate_control?.entity_id) {
-          chips.push(new ControlChip("climate", device?.entities.climate_control?.entity_id).getChip());
+        const Helper = require("./Helper").Helper;
+        if (Helper.isInitialized()) {
+          const resolver = Helper.entityResolver;
+          const climateControlResolution = resolver.resolveClimateControlSwitch(device.slug);
+          if (climateControlResolution.entity_id) {
+            chips.push(new ControlChip("climate", climateControlResolution.entity_id).getChip());
+          }
         }
         return chips
       },
@@ -90,11 +100,15 @@ export const configurationDefaults: StrategyDefaults = {
       showControls: true,
       hidden: false,
       order: 3,
-      extraControls: (device: any) => {
+      extraControls: (device: MagicAreaRegistryEntry) => {
         const chips = [];
-        // Add control switch if available
-        if (device?.entities.media_player_control?.entity_id) {
-          chips.push(new ControlChip("media_player", device?.entities.media_player_control?.entity_id).getChip());
+        const Helper = require("./Helper").Helper;
+        if (Helper.isInitialized()) {
+          const resolver = Helper.entityResolver;
+          const mediaPlayerControlResolution = resolver.resolveMediaPlayerControlSwitch(device.slug);
+          if (mediaPlayerControlResolution.entity_id) {
+            chips.push(new ControlChip("media_player", mediaPlayerControlResolution.entity_id).getChip());
+          }
         }
         return chips
       },
@@ -106,11 +120,15 @@ export const configurationDefaults: StrategyDefaults = {
     },
     scene: {
       showControls: false,
-      extraControls: (device: any) => {
+      extraControls: (device: MagicAreaRegistryEntry) => {
         const chips = [];
-        if (device?.entities.all_lights?.entity_id) {
-          chips.push(new ToggleSceneChip(device).getChip());
-          chips.push(new SettingsChip({ tap_action: new SceneSettings(device).getPopup() }).getChip());
+        // ControllerCard passes { slug, entities: {} } — resolve full MA device
+        const Helper = require("./Helper").Helper;
+        const maDevice = device.slug ? Helper.magicAreasDevices[device.slug] : null;
+        const effectiveDevice = maDevice || device;
+        if (effectiveDevice?.entities.all_lights?.entity_id) {
+          chips.push(new ToggleSceneChip(effectiveDevice).getChip());
+          chips.push(new SettingsChip({ tap_action: new SceneSettings(effectiveDevice).getPopup() }).getChip());
         }
         return chips
       },

@@ -3,8 +3,8 @@ import merge from "lodash.merge";
 
 import { configurationDefaults } from "./configurationDefaults";
 import { generic } from "./types/strategy/generic";
-import { DEVICE_CLASSES, LINUS_BRAIN_DOMAIN, SENSOR_STATE_CLASS_TOTAL, SENSOR_STATE_CLASS_TOTAL_INCREASING, UNDISCLOSED, colorMapping, ALL_HOME_ASSISTANT_DOMAINS, STANDARD_DOMAIN_ICONS } from "./variables";
-import { getEntityDomain, getGlobalEntitiesExceptUndisclosed, groupEntitiesByDomain, slugify } from "./utils";
+import { DEVICE_CLASSES, LINUS_BRAIN_DOMAIN, MAGIC_AREAS_DOMAIN, MAGIC_AREAS_NAME, SENSOR_STATE_CLASS_TOTAL, SENSOR_STATE_CLASS_TOTAL_INCREASING, UNDISCLOSED, colorMapping, ALL_HOME_ASSISTANT_DOMAINS, STANDARD_DOMAIN_ICONS } from "./variables";
+import { getEntityDomain, getGlobalEntitiesExceptUndisclosed, getMAEntity, getMagicAreaSlug, groupEntitiesByDomain, slugify } from "./utils";
 import { createDomainTag } from "./utils/domainTagHelper";
 import { IconResources } from "./types/homeassistant/data/frontend";
 import { LinusDashboardConfig } from "./types/homeassistant/data/linus_dashboard";
@@ -13,6 +13,7 @@ import { PerformanceProfiler } from "./utils/performanceProfiler";
 
 const DEVICE_CLASS_DOMAINS = new Set(Object.keys(DEVICE_CLASSES));
 
+import MagicAreaRegistryEntry = generic.MagicAreaRegistryEntry;
 import StrategyDevice = generic.StrategyDevice;
 import StrategyEntity = generic.StrategyEntity;
 import StrategyFloor = generic.StrategyFloor;
@@ -140,6 +141,14 @@ class Helper {
   static #strategyOptions: generic.StrategyConfig;
 
   /**
+   * The Magic Areas devices mapped by area slug.
+   *
+   * @type {Record<string, MagicAreaRegistryEntry>}
+   * @private
+   */
+  static #magicAreasDevices: Record<string, MagicAreaRegistryEntry> = {};
+
+  /**
    * The entity resolver for Linus Brain / Magic Areas hybrid support.
    *
    * @type {EntityResolver}
@@ -217,7 +226,17 @@ class Helper {
   }
 
   /**
-   * Get the entity resolver instance for Linus Brain support.
+   * Get the Magic Areas devices.
+   *
+   * @returns {Record<string, MagicAreaRegistryEntry>}
+   * @static
+   */
+  static get magicAreasDevices(): Record<string, MagicAreaRegistryEntry> {
+    return this.#magicAreasDevices;
+  }
+
+  /**
+   * Get the entity resolver instance for Linus Brain / Magic Areas hybrid support.
    *
    * @returns {EntityResolver} The entity resolver.
    * @static
@@ -775,7 +794,7 @@ class Helper {
 
       acc[entity.entity_id] = enrichedEntity;
 
-      if (entity.platform !== LINUS_BRAIN_DOMAIN) {
+      if (entity.platform !== MAGIC_AREAS_DOMAIN && entity.platform !== LINUS_BRAIN_DOMAIN) {
         const areaId = entity.area_id ?? deviceAreaMap.get(entity.device_id ?? "") ?? UNDISCLOSED;
         if (!entitiesByAreaId.has(areaId)) {
           entitiesByAreaId.set(areaId, []);
@@ -790,7 +809,7 @@ class Helper {
         entitiesByDeviceId.get(entity.device_id)!.push(enrichedEntity);
       }
 
-      if (entity.platform !== LINUS_BRAIN_DOMAIN) this.#domains[domainTag].push(enrichedEntity);
+      if (entity.platform !== MAGIC_AREAS_DOMAIN && entity.platform !== LINUS_BRAIN_DOMAIN) this.#domains[domainTag].push(enrichedEntity);
 
       return acc;
     }, {} as Record<string, StrategyEntity>);
@@ -819,11 +838,26 @@ class Helper {
 
       acc[device.id] = enrichedDevice;
 
-      const areaId = device.area_id ?? UNDISCLOSED;
-      if (!devicesByAreaId.has(areaId)) {
-        devicesByAreaId.set(areaId, []);
+      if (device.manufacturer !== MAGIC_AREAS_NAME) {
+        const areaId = device.area_id ?? UNDISCLOSED;
+        if (!devicesByAreaId.has(areaId)) {
+          devicesByAreaId.set(areaId, []);
+        }
+        devicesByAreaId.get(areaId)!.push(enrichedDevice);
       }
-      devicesByAreaId.get(areaId)!.push(enrichedDevice);
+
+      if (device.manufacturer === MAGIC_AREAS_NAME) {
+        const magicAreaSlug = getMagicAreaSlug(device as MagicAreaRegistryEntry);
+        this.#magicAreasDevices[magicAreaSlug] = {
+          ...device,
+          area_name: device.name!,
+          slug: magicAreaSlug,
+          entities: entitiesInDevice.reduce((entities: Record<string, StrategyEntity>, entity) => {
+            entities[entity.translation_key!] = entity;
+            return entities;
+          }, {} as Record<string, StrategyEntity>)
+        };
+      }
 
       return acc;
     }, {} as Record<string, StrategyDevice>);
@@ -1151,9 +1185,13 @@ class Helper {
     const areaSlugs = Array.isArray(area_slug) ? area_slug : [area_slug];
 
     for (const slug of areaSlugs) {
+      const magic_entity = getMAEntity(slug, "sensor", device_class);
+
       let entities: string[] | undefined;
 
-      if (slug === "global") {
+      if (magic_entity) {
+        entities = [magic_entity.entity_id];
+      } else if (slug === "global") {
         // Mode global : récupérer toutes les entités sauf undisclosed
         entities = getGlobalEntitiesExceptUndisclosed('sensor', device_class);
       } else {
@@ -1567,9 +1605,15 @@ class Helper {
         }
         // Handle device_class with a specific value
         else if (device_class) {
+          // For binary_sensor, sensor, and cover, do NOT use Magic Areas aggregate entities
+          const useMagicArea = domain !== "binary_sensor" && domain !== "sensor" && domain !== "cover";
+          const magic_entity = useMagicArea ? getMAEntity(slug, domain, device_class) : null;
+
           let entities: string[] | undefined;
 
-          if (slug === "global") {
+          if (magic_entity) {
+            entities = [magic_entity.entity_id];
+          } else if (slug === "global") {
             // Mode global : récupérer toutes les entités sauf undisclosed
             entities = getGlobalEntitiesExceptUndisclosed(domain, device_class);
           } else {
@@ -1606,9 +1650,12 @@ class Helper {
           // Then, retrieve entities WITH device_class
           if (domainTags.length > 0) {
             for (const domainTag of domainTags) {
-              const entities = slug === "global"
-                ? getGlobalEntitiesExceptUndisclosed(domain, domainTag.split(":")[1])
-                : this.#areas[slug]?.domains?.[domainTag];
+              const magic_entity = getMAEntity(slug, domain, domainTag.split(":")[1]);
+              const entities = magic_entity
+                ? [magic_entity.entity_id]
+                : slug === "global"
+                  ? getGlobalEntitiesExceptUndisclosed(domain, domainTag.split(":")[1])
+                  : this.#areas[slug]?.domains?.[domainTag];
               if (entities) results.push(...entities.map(transformer));
             }
           }

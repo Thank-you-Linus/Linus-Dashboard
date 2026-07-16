@@ -377,21 +377,27 @@ class AggregateChip extends AbstractChip {
         return lightResolution.entity_id;
       }
 
-      case "climate":
-        // No climate group entity yet (deliberately deferred — see plan:
-        // climate/media_player need real HVAC-mode/target-temp aggregation
-        // semantics, not just on/off forwarding).
-        return null;
+      case "climate": {
+        // Try Magic Areas climate_group entity — no Linus Dashboard-native
+        // equivalent yet (deliberately deferred, see plan: climate/media_player
+        // need real HVAC-mode/target-temp aggregation semantics, not just
+        // on/off forwarding).
+        const climateResolution = resolver.resolveClimateGroup(options.area_slug);
+        return climateResolution.entity_id;
+      }
 
       case "cover":
       case "fan":
-      case "media_player":
       case "switch":
         // switch/fan/cover group entities now exist
         // (switch.linus_dashboard_all_switches_area_*, etc.) but this chip
         // isn't wired to resolve them yet — follow-up, not covered by this
         // change (which only adds the entities, not this chip's consumption
         // of them).
+        return null;
+
+      case "media_player":
+        // No Linus Dashboard-native or Magic Areas group entity for this domain.
         return null;
 
       default:

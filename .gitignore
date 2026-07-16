@@ -57,6 +57,8 @@ yarn-error.log*
 config/*
 !config/configuration.yaml
 !config/scenes.yaml
+!config/automations.yaml
+!config/scripts.yaml
 !config/.gitkeep
 
 # Fake house test environment (shareable so devs get the same HA test env)

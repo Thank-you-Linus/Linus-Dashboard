@@ -2,6 +2,9 @@
 # https://www.home-assistant.io/integrations/homeassistant/
 homeassistant:
   debug: true
+  # Sans ça, config/packages/fake_house.yaml (lumières/covers/fans/climate du
+  # fake house) n'est jamais chargé — bug déjà rencontré et documenté.
+  packages: !include_dir_named packages
 
 # Composants essentiels (remplace default_config sans go2rtc)
 automation: !include automations.yaml

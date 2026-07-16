@@ -58,6 +58,18 @@ jobs:
       - name: "Install Python dependencies"
         run: python3 -m pip install --break-system-packages -r requirements.txt
 
+      - name: "Pre-install Home Assistant component dependencies"
+        # Without this, HA lazily installs a component's requirements the
+        # first time it's set up — and if the frontend component's own
+        # requirement (home-assistant-frontend) is missing, HA silently
+        # activates recovery mode, which skips `packages:` entirely. That
+        # took down every fake_house.yaml entity (light/cover/climate/
+        # media_player) with no explicit error pointing at the cause. See
+        # scripts/install_component_requirements.py, also used by
+        # scripts/setup for local/devcontainer installs — this keeps CI and
+        # local envs from drifting apart again.
+        run: python3 scripts/install_component_requirements.py --break-system-packages
+
       - name: "Start Home Assistant"
         run: |
           nohup hass --config ./config > /tmp/ha.log 2>&1 &

@@ -84,12 +84,24 @@ jobs:
 
       - name: "Verify key entities exist and are not unavailable"
         run: |
+          # Entity registry registration (logged the moment the platform sets
+          # up) and the entity actually getting a live state in hass.states
+          # (what /api/states reflects) aren't the same instant — checking
+          # once right after provisioning is flaky. Poll each entity instead
+          # of assuming HA has finished settling immediately.
           TOKEN=$(grep '^HA_TOKEN=' /tmp/ci.env | cut -d= -f2-)
           fail=0
           for eid in light.salon_principal cover.volet_chambre climate.thermostat_salon \
                      sensor.temperature_salon binary_sensor.motion_salon media_player.tv_salon; do
-            state=$(curl -s http://localhost:8123/api/states/$eid \
-              -H "Authorization: Bearer $TOKEN" | python3 -c "import json,sys; print(json.load(sys.stdin).get('state','MISSING'))" 2>/dev/null || echo "MISSING")
+            state="MISSING"
+            for _ in $(seq 1 20); do
+              state=$(curl -s http://localhost:8123/api/states/$eid \
+                -H "Authorization: Bearer $TOKEN" | python3 -c "import json,sys; print(json.load(sys.stdin).get('state','MISSING'))" 2>/dev/null || echo "MISSING")
+              if [ "$state" != "MISSING" ] && [ "$state" != "unavailable" ]; then
+                break
+              fi
+              sleep 3
+            done
             if [ "$state" = "MISSING" ] || [ "$state" = "unavailable" ]; then
               echo "❌ $eid -> $state"
               fail=1

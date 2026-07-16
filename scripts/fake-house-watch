@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
-# Waits for Home Assistant to be reachable AND for HA_TOKEN to be set in .env,
-# then provisions the fake house test entities automatically — no manual
-# `make fake-house` needed. Meant to be launched in the background (see
-# .devcontainer/devcontainer.json's postStartCommand).
+# Waits for Home Assistant to be reachable, then bootstraps the admin
+# account + HA_TOKEN (via the same API HA's onboarding wizard uses — see
+# config/bootstrap_ha_onboarding.py) and provisions the fake house test
+# entities, fully unattended. Meant to be launched in the background (see
+# .devcontainer/devcontainer.json's postStartCommand) so a fresh devcontainer
+# ends up with a populated fake house without anyone opening a browser.
 #
-# Why this exists: HA's first-boot admin account creation can't be safely
-# automated (it's an interactive onboarding step), so there's always one
-# manual gate — create the account, drop a long-lived token in .env. This
-# script just removes every step *after* that: the moment both conditions are
-# true, it provisions the fake house on its own and exits.
+# Also safe to leave running across restarts: bootstrap no-ops immediately
+# once .env has a working HA_TOKEN, and setup_fake_house_full.py no-ops
+# per-entity for anything that already exists.
 
 set -uo pipefail
 cd "$(dirname "$0")/.."
@@ -18,22 +18,21 @@ MAX_WAIT="${FAKE_HOUSE_WATCH_MAX_WAIT:-3600}"  # give up after 1 hour
 INTERVAL=10
 elapsed=0
 
-echo "[fake-house-watch] waiting for HA_TOKEN in .env and HA at $HA_URL (up to ${MAX_WAIT}s)..."
+echo "[fake-house-watch] waiting for HA at $HA_URL (up to ${MAX_WAIT}s)..."
 
 while [ "$elapsed" -lt "$MAX_WAIT" ]; do
-  if [ -f .env ] && grep -q "^HA_TOKEN=." .env 2>/dev/null; then
-    TOKEN=$(grep "^HA_TOKEN=" .env | head -1 | cut -d= -f2- | tr -d '"'"'"' \r\n')
-    if [ -n "$TOKEN" ] && curl -sf "$HA_URL/api/" -H "Authorization: Bearer $TOKEN" >/dev/null 2>&1; then
-      echo "[fake-house-watch] HA is up and HA_TOKEN is valid — provisioning the fake house..."
-      if HA_TOKEN="$TOKEN" HA_URL="$HA_URL" ./ha-env/bin/python config/setup_fake_house_full.py; then
-        echo "[fake-house-watch] done."
-        exit 0
-      fi
-      echo "[fake-house-watch] provisioning failed, will retry."
+  if curl -sf "$HA_URL/api/onboarding" >/dev/null 2>&1; then
+    echo "[fake-house-watch] HA is up — bootstrapping account/token and provisioning the fake house..."
+    if HA_URL="$HA_URL" ./ha-env/bin/python config/bootstrap_ha_onboarding.py \
+      && set -a && . ./.env && set +a \
+      && HA_URL="$HA_URL" ./ha-env/bin/python config/setup_fake_house_full.py; then
+      echo "[fake-house-watch] done."
+      exit 0
     fi
+    echo "[fake-house-watch] a step failed, will retry."
   fi
   sleep "$INTERVAL"
   elapsed=$((elapsed + INTERVAL))
 done
 
-echo "[fake-house-watch] gave up after ${MAX_WAIT}s — run 'make fake-house' manually once HA_TOKEN is set."
+echo "[fake-house-watch] gave up after ${MAX_WAIT}s — run 'make fake-house' manually once HA is reachable."

@@ -62,6 +62,7 @@ config/*
 !config/packages/
 !config/packages/fake_house.yaml
 !config/setup_fake_house_full.py
+!config/bootstrap_ha_onboarding.py
 
 # Python virtual environment
 ha-env/

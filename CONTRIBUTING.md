@@ -93,11 +93,25 @@ scripts/develop
 
 Home Assistant automatically loads a fake house (`config/packages/fake_house.yaml`): lights, covers, a thermostat, media players, switches, and sensors/motion/door entities that generate real random values on their own — enough to exercise every area of the dashboard without a real HA install.
 
-One-time setup after your first `scripts/develop` / `make dev` boot:
-1. Create the admin account in the browser onboarding flow.
-2. Create a long-lived access token (**Profile → Security → Tokens**).
-3. Add it to `.env` as `HA_TOKEN=...`.
-4. Run `make fake-house` — creates the areas, floors and random sensor entities, and assigns every fake house entity to its room. Safe to re-run any time.
+**Fully automatic** in the devcontainer: as soon as you run `make dev`, a
+background watcher (`scripts/fake-house-watch`, started when the devcontainer
+was created) detects HA coming up, creates the admin account and a
+long-lived token via the API — no browser, no manual onboarding — and
+provisions the fake house on its own. Check `/tmp/fake-house-watch.log` if
+you want to see it happen (the admin password is printed there once, in case
+you ever want to log into the UI). Nothing to do on your end.
+
+Running outside the devcontainer, or want to trigger it yourself:
+```
+make fake-house   # bootstraps the admin account + HA_TOKEN if needed, then provisions
+```
+Safe to re-run any time — it's a no-op if `.env` already has a working
+`HA_TOKEN` and every fake house entity already exists.
+
+Prefer doing it by hand? `make bootstrap` on its own just creates the
+account/token without touching the fake house, or you can skip it entirely
+and set `HA_TOKEN` in `.env` yourself from a token created in the UI
+(**Profile → Security → Tokens**) — see `.env.example`.
 
 ### 📁 Project Structure
 
@@ -253,11 +267,26 @@ scripts/develop
 
 Home Assistant charge automatiquement une fausse maison (`config/packages/fake_house.yaml`) : lumières, volets, un thermostat, des media players, des interrupteurs, ainsi que des capteurs/détecteurs de mouvement/porte dont la valeur change réellement toute seule — de quoi tester chaque recoin du dashboard sans installation HA réelle.
 
-Configuration unique après le premier démarrage via `scripts/develop` / `make dev` :
-1. Créer le compte admin dans l'écran d'onboarding du navigateur.
-2. Créer un jeton d'accès longue durée (**Profil → Sécurité → Jetons**).
-3. L'ajouter dans `.env` sous `HA_TOKEN=...`.
-4. Lancer `make fake-house` — crée les pièces, les étages et les capteurs aléatoires, et assigne chaque entité de la fake house à sa pièce. Peut être relancé à tout moment sans risque.
+**Entièrement automatique** dans le devcontainer : dès que tu lances
+`make dev`, un processus de fond (`scripts/fake-house-watch`, démarré à la
+création du devcontainer) détecte que HA démarre, crée le compte admin et un
+jeton longue durée via l'API — pas de navigateur, pas d'onboarding manuel —
+puis provisionne la fake house tout seul. Regarde
+`/tmp/fake-house-watch.log` si tu veux voir ce qui se passe (le mot de passe
+admin y est affiché une fois, au cas où tu voudrais te connecter à
+l'interface). Rien à faire de ton côté.
+
+En dehors du devcontainer, ou pour le déclencher toi-même :
+```
+make fake-house   # crée le compte admin + HA_TOKEN si besoin, puis provisionne
+```
+Peut être relancé à tout moment sans risque — ne fait rien si `.env` a déjà
+un `HA_TOKEN` valide et que chaque entité de la fake house existe déjà.
+
+Tu préfères le faire à la main ? `make bootstrap` seul crée juste le
+compte/jeton sans toucher à la fake house, ou tu peux passer complètement
+cette étape et renseigner `HA_TOKEN` toi-même dans `.env` à partir d'un jeton
+créé dans l'interface (**Profil → Sécurité → Jetons**) — voir `.env.example`.
 
 ### 📁 Structure du projet
 

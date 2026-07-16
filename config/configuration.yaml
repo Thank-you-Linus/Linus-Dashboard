@@ -71,25 +71,9 @@ alarm_control_panel:
       arming_time: 0
       delay_time: 0
 
-media_player:
-  - platform: media_player_template
-    media_players:
-      receiver:
-        friendly_name: Receiver
-        unique_id: receiver
-        # device_class: receiver
-        # current_source_template: "{{ states('input_text.selected_source') }}"
-        value_template: >
-          {% if is_state("switch.decorative_lights", "on") -%}
-            playing
-          {%- else -%}
-            off
-          {%- endif %}
-        turn_on:
-          service: switch.turn_on
-          data_template:
-            entity_id: switch.decorative_lights
-        turn_off:
-          service: switch.turn_off
-          data_template:
-            entity_id: switch.decorative_lights
+# L'ancien bloc media_player_template a été retiré : composant custom non
+# installé (Integration 'media_player_template' not found au démarrage),
+# et de toute façon obsolète depuis que config/packages/fake_house.yaml
+# fournit ses propres media_player natifs (platform: universal, ex.
+# media_player.tv_salon) — sa cible switch.decorative_lights n'existe même
+# plus.

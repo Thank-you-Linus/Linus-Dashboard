@@ -6,31 +6,57 @@
 # ─────────────────────────────────────────────
 input_boolean:
   # Lights
+  # NOTE: every entry below needs a non-empty mapping (`initial: off`, not a
+  # bare key) — HA's package merger silently drops entries that parse as
+  # YAML null/empty-dict when merging config/packages/*.yaml, which was
+  # making all 21 of these (and the lights/covers/fans/climate depending on
+  # them) never actually get created (unavailable at startup).
   fake_salon_principal:
+    initial: off
   fake_salon_deco:
+    initial: off
   fake_salon_lampe:
+    initial: off
   fake_chambre:
+    initial: off
   fake_chambre_chevet:
+    initial: off
   fake_cuisine:
+    initial: off
   fake_cuisine_plan:
+    initial: off
   fake_bureau:
+    initial: off
   fake_bureau_bureau:
+    initial: off
   fake_salle_de_bain:
+    initial: off
   fake_entree:
+    initial: off
   # Covers (backing)
   fake_salon_volet:
+    initial: off
   fake_chambre_volet:
+    initial: off
   fake_cuisine_volet:
+    initial: off
   fake_bureau_volet:
+    initial: off
   # Fans (backing)
   fake_bureau_fan:
+    initial: off
   fake_sdb_fan:
+    initial: off
   # Climate heaters (backing for generic_thermostat)
   fake_salon_heater:
+    initial: off
   fake_chambre_heater:
+    initial: off
   # Switches
   fake_cuisine_lave_vaisselle:
+    initial: off
   fake_cuisine_hotte:
+    initial: off
 
 input_number:
   # Fan speeds

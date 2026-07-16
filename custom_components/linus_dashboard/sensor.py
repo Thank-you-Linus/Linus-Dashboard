@@ -59,8 +59,14 @@ async def _build_aggregate_sensors(
     excluded_floor_ids = set(excluded_targets.get("floor_id") or [])
     excluded_integrations = set(options.get("excluded_integrations") or [])
 
+    # Domain-level buckets serve chips without a device_class; the device_class
+    # buckets serve device_class-scoped chips (binary_sensor/sensor/cover). An
+    # entity always joins its domain bucket and additionally its device_class
+    # bucket when it has one, so both frontend lookups resolve to a sensor.
     domain_entities: dict[str, list[str]] = {}
     floor_domain_entities: dict[tuple[str, str], list[str]] = {}
+    device_class_entities: dict[tuple[str, str], list[str]] = {}
+    floor_device_class_entities: dict[tuple[str, str, str], list[str]] = {}
 
     for entity_entry in ent_reg.entities.values():
         if entity_entry.hidden_by or entity_entry.disabled_by:
@@ -113,9 +119,17 @@ async def _build_aggregate_sensors(
             continue
 
         domain_entities.setdefault(domain, []).append(entity_id)
+        if device_class:
+            device_class_entities.setdefault(
+                (domain, device_class), []
+            ).append(entity_id)
 
         if floor_id:
             floor_domain_entities.setdefault((domain, floor_id), []).append(entity_id)
+            if device_class:
+                floor_device_class_entities.setdefault(
+                    (domain, device_class, floor_id), []
+                ).append(entity_id)
 
     sensors: list[LinusDashboardAggregateSensor] = []
 
@@ -132,6 +146,19 @@ async def _build_aggregate_sensors(
                 )
             )
 
+    for (domain, device_class), entity_ids in device_class_entities.items():
+        if entity_ids:
+            sensors.append(
+                LinusDashboardAggregateSensor(
+                    hass=hass,
+                    domain=domain,
+                    device_class_filter=device_class,
+                    floor_id=None,
+                    tracked_entity_ids=entity_ids,
+                    config_entry=config_entry,
+                )
+            )
+
     for (domain, floor_id), entity_ids in floor_domain_entities.items():
         if entity_ids:
             sensors.append(
@@ -139,6 +166,23 @@ async def _build_aggregate_sensors(
                     hass=hass,
                     domain=domain,
                     device_class_filter=None,
+                    floor_id=floor_id,
+                    tracked_entity_ids=entity_ids,
+                    config_entry=config_entry,
+                )
+            )
+
+    for (
+        domain,
+        device_class,
+        floor_id,
+    ), entity_ids in floor_device_class_entities.items():
+        if entity_ids:
+            sensors.append(
+                LinusDashboardAggregateSensor(
+                    hass=hass,
+                    domain=domain,
+                    device_class_filter=device_class,
                     floor_id=floor_id,
                     tracked_entity_ids=entity_ids,
                     config_entry=config_entry,

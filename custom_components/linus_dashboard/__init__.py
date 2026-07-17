@@ -18,6 +18,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import floor_registry as fr
 
 from custom_components.linus_dashboard import utils
 from custom_components.linus_dashboard.const import (
@@ -61,6 +63,49 @@ async def async_setup(hass: HomeAssistant, _config: dict) -> bool:
     _LOGGER.info("Registered WebSocket command: linus_dashboard/get_config")
 
     return True
+
+
+# Domains whose generic hidden domain-level (no device_class) counting
+# sensor was dropped in favor of their own dedicated group entity — see
+# sensor.py's GENERIC_DOMAIN_LEVEL_DOMAINS. Any install that already ran an
+# earlier version has these lingering in the registry as permanently
+# "unavailable" (sensor.py stops recreating them, but nothing removes the
+# old registry entry on its own).
+_DEAD_GENERIC_SENSOR_DOMAINS = ("light", "switch", "fan", "cover", "siren")
+
+
+async def async_cleanup_orphaned_aggregate_sensors(
+    hass: HomeAssistant, entry: ConfigEntry
+) -> None:
+    """
+    Remove the now-dead domain-level (no device_class) generic counting
+    sensors for _DEAD_GENERIC_SENSOR_DOMAINS, at global and every current
+    floor scope. Built from exact expected unique_ids (not a prefix match)
+    so this can't accidentally catch a same-domain device_class bucket,
+    which is a different, still-live unique_id shape.
+    """
+    entity_reg = er.async_get(hass)
+    floor_reg = fr.async_get(hass)
+
+    dead_unique_ids = {
+        f"{DOMAIN}_{domain}_active" for domain in _DEAD_GENERIC_SENSOR_DOMAINS
+    }
+    for floor in floor_reg.floors.values():
+        dead_unique_ids.update(
+            f"{DOMAIN}_{domain}_{floor.floor_id}_active"
+            for domain in _DEAD_GENERIC_SENSOR_DOMAINS
+        )
+
+    for entity_entry in list(entity_reg.entities.values()):
+        if (
+            entity_entry.config_entry_id == entry.entry_id
+            and entity_entry.unique_id in dead_unique_ids
+        ):
+            entity_reg.async_remove(entity_entry.entity_id)
+            _LOGGER.info(
+                "Removed orphaned generic aggregate sensor: %s",
+                entity_entry.entity_id,
+            )
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -135,6 +180,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     _register_panel(hass, DOMAIN, "yaml", dashboard_config, False)  # noqa: FBT003
+
+    # Clean up sensors dropped in favor of a dedicated group entity, before
+    # platforms load (same ordering as the equivalent cleanup in Linus Brain)
+    await async_cleanup_orphaned_aggregate_sensors(hass, entry)
 
     # Forward platforms (aggregate sensors + area/floor/global group entities)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

@@ -4,18 +4,22 @@ Sensor platform for Linus Dashboard.
 Three families of sensors:
 1. Generic hidden diagnostic aggregate sensors (`LinusDashboardAggregateSensor`)
    — pure rendering caches for AggregateChip's floor/global-scope fast path
-   (`getAggregateSensorId()` in src/chips/AggregateChip.ts), covering every
-   domain/device_class in DOMAIN_ACTIVE_STATES at global and floor scope only
-   (AggregateChip never queries these at area scope — it renders area-scope
-   chips client-side instead, from the raw entities directly). Several
-   domains (light, switch, fan, cover, siren, binary_sensor) *also* now have
-   a dedicated, visible group entity (light.py, switch.py, fan.py, cover.py,
-   siren.py, binary_sensor.py) with richer attributes, including at area
-   scope — this generic system and those dedicated entities currently
-   overlap in what they compute for those domains at floor/global scope.
-   Left as-is rather than de-duplicated in this pass: AggregateChip would
-   need to prefer the dedicated group entity over this hidden sensor first,
-   which is a frontend change out of scope here — follow-up.
+   (`getAggregateSensorId()` in src/chips/AggregateChip.ts), at global and
+   floor scope only (AggregateChip never queries these at area scope — it
+   renders area-scope chips client-side instead, from the raw entities
+   directly). AggregateChip now prefers a domain's own dedicated group
+   entity (light.py/switch.py/fan.py/cover.py/siren.py, or a binary_sensor
+   device_class group) when one exists, falling back to this generic system
+   only when it doesn't — so this only still generates:
+   - domain-level buckets (no device_class) for climate/media_player (no
+     dedicated group — no simple on/off control semantics for either) and
+     binary_sensor (no "every binary_sensor regardless of device_class"
+     dedicated group exists)
+   - device_class buckets for every domain, since not every device_class
+     has its own dedicated group (e.g. cover doesn't split by type; binary_
+     sensor's presence-related classes — motion/presence/occupancy — feed
+     the presence composite instead of getting their own device_class
+     group, see binary_sensor.py's PRESENCE_DEVICE_CLASSES)
 2. Numeric sensor aggregates (`LinusDashboardNumericAggregateSensor`) — sum,
    average or minimum (depending on state_class/device_class) of a `sensor`
    domain device_class across a zone/floor/global, e.g. average temperature.
@@ -72,6 +76,13 @@ _LOGGER = logging.getLogger(__name__)
 
 DEBOUNCE_SECONDS = 0.1
 
+# Domains whose domain-level (no device_class) bucket has no dedicated group
+# entity to fall back to instead — see module docstring, item 1. Every other
+# domain in DOMAIN_ACTIVE_STATES (light/switch/fan/cover/siren) now has a
+# full dedicated single-domain group, so the hidden sensor for their
+# domain-level bucket would just be dead weight AggregateChip never reads.
+GENERIC_DOMAIN_LEVEL_DOMAINS = ("climate", "media_player", "binary_sensor")
+
 # device_class list for numeric aggregate sensors. Deliberately short and
 # fixed for v1 rather than "every sensor device_class encountered" — avoids
 # entity sprawl for device_class where a per-zone aggregate adds no value
@@ -109,9 +120,11 @@ async def _build_aggregate_sensors(
     config_entry: ConfigEntry,
 ) -> list["LinusDashboardAggregateSensor"]:
     """
-    Build the generic hidden counting sensor for every domain/device_class in
-    DOMAIN_ACTIVE_STATES, at global and floor scope (no area scope — see
-    module docstring, AggregateChip never queries this system at area scope).
+    Build the generic hidden counting sensor at global and floor scope (no
+    area scope — see module docstring, AggregateChip never queries this
+    system at area scope): domain-level buckets only for
+    GENERIC_DOMAIN_LEVEL_DOMAINS, device_class buckets for every domain in
+    DOMAIN_ACTIVE_STATES — see module docstring, item 1, for why the split.
     """
     ent_reg = er.async_get(hass)
     dev_reg = dr.async_get(hass)
@@ -186,14 +199,18 @@ async def _build_aggregate_sensors(
         if floor_id and floor_id in excluded_floor_ids:
             continue
 
-        domain_entities.setdefault(domain, []).append(entity_id)
+        if domain in GENERIC_DOMAIN_LEVEL_DOMAINS:
+            domain_entities.setdefault(domain, []).append(entity_id)
         if device_class:
             device_class_entities.setdefault((domain, device_class), []).append(
                 entity_id
             )
 
         if floor_id:
-            floor_domain_entities.setdefault((domain, floor_id), []).append(entity_id)
+            if domain in GENERIC_DOMAIN_LEVEL_DOMAINS:
+                floor_domain_entities.setdefault((domain, floor_id), []).append(
+                    entity_id
+                )
             if device_class:
                 floor_device_class_entities.setdefault(
                     (domain, device_class, floor_id), []
@@ -365,7 +382,7 @@ class LinusDashboardAggregateSensor(SensorEntity):
             "total": len(self._tracked_entities),
             "icon": icon,
             "color": color,
-            "entity_ids": sorted(self._tracked_entities),
+            ATTR_ENTITY_ID: sorted(self._tracked_entities),
             "active_entity_ids": active_ids,
         }
 

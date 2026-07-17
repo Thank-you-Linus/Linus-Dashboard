@@ -223,7 +223,6 @@ async def async_hide_group_entities_from_voice_assistants(
     try:
         from homeassistant.components.homeassistant.exposed_entities import (
             async_expose_entity,
-            async_listed_assistants,
         )
     except ImportError:
         _LOGGER.warning(
@@ -232,15 +231,25 @@ async def async_hide_group_entities_from_voice_assistants(
         )
         return
 
+    # KNOWN_ASSISTANTS replaced an earlier async_listed_assistants(hass)
+    # function this used to import instead — that name no longer exists as
+    # of at least 2026.4.0 (confirmed live: the whole function was silently
+    # a no-op every run, caught by the ImportError above swallowing this
+    # along with async_expose_entity). Importing it separately so a rename
+    # here can't take async_expose_entity down with it again.
+    try:
+        from homeassistant.components.homeassistant.exposed_entities import (
+            KNOWN_ASSISTANTS,
+        )
+
+        assistants = KNOWN_ASSISTANTS
+    except ImportError:
+        assistants = ("conversation", "cloud.alexa", "cloud.google_assistant")
+
     from homeassistant.helpers import entity_registry as er
 
     entity_reg = er.async_get(hass)
     entries = er.async_entries_for_config_entry(entity_reg, entry.entry_id)
-
-    try:
-        assistants = async_listed_assistants(hass)
-    except Exception:  # noqa: BLE001 - defensive, see docstring
-        assistants = ("conversation", "cloud.alexa", "cloud.google_assistant")
 
     for entity_entry in entries:
         for assistant in assistants:

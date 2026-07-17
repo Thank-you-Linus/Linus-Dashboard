@@ -448,6 +448,13 @@ async def async_setup_entry(
 
         if to_add:
             async_add_entities(to_add)
+            # Entities created after initial setup (new area, entity moved
+            # in, ...) bypass the one-shot hide pass in async_setup_entry —
+            # without this they'd be exposed to voice assistants by default
+            # even with the option enabled.
+            from . import async_hide_group_entities_from_voice_assistants
+
+            await async_hide_group_entities_from_voice_assistants(hass, config_entry)
 
     platform_manager = PlatformGroupManager(hass, monitored_domains=["light"])
     platform_manager.register_callbacks(

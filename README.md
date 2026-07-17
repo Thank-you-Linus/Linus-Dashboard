@@ -304,6 +304,9 @@ With Home Assistant 2025.1+, you can drag & drop rooms directly in HA settings (
 **No** - Linus Dashboard works standalone. Linus Brain is an optional upgrade for advanced AI activity detection and automation.
 [Compare features →](https://thankyou-linus.com/)
 
+**Q: Does Linus Dashboard create its own room/floor entities, or do I need another integration for that?**
+**It creates them natively.** For every area and floor (and the whole house), Linus Dashboard adds its own group entities — presence detection, and a controllable "all lights"/"all switches"/"all fans"/"all covers"/"all sirens" for each — with no other integration required. Each one exposes rich attributes (member list, active count, icon, color) and forwards full feature control where it makes sense (brightness for lights, speed for fans, position for covers), not just on/off. You can turn any of them off per-domain from the integration's options if you'd rather not have them.
+
 ### Troubleshooting
 
 **Q: I see a timeout or red error message**

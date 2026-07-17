@@ -44,7 +44,7 @@ export interface AggregateChipOptions extends chips.ChipOptions {
  * Supports device_class for binary_sensor, sensor, and cover domains.
  * 
  * **Features**:
- * - Automatic Linus Brain/Magic Areas detection (passed to popup as linusBrainEntity)
+ * - Automatic group entity detection (Dashboard native / Magic Areas, passed to popup as groupEntity)
  * - Scope-aware (adapts behavior for global/floor/area)
  * - EntityResolver integration (consistent entity resolution)
  * - Centralized color management (uses colorMapping from variables.ts)
@@ -108,8 +108,8 @@ class AggregateChip extends AbstractChip {
       return;
     }
 
-    // 2. Check for Linus Brain group entity (only for area scope)
-    const linusBrainEntity = this.getLinusBrainEntity(config);
+    // 2. Check for the area's group entity (only for area scope)
+    const groupEntity = this.getGroupEntity(config);
 
     // 3. Configure chip appearance
     const aggregateSource = this.getAggregateSensorId(config);
@@ -160,7 +160,7 @@ class AggregateChip extends AbstractChip {
       serviceOff: config.serviceOff,
       activeStates: config.activeStates,
       translationKey: config.translationKey,
-      linusBrainEntity: linusBrainEntity,
+      groupEntity: groupEntity,
       features: config.features,
       device_class: config.device_class,
     });
@@ -360,14 +360,20 @@ class AggregateChip extends AbstractChip {
   }
 
   /**
-   * Get Linus Brain or Magic Areas group entity if available
-   * 
+   * Get the area's group entity for this chip's domain, if one exists —
+   * Linus Dashboard native, or Magic Areas as fallback where Dashboard has
+   * no equivalent (climate). Passed to the popup so it can show a quick
+   * group-control tile (see AggregatePopup.buildGroupControlSection).
+   *
    * @param options - Chip options
    * @returns Entity ID or null
    * @private
    */
-  private getLinusBrainEntity(options: AggregateChipOptions): string | null {
-    // Only check for Linus Brain in area scope
+  private getGroupEntity(options: AggregateChipOptions): string | null {
+    // Only relevant in area scope — floor/global already get their own
+    // dedicated group entity as the chip's main entity_id (see
+    // getAggregateSensorId), so there's no separate "quick control tile"
+    // entity to resolve there.
     if (options.scope !== "area") {
       return null;
     }
@@ -379,7 +385,6 @@ class AggregateChip extends AbstractChip {
 
     const resolver = Helper.entityResolver;
 
-    // Check by domain
     switch (options.domain) {
       case "light": {
         const lightResolution = resolver.resolveAllLights(options.area_slug);
@@ -396,15 +401,14 @@ class AggregateChip extends AbstractChip {
         return climateResolution.entity_id;
       }
 
-      case "cover":
-      case "fan":
       case "switch":
-        // switch/fan/cover group entities now exist
-        // (switch.linus_dashboard_all_switches_area_*, etc.) but this chip
-        // isn't wired to resolve them yet — follow-up, not covered by this
-        // change (which only adds the entities, not this chip's consumption
-        // of them).
-        return null;
+      case "fan":
+      case "cover":
+      case "siren": {
+        const slug = AggregateChip.DEDICATED_GROUP_DOMAINS[options.domain];
+        const resolution = resolver.resolveGroupEntity(options.domain, slug, options.area_slug);
+        return resolution.entity_id;
+      }
 
       case "media_player":
         // No Linus Dashboard-native or Magic Areas group entity for this domain.

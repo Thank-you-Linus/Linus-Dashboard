@@ -421,7 +421,7 @@ class SecurityView {
         serviceOff: "turn_off",
         activeStates: ["on"],
         translationKey: domain,
-        linusBrainEntity: null,
+        groupEntity: null,
         features: [],
         device_class
       });
@@ -515,7 +515,7 @@ class SecurityView {
           serviceOff: "turn_off",
           activeStates: ["on"],
           translationKey: domain,
-          linusBrainEntity: null,
+          groupEntity: null,
           features: [],
           device_class
         });

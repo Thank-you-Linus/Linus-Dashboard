@@ -30,8 +30,8 @@ export interface AggregatePopupConfig {
   activeStates: string[];
   /** Translation key prefix for domain-specific text */
   translationKey: string;
-  /** Linus Brain entity (if available, will use more-info instead of popup) */
-  linusBrainEntity?: string | null;
+  /** Area's group entity, if one exists (Dashboard native or Magic Areas) */
+  groupEntity?: string | null;
   /** Features for tile cards (e.g., [{ type: "light-brightness" }]) */
   features?: any[];
   /** Device class (for covers, sensors, binary_sensors) */
@@ -85,7 +85,7 @@ class AggregatePopup extends AbstractPopup {
   }
 
   getDefaultConfig(config: AggregatePopupConfig): PopupActionConfig {
-    const { linusBrainEntity, domain, scope, floor_id, area_slug, device_class } = config;
+    const { groupEntity, domain, scope, floor_id, area_slug, device_class } = config;
 
     // Query entities dynamically based on scope
     const queryOptions: any = {
@@ -150,9 +150,9 @@ class AggregatePopup extends AbstractPopup {
       cards.push(controlButtons);
     }
 
-    // 3. Linus Brain section (if exists) - positioned AFTER control buttons
-    if (linusBrainEntity) {
-      cards.push(this.buildLinusBrainSection(linusBrainEntity));
+    // 3. Group control tile (if a group entity exists) - positioned AFTER control buttons
+    if (groupEntity) {
+      cards.push(this.buildGroupControlSection(groupEntity, domain));
     }
 
 
@@ -433,15 +433,27 @@ class AggregatePopup extends AbstractPopup {
   }
 
   /**
-   * Build Linus Brain section (tile card for Linus Brain group entity)
+   * Domain-appropriate tile card feature(s) for the group control tile below
+   * — mirrors what each dedicated group entity actually supports
+   * (light.py/fan.py/cover.py's feature aggregation). switch/siren have no
+   * HA tile feature beyond the toggle already built into the tile itself.
    */
-  protected buildLinusBrainSection(linusBrainEntity: string) {
+  private static readonly GROUP_TILE_FEATURES: Record<string, any[]> = {
+    light: [{ type: "light-brightness" }],
+    fan: [{ type: "fan-speed" }],
+    cover: [{ type: "cover-open-close" }, { type: "cover-position" }],
+  };
+
+  /**
+   * Build the group control tile (quick on/off + domain-appropriate feature
+   * slider for the area's group entity — light/switch/fan/cover/siren, or
+   * Magic Areas' climate_group).
+   */
+  protected buildGroupControlSection(groupEntity: string, domain: string) {
     return {
       type: "tile",
-      entity: linusBrainEntity,
-      features: [
-        { type: "light-brightness" },
-      ],
+      entity: groupEntity,
+      features: AggregatePopup.GROUP_TILE_FEATURES[domain] ?? [],
       features_position: "inline"
     };
   }
@@ -516,7 +528,7 @@ class AggregatePopup extends AbstractPopup {
       serviceOff: config.serviceOff,
       activeStates: config.activeStates,
       translationKey: config.translationKey,
-      linusBrainEntity: null,
+      groupEntity: null,
       features: config.features,
       showNavigationButton: true,
     });
@@ -598,7 +610,7 @@ class AggregatePopup extends AbstractPopup {
       serviceOff: config.serviceOff,
       activeStates: config.activeStates,
       translationKey: config.translationKey,
-      linusBrainEntity: null,
+      groupEntity: null,
       features: config.features,
       showNavigationButton: true,
     });
@@ -719,7 +731,7 @@ class AggregatePopup extends AbstractPopup {
       serviceOff: config.serviceOff,
       activeStates: config.activeStates,
       translationKey: config.translationKey,
-      linusBrainEntity: null,
+      groupEntity: null,
       features: config.features,
       showNavigationButton: true  // Don't show nav button in sub-popups
     };

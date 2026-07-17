@@ -188,15 +188,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Forward platforms (aggregate sensors + area/floor/global group entities)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    if entry.options.get(CONF_HIDE_GROUPS_FROM_VOICE_ASSISTANTS, True):
-        await _async_hide_group_entities_from_voice_assistants(hass, entry)
+    await async_hide_group_entities_from_voice_assistants(hass, entry)
 
     # Store the entry
     hass.data[DOMAIN][entry.entry_id] = DOMAIN
     return True
 
 
-async def _async_hide_group_entities_from_voice_assistants(
+async def async_hide_group_entities_from_voice_assistants(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> None:
     """
@@ -204,12 +203,23 @@ async def _async_hide_group_entities_from_voice_assistants(
     assistants (independent of entity_registry_visible_default, which only
     controls UI visibility — the two are separate HA settings).
 
-    Best-effort: the exposed_entities API has moved across HA versions, so
-    this is wrapped defensively rather than treated as a hard dependency —
-    losing voice-assistant exclusion isn't worth failing config entry setup
-    over. Verify against the pinned HA version if this starts logging
-    warnings.
+    Not underscore-prefixed and exported (unlike most of this module's
+    helpers) because every platform's dynamic _rebuild() callback also
+    calls this after adding newly-discovered entities (a new area, a moved
+    entity, ...) — this only ran once at config entry setup otherwise,
+    silently leaving anything created later exposed to voice assistants by
+    default even with the option enabled.
+
+    Checks the option itself (rather than requiring every caller to) so
+    call sites can stay a one-liner. Best-effort: the exposed_entities API
+    has moved across HA versions, so this is wrapped defensively rather
+    than treated as a hard dependency — losing voice-assistant exclusion
+    isn't worth failing config entry setup, or a platform reload, over.
+    Verify against the pinned HA version if this starts logging warnings.
     """
+    if not entry.options.get(CONF_HIDE_GROUPS_FROM_VOICE_ASSISTANTS, True):
+        return
+
     try:
         from homeassistant.components.homeassistant.exposed_entities import (
             async_expose_entity,

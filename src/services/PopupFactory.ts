@@ -24,8 +24,8 @@ export interface PopupConfig {
   activeStates: string[];
   /** Translation key for domain */
   translationKey: string;
-  /** Linus Brain entity if available */
-  linusBrainEntity: string | null;
+  /** Area's group entity if available (Dashboard native or Magic Areas) */
+  groupEntity: string | null;
   /** Optional features for tile cards */
   features?: any[];
   /** Optional device class. Pass null to get ONLY entities without device_class */
@@ -93,7 +93,7 @@ export class PopupFactory {
       serviceOff: config.serviceOff,
       activeStates: config.activeStates,
       translationKey: config.translationKey,
-      linusBrainEntity: config.linusBrainEntity,
+      groupEntity: config.groupEntity,
       features: config.features,
       device_class: config.device_class,
       showNavigationButton: config.showNavigationButton,
@@ -120,7 +120,7 @@ export class PopupFactory {
       serviceOff: config.serviceOff,
       activeStates: config.activeStates,
       translationKey: config.translationKey,
-      linusBrainEntity: null,
+      groupEntity: null,
       features: config.features,
       device_class: config.device_class,
       showNavigationButton: config.showNavigationButton,
@@ -147,7 +147,7 @@ export class PopupFactory {
       serviceOff: config.serviceOff,
       activeStates: config.activeStates,
       translationKey: config.translationKey,
-      linusBrainEntity: null,
+      groupEntity: config.groupEntity,
       features: config.features,
       device_class: config.device_class,
       showNavigationButton: config.showNavigationButton,
@@ -174,7 +174,7 @@ export class PopupFactory {
       serviceOff: config.serviceOff,
       activeStates: config.activeStates,
       translationKey: config.translationKey,
-      linusBrainEntity: null,
+      groupEntity: null,
       features: config.features,
       device_class: config.device_class,
       showNavigationButton: config.showNavigationButton,
@@ -201,7 +201,7 @@ export class PopupFactory {
       serviceOff: config.serviceOff,
       activeStates: config.activeStates,
       translationKey: config.translationKey,
-      linusBrainEntity: null,
+      groupEntity: config.groupEntity,
       features: config.features,
       device_class: config.device_class,
       showNavigationButton: config.showNavigationButton,

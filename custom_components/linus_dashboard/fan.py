@@ -278,6 +278,10 @@ async def async_setup_entry(
 
         if to_add:
             async_add_entities(to_add)
+            # See light.py's _rebuild for why this is needed here too.
+            from . import async_hide_group_entities_from_voice_assistants
+
+            await async_hide_group_entities_from_voice_assistants(hass, config_entry)
 
     platform_manager = PlatformGroupManager(hass, monitored_domains=["fan"])
     platform_manager.register_callbacks(

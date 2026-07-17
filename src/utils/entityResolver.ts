@@ -193,6 +193,27 @@ export class EntityResolver {
   }
 
   /**
+   * Resolves a Linus Dashboard native area-scope group entity for domains
+   * with no Magic Areas equivalent (switch/fan/cover/siren — Magic Areas
+   * only provides light/climate/media_player groups). One generic method
+   * rather than one per domain since the resolution logic is identical;
+   * only the entity_id's domain and "all_X" slug vary.
+   *
+   * @param domain - switch/fan/cover/siren
+   * @param groupSlug - the slug each platform uses in its unique_id, e.g.
+   *   "all_switches" for switch.py, "all_fans" for fan.py
+   * @param area_slug - The area slug
+   * @returns EntityResolution with the resolved entity
+   */
+  resolveGroupEntity(domain: string, groupSlug: string, area_slug: string): EntityResolution {
+    const entity_id = `${domain}.linus_dashboard_${groupSlug}_area_${area_slug}`;
+    if (this.hass.states[entity_id]) {
+      return { entity_id, source: "native" };
+    }
+    return { entity_id: null, source: "native" };
+  }
+
+  /**
    * Resolves the climate group entity
    *
    * Priority: Linus Brain (future) > Magic Areas > native

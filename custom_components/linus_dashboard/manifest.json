@@ -12,6 +12,7 @@
     "device_tracker",
     "person",
     "fan",
+    "siren",
     "lock",
     "vacuum",
     "water_heater",
@@ -29,5 +30,5 @@
   "iot_class": "calculated",
   "issue_tracker": "https://github.com/Thank-you-Linus/Linus-Dashboard/issues",
   "requirements": [],
-  "version": "1.6.0-beta.1"
+  "version": "1.7.0-beta.1"
 }

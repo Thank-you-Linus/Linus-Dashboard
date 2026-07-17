@@ -230,67 +230,15 @@ class HomeView {
         cards: [],
       } as LovelaceGridCardConfig;
 
-      const lightEntities = Helper.getEntityIds({ domain: "light", floor_id: floor.floor_id });
-      const climateEntities = Helper.getEntityIds({ domain: "climate", floor_id: floor.floor_id });
-      const fanEntities = Helper.getEntityIds({ domain: "fan", floor_id: floor.floor_id });
-
       const chips = floor.floor_id === UNDISCLOSED ? [] : [
-        lightEntities.length > 0 && new AggregateChip({
-          domain: "light",
-          show_content: true,
-          scope: "floor",
-          floor_id: floor.floor_id,
-        }).getChip(),
-        climateEntities.length > 0 && new AggregateChip({
-          domain: "climate",
-          show_content: true,
-          scope: "floor",
-          floor_id: floor.floor_id,
-        }).getChip(),
-        fanEntities.length > 0 && new AggregateChip({
-          domain: "fan",
-          show_content: true,
-          scope: "floor",
-          floor_id: floor.floor_id,
-        }).getChip(),
-        // Add a chip for covers WITHOUT device_class
-        (() => {
-          const coverEntities = Helper.getEntityIds({
-            domain: "cover",
-            device_class: null,  // ONLY covers without device_class
-            floor_id: floor.floor_id,
-          });
-
-          if (coverEntities.length > 0) {
-            return new AggregateChip({
-              domain: "cover",
-              device_class: null,
-              show_content: true,
-              scope: "floor",
-              floor_id: floor.floor_id,
-            }).getChip();
-          }
-          return null;
-        })(),
-        // Add a chip for each cover device_class if entities exist
-        ...DEVICE_CLASSES.cover.map(device_class => {
-          const coverEntities = Helper.getEntityIds({
-            domain: "cover",
-            device_class,
-            floor_id: floor.floor_id,
-          });
-
-          if (coverEntities.length > 0) {
-            return new AggregateChip({
-              domain: "cover",
-              device_class,
-              show_content: true,
-              scope: "floor",
-              floor_id: floor.floor_id,
-            }).getChip();
-          }
-          return null;
-        }),
+        this.#buildFloorScopeChipIfPresent("light", floor.floor_id),
+        this.#buildFloorScopeChipIfPresent("climate", floor.floor_id),
+        this.#buildFloorScopeChipIfPresent("fan", floor.floor_id),
+        // Covers without a device_class, plus one chip per cover device_class
+        this.#buildFloorScopeChipIfPresent("cover", floor.floor_id, null),
+        ...DEVICE_CLASSES.cover.map(device_class =>
+          this.#buildFloorScopeChipIfPresent("cover", floor.floor_id, device_class)
+        ),
       ].filter(Boolean);
 
       // Collect area cards in parallel (dynamic imports are cached by ComponentRegistry)
@@ -380,6 +328,29 @@ class HomeView {
     }
 
     return groupedSections;
+  }
+
+  /**
+   * Build a floor-scope AggregateChip, but only if at least one matching
+   * entity exists on this floor — the shared shape behind every chip in
+   * the floor heading badge above (light/climate/fan, and the cover +
+   * per-cover-device_class chips), which all otherwise repeated the same
+   * "check entities exist, then build the chip" body.
+   */
+  #buildFloorScopeChipIfPresent(
+    domain: string,
+    floor_id: string,
+    device_class?: string | null
+  ): LovelaceChipConfig | null {
+    const entities = Helper.getEntityIds({ domain, device_class, floor_id });
+    if (entities.length === 0) return null;
+    return new AggregateChip({
+      domain,
+      device_class,
+      show_content: true,
+      scope: "floor",
+      floor_id,
+    }).getChip();
   }
 
   /**

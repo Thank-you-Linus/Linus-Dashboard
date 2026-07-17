@@ -181,8 +181,12 @@ class ActivityDetectionPopup extends AbstractPopup {
             audioEntities: audio_entities,
         };
 
-        // Get entities from Linus Brain presence detection group if it exists
-        const presenceGroupEntity = `binary_sensor.linus_brain_presence_detection_${area_slug}`;
+        // Get entities from Linus Dashboard's native presence detection group
+        // if it exists (moved here from Linus Brain — same OR-gate over
+        // motion/presence/occupancy/media, so its member list is the same
+        // safety net this always relied on: entities that don't match the
+        // standard device_class filters above but still feed presence).
+        const presenceGroupEntity = `binary_sensor.linus_dashboard_presence_detection_area_${area_slug}`;
         const presenceGroupState = Helper.getEntityState(presenceGroupEntity);
         const groupMemberEntities: string[] = [];
 
@@ -195,7 +199,7 @@ class ActivityDetectionPopup extends AbstractPopup {
         }
 
         // Combine all entities and remove duplicates
-        // Group members are included to ensure all Linus Brain sensors appear
+        // Group members are included to ensure all presence sensors appear
         // even if they don't match the standard device_class filters
         const allPresenceEntities = [
             ...motion_entities,

@@ -19,14 +19,21 @@ class LinusBrainAreaPopup extends AbstractPopup {
 
         // Get area-specific Linus Brain entities
         const activityEntity = `sensor.linus_brain_activity_${area_slug}`;
-        const presenceEntity = `binary_sensor.linus_brain_presence_detection_${area_slug}`;
         const automaticLightingEntity = `switch.linus_brain_feature_automatic_lighting_${area_slug}`;
-        const allLightsEntity = `light.linus_brain_all_lights_${area_slug}`;
         const activityDurationEntity = `sensor.linus_brain_activity_duration_${area_slug}`;
         const timeOccupiedEntity = `sensor.linus_brain_time_occupied_${area_slug}`;
+        // Presence and all-lights moved to Linus Dashboard (mechanical
+        // aggregation, not AI-driven) — no longer Brain-specific, so this
+        // popup now reads Dashboard's native entities for those two cards
+        // instead of the linus_brain_* group entities that used to provide
+        // them (removed from Brain, superseded by these).
+        const presenceEntity = `binary_sensor.linus_dashboard_presence_detection_area_${area_slug}`;
+        const allLightsEntity = `light.linus_dashboard_all_lights_area_${area_slug}`;
 
-        // Check if Linus Brain is available for this area
-        const hasLinusBrain = !!Helper.entities[activityEntity] || !!Helper.entities[presenceEntity];
+        // Check if Linus Brain is available for this area — activity is the
+        // only entity still exclusive to Brain (presence/lights above are
+        // Dashboard-native now, so their presence doesn't indicate Brain).
+        const hasLinusBrain = !!Helper.entities[activityEntity];
 
         if (!hasLinusBrain) {
             return {

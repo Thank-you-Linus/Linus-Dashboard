@@ -449,26 +449,36 @@ class AggregateChip extends AbstractChip {
    * generic sensor only still exists for climate/media_player (no
    * dedicated group — no simple on/off control semantics for either) and
    * for binary_sensor device_classes that don't get their own dedicated
-   * group (the presence-related ones).
+   * group (the presence-related ones). It also has no area tier at all
+   * (sensor.py only builds it at floor/global — AggregateChip never used
+   * to query it at area scope), so at area scope this only ever tries the
+   * dedicated group, never that fallback.
    *
-   * Returns null for area scope (stays client-side, same as always) or if
-   * neither entity exists.
+   * Returns null (client-side rendering, same as always) if nothing
+   * server-side exists for this scope/domain/device_class.
    */
   private getAggregateSensorId(
     config: AggregateChipOptions
   ): { entityId: string; isDedicatedGroup: boolean } | null {
-    if (config.scope === "area") return null;
-
-    const scopeSuffix =
-      config.scope === "floor" && config.floor_id ? `_floor_${config.floor_id}` : "_global";
     const hasDeviceClass = !!config.device_class && config.device_class !== "_";
+
+    let scopeSuffix: string;
+    if (config.scope === "area") {
+      if (Array.isArray(config.area_slug) || !config.area_slug) return null;
+      scopeSuffix = `_area_${config.area_slug}`;
+    } else if (config.scope === "floor" && config.floor_id) {
+      scopeSuffix = `_floor_${config.floor_id}`;
+    } else {
+      scopeSuffix = "_global";
+    }
 
     const tryEntity = (entityId: string): boolean => {
       const state = Helper.getEntityState(entityId);
       return !!state && state.state !== "unavailable";
     };
 
-    // 1. Dedicated single-domain group (light/switch/fan/cover/siren)
+    // 1. Dedicated single-domain group (light/switch/fan/cover/siren) —
+    // exists at every scope, including area.
     const dedicatedSlug = AggregateChip.DEDICATED_GROUP_DOMAINS[config.domain];
     if (dedicatedSlug && !hasDeviceClass) {
       const entityId = `${config.domain}.linus_dashboard_${dedicatedSlug}${scopeSuffix}`;
@@ -477,7 +487,8 @@ class AggregateChip extends AbstractChip {
       }
     }
 
-    // 2. Dedicated binary_sensor-by-device_class group
+    // 2. Dedicated binary_sensor-by-device_class group — also exists at
+    // every scope, including area.
     if (config.domain === "binary_sensor" && hasDeviceClass) {
       const entityId = `binary_sensor.linus_dashboard_${config.device_class}${scopeSuffix}`;
       if (tryEntity(entityId)) {
@@ -485,7 +496,12 @@ class AggregateChip extends AbstractChip {
       }
     }
 
-    // 3. Fallback: generic hidden counting sensor
+    if (config.scope === "area") {
+      // No area tier for the generic hidden sensor — see docstring.
+      return null;
+    }
+
+    // 3. Fallback: generic hidden counting sensor (floor/global only)
     const parts = ["linus_dashboard", config.domain];
     if (hasDeviceClass) {
       parts.push(config.device_class as string);

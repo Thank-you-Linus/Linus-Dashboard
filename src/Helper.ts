@@ -194,13 +194,23 @@ class Helper {
    * Defines which states count as "active" (show on-icon) for aggregate chips.
    * Kept as a static field so it is allocated once, not on every getIcon() call.
    */
+  // Kept in sync with aggregate.py's DOMAIN_ACTIVE_STATES/DOMAIN_ICONS —
+  // that's the source of truth (this only exists as the client-side
+  // fallback for area scope / a momentarily-unavailable server entity, see
+  // AggregateChip.getAggregateSensorId's else branch). binary_sensor and
+  // siren were missing here even after aggregate.py gained them: without an
+  // entry, getIcon() falls back to Path A (HA's own per-entity icon state
+  // map), which the comment below already warns is unreliable for a group
+  // of entities in mixed states.
   static readonly #DOMAIN_ACTIVE_STATES: Record<string, { activeStates: string[]; on: string; off: string }> = {
-    light:        { activeStates: ['on'],                                                       on: "mdi:lightbulb-on",   off: "mdi:lightbulb-off"      },
-    switch:       { activeStates: ['on'],                                                       on: "mdi:toggle-switch",  off: "mdi:toggle-switch-off"   },
-    fan:          { activeStates: ['on'],                                                       on: "mdi:fan",            off: "mdi:fan-off"             },
-    media_player: { activeStates: ['playing', 'paused', 'on'],                                 on: "mdi:cast-connected", off: "mdi:cast-off"            },
-    climate:      { activeStates: ['heat', 'cool', 'auto', 'heat_cool', 'dry', 'fan_only'],    on: "mdi:thermostat",     off: "mdi:thermostat-box"      },
-    cover:        { activeStates: ['open', 'opening'],                                         on: "mdi:window-open",    off: "mdi:window-closed"       },
+    light:         { activeStates: ['on'],                                                       on: "mdi:lightbulb-on",           off: "mdi:lightbulb-off"                    },
+    switch:        { activeStates: ['on'],                                                       on: "mdi:toggle-switch",           off: "mdi:toggle-switch-off"                },
+    fan:           { activeStates: ['on'],                                                       on: "mdi:fan",                     off: "mdi:fan-off"                          },
+    media_player:  { activeStates: ['playing', 'paused', 'on'],                                 on: "mdi:cast-connected",          off: "mdi:cast-off"                          },
+    climate:       { activeStates: ['heat', 'cool', 'auto', 'heat_cool', 'dry', 'fan_only'],    on: "mdi:thermostat",              off: "mdi:thermostat-box"                    },
+    cover:         { activeStates: ['open', 'opening'],                                         on: "mdi:window-open",             off: "mdi:window-closed"                     },
+    binary_sensor: { activeStates: ['on'],                                                       on: "mdi:checkbox-marked-circle",  off: "mdi:checkbox-blank-circle-outline"     },
+    siren:         { activeStates: ['on'],                                                       on: "mdi:alarm-light",             off: "mdi:alarm-light-off"                   },
   };
 
   /**

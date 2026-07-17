@@ -32,6 +32,13 @@ export interface AggregatePopupConfig {
   translationKey: string;
   /** Area's group entity, if one exists (Dashboard native or Magic Areas) */
   groupEntity?: string | null;
+  /**
+   * The dedicated group entity backing this popup's own scope (area, or
+   * floor/global too — unlike groupEntity above, which is area-only), when
+   * one exists for this domain. buildControlButtons targets this single
+   * entity instead of every raw member when present.
+   */
+  dedicatedGroupEntity?: string | null;
   /** Features for tile cards (e.g., [{ type: "light-brightness" }]) */
   features?: any[];
   /** Device class (for covers, sensors, binary_sensors) */
@@ -330,7 +337,14 @@ class AggregatePopup extends AbstractPopup {
    * Uses Home Assistant service names
    */
   protected buildControlButtons(config: AggregatePopupConfigWithEntities) {
-    const { domain, serviceOn, serviceOff, entity_ids, translationKey } = config;
+    const { domain, serviceOn, serviceOff, entity_ids, translationKey, dedicatedGroupEntity } = config;
+
+    // Target the dedicated group entity when one exists for this domain/
+    // scope (light/switch/fan/cover/siren) instead of every raw member —
+    // one entity instead of N, and it goes through the group's own
+    // async_turn_on/off (climate/media_player have no dedicated group, so
+    // they keep targeting entity_ids directly, same as before).
+    const controlTarget = dedicatedGroupEntity ? [dedicatedGroupEntity] : entity_ids;
 
     // Use custom translations for action labels
     const actionOn = Helper.localize(`component.linus_dashboard.entity.text.aggregate_popup.state.action_on_${translationKey}`)
@@ -352,7 +366,7 @@ class AggregatePopup extends AbstractPopup {
             action: "call-service",
             service: `${domain}.${serviceOn}`,
             data: {
-              entity_id: entity_ids
+              entity_id: controlTarget
             }
           },
           hold_action: {
@@ -374,7 +388,7 @@ class AggregatePopup extends AbstractPopup {
             action: "call-service",
             service: `${domain}.${serviceOff}`,
             data: {
-              entity_id: entity_ids
+              entity_id: controlTarget
             }
           },
           hold_action: {
@@ -529,6 +543,7 @@ class AggregatePopup extends AbstractPopup {
       activeStates: config.activeStates,
       translationKey: config.translationKey,
       groupEntity: null,
+      dedicatedGroupEntity: null,
       features: config.features,
       showNavigationButton: true,
     });
@@ -611,6 +626,7 @@ class AggregatePopup extends AbstractPopup {
       activeStates: config.activeStates,
       translationKey: config.translationKey,
       groupEntity: null,
+      dedicatedGroupEntity: null,
       features: config.features,
       showNavigationButton: true,
     });
@@ -732,6 +748,7 @@ class AggregatePopup extends AbstractPopup {
       activeStates: config.activeStates,
       translationKey: config.translationKey,
       groupEntity: null,
+      dedicatedGroupEntity: null,
       features: config.features,
       showNavigationButton: true  // Don't show nav button in sub-popups
     };

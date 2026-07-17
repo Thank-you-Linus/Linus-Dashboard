@@ -161,6 +161,7 @@ class AggregateChip extends AbstractChip {
       activeStates: config.activeStates,
       translationKey: config.translationKey,
       groupEntity: groupEntity,
+      dedicatedGroupEntity: aggregateSource?.isDedicatedGroup ? aggregateSource.entityId : null,
       features: config.features,
       device_class: config.device_class,
     });

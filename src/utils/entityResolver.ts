@@ -40,9 +40,11 @@ export interface EntityResolution {
  * `linus_brain_all_lights_*` entity_id is kept — clean cut, not a dual
  * fallback (see PR description for the reasoning).
  *
- * **Entities kept from Magic Areas (fallback, when Brain doesn't provide them):**
- * - area_state, light_control, all_lights, climate_group
- * - All aggregates (aggregate_*), groups (climate_group)
+ * **Entities kept from Magic Areas (fallback, when Brain doesn't provide them,
+ * or — for the dedicated-group domains below — when the native entity is
+ * unavailable):**
+ * - area_state, light_control, all_lights, climate_group, media_player_group
+ * - All aggregates (aggregate_*), groups (climate_group, media_player_group)
  * - TOD scene services, presence_hold
  */
 export class EntityResolver {
@@ -224,6 +226,30 @@ export class EntityResolver {
   resolveClimateGroup(area_slug: string): EntityResolution {
     if (this.hasMagicAreas) {
       return this.resolveMagicAreasEntity(area_slug, "climate_group");
+    }
+
+    return { entity_id: null, source: "native" };
+  }
+
+  /**
+   * Resolves the media player group entity
+   *
+   * Priority: Magic Areas > native. Unlike climate, there IS a Linus
+   * Dashboard-native media_player group too (media_player.py) — but
+   * AggregateChip's getAggregateSensorId already tries that one first, at
+   * every scope, before this ever gets called (see AggregateChip's
+   * getGroupEntity, area-scope only, secondary fallback for when the native
+   * entity happens to be unavailable). Magic Areas' own media_player_group
+   * (homeassistant.components.group.media_player.MediaPlayerGroup under the
+   * hood) is a real media_player entity, unlike media_player_control
+   * (a boolean switch — can't serve as this tile's target).
+   *
+   * @param area_slug - The area slug
+   * @returns EntityResolution with the resolved entity
+   */
+  resolveMediaPlayerGroup(area_slug: string): EntityResolution {
+    if (this.hasMagicAreas) {
+      return this.resolveMagicAreasEntity(area_slug, "media_player_group");
     }
 
     return { entity_id: null, source: "native" };

@@ -412,14 +412,16 @@ class AggregateChip extends AbstractChip {
         return resolution.entity_id;
       }
 
-      case "media_player":
-        // No separate fallback needed — getAggregateSensorId's dedicated
-        // group lookup (media_player.py) already covers this at every
-        // scope, and there's no Magic Areas media_player *group* entity to
-        // fall back to if it were unavailable (media_player_control is a
-        // boolean switch, not a media_player entity — can't serve as this
+      case "media_player": {
+        // Secondary fallback only, same reasoning as climate above —
+        // getAggregateSensorId already tries the native dedicated group
+        // (media_player.py) first, at every scope. Magic Areas does have a
+        // real media_player_group entity to fall back to here (unlike
+        // media_player_control, a boolean switch that can't serve as this
         // tile's target).
-        return null;
+        const mediaPlayerResolution = resolver.resolveMediaPlayerGroup(options.area_slug);
+        return mediaPlayerResolution.entity_id;
+      }
 
       default:
         return null;

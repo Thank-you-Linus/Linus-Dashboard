@@ -514,10 +514,17 @@ class AggregatePopup extends AbstractPopup {
    * Magic Areas' climate_group).
    */
   protected buildGroupControlSection(groupEntity: string, domain: string) {
+    // light-brightness renders an empty slider when the group has no
+    // dimmable member — see Helper.lightSupportsBrightness. Falling back to
+    // no feature at all still leaves the tile's own tap-to-toggle working.
+    const features =
+      domain === "light" && !Helper.lightSupportsBrightness(groupEntity)
+        ? []
+        : AggregatePopup.GROUP_TILE_FEATURES[domain] ?? [];
     return {
       type: "tile",
       entity: groupEntity,
-      features: AggregatePopup.GROUP_TILE_FEATURES[domain] ?? [],
+      features,
       features_position: "inline"
     };
   }

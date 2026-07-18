@@ -1429,6 +1429,23 @@ class Helper {
     return this.#hassStates[entity_id]!;
   }
 
+  /**
+   * Whether a light entity currently reports a color mode beyond plain
+   * on/off (brightness, color, color temp, ...). A light-brightness tile
+   * feature on a light group whose supported_color_modes is only ["onoff"]
+   * renders empty — nothing to bind the slider to — so callers building a
+   * feature list should check this first and fall back to no feature at
+   * all (the tile's own tap-to-toggle still works either way) rather than
+   * unconditionally assuming every light supports dimming.
+   *
+   * @param entity_id - The light entity to check.
+   * @return {boolean}
+   */
+  static lightSupportsBrightness(entity_id: string): boolean {
+    const modes: string[] = this.getEntityState(entity_id)?.attributes?.supported_color_modes ?? [];
+    return modes.some(mode => mode !== "onoff");
+  }
+
 
   /**
    * Get translation.

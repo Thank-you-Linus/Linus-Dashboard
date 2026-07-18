@@ -214,9 +214,16 @@ class HomeAreaCard {
   }
 
   getLightCard(all_lights_entity_id: string): any {
+    // light-brightness renders an empty slider when the group has no
+    // dimmable member (supported_color_modes is just ["onoff"]) — omit it
+    // in that case rather than showing a blank feature area; the tile's own
+    // tap-to-toggle still turns the group on/off either way.
+    const features = Helper.lightSupportsBrightness(all_lights_entity_id)
+      ? [{ type: "light-brightness" }]
+      : [];
     return {
       type: "tile",
-      features: [{ type: "light-brightness" }],
+      features,
       hide_state: true,
       entity: all_lights_entity_id,
       card_mod: { style: this.getLightCardModStyle() }

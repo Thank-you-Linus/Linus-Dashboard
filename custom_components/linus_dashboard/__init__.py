@@ -108,6 +108,57 @@ async def async_cleanup_orphaned_aggregate_sensors(
             )
 
 
+# Domains whose domain-level (no device_class) generic aggregate sensor used
+# to be hidden/diagnostic and is now meant to be visible (see sensor.py's
+# LinusDashboardAggregateSensor.__init__ — it's the only aggregate
+# climate/media_player/binary_sensor-without-a-dedicated-group ever get).
+_UNHIDE_DOMAIN_LEVEL_SENSOR_DOMAINS = ("climate", "media_player", "binary_sensor")
+
+
+async def async_unhide_domain_level_aggregate_sensors(
+    hass: HomeAssistant, entry: ConfigEntry
+) -> None:
+    """
+    Clear hidden_by="integration" on the climate/media_player/binary_sensor
+    domain-level aggregate sensors that an earlier version of this
+    integration created with entity_registry_visible_default=False.
+
+    HA only applies a platform's entity_registry_visible_default at first
+    entity creation — bumping that default in code later doesn't
+    retroactively un-hide an entity already sitting in the registry, so this
+    is a one-time explicit fix rather than something the class attribute
+    change alone could accomplish. Built from the exact expected unique_id
+    set (global + one per current floor), same technique as
+    async_cleanup_orphaned_aggregate_sensors above, so this can't
+    accidentally touch a device_class-specific bucket (a different,
+    still-meant-to-stay-hidden unique_id shape). Only clears hidden_by when
+    it's still exactly "integration" — never touches a user's own manual
+    hide (hidden_by="user").
+    """
+    entity_reg = er.async_get(hass)
+    floor_reg = fr.async_get(hass)
+
+    target_unique_ids = {
+        f"{DOMAIN}_{domain}_active" for domain in _UNHIDE_DOMAIN_LEVEL_SENSOR_DOMAINS
+    }
+    for floor in floor_reg.floors.values():
+        target_unique_ids.update(
+            f"{DOMAIN}_{domain}_{floor.floor_id}_active"
+            for domain in _UNHIDE_DOMAIN_LEVEL_SENSOR_DOMAINS
+        )
+
+    for entity_entry in list(entity_reg.entities.values()):
+        if (
+            entity_entry.config_entry_id == entry.entry_id
+            and entity_entry.unique_id in target_unique_ids
+            and entity_entry.hidden_by == "integration"
+        ):
+            entity_reg.async_update_entity(entity_entry.entity_id, hidden_by=None)
+            _LOGGER.info(
+                "Un-hid domain-level aggregate sensor: %s", entity_entry.entity_id
+            )
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Linus Dashboard from a config entry."""
     _LOGGER.info("Setting up Linus Dashboard entry")
@@ -184,6 +235,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Clean up sensors dropped in favor of a dedicated group entity, before
     # platforms load (same ordering as the equivalent cleanup in Linus Brain)
     await async_cleanup_orphaned_aggregate_sensors(hass, entry)
+    await async_unhide_domain_level_aggregate_sensors(hass, entry)
 
     # Forward platforms (aggregate sensors + area/floor/global group entities)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

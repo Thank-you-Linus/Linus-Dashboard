@@ -92,7 +92,7 @@ class AggregatePopup extends AbstractPopup {
   }
 
   getDefaultConfig(config: AggregatePopupConfig): PopupActionConfig {
-    const { groupEntity, domain, scope, floor_id, area_slug, device_class } = config;
+    const { groupEntity, dedicatedGroupEntity, domain, scope, floor_id, area_slug, device_class } = config;
 
     // Query entities dynamically based on scope
     const queryOptions: any = {
@@ -157,11 +157,22 @@ class AggregatePopup extends AbstractPopup {
       cards.push(controlButtons);
     }
 
-    // 3. Group control tile (if a group entity exists) - positioned AFTER control buttons
-    if (groupEntity) {
-      cards.push(this.buildGroupControlSection(groupEntity, domain));
+    // 3. Group control tile (if a group entity exists) - positioned AFTER control buttons.
+    // dedicatedGroupEntity covers light/switch/fan/cover/siren at every scope
+    // (area/floor/global); groupEntity is the area-only Magic Areas/Brain
+    // fallback for domains with no dedicated group (climate) — prefer the
+    // dedicated one when both would resolve (same entity in practice today).
+    const tileEntity = dedicatedGroupEntity ?? groupEntity;
+    if (tileEntity) {
+      cards.push(this.buildGroupControlSection(tileEntity, domain));
     }
 
+    // 3b. History graph for numeric sensors — the individual tiles below
+    // only show the current value, not the trend that's usually the actual
+    // point of looking at a temperature/humidity/etc. popup.
+    if (needsStatistics) {
+      cards.push(this.buildHistoryGraph(configWithEntities));
+    }
 
     // 4. Separator (only if multiple entities)
     const separator = this.buildSeparator(configWithEntities);
@@ -329,6 +340,26 @@ class AggregatePopup extends AbstractPopup {
         ${jinjaCalculation}
         **${statLabel}:** {{ result }} ${unit}
       `.trim()
+    };
+  }
+
+  /**
+   * Build a history graph of every entity in scope — one line per entity,
+   * same set as the statistics card sums/averages and the individual tiles
+   * below list. Deliberately per-entity rather than a single aggregate line:
+   * there's no dedicated "official" history for the client-side sum/average
+   * computed above (it's not backed by its own recorded entity), and seeing
+   * each room's trend side by side is more informative than one blended line
+   * for a temperature/humidity popup covering several areas.
+   */
+  protected buildHistoryGraph(config: AggregatePopupConfigWithEntities) {
+    const { entity_ids } = config;
+
+    return {
+      type: "history-graph",
+      entities: entity_ids.map(entity => ({ entity })),
+      hours_to_show: 24,
+      refresh_interval: 0
     };
   }
 

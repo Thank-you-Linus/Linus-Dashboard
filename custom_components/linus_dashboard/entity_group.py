@@ -345,8 +345,17 @@ def ensure_area_device_placed(
         model=device_info["model"],
         sw_version=device_info["sw_version"],
     )
+    _LOGGER.debug(
+        "ensure_area_device_placed: device=%s current_area=%s target_area=%s",
+        device.id,
+        device.area_id,
+        area_id,
+    )
     if device.area_id != area_id:
-        device_reg.async_update_device(device.id, area_id=area_id)
+        updated = device_reg.async_update_device(device.id, area_id=area_id)
+        _LOGGER.debug(
+            "ensure_area_device_placed: after update area=%s", updated.area_id
+        )
 
 
 async def build_nested_domain_groups(

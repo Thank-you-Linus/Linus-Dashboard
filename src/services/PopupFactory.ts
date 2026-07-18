@@ -132,6 +132,12 @@ export class PopupFactory {
       activeStates: config.activeStates,
       translationKey: config.translationKey,
       groupEntity: null,
+      // No Magic Areas media_player *group* equivalent (groupEntity stays
+      // null, see AggregateChip's getGroupEntity), but media_player.py now
+      // provides a real dedicated group — this was missing entirely here,
+      // so the group control tile never showed and Play All/Pause All
+      // always targeted the raw entity list even when the group existed.
+      dedicatedGroupEntity: config.dedicatedGroupEntity,
       features: config.features,
       device_class: config.device_class,
       showNavigationButton: config.showNavigationButton,

@@ -1,10 +1,10 @@
 """
 Shared scanning/nesting logic for Linus Dashboard area/floor/global group entities.
 
-Used by binary_sensor.py, light.py, switch.py, fan.py, cover.py and siren.py to
-build the same three-tier hierarchy (global > floor > area > raw entities)
-without duplicating the entity-registry scanning and exclusion-filtering logic
-in every platform.
+Used by binary_sensor.py, light.py, switch.py, fan.py, cover.py, siren.py,
+climate.py and media_player.py to build the same three-tier hierarchy
+(global > floor > area > raw entities) without duplicating the
+entity-registry scanning and exclusion-filtering logic in every platform.
 
 CRITICAL PATTERN - self-exclusion:
 When iterating over entity_registry.entities.values(), always skip entities
@@ -312,6 +312,43 @@ EntityFactory = Callable[
 ]
 
 
+def ensure_area_device_placed(
+    hass: HomeAssistant, entry_id: str, area_id: str, device_info: dict
+) -> None:
+    """
+    Explicitly place an area-scoped Linus Dashboard device in its real HA
+    area.
+
+    get_area_device_info()/get_floor_device_info() deliberately omit
+    `suggested_area` (a name-matching heuristic with a duplicate-area risk —
+    see their docstrings); the actual placement was meant to happen here,
+    via device_registry.async_update_device(area_id=...) using the area's
+    real registry ID directly, no name-matching involved. This had never
+    actually been called anywhere, so every area-scoped device has been
+    sitting with no area assigned at all since the feature first shipped —
+    none of the "open Settings > Areas > Salon and see its Linus Dashboard
+    device" UX the plan described was actually happening.
+
+    Proactively get-or-create the device here (idempotent — resolves to the
+    same device HA creates lazily later from the entity's own
+    _attr_device_info, since both share the same `identifiers`) so area_id
+    can be set immediately rather than racing a device creation that
+    otherwise only happens on a background task scheduled by
+    async_add_entities().
+    """
+    device_reg = dr.async_get(hass)
+    device = device_reg.async_get_or_create(
+        config_entry_id=entry_id,
+        identifiers=device_info["identifiers"],
+        name=device_info["name"],
+        manufacturer=device_info["manufacturer"],
+        model=device_info["model"],
+        sw_version=device_info["sw_version"],
+    )
+    if device.area_id != area_id:
+        device_reg.async_update_device(device.id, area_id=area_id)
+
+
 async def build_nested_domain_groups(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -346,13 +383,17 @@ async def build_nested_domain_groups(
     for area_id, member_ids in scoped.area_entities.items():
         if not member_ids:
             continue
+        area_device_info = get_area_device_info(
+            entry_id, area_id, scoped.area_names[area_id]
+        )
+        ensure_area_device_placed(hass, entry_id, area_id, area_device_info)
         unique_id = f"{unique_id_prefix}_area_{area_id}"
         entity = entity_factory(
             hass,
             unique_id,
             translation_key,
             {"name": scoped.area_names[area_id]},
-            get_area_device_info(entry_id, area_id, scoped.area_names[area_id]),
+            area_device_info,
             member_ids,
         )
         entities.append(entity)

@@ -496,13 +496,17 @@ class AggregatePopup extends AbstractPopup {
   /**
    * Domain-appropriate tile card feature(s) for the group control tile below
    * — mirrors what each dedicated group entity actually supports
-   * (light.py/fan.py/cover.py's feature aggregation). switch/siren have no
-   * HA tile feature beyond the toggle already built into the tile itself.
+   * (light.py/fan.py/cover.py/climate.py's feature aggregation). switch/
+   * siren/media_player have no HA tile feature beyond the toggle already
+   * built into the tile itself (media_player's own volume/playback tile
+   * features assume source/queue info this v1 "dumb" group deliberately
+   * doesn't aggregate — see media_player.py).
    */
   private static readonly GROUP_TILE_FEATURES: Record<string, any[]> = {
     light: [{ type: "light-brightness" }],
     fan: [{ type: "fan-speed" }],
     cover: [{ type: "cover-open-close" }, { type: "cover-position" }],
+    climate: [{ type: "climate-hvac-modes" }],
   };
 
   /**

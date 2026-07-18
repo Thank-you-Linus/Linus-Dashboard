@@ -41,6 +41,7 @@ from .entity_group import (
     ScopedMembers,
     compute_group_attributes,
     domain_is_excluded,
+    ensure_area_device_placed,
     resolve_floors_for_areas,
     scan_domain_members,
 )
@@ -232,13 +233,15 @@ async def _build_presence_groups(
     for area_id, member_ids in area_entities.items():
         if not member_ids:
             continue
+        area_device_info = get_area_device_info(entry_id, area_id, area_names[area_id])
+        ensure_area_device_placed(hass, entry_id, area_id, area_device_info)
         unique_id = f"{DOMAIN}_presence_detection_area_{area_id}"
         group = _get_or_create_presence_group(
             hass,
             unique_id,
             "presence_detection",
             {"name": area_names[area_id]},
-            get_area_device_info(entry_id, area_id, area_names[area_id]),
+            area_device_info,
             member_ids,
             breakdown=area_breakdown.get(area_id),
         )
@@ -354,6 +357,10 @@ async def _build_device_class_groups(
         for area_id, member_ids in scoped.area_entities.items():
             if not member_ids:
                 continue
+            area_device_info = get_area_device_info(
+                entry_id, area_id, scoped.area_names[area_id]
+            )
+            ensure_area_device_placed(hass, entry_id, area_id, area_device_info)
             unique_id = f"{DOMAIN}_{device_class}_area_{area_id}"
             group = _get_or_create_device_class_group(
                 hass,
@@ -369,7 +376,7 @@ async def _build_device_class_groups(
                 # the raw English slug back verbatim in every language).
                 None,
                 None,
-                get_area_device_info(entry_id, area_id, scoped.area_names[area_id]),
+                area_device_info,
                 member_ids,
                 device_class,
             )

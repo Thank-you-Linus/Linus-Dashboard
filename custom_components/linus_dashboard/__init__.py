@@ -48,6 +48,8 @@ PLATFORMS: list[Platform] = [
     Platform.FAN,
     Platform.COVER,
     Platform.SIREN,
+    Platform.CLIMATE,
+    Platform.MEDIA_PLAYER,
 ]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -71,7 +73,15 @@ async def async_setup(hass: HomeAssistant, _config: dict) -> bool:
 # earlier version has these lingering in the registry as permanently
 # "unavailable" (sensor.py stops recreating them, but nothing removes the
 # old registry entry on its own).
-_DEAD_GENERIC_SENSOR_DOMAINS = ("light", "switch", "fan", "cover", "siren")
+_DEAD_GENERIC_SENSOR_DOMAINS = (
+    "light",
+    "switch",
+    "fan",
+    "cover",
+    "siren",
+    "climate",
+    "media_player",
+)
 
 
 async def async_cleanup_orphaned_aggregate_sensors(
@@ -110,18 +120,23 @@ async def async_cleanup_orphaned_aggregate_sensors(
 
 # Domains whose domain-level (no device_class) generic aggregate sensor used
 # to be hidden/diagnostic and is now meant to be visible (see sensor.py's
-# LinusDashboardAggregateSensor.__init__ — it's the only aggregate
-# climate/media_player/binary_sensor-without-a-dedicated-group ever get).
-_UNHIDE_DOMAIN_LEVEL_SENSOR_DOMAINS = ("climate", "media_player", "binary_sensor")
+# LinusDashboardAggregateSensor.__init__). climate and media_player used to
+# be here too, back when they had no dedicated group entity of their own and
+# this hidden sensor was their only aggregate — now that climate.py/
+# media_player.py provide a real group, their domain-level bucket is dead
+# weight, cleaned up by _DEAD_GENERIC_SENSOR_DOMAINS above instead of needing
+# to stay un-hidden. binary_sensor remains here since "every binary_sensor
+# regardless of device_class" has no dedicated group and likely never will.
+_UNHIDE_DOMAIN_LEVEL_SENSOR_DOMAINS = ("binary_sensor",)
 
 
 async def async_unhide_domain_level_aggregate_sensors(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> None:
     """
-    Clear hidden_by="integration" on the climate/media_player/binary_sensor
-    domain-level aggregate sensors that an earlier version of this
-    integration created with entity_registry_visible_default=False.
+    Clear hidden_by="integration" on the binary_sensor domain-level aggregate
+    sensor that an earlier version of this integration created with
+    entity_registry_visible_default=False.
 
     HA only applies a platform's entity_registry_visible_default at first
     entity creation — bumping that default in code later doesn't

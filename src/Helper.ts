@@ -3,7 +3,7 @@ import merge from "lodash.merge";
 
 import { configurationDefaults } from "./configurationDefaults";
 import { generic } from "./types/strategy/generic";
-import { DEVICE_CLASSES, LINUS_BRAIN_DOMAIN, MAGIC_AREAS_DOMAIN, MAGIC_AREAS_NAME, SENSOR_STATE_CLASS_TOTAL, SENSOR_STATE_CLASS_TOTAL_INCREASING, UNDISCLOSED, colorMapping, ALL_HOME_ASSISTANT_DOMAINS, STANDARD_DOMAIN_ICONS } from "./variables";
+import { DEVICE_CLASSES, LINUS_BRAIN_DOMAIN, LINUS_DASHBOARD_DOMAIN, MAGIC_AREAS_DOMAIN, MAGIC_AREAS_NAME, SENSOR_STATE_CLASS_TOTAL, SENSOR_STATE_CLASS_TOTAL_INCREASING, UNDISCLOSED, colorMapping, ALL_HOME_ASSISTANT_DOMAINS, STANDARD_DOMAIN_ICONS } from "./variables";
 import { getEntityDomain, getGlobalEntitiesExceptUndisclosed, getMAEntity, getMagicAreaSlug, groupEntitiesByDomain, slugify } from "./utils";
 import { createDomainTag } from "./utils/domainTagHelper";
 import { IconResources } from "./types/homeassistant/data/frontend";
@@ -804,7 +804,21 @@ class Helper {
 
       acc[entity.entity_id] = enrichedEntity;
 
-      if (entity.platform !== MAGIC_AREAS_DOMAIN && entity.platform !== LINUS_BRAIN_DOMAIN) {
+      // Exclude Magic Areas/Linus Brain's own aggregate entities (as before)
+      // and now also Linus Dashboard's own group entities — the same
+      // self-inclusion risk documented in entity_group.py's CRITICAL
+      // PATTERN comment applies here too, now that area-scoped group
+      // devices are actually placed in their real HA area (see
+      // ensure_area_device_placed): without this, e.g.
+      // light.linus_dashboard_all_lights_area_salon would show up as an
+      // extra "individual" tile in the Salon light popup, indistinguishable
+      // from a real light.
+      const isOwnAggregateEntity =
+        entity.platform === MAGIC_AREAS_DOMAIN ||
+        entity.platform === LINUS_BRAIN_DOMAIN ||
+        entity.platform === LINUS_DASHBOARD_DOMAIN;
+
+      if (!isOwnAggregateEntity) {
         const areaId = entity.area_id ?? deviceAreaMap.get(entity.device_id ?? "") ?? UNDISCLOSED;
         if (!entitiesByAreaId.has(areaId)) {
           entitiesByAreaId.set(areaId, []);
@@ -819,7 +833,7 @@ class Helper {
         entitiesByDeviceId.get(entity.device_id)!.push(enrichedEntity);
       }
 
-      if (entity.platform !== MAGIC_AREAS_DOMAIN && entity.platform !== LINUS_BRAIN_DOMAIN) this.#domains[domainTag].push(enrichedEntity);
+      if (!isOwnAggregateEntity) this.#domains[domainTag].push(enrichedEntity);
 
       return acc;
     }, {} as Record<string, StrategyEntity>);

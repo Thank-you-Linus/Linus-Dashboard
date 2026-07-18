@@ -8,13 +8,12 @@ Three families of sensors:
    floor scope only (AggregateChip never queries these at area scope — it
    renders area-scope chips client-side instead, from the raw entities
    directly). AggregateChip now prefers a domain's own dedicated group
-   entity (light.py/switch.py/fan.py/cover.py/siren.py, or a binary_sensor
-   device_class group) when one exists, falling back to this generic system
-   only when it doesn't — so this only still generates:
-   - domain-level buckets (no device_class) for climate/media_player (no
-     dedicated group — no simple on/off control semantics for either) and
-     binary_sensor (no "every binary_sensor regardless of device_class"
-     dedicated group exists)
+   entity (light.py/switch.py/fan.py/cover.py/siren.py/climate.py/
+   media_player.py, or a binary_sensor device_class group) when one exists,
+   falling back to this generic system only when it doesn't — so this only
+   still generates:
+   - domain-level buckets (no device_class) for binary_sensor (no "every
+     binary_sensor regardless of device_class" dedicated group exists)
    - device_class buckets for every domain, since not every device_class
      has its own dedicated group (e.g. cover doesn't split by type; binary_
      sensor's presence-related classes — motion/presence/occupancy — feed
@@ -78,10 +77,11 @@ DEBOUNCE_SECONDS = 0.1
 
 # Domains whose domain-level (no device_class) bucket has no dedicated group
 # entity to fall back to instead — see module docstring, item 1. Every other
-# domain in DOMAIN_ACTIVE_STATES (light/switch/fan/cover/siren) now has a
-# full dedicated single-domain group, so the hidden sensor for their
-# domain-level bucket would just be dead weight AggregateChip never reads.
-GENERIC_DOMAIN_LEVEL_DOMAINS = ("climate", "media_player", "binary_sensor")
+# domain in DOMAIN_ACTIVE_STATES (light/switch/fan/cover/siren, and now
+# climate/media_player too — see climate.py/media_player.py) has a full
+# dedicated single-domain group, so the hidden sensor for their domain-level
+# bucket would just be dead weight AggregateChip never reads.
+GENERIC_DOMAIN_LEVEL_DOMAINS = ("binary_sensor",)
 
 # device_class list for numeric aggregate sensors. Deliberately short and
 # fixed for v1 rather than "every sensor device_class encountered" — avoids
@@ -301,13 +301,14 @@ class LinusDashboardAggregateSensor(SensorEntity):
         self._device_class_filter = device_class_filter
 
         # Domain-level buckets (no device_class_filter) only still exist for
-        # GENERIC_DOMAIN_LEVEL_DOMAINS (climate/media_player/binary_sensor) —
-        # the ones with no dedicated group entity to show a real count/
-        # control tile instead. Unlike the device_class-specific buckets
+        # GENERIC_DOMAIN_LEVEL_DOMAINS (binary_sensor) — the one domain with
+        # no dedicated group entity to show a real count/control tile
+        # instead ("every binary_sensor regardless of device_class" has no
+        # sensible single group). Unlike the device_class-specific buckets
         # (which mostly duplicate what a dedicated group already shows
-        # elsewhere), this is the only aggregate a climate/media_player user
-        # ever sees, so keep it visible rather than tucked away as a
-        # diagnostic entity nobody would think to look for.
+        # elsewhere), this is the only aggregate such a user ever sees, so
+        # keep it visible rather than tucked away as a diagnostic entity
+        # nobody would think to look for.
         if device_class_filter is None:
             self._attr_entity_registry_visible_default = True
             self._attr_entity_category = None

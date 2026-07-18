@@ -394,10 +394,11 @@ class AggregateChip extends AbstractChip {
       }
 
       case "climate": {
-        // Try Magic Areas climate_group entity — no Linus Dashboard-native
-        // equivalent yet (deliberately deferred, see plan: climate/media_player
-        // need real HVAC-mode/target-temp aggregation semantics, not just
-        // on/off forwarding).
+        // Secondary fallback only — getAggregateSensorId already tries the
+        // native dedicated group (climate.py) first, at every scope. This
+        // only matters if that entity happens to be unavailable, in which
+        // case Magic Areas' climate_group is still worth falling back to
+        // for this area-scope quick-control tile.
         const climateResolution = resolver.resolveClimateGroup(options.area_slug);
         return climateResolution.entity_id;
       }
@@ -412,7 +413,12 @@ class AggregateChip extends AbstractChip {
       }
 
       case "media_player":
-        // No Linus Dashboard-native or Magic Areas group entity for this domain.
+        // No separate fallback needed — getAggregateSensorId's dedicated
+        // group lookup (media_player.py) already covers this at every
+        // scope, and there's no Magic Areas media_player *group* entity to
+        // fall back to if it were unavailable (media_player_control is a
+        // boolean switch, not a media_player entity — can't serve as this
+        // tile's target).
         return null;
 
       default:
@@ -422,10 +428,10 @@ class AggregateChip extends AbstractChip {
 
   /**
    * Domains with their own dedicated group entity platform (light.py,
-   * switch.py, fan.py, cover.py, siren.py) — value is the "all_X" slug each
-   * platform uses in its unique_id (see e.g. light.py's
-   * `unique_id_prefix=f"{DOMAIN}_all_lights"`). These are richer than the
-   * generic hidden counting sensor (controllable, list members via
+   * switch.py, fan.py, cover.py, siren.py, climate.py, media_player.py) —
+   * value is the "all_X" slug each platform uses in its unique_id (see e.g.
+   * light.py's `unique_id_prefix=f"{DOMAIN}_all_lights"`). These are richer
+   * than the generic hidden counting sensor (controllable, list members via
    * entity_id) and cover the same ground at floor/global scope, so they're
    * preferred over it. Only applies with no device_class filter — cover's
    * own device_class variants (if any) still fall through to the generic
@@ -440,20 +446,23 @@ class AggregateChip extends AbstractChip {
     fan: "all_fans",
     cover: "all_covers",
     siren: "all_sirens",
+    climate: "all_climates",
+    media_player: "all_media_players",
   };
 
   /**
    * Get the server-side aggregate entity for this chip's configuration —
    * preferring a dedicated group entity when one exists for this
    * domain/device_class, falling back to the generic hidden counting
-   * sensor (sensor.py's LinusDashboardAggregateSensor) otherwise. That
-   * generic sensor only still exists for climate/media_player (no
-   * dedicated group — no simple on/off control semantics for either) and
-   * for binary_sensor device_classes that don't get their own dedicated
-   * group (the presence-related ones). It also has no area tier at all
-   * (sensor.py only builds it at floor/global — AggregateChip never used
-   * to query it at area scope), so at area scope this only ever tries the
-   * dedicated group, never that fallback.
+   * sensor (sensor.py's LinusDashboardAggregateSensor) otherwise. Every
+   * domain in DOMAIN_ACTIVE_STATES now has its own dedicated group; that
+   * generic sensor only still exists for "every binary_sensor regardless of
+   * device_class" (no sensible single group for that) and for device_class
+   * buckets that don't get their own dedicated group (binary_sensor's
+   * presence-related classes, cover's device_class variants). It also has
+   * no area tier at all (sensor.py only builds it at floor/global —
+   * AggregateChip never used to query it at area scope), so at area scope
+   * this only ever tries the dedicated group, never that fallback.
    *
    * Returns null (client-side rendering, same as always) if nothing
    * server-side exists for this scope/domain/device_class.

@@ -369,6 +369,22 @@
         "name": "All Sirens"
       }
     },
+    "climate": {
+      "climate_group": {
+        "name": "All Thermostats"
+      },
+      "climate_group_global": {
+        "name": "All Thermostats"
+      }
+    },
+    "media_player": {
+      "media_player_group": {
+        "name": "All Media Players"
+      },
+      "media_player_group_global": {
+        "name": "All Media Players"
+      }
+    },
     "sensor": {
       "numeric_temperature": {
         "name": "Temperature"

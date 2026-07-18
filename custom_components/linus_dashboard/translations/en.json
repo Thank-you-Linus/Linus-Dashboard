@@ -386,30 +386,6 @@
       }
     },
     "sensor": {
-      "numeric_temperature": {
-        "name": "Temperature"
-      },
-      "numeric_temperature_global": {
-        "name": "Temperature"
-      },
-      "numeric_humidity": {
-        "name": "Humidity"
-      },
-      "numeric_humidity_global": {
-        "name": "Humidity"
-      },
-      "numeric_illuminance": {
-        "name": "Illuminance"
-      },
-      "numeric_illuminance_global": {
-        "name": "Illuminance"
-      },
-      "numeric_battery": {
-        "name": "Battery (min)"
-      },
-      "numeric_battery_global": {
-        "name": "Battery (min)"
-      },
       "unavailable": {
         "name": "Unavailable Entities"
       },

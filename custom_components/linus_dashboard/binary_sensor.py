@@ -8,9 +8,12 @@ Creates two families of nested area/floor/global group entities:
    feature moved here (see plan: presence/light groups are mechanical
    aggregation, not AI, so they belong in Dashboard, available to every user
    rather than gated behind an optional companion integration).
-2. Generic per-device_class binary_sensor groups (door, window, smoke, ...)
-   for every device_class other than the presence-related ones above, which
-   are already covered by the composite group.
+2. Generic per-device_class binary_sensor groups (door, window, smoke,
+   motion, presence, occupancy, ...) — every device_class present, including
+   the presence-related ones already folded into the composite group above
+   (that composite answers "is anyone home"; a per-device_class group
+   answers "how many motion sensors are triggered right now" — different
+   questions, same underlying sensors can feed both).
 
 Both use the same nested hierarchy as light.py: global groups reference the
 entity_id of floor groups, floor groups reference the entity_id of area
@@ -295,7 +298,16 @@ async def _build_presence_groups(
 def _discover_generic_device_classes(
     hass: HomeAssistant, exclusions: ExclusionConfig
 ) -> set[str]:
-    """Find binary_sensor device_classes present, excluding presence-related ones."""
+    """
+    Find binary_sensor device_classes present.
+
+    Includes motion/presence/occupancy too, even though they're also folded
+    into the composite presence_detection group above — that composite is an
+    OR-gate meant to answer "is anyone home", not a substitute for "how many
+    motion sensors are triggered right now", which is what a per-device_class
+    group like the others answers. Same sensor can legitimately be a member
+    of both.
+    """
     from homeassistant.helpers import entity_registry as er
 
     entity_reg = er.async_get(hass)
@@ -309,7 +321,7 @@ def _discover_generic_device_classes(
         if not state_obj:
             continue
         device_class = state_obj.attributes.get("device_class")
-        if not device_class or device_class in PRESENCE_DEVICE_CLASSES:
+        if not device_class:
             continue
         if device_class in exclusions.excluded_device_classes:
             continue

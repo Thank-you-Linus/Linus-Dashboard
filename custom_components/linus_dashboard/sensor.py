@@ -83,11 +83,10 @@ DEBOUNCE_SECONDS = 0.1
 # bucket would just be dead weight AggregateChip never reads.
 GENERIC_DOMAIN_LEVEL_DOMAINS = ("binary_sensor",)
 
-# device_class list for numeric aggregate sensors. Deliberately short and
-# fixed for v1 rather than "every sensor device_class encountered" — avoids
-# entity sprawl for device_class where a per-zone aggregate adds no value
-# (voltage, signal_strength, ...). Extend only when a concrete need shows up.
-NUMERIC_DEVICE_CLASSES = ("temperature", "humidity", "illuminance", "battery")
+# Device classes to skip even though they carry a numeric-looking state —
+# these are indices/identifiers, not measurements, so summing or averaging
+# them across a zone produces a meaningless number.
+NUMERIC_DEVICE_CLASS_EXCLUSIONS = frozenset({"timestamp", "date", "enum"})
 
 # Area registry attribute that, if the user configured an "official" sensor
 # for that area, takes priority over averaging every sensor of that
@@ -425,7 +424,7 @@ class LinusDashboardNumericAggregateSensor(SensorEntity):
         hass: HomeAssistant,
         *,
         unique_id: str,
-        translation_key: str,
+        translation_key: str | None,
         translation_placeholders: dict[str, str] | None,
         device_info: dict,
         device_class: str,
@@ -542,29 +541,75 @@ class LinusDashboardNumericAggregateSensor(SensorEntity):
         }
 
 
+def _discover_numeric_device_classes(
+    hass: HomeAssistant, exclusions: ExclusionConfig
+) -> set[str]:
+    """
+    Find sensor device_classes present with an actually-numeric state.
+
+    Every device_class gets an aggregate now (dynamically discovered, same
+    approach as binary_sensor.py's per-device_class groups) rather than a
+    fixed short list — a device_class with a non-numeric state (enum,
+    timestamp, date) is skipped since summing/averaging it is meaningless;
+    see NUMERIC_DEVICE_CLASS_EXCLUSIONS for the ones excluded outright
+    without even checking the live value.
+    """
+    entity_reg = er.async_get(hass)
+    device_classes: set[str] = set()
+    for entity_entry in entity_reg.entities.values():
+        if entity_entry.domain != "sensor" or entity_entry.platform == DOMAIN:
+            continue
+        if entity_entry.hidden_by or entity_entry.disabled_by:
+            continue
+        device_class = entity_entry.device_class or entity_entry.original_device_class
+        if not device_class or device_class in NUMERIC_DEVICE_CLASS_EXCLUSIONS:
+            continue
+        if device_class in exclusions.excluded_device_classes:
+            continue
+        state_obj = hass.states.get(entity_entry.entity_id)
+        if not state_obj:
+            continue
+        try:
+            float(state_obj.state)
+        except (ValueError, TypeError):
+            continue
+        device_classes.add(device_class)
+    return device_classes
+
+
 async def _build_numeric_sensors(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> list[LinusDashboardNumericAggregateSensor]:
-    """Build temperature/humidity/illuminance/battery sensors, nested area/floor/global."""
+    """Build one numeric aggregate sensor per sensor device_class present, nested area/floor/global."""
     exclusions = ExclusionConfig.from_config_entry(config_entry)
     entry_id = config_entry.entry_id
     area_reg = ar.async_get(hass)
     entities: list[LinusDashboardNumericAggregateSensor] = []
 
-    for device_class in NUMERIC_DEVICE_CLASSES:
-        mode = resolve_numeric_aggregation_mode(device_class, "measurement")
-        # Battery/illuminance/humidity/temperature are all "measurement"
-        # state_class in practice, so this always resolves via the
-        # min-mode override (battery) or the average branch — sum is kept
-        # available in compute_numeric_aggregate for future device_class
-        # entries with a genuine total/total_increasing state_class.
-        unit = None
-
+    for device_class in _discover_numeric_device_classes(hass, exclusions):
         scoped = scan_domain_members(
             hass, domain="sensor", device_class=device_class, exclusions=exclusions
         )
         area_group_ids: dict[str, str] = {}
         area_official: dict[str, str | None] = {}
+
+        # Sample one member's real state_class rather than assuming
+        # "measurement" for every device_class — sum-type sensors (energy,
+        # water, gas, ...) need resolve_numeric_aggregation_mode to actually
+        # see "total"/"total_increasing" or they'd get averaged instead of
+        # summed. All members of a given device_class are expected to share
+        # the same state_class in practice, so the first one found is enough.
+        state_class = None
+        unit = None
+        for member_ids in scoped.area_entities.values():
+            if not member_ids:
+                continue
+            first_state = hass.states.get(member_ids[0])
+            if first_state:
+                state_class = first_state.attributes.get("state_class")
+                unit = first_state.attributes.get("unit_of_measurement")
+            break
+        mode = resolve_numeric_aggregation_mode(device_class, state_class)
 
         for area_id, member_ids in scoped.area_entities.items():
             if not member_ids:
@@ -578,17 +623,22 @@ async def _build_numeric_sensors(
                     getattr(area, registry_attr, None) if area else None
                 )
 
-            if unit is None:
-                first_state = hass.states.get(member_ids[0])
-                if first_state:
-                    unit = first_state.attributes.get("unit_of_measurement")
-
             unique_id = f"{DOMAIN}_{device_class}_area_{area_id}"
             sensor = LinusDashboardNumericAggregateSensor(
                 hass,
                 unique_id=unique_id,
-                translation_key=f"numeric_{device_class}",
-                translation_placeholders={"name": scoped.area_names[area_id]},
+                # No custom translation_key/placeholders — same reasoning as
+                # binary_sensor.py's per-device_class groups: with
+                # _attr_device_class set and no translation_key, HA falls
+                # back to its own core per-device_class sensor name
+                # (already localized for every standard device_class)
+                # combined with the device's own name for the area/floor
+                # distinction. A hand-written "numeric_{device_class}" key
+                # can't scale to a dynamically-discovered device_class list
+                # anyway — there's no way to pre-write a translation for a
+                # device_class we don't know about yet.
+                translation_key=None,
+                translation_placeholders=None,
                 device_info=get_area_device_info(
                     entry_id, area_id, scoped.area_names[area_id]
                 ),
@@ -616,8 +666,8 @@ async def _build_numeric_sensors(
             sensor = LinusDashboardNumericAggregateSensor(
                 hass,
                 unique_id=unique_id,
-                translation_key=f"numeric_{device_class}",
-                translation_placeholders={"name": floor_names.get(floor_id, floor_id)},
+                translation_key=None,
+                translation_placeholders=None,
                 device_info=get_floor_device_info(
                     entry_id, floor_id, floor_names.get(floor_id, floor_id)
                 ),
@@ -634,7 +684,7 @@ async def _build_numeric_sensors(
             sensor = LinusDashboardNumericAggregateSensor(
                 hass,
                 unique_id=unique_id,
-                translation_key=f"numeric_{device_class}_global",
+                translation_key=None,
                 translation_placeholders=None,
                 device_info=get_global_device_info(entry_id),
                 device_class=device_class,

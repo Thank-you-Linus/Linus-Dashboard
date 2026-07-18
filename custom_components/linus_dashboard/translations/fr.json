@@ -386,30 +386,6 @@
       }
     },
     "sensor": {
-      "numeric_temperature": {
-        "name": "Température"
-      },
-      "numeric_temperature_global": {
-        "name": "Température"
-      },
-      "numeric_humidity": {
-        "name": "Humidité"
-      },
-      "numeric_humidity_global": {
-        "name": "Humidité"
-      },
-      "numeric_illuminance": {
-        "name": "Luminosité"
-      },
-      "numeric_illuminance_global": {
-        "name": "Luminosité"
-      },
-      "numeric_battery": {
-        "name": "Batterie (min)"
-      },
-      "numeric_battery_global": {
-        "name": "Batterie (min)"
-      },
       "unavailable": {
         "name": "Entités indisponibles"
       },

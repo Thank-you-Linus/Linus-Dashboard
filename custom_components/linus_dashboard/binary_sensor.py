@@ -35,6 +35,7 @@ from homeassistant.const import ATTR_ENTITY_ID, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from .aggregate import compute_color, compute_icon
 from .const import (
     DOMAIN,
     get_area_device_info,
@@ -96,18 +97,29 @@ class PresenceGroup(NestedGroupMixin, BinarySensorEntity):
 
     def _recompute(self) -> None:
         active_ids: list[str] = []
+        entity_states: dict[str, str] = {}
         for entity_id in self._member_entity_ids:
             state_obj = self.hass.states.get(entity_id)
             if not state_obj or state_obj.state in ("unavailable", "unknown"):
                 continue
+            entity_states[entity_id] = state_obj.state
             if state_obj.state in ("on", "playing"):
                 active_ids.append(entity_id)
 
         self._attr_is_on = len(active_ids) > 0
+        # icon/color reuse the exact member scan/state read above — no new
+        # entity lookups (in particular, never references the per-
+        # device_class motion/presence/occupancy groups binary_sensor.py
+        # also builds from the same raw sensors), so there's no risk of a
+        # dependency loop between this composite and them.
+        icon = compute_icon("binary_sensor", len(active_ids), "occupancy")
+        color = compute_color("binary_sensor", "occupancy", entity_states)
         attrs = {
             ATTR_ENTITY_ID: list(self._member_entity_ids),
             "total": len(self._member_entity_ids),
             "active_entity_ids": active_ids,
+            "icon": icon,
+            "color": color,
         }
         for key, entity_ids in self._breakdown.items():
             attrs[f"{key}_entity_ids"] = entity_ids

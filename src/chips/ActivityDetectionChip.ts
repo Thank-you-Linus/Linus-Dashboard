@@ -8,8 +8,12 @@ import { AbstractChip } from "./AbstractChip";
 /**
  * Activity Detection Chip class.
  *
- * Used to create a chip to indicate activity detection state.
- * Shows Linus Brain activity entity when available, otherwise shows static home search icon.
+ * Used to create a chip to indicate activity detection state. Shows Linus
+ * Brain's activity/context entity when available (richer: movement/
+ * inactive/empty/sleep/... with its own icon per state), falling back to
+ * the native presence entity (binary_sensor.linus_dashboard_
+ * presence_detection_area_X — just on/off, but a real dynamic signal) when
+ * Brain isn't installed, and only a static icon if neither exists.
  */
 class ActivityDetectionChip extends AbstractChip {
 
@@ -38,7 +42,19 @@ class ActivityDetectionChip extends AbstractChip {
       };
     }
 
-    // Without Linus Brain - static activity search icon
+    // No Brain — fall back to the native presence entity, if this area has
+    // one, rather than a static icon that never reflects anything.
+    const presenceSensorEntity = resolver.resolvePresenceSensor(area_slug).entity_id;
+    if (presenceSensorEntity) {
+      return {
+        type: "entity",
+        entity: presenceSensorEntity,
+        content_info: "none",
+        tap_action: new ActivityDetectionPopup(area_slug).getPopup(),
+      };
+    }
+
+    // Neither Brain nor a presence entity for this area — static icon.
     return {
       type: "template",
       icon: "mdi:home-search",

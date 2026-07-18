@@ -27,13 +27,13 @@ export interface PopupConfig {
   /** Area's group entity if available (Dashboard native or Magic Areas) */
   groupEntity: string | null;
   /**
-   * The dedicated group entity backing this chip's own scope (not just
-   * area — light.linus_dashboard_all_lights_floor_*/_global etc. too),
-   * when one exists for this domain. Lets the popup's Turn All On/Off
-   * buttons target this single controllable entity instead of every raw
-   * member — same resolution AggregateChip already did for its own
-   * rendering (getAggregateSensorId), just threaded through instead of
-   * re-derived here.
+   * The dedicated group entity backing this chip's own scope, not just
+   * area (light.linus_dashboard_all_lights_floor_X / _global too), when
+   * one exists for this domain. Lets the popup's Turn All On/Off buttons
+   * target this single controllable entity instead of every raw member —
+   * same resolution AggregateChip already did for its own rendering
+   * (getAggregateSensorId), just threaded through instead of re-derived
+   * here.
    */
   dedicatedGroupEntity?: string | null;
   /** Optional features for tile cards */

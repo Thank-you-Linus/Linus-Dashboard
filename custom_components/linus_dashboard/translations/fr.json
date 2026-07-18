@@ -138,7 +138,11 @@
           "add_sensor_explanation": "Cliquez pour assigner des capteurs à cette pièce",
           "add_entity_button": "Ajouter une entité",
           "manage_area_entities": "Gérer les entités de cette pièce",
-          "auto_detection_criteria": "ℹ️ **Détection automatique**\n\nLes entités apparaissent ici si elles sont assignées à cette pièce ET :\n✅ Capteurs binaires avec `device_class` = motion, occupancy ou presence\n✅ Lecteurs multimédias (media_player)\n\n**Pour ajouter des capteurs :**\n1. Cliquez sur le bouton ci-dessous pour ouvrir les paramètres d'entités\n2. Assignez vos capteurs à cette pièce\n3. Configurez le `device_class` si nécessaire\n4. **Cliquez sur le badge de rafraîchissement (🔄) en haut** pour mettre à jour la liste\n\n[📖 En savoir plus sur la détection d'activité](https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/docs/ACTIVITY_DETECTION.md)"
+          "auto_detection_criteria": "ℹ️ **Détection automatique**\n\nLes entités apparaissent ici si elles sont assignées à cette pièce ET :\n✅ Capteurs binaires avec `device_class` = motion, occupancy ou presence\n✅ Lecteurs multimédias (media_player)\n\n**Pour ajouter des capteurs :**\n1. Cliquez sur le bouton ci-dessous pour ouvrir les paramètres d'entités\n2. Assignez vos capteurs à cette pièce\n3. Configurez le `device_class` si nécessaire\n4. **Cliquez sur le badge de rafraîchissement (🔄) en haut** pour mettre à jour la liste\n\n[📖 En savoir plus sur la détection d'activité](https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/docs/ACTIVITY_DETECTION.md)",
+          "controls_title": "Contrôles",
+          "controls_subtitle": "Automatisation de la pièce",
+          "automatic_lighting": "Éclairage automatique",
+          "view_device_config": "Voir la configuration de l'appareil"
         }
       },
       "lights_group_popup": {

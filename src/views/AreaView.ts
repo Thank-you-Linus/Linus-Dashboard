@@ -68,12 +68,10 @@ class AreaView {
 
     const chips: LovelaceChipConfig[] = [];
 
-    // Check if Linus Brain is configured for this area
-    const resolver = Helper.entityResolver;
-    const activityResolution = resolver.resolveAreaState(this.area.slug);
-    const hasLinusBrain = activityResolution.source === "linus_brain";
-
-    // FIRST: Activity Detection chip (ALWAYS show, with or without Linus Brain)
+    // FIRST: Activity Detection chip (ALWAYS show, with or without Linus
+    // Brain — its own popup is augmented with a Controls section when Brain
+    // is available instead of a second, separate "Linus Brain" chip/popup
+    // duplicating most of the same activity/presence/duration/stats ground)
     try {
       const activityDetectionChip = await ChipFactory.createChip("ActivityDetectionChip", { area_slug: this.area.slug });
       if (activityDetectionChip) {
@@ -106,24 +104,6 @@ class AreaView {
     // Refresh chip - allows manual refresh of registries
     const refreshChip = new RefreshChip();
     chips.push(refreshChip.getChip());
-
-    // LinusBrain area-specific chip.
-    try {
-      if (hasLinusBrain) {
-        const linusBrainPopupModule = await import("../popups/LinusBrainAreaPopup");
-        const linusBrainPopup = new linusBrainPopupModule.LinusBrainAreaPopup(this.area.slug);
-        
-        chips.push({
-          type: "template",
-          icon: "mdi:brain",
-          icon_color: "cyan",
-          content: "Linus Brain",
-          tap_action: linusBrainPopup.getPopup(),
-        });
-      }
-    } catch (e) {
-      Helper.logError("An error occurred while creating the Linus Brain area chip!", e);
-    }
 
     return chips
       .filter(chip => chip && chip.type) // Filter out undefined or invalid chips

@@ -520,6 +520,72 @@ class ActivityDetectionPopup extends AbstractPopup {
             }
         }
 
+        // === Controls Section (ONLY if Linus Brain) ===
+        // Used to live in a separate LinusBrainAreaPopup/chip, shown
+        // alongside this one whenever Brain was installed — two popups
+        // covering overlapping activity/presence/duration/stats ground with
+        // different layouts (one localized with graphs, one flat hardcoded-
+        // English cards). Everything that popup showed beyond this one is
+        // already covered above (activity/presence/duration chips, the
+        // history graphs, the Occupied stat) — automatic lighting and the
+        // device config link were the only genuinely Brain-only additions
+        // with no home elsewhere, so those are what got folded in here
+        // instead of keeping a second popup just for them. All-lights
+        // control was dropped as redundant — the area's own light card
+        // already provides it.
+        if (isLinusBrain) {
+            const automaticLightingEntity = `switch.linus_brain_feature_automatic_lighting_${area_slug}`;
+            const automaticLightingState = Helper.getEntityState(automaticLightingEntity);
+
+            if (automaticLightingState && automaticLightingState.state !== "unavailable") {
+                cards.push({
+                    type: "custom:mushroom-title-card",
+                    title: Helper.localize("component.linus_dashboard.entity.text.activity_detection_popup.state.controls_title") || "Controls",
+                    subtitle: Helper.localize("component.linus_dashboard.entity.text.activity_detection_popup.state.controls_subtitle") || "Area automation"
+                });
+
+                cards.push({
+                    type: "tile",
+                    entity: automaticLightingEntity,
+                    name: Helper.localize("component.linus_dashboard.entity.text.activity_detection_popup.state.automatic_lighting") || "Automatic Lighting",
+                    icon: "mdi:lightbulb-auto",
+                    card_mod: {
+                        style: "ha-card { box-shadow: none; margin: 2px 0; }"
+                    }
+                });
+            }
+
+            const linusBrainDevice = Object.values(Helper.devices).find(
+                device => device.manufacturer === "Linus Brain" &&
+                          device.model === "Area Intelligence" &&
+                          device.area_id === area_slug
+            );
+
+            if (linusBrainDevice) {
+                cards.push({
+                    type: "custom:mushroom-template-card",
+                    primary: Helper.localize("component.linus_dashboard.entity.text.activity_detection_popup.state.view_device_config") || "View Device Configuration",
+                    icon: "mdi:cog",
+                    icon_color: "cyan",
+                    tap_action: {
+                        action: "fire-dom-event",
+                        browser_mod: {
+                            service: "browser_mod.sequence",
+                            data: {
+                                sequence: [
+                                    { service: "browser_mod.close_popup", data: {} },
+                                    { service: "browser_mod.navigate", data: { path: `/config/devices/device/${linusBrainDevice.id}` } }
+                                ]
+                            }
+                        }
+                    },
+                    card_mod: {
+                        style: "ha-card { box-shadow: none; margin-top: 4px; }"
+                    }
+                });
+            }
+        }
+
         return {
             action: "fire-dom-event",
             browser_mod: {

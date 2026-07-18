@@ -529,34 +529,19 @@ class AggregatePopup extends AbstractPopup {
     const floor = Helper.floors[floorId];
     if (!floor) return [];
 
-    // Build sub-popup configuration for floor scope
-    const { PopupFactory } = require("../services/PopupFactory");
-
-    const subPopupAction = PopupFactory.createPopup({
-      domain,
-      device_class,
-      scope: "floor",
-      scopeName: floor.name,
-      floor_id: floorId,
-      serviceOn: config.serviceOn,
-      serviceOff: config.serviceOff,
-      activeStates: config.activeStates,
-      translationKey: config.translationKey,
-      groupEntity: null,
-      dedicatedGroupEntity: null,
-      features: config.features,
-      showNavigationButton: true,
-    });
-
-    // Create aggregate chip for floor control
+    // Create aggregate chip for floor control. Its own tap_action already
+    // resolves the correct dedicatedGroupEntity (see AggregateChip's
+    // getAggregateSensorId) for this floor/domain — reuse it as the
+    // heading's tap_action instead of building a second, separate popup
+    // config that used to hardcode dedicatedGroupEntity/groupEntity to null,
+    // silently losing the Turn All On/Off single-entity targeting whenever a
+    // floor popup was reached by drilling down from a parent (global) one.
     const { AggregateChip } = require("../chips/AggregateChip");
     const chip = new AggregateChip({
       domain,
       device_class,
       scope: "floor",
       floor_id: floorId,
-      magic_device_id: "global",
-      area_slug: "global",
       show_content: true
     }).getChip();
 
@@ -576,7 +561,7 @@ class AggregatePopup extends AbstractPopup {
       heading: floor.name,
       heading_style: "title",
       icon: floor.icon ?? "mdi:floor-plan",
-      tap_action: subPopupAction,
+      tap_action: chip.tap_action,
       badges
     }];
   }
@@ -612,33 +597,15 @@ class AggregatePopup extends AbstractPopup {
     const area = Helper.areas[areaSlug];
     if (!area) return [];
 
-    // Build sub-popup configuration for area scope
-    const { PopupFactory } = require("../services/PopupFactory");
-
-    const subPopupAction = PopupFactory.createPopup({
-      domain,
-      device_class,
-      scope: "area",
-      scopeName: area.name,
-      area_slug: areaSlug,
-      serviceOn: config.serviceOn,
-      serviceOff: config.serviceOff,
-      activeStates: config.activeStates,
-      translationKey: config.translationKey,
-      groupEntity: null,
-      dedicatedGroupEntity: null,
-      features: config.features,
-      showNavigationButton: true,
-    });
-
-    // Create aggregate chip for area control
+    // Create aggregate chip for area control — reuse its own tap_action as
+    // the heading's, same reasoning as buildFloorSeparator above (it already
+    // resolves groupEntity/dedicatedGroupEntity correctly for this area).
     const { AggregateChip } = require("../chips/AggregateChip");
     const chip = new AggregateChip({
       domain,
       device_class,
       scope: "area",
       area_slug: areaSlug,
-      magic_device_id: areaSlug,
       show_content: true
     }).getChip();
 
@@ -658,7 +625,7 @@ class AggregatePopup extends AbstractPopup {
       heading: area.name,
       heading_style: "subtitle",
       icon: area.icon ?? "mdi:home",
-      tap_action: subPopupAction,
+      tap_action: chip.tap_action,
       badges
     }];
   }

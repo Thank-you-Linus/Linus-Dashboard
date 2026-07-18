@@ -312,6 +312,17 @@ EntityFactory = Callable[
 ]
 
 
+def mean_float(*args: float) -> float:
+    """
+    Float-precision mean, for use as homeassistant.components.group.util's
+    reduce_attribute(reduce=...) argument on non-integer attributes (e.g.
+    temperature, volume_level). group.util's own default reducer, mean_int,
+    truncates to an int — fine for brightness (0-255), wrong for anything
+    with meaningful decimal precision.
+    """
+    return sum(args) / len(args)
+
+
 def ensure_area_device_placed(
     hass: HomeAssistant, entry_id: str, area_id: str, device_info: dict
 ) -> None:

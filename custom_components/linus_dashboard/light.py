@@ -8,11 +8,26 @@ adjustments), not just on/off. Activity-based learning stays in Brain; this
 is the "dumb" grouping/forwarding behavior only. See entity_group.py for the
 shared nested-hierarchy scanning logic and NestedGroupMixin for the shared
 state-tracking plumbing.
+
+State/attribute reduction (brightness/color averaging, "all members agree or
+show nothing" for color) reuses HA core's own homeassistant.components.
+group.util helpers (the same ones HA's own light.group platform is built
+on) instead of hand-rolled loops — same math, one less thing to maintain
+ourselves. supported_features/supported_color_modes stay intersection-based
+via our own logic though, not HA's group.light (which unions features and
+restricts to a fixed EFFECT/FLASH/TRANSITION mask): we deliberately want a
+feature the group exposes to actually work on every member, not just one of
+them — see _detect_features_from_members.
 """
 
 import logging
 from typing import Any
 
+from homeassistant.components.group.util import (
+    attribute_equal,
+    find_state_attributes,
+    reduce_attribute,
+)
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP_KELVIN,
@@ -93,24 +108,22 @@ class LightGroup(NestedGroupMixin, LightEntity):
 
         supported_features: intersection (only features every member
         supports, so a group action never silently no-ops on a member that
-        doesn't understand it). supported_color_modes: valid combination per
-        HA's rules (color modes exclude BRIGHTNESS; only one "family" wins,
-        priority color > brightness > onoff). effect_list: union (any member
-        offering an effect makes it selectable — actual application is
-        filtered per-member in async_turn_on).
+        doesn't understand it) — deliberately not HA's own group.light
+        behavior (which unions features and masks to a fixed EFFECT/FLASH/
+        TRANSITION set), see module docstring. supported_color_modes: valid
+        combination per HA's rules (color modes exclude BRIGHTNESS; only one
+        "family" wins, priority color > brightness > onoff). effect_list:
+        union (any member offering an effect makes it selectable — actual
+        application is filtered per-member in async_turn_on).
         """
-        all_features: list[int] = []
-        all_color_modes: list[str] = []
-        all_effects: list[str] = []
+        states = [
+            state
+            for entity_id in self._member_entity_ids
+            if (state := self.hass.states.get(entity_id)) is not None
+            and state.state != STATE_UNAVAILABLE
+        ]
 
-        for entity_id in self._member_entity_ids:
-            state = self.hass.states.get(entity_id)
-            if not state or state.state == STATE_UNAVAILABLE:
-                continue
-            all_features.append(state.attributes.get("supported_features", 0))
-            all_color_modes.extend(state.attributes.get("supported_color_modes", []))
-            all_effects.extend(state.attributes.get(ATTR_EFFECT_LIST) or [])
-
+        all_features = list(find_state_attributes(states, "supported_features"))
         if not all_features:
             self._attr_supported_features = LightEntityFeature(0)
             self._attr_supported_color_modes = {ColorMode.ONOFF}
@@ -123,7 +136,9 @@ class LightGroup(NestedGroupMixin, LightEntity):
         common_features |= LightEntityFeature.TRANSITION | LightEntityFeature.FLASH
         self._attr_supported_features = LightEntityFeature(common_features)
 
-        modes = set(all_color_modes)
+        modes: set[str] = set()
+        for member_modes in find_state_attributes(states, "supported_color_modes"):
+            modes.update(member_modes)
         modes.discard(ColorMode.ONOFF)
         color_modes_present = modes & _COLOR_MODES
         if color_modes_present:
@@ -133,20 +148,41 @@ class LightGroup(NestedGroupMixin, LightEntity):
         else:
             self._attr_supported_color_modes = {ColorMode.ONOFF}
 
+        all_effects: list[str] = []
+        for effect_list in find_state_attributes(states, ATTR_EFFECT_LIST):
+            all_effects.extend(effect_list or [])
         self._attr_effect_list = sorted(set(all_effects)) if all_effects else None
+
+    @staticmethod
+    def _agree_or_none(states: list, key: str) -> Any:
+        """
+        Return the shared value of `key` across `states` if every state that
+        reports it agrees, else None. Deliberately not an average: averaging
+        RGB/HS values can produce a color no member is actually displaying,
+        which is worse than showing nothing. attribute_equal/
+        find_state_attributes are HA's own group.util primitives for exactly
+        this "do all states agree" check.
+        """
+        if not attribute_equal(states, key):
+            return None
+        return next(find_state_attributes(states, key), None)
+
+    @classmethod
+    def _agree_or_none_tuple(cls, states: list, key: str) -> tuple | None:
+        """
+        Same as _agree_or_none, but cast to a tuple — color attributes
+        come back from the state machine as lists (JSON round-trip), while
+        LightEntity's own typing (and the members' _light_supports_color
+        checks elsewhere in this file) expect a tuple.
+        """
+        value = cls._agree_or_none(states, key)
+        return tuple(value) if value is not None else None
 
     def _recompute(self) -> None:
         self._detect_features_from_members()
 
         lights_on: list[str] = []
         lights_off: list[str] = []
-        brightness_values: list[int] = []
-        color_temps: list[int] = []
-        rgb_colors: list[tuple] = []
-        hs_colors: list[tuple] = []
-        rgbw_colors: list[tuple] = []
-        rgbww_colors: list[tuple] = []
-        effects: list[str] = []
 
         for entity_id in self._member_entity_ids:
             state = self.hass.states.get(entity_id)
@@ -154,62 +190,30 @@ class LightGroup(NestedGroupMixin, LightEntity):
                 continue
             if state.state == STATE_ON:
                 lights_on.append(entity_id)
-                if (v := state.attributes.get(ATTR_BRIGHTNESS)) is not None:
-                    brightness_values.append(int(v))
-                if (v := state.attributes.get(ATTR_COLOR_TEMP_KELVIN)) is not None:
-                    color_temps.append(int(v))
-                if (v := state.attributes.get(ATTR_RGB_COLOR)) is not None:
-                    rgb_colors.append(tuple(v))
-                if (v := state.attributes.get(ATTR_HS_COLOR)) is not None:
-                    hs_colors.append(tuple(v))
-                if (v := state.attributes.get(ATTR_RGBW_COLOR)) is not None:
-                    rgbw_colors.append(tuple(v))
-                if (v := state.attributes.get(ATTR_RGBWW_COLOR)) is not None:
-                    rgbww_colors.append(tuple(v))
-                if v := state.attributes.get(ATTR_EFFECT):
-                    effects.append(str(v))
             elif state.state != STATE_UNAVAILABLE:
                 lights_off.append(entity_id)
 
         self._lights_on = lights_on
         self._lights_off = lights_off
 
-        # Average brightness across ON members — matches temperature/humidity
-        # numeric-sensor averaging elsewhere in the integration, applied here
-        # to a "measurement"-like attribute rather than a separate sensor.
-        self._attr_brightness = (
-            int(sum(brightness_values) / len(brightness_values))
-            if brightness_values
-            else None
+        on_states = [
+            state
+            for entity_id in lights_on
+            if (state := self.hass.states.get(entity_id)) is not None
+        ]
+
+        # Brightness: averaged across ON members via reduce_attribute's
+        # default reducer (mean_int) — same sum/len/int() math as before,
+        # just HA's own implementation of it.
+        self._attr_brightness = reduce_attribute(on_states, ATTR_BRIGHTNESS)
+        self._attr_color_temp_kelvin = self._agree_or_none(
+            on_states, ATTR_COLOR_TEMP_KELVIN
         )
-        self._attr_color_temp_kelvin = (
-            color_temps[0]
-            if color_temps and all(c == color_temps[0] for c in color_temps)
-            else None
-        )
-        self._attr_rgb_color = (
-            rgb_colors[0]
-            if rgb_colors and all(c == rgb_colors[0] for c in rgb_colors)
-            else None
-        )
-        self._attr_hs_color = (
-            hs_colors[0]
-            if hs_colors and all(c == hs_colors[0] for c in hs_colors)
-            else None
-        )
-        self._attr_rgbw_color = (
-            rgbw_colors[0]
-            if rgbw_colors and all(c == rgbw_colors[0] for c in rgbw_colors)
-            else None
-        )
-        self._attr_rgbww_color = (
-            rgbww_colors[0]
-            if rgbww_colors and all(c == rgbww_colors[0] for c in rgbww_colors)
-            else None
-        )
-        self._attr_effect = (
-            effects[0] if effects and all(e == effects[0] for e in effects) else None
-        )
+        self._attr_rgb_color = self._agree_or_none_tuple(on_states, ATTR_RGB_COLOR)
+        self._attr_hs_color = self._agree_or_none_tuple(on_states, ATTR_HS_COLOR)
+        self._attr_rgbw_color = self._agree_or_none_tuple(on_states, ATTR_RGBW_COLOR)
+        self._attr_rgbww_color = self._agree_or_none_tuple(on_states, ATTR_RGBWW_COLOR)
+        self._attr_effect = self._agree_or_none(on_states, ATTR_EFFECT)
 
         modes = self._attr_supported_color_modes
         if self._attr_rgbww_color is not None and ColorMode.RGBWW in modes:
@@ -238,22 +242,21 @@ class LightGroup(NestedGroupMixin, LightEntity):
         else:
             self._attr_color_mode = ColorMode.ONOFF
 
-        # min/max_color_temp_kelvin: widest range any member supports, so the
-        # group's slider never rejects a value a member could actually take.
-        min_temps = [
-            self.hass.states.get(e).attributes.get("min_color_temp_kelvin")
-            for e in self._member_entity_ids
-            if self.hass.states.get(e)
-            and self.hass.states.get(e).attributes.get("min_color_temp_kelvin")
+        # min/max_color_temp_kelvin: widest range any member supports (not
+        # just ON ones — this is a static capability, not a live value), so
+        # the group's slider never rejects a value a member could actually
+        # take.
+        all_states = [
+            state
+            for entity_id in self._member_entity_ids
+            if (state := self.hass.states.get(entity_id)) is not None
         ]
-        max_temps = [
-            self.hass.states.get(e).attributes.get("max_color_temp_kelvin")
-            for e in self._member_entity_ids
-            if self.hass.states.get(e)
-            and self.hass.states.get(e).attributes.get("max_color_temp_kelvin")
-        ]
-        self._attr_min_color_temp_kelvin = min(min_temps) if min_temps else 2000
-        self._attr_max_color_temp_kelvin = max(max_temps) if max_temps else 6535
+        self._attr_min_color_temp_kelvin = reduce_attribute(
+            all_states, "min_color_temp_kelvin", default=2000, reduce=min
+        )
+        self._attr_max_color_temp_kelvin = reduce_attribute(
+            all_states, "max_color_temp_kelvin", default=6535, reduce=max
+        )
 
         attrs = compute_group_attributes(
             self.hass,

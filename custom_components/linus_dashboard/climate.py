@@ -10,6 +10,12 @@ current/target temperature are simple averages, and turn_on/turn_off are
 implemented via the universal set_hvac_mode primitive rather than the
 optional TURN_ON/TURN_OFF feature — so the group's own turn_on/off always
 works regardless of whether every member happens to support that feature.
+
+Numeric attribute reduction (temperature averaging/ranges) reuses HA core's
+own homeassistant.components.group.util helpers — see light.py's module
+docstring for the same reasoning. hvac_mode itself doesn't fit those helpers
+(they reduce *attributes*, and HVAC mode is the state itself, not an
+attribute), so that one stays a plain manual reduction.
 """
 
 import logging
@@ -20,6 +26,7 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
+from homeassistant.components.group.util import find_state_attributes, reduce_attribute
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -31,6 +38,7 @@ from .entity_group import (
     NestedGroupMixin,
     build_nested_domain_groups,
     compute_group_attributes,
+    mean_float,
 )
 from .group_manager import PlatformGroupManager
 
@@ -78,18 +86,16 @@ class ClimateGroup(NestedGroupMixin, ClimateEntity):
         (our own turn_on/off use set_hvac_mode, not the members' turn_on/off
         service, so they don't depend on members declaring that feature).
         """
-        mode_sets: list[set] = []
-        features: list[int] = []
+        states = [
+            state
+            for entity_id in self._member_entity_ids
+            if (state := self.hass.states.get(entity_id)) is not None
+            and state.state != STATE_UNAVAILABLE
+        ]
 
-        for entity_id in self._member_entity_ids:
-            state = self.hass.states.get(entity_id)
-            if not state or state.state == STATE_UNAVAILABLE:
-                continue
-            hvac_modes = state.attributes.get("hvac_modes")
-            if hvac_modes:
-                mode_sets.append(set(hvac_modes))
-            features.append(state.attributes.get("supported_features", 0))
-
+        mode_sets = [
+            set(modes) for modes in find_state_attributes(states, "hvac_modes") if modes
+        ]
         if mode_sets:
             common_modes = set.intersection(*mode_sets)
             common_modes.add(HVACMode.OFF)
@@ -97,6 +103,7 @@ class ClimateGroup(NestedGroupMixin, ClimateEntity):
         else:
             self._attr_hvac_modes = [HVACMode.OFF]
 
+        features = list(find_state_attributes(states, "supported_features"))
         common_features = features[0] if features else 0
         for f in features[1:]:
             common_features &= f
@@ -109,46 +116,39 @@ class ClimateGroup(NestedGroupMixin, ClimateEntity):
     def _recompute(self) -> None:
         self._detect_modes_and_features()
 
-        active_modes: list[str] = []
-        current_temps: list[float] = []
-        target_temps: list[float] = []
-        min_temps: list[float] = []
-        max_temps: list[float] = []
-
-        for entity_id in self._member_entity_ids:
-            state = self.hass.states.get(entity_id)
-            if not state or state.state == STATE_UNAVAILABLE:
-                continue
-            if state.state != HVACMode.OFF:
-                active_modes.append(state.state)
-            if (v := state.attributes.get("current_temperature")) is not None:
-                current_temps.append(v)
-            if (v := state.attributes.get("temperature")) is not None:
-                target_temps.append(v)
-            if (v := state.attributes.get("min_temp")) is not None:
-                min_temps.append(v)
-            if (v := state.attributes.get("max_temp")) is not None:
-                max_temps.append(v)
+        states = [
+            state
+            for entity_id in self._member_entity_ids
+            if (state := self.hass.states.get(entity_id)) is not None
+            and state.state != STATE_UNAVAILABLE
+        ]
+        active_modes = [state.state for state in states if state.state != HVACMode.OFF]
 
         # Most common active mode across members, so a fleet mostly heating
-        # with one outlier doesn't leave the group looking undecided.
+        # with one outlier doesn't leave the group looking undecided. Not a
+        # group.util helper — those reduce *attributes*, hvac_mode is the
+        # state itself.
         self._attr_hvac_mode = (
             max(set(active_modes), key=active_modes.count)
             if active_modes
             else HVACMode.OFF
         )
 
-        self._attr_current_temperature = (
-            sum(current_temps) / len(current_temps) if current_temps else None
+        self._attr_current_temperature = reduce_attribute(
+            states, "current_temperature", reduce=mean_float
         )
-        self._attr_target_temperature = (
-            sum(target_temps) / len(target_temps) if target_temps else None
+        self._attr_target_temperature = reduce_attribute(
+            states, "temperature", reduce=mean_float
         )
         # Widest range any member supports (same reasoning as light.py's
         # min/max_color_temp_kelvin) rather than the narrowest, so the
         # group's own slider never rejects a value some member could take.
-        self._attr_min_temp = min(min_temps) if min_temps else DEFAULT_MIN_TEMP
-        self._attr_max_temp = max(max_temps) if max_temps else DEFAULT_MAX_TEMP
+        self._attr_min_temp = reduce_attribute(
+            states, "min_temp", default=DEFAULT_MIN_TEMP, reduce=min
+        )
+        self._attr_max_temp = reduce_attribute(
+            states, "max_temp", default=DEFAULT_MAX_TEMP, reduce=max
+        )
 
         attrs = compute_group_attributes(
             self.hass,

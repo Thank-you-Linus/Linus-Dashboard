@@ -9,10 +9,15 @@ are forwarded blindly to every member (a member that doesn't support one
 just logs a warning, doesn't fail the group), volume_level is a simple
 average, and source/source_list are deliberately not aggregated — no
 sensible single "source" exists across a mixed fleet of players.
+
+volume_level averaging reuses HA core's own homeassistant.components.
+group.util.reduce_attribute — see light.py's module docstring for the same
+reasoning.
 """
 
 import logging
 
+from homeassistant.components.group.util import reduce_attribute
 from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
@@ -30,6 +35,7 @@ from .entity_group import (
     NestedGroupMixin,
     build_nested_domain_groups,
     compute_group_attributes,
+    mean_float,
 )
 from .group_manager import PlatformGroupManager
 
@@ -77,17 +83,21 @@ class MediaPlayerGroup(NestedGroupMixin, MediaPlayerEntity):
         )
 
     def _recompute(self) -> None:
-        active_states: list[str] = []
-        volumes: list[float] = []
+        states = [
+            state
+            for entity_id in self._member_entity_ids
+            if (state := self.hass.states.get(entity_id)) is not None
+            and state.state != STATE_UNAVAILABLE
+        ]
+        # Not a group.util helper — those reduce *attributes*, and this is
+        # the state itself, same reasoning as climate.py's hvac_mode.
+        active_states = [
+            state.state for state in states if state.state in _ACTIVE_STATES
+        ]
 
-        for entity_id in self._member_entity_ids:
-            state = self.hass.states.get(entity_id)
-            if not state or state.state == STATE_UNAVAILABLE:
-                continue
-            if state.state in _ACTIVE_STATES:
-                active_states.append(state.state)
-            if (v := state.attributes.get("volume_level")) is not None:
-                volumes.append(v)
+        self._attr_volume_level = reduce_attribute(
+            states, "volume_level", reduce=mean_float
+        )
 
         if "playing" in active_states:
             self._attr_state = MediaPlayerState.PLAYING
@@ -97,8 +107,6 @@ class MediaPlayerGroup(NestedGroupMixin, MediaPlayerEntity):
             self._attr_state = MediaPlayerState.ON
         else:
             self._attr_state = MediaPlayerState.IDLE
-
-        self._attr_volume_level = sum(volumes) / len(volumes) if volumes else None
 
         attrs = compute_group_attributes(
             self.hass,

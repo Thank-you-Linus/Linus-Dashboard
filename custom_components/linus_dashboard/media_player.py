@@ -23,6 +23,7 @@ from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from .aggregate import DOMAIN_ACTIVE_STATES
 from .const import DOMAIN
 from .entity_group import (
     ExclusionConfig,
@@ -36,9 +37,11 @@ _LOGGER = logging.getLogger(__name__)
 
 _MEDIA_PLAYER_GROUPS: dict[str, "MediaPlayerGroup"] = {}
 
-# States considered "active" for state aggregation — mirrors
-# aggregate.py's DOMAIN_ACTIVE_STATES["media_player"].
-_ACTIVE_STATES = ("playing", "paused", "on")
+# States considered "active" for state aggregation. Imported rather than
+# duplicated as a local tuple — this used to be its own hardcoded copy of
+# aggregate.py's DOMAIN_ACTIVE_STATES["media_player"], two lists that would
+# only stay in sync by someone remembering to update both.
+_ACTIVE_STATES = DOMAIN_ACTIVE_STATES["media_player"]
 
 
 class MediaPlayerGroup(NestedGroupMixin, MediaPlayerEntity):

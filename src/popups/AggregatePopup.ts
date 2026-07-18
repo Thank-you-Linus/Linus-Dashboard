@@ -133,7 +133,19 @@ class AggregatePopup extends AbstractPopup {
     // dedicatedGroupEntity covers light/switch/fan/cover/siren at every
     // scope (area/floor/global); groupEntity is the area-only Magic
     // Areas/Brain fallback for domains with no dedicated group (climate).
-    const tileEntity = dedicatedGroupEntity ?? groupEntity;
+    // groupEntity is only checked for existence in the Magic Areas device
+    // registry by EntityResolver, not for actual availability — Magic Areas
+    // registers a climate_group entity even when its underlying climate
+    // control is misconfigured (e.g. "Climate entity not set"), which would
+    // otherwise leave the popup with a broken tile and no working fallback
+    // once the Turn All buttons are hidden below. dedicatedGroupEntity is
+    // already availability-checked upstream (AggregateChip's
+    // getAggregateSensorId), so this only re-checks the groupEntity case.
+    const rawTileEntity = dedicatedGroupEntity ?? groupEntity;
+    const tileEntity =
+      rawTileEntity && Helper.getEntityState(rawTileEntity)?.state !== "unavailable"
+        ? rawTileEntity
+        : null;
 
     // 1. First line: Status + Navigation button (horizontal)
     const statusCard = needsStatistics
@@ -511,8 +523,12 @@ class AggregatePopup extends AbstractPopup {
    * Build separator title (only shown if multiple entities)
    */
   protected buildSeparator(config: AggregatePopupConfigWithEntities) {
-    // Only show separator if more than one entity
-    if (config.entity_ids.length <= 1) {
+    // Show whenever there's at least one entity to introduce — a single
+    // entity is still worth labeling "Individual Controls" so the section
+    // looks the same regardless of how many members an area happens to
+    // have (an area with 1 light shouldn't look like a different popup
+    // layout than one with 3).
+    if (config.entity_ids.length === 0) {
       return null;
     }
 

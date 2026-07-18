@@ -292,7 +292,7 @@ def compute_group_attributes(
 
     active_count = compute_active_count(entity_states, domain)
     active_ids = compute_active_entity_ids(entity_states, domain)
-    icon = compute_icon(domain, active_count)
+    icon = compute_icon(domain, active_count, device_class)
     color = compute_color(domain, device_class, entity_states)
 
     return {
@@ -416,7 +416,7 @@ class NestedGroupMixin:
         *,
         unique_id: str,
         entity_id_prefix: str,
-        translation_key: str,
+        translation_key: str | None,
         translation_placeholders: dict[str, str] | None,
         device_info: dict,
         member_entity_ids: list[str],

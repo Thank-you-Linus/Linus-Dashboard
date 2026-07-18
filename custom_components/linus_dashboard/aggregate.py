@@ -42,6 +42,33 @@ DOMAIN_COLORS: dict[str, dict[str, str]] = {
     "siren": {"on": "red"},
 }
 
+BINARY_SENSOR_ICONS: dict[str, tuple[str, str]] = {
+    "motion": ("mdi:motion-sensor", "mdi:motion-sensor-off"),
+    "door": ("mdi:door-open", "mdi:door-closed"),
+    "window": ("mdi:window-open", "mdi:window-closed"),
+    "smoke": ("mdi:smoke-detector-variant-alert", "mdi:smoke-detector-variant"),
+    "gas": ("mdi:gas-cylinder", "mdi:gas-cylinder"),
+    "moisture": ("mdi:water", "mdi:water-off"),
+    "tamper": ("mdi:shield-alert", "mdi:shield-check"),
+    "battery_charging": ("mdi:battery-charging", "mdi:battery"),
+    "carbon_monoxide": ("mdi:molecule-co", "mdi:molecule-co"),
+    "cold": ("mdi:snowflake", "mdi:thermometer"),
+    "connectivity": ("mdi:wifi", "mdi:wifi-off"),
+    "garage_door": ("mdi:garage-open", "mdi:garage"),
+    "heat": ("mdi:fire", "mdi:thermometer"),
+    "lock": ("mdi:lock-open-variant", "mdi:lock"),
+    "occupancy": ("mdi:home", "mdi:home-outline"),
+    "opening": ("mdi:square-outline", "mdi:square"),
+    "plug": ("mdi:power-plug", "mdi:power-plug-off"),
+    "presence": ("mdi:home", "mdi:home-outline"),
+    "problem": ("mdi:alert-circle", "mdi:check-circle"),
+    "running": ("mdi:play", "mdi:stop"),
+    "safety": ("mdi:shield-alert", "mdi:shield-check"),
+    "sound": ("mdi:volume-high", "mdi:volume-off"),
+    "update": ("mdi:package-up", "mdi:package"),
+    "vibration": ("mdi:vibrate", "mdi:vibrate-off"),
+}
+
 BINARY_SENSOR_COLORS: dict[str, dict[str, str]] = {
     "motion": {"on": "red"},
     "door": {"on": "orange"},
@@ -82,8 +109,21 @@ def compute_active_entity_ids(entity_states: dict[str, str], domain: str) -> lis
     return [eid for eid, state in entity_states.items() if state in active_states]
 
 
-def compute_icon(domain: str, active_count: int) -> str:
-    """Compute the appropriate icon based on active state."""
+def compute_icon(
+    domain: str, active_count: int, device_class: str | None = None
+) -> str:
+    """
+    Compute the appropriate icon based on active state.
+
+    binary_sensor device classes get their own icon pair (a door/motion/
+    smoke group looks nothing like a generic checkbox) — same device_class
+    override pattern as compute_color, just for icons instead of colors.
+    """
+    if domain == "binary_sensor" and device_class:
+        icons = BINARY_SENSOR_ICONS.get(device_class)
+        if icons:
+            return icons[0] if active_count > 0 else icons[1]
+
     icons = DOMAIN_ICONS.get(domain, ("mdi:help-circle", "mdi:help-circle-outline"))
     return icons[0] if active_count > 0 else icons[1]
 

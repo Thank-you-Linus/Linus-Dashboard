@@ -118,7 +118,7 @@ class BinarySensorDeviceClassGroup(NestedGroupMixin, BinarySensorEntity):
         hass: HomeAssistant,
         *,
         unique_id: str,
-        translation_key: str,
+        translation_key: str | None,
         translation_placeholders: dict[str, str] | None,
         device_info: dict,
         member_entity_ids: list[str],
@@ -310,7 +310,7 @@ def _discover_generic_device_classes(
 def _get_or_create_device_class_group(
     hass: HomeAssistant,
     unique_id: str,
-    translation_key: str,
+    translation_key: str | None,
     translation_placeholders: dict[str, str] | None,
     device_info: dict,
     member_entity_ids: list[str],
@@ -358,8 +358,17 @@ async def _build_device_class_groups(
             group = _get_or_create_device_class_group(
                 hass,
                 unique_id,
-                "binary_sensor_group",
-                {"device_class": device_class, "name": scoped.area_names[area_id]},
+                # No custom translation_key/placeholders here: with
+                # _attr_device_class set (below) and no translation_key, HA
+                # falls back to its own core per-device_class entity name
+                # (e.g. "Door", already localized) combined with the
+                # device's own name (e.g. "Linus Dashboard - Salon") for the
+                # area distinction — exactly what a hand-rolled
+                # "{device_class}" placeholder string used to fake, except
+                # that string was never actually translated (it just echoed
+                # the raw English slug back verbatim in every language).
+                None,
+                None,
                 get_area_device_info(entry_id, area_id, scoped.area_names[area_id]),
                 member_ids,
                 device_class,
@@ -378,11 +387,8 @@ async def _build_device_class_groups(
             group = _get_or_create_device_class_group(
                 hass,
                 unique_id,
-                "binary_sensor_group",
-                {
-                    "device_class": device_class,
-                    "name": scoped.floor_names.get(floor_id, floor_id),
-                },
+                None,
+                None,
                 get_floor_device_info(
                     entry_id, floor_id, scoped.floor_names.get(floor_id, floor_id)
                 ),
@@ -397,8 +403,8 @@ async def _build_device_class_groups(
             group = _get_or_create_device_class_group(
                 hass,
                 unique_id,
-                "binary_sensor_group_global",
-                {"device_class": device_class},
+                None,
+                None,
                 get_global_device_info(entry_id),
                 floor_group_ids,
                 device_class,

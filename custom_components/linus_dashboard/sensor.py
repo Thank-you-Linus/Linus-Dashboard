@@ -299,6 +299,19 @@ class LinusDashboardAggregateSensor(SensorEntity):
         self.hass = hass
         self._domain = domain
         self._device_class_filter = device_class_filter
+
+        # Domain-level buckets (no device_class_filter) only still exist for
+        # GENERIC_DOMAIN_LEVEL_DOMAINS (climate/media_player/binary_sensor) —
+        # the ones with no dedicated group entity to show a real count/
+        # control tile instead. Unlike the device_class-specific buckets
+        # (which mostly duplicate what a dedicated group already shows
+        # elsewhere), this is the only aggregate a climate/media_player user
+        # ever sees, so keep it visible rather than tucked away as a
+        # diagnostic entity nobody would think to look for.
+        if device_class_filter is None:
+            self._attr_entity_registry_visible_default = True
+            self._attr_entity_category = None
+
         self._tracked_entities = frozenset(tracked_entity_ids)
         self._config_entry = config_entry
         self._debounce_unsub: CALLBACK_TYPE | None = None
@@ -374,7 +387,7 @@ class LinusDashboardAggregateSensor(SensorEntity):
 
         active_count = compute_active_count(entity_states, self._domain)
         active_ids = compute_active_entity_ids(entity_states, self._domain)
-        icon = compute_icon(self._domain, active_count)
+        icon = compute_icon(self._domain, active_count, self._device_class_filter)
         color = compute_color(self._domain, self._device_class_filter, entity_states)
 
         self._attr_native_value = active_count

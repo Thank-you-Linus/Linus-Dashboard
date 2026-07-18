@@ -327,12 +327,6 @@
       },
       "presence_detection_global": {
         "name": "Détection de présence"
-      },
-      "binary_sensor_group": {
-        "name": "{device_class}"
-      },
-      "binary_sensor_group_global": {
-        "name": "{device_class}"
       }
     },
     "light": {

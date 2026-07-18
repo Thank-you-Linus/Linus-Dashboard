@@ -259,19 +259,20 @@ class ActivityDetectionPopup extends AbstractPopup {
             });
         }
 
-        // Chip 3: Presence (ONLY if Linus Brain)
-        if (isLinusBrain) {
+        // Chip 3: Presence — binary_sensor.linus_dashboard_presence_detection_area_X
+        // is native (works without Linus Brain), so this no longer needs to
+        // be gated on isLinusBrain — only Chips 2/4 and the sections below
+        // that read genuinely Brain-only entities/attributes still are.
+        if (presenceSensorEntity) {
             const presenceLabel = Helper.localize("component.linus_dashboard.entity.text.activity_detection_popup.state.presence");
-            if (presenceSensorEntity) {
-                statusChips.push({
-                    type: "template",
-                    entity: presenceSensorEntity,
-                    content: `${presenceLabel}`,
-                    icon: `{{ state_attr('${presenceSensorEntity}', 'icon') or 'mdi:home-search' }}`,
-                    icon_color: `{{ 'red' if is_state('${presenceSensorEntity}', 'on') else 'grey' }}`,
-                    tap_action: { action: "more-info", entity: presenceSensorEntity }
-                });
-            }
+            statusChips.push({
+                type: "template",
+                entity: presenceSensorEntity,
+                content: `${presenceLabel}`,
+                icon: `{{ state_attr('${presenceSensorEntity}', 'icon') or 'mdi:home-search' }}`,
+                icon_color: `{{ 'red' if is_state('${presenceSensorEntity}', 'on') else 'grey' }}`,
+                tap_action: { action: "more-info", entity: presenceSensorEntity }
+            });
         }
 
         // Chip 4: Duration (ONLY if Linus Brain)
@@ -320,21 +321,26 @@ class ActivityDetectionPopup extends AbstractPopup {
             });
         }
 
-        // === HISTORY SECTION (ONLY if Linus Brain) ===
-        if (isLinusBrain && activityEntity) {
+        // === HISTORY SECTION ===
+        // activityEntity is still Brain-only (no native equivalent), but
+        // presenceSensorEntity works without Brain — show the section (and
+        // its presence line) whenever either one is available, not just
+        // when Brain provides the activity entity.
+        if (activityEntity || presenceSensorEntity) {
             cards.push({
                 type: "custom:mushroom-title-card",
                 title: Helper.localize("component.linus_dashboard.entity.text.activity_detection_popup.state.history_title"),
                 subtitle: Helper.localize("component.linus_dashboard.entity.text.activity_detection_popup.state.history_subtitle")
             });
 
-            // Show activity + presence graphs
-            const historyEntities: any[] = [
-                {
+            const historyEntities: any[] = [];
+
+            if (activityEntity) {
+                historyEntities.push({
                     entity: activityEntity,
                     name: Helper.localize("component.linus_dashboard.entity.text.activity_detection_popup.state.activity")
-                }
-            ];
+                });
+            }
 
             if (presenceSensorEntity) {
                 historyEntities.push({

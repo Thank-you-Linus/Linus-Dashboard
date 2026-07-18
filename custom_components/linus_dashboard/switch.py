@@ -1,19 +1,26 @@
-"""Switch platform for Linus Dashboard: nested area/floor/global switch groups."""
+"""
+Switch platform for Linus Dashboard: nested area/floor/global switch groups.
+
+State computation and turn_on/turn_off both delegate entirely to HA core's
+own homeassistant.components.group.switch.SwitchGroup (multiply-inherited
+below) — its blind forward-to-every-member turn_on/off is exactly what ours
+did by hand, so there's nothing left to override here. See light.py's module
+docstring for the general pattern (and the two HA-init quirks it documents:
+deleting the instance-level _attr_name HA's own __init__ sets, so
+translation_key-based naming still works) and entity_group.py's
+NestedGroupMixin for the shared nested-hierarchy/debounced-subscription
+plumbing.
+"""
 
 import logging
 
-from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.group.switch import SwitchGroup as HASwitchGroup
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .entity_group import (
-    ExclusionConfig,
-    NestedGroupMixin,
-    build_nested_domain_groups,
-    compute_group_attributes,
-)
+from .entity_group import ExclusionConfig, NestedGroupMixin, build_nested_domain_groups
 from .group_manager import PlatformGroupManager
 
 _LOGGER = logging.getLogger(__name__)
@@ -21,7 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 _SWITCH_GROUPS: dict[str, "SwitchGroup"] = {}
 
 
-class SwitchGroup(NestedGroupMixin, SwitchEntity):
+class SwitchGroup(NestedGroupMixin, HASwitchGroup):
     """A switch entity that forwards on/off to its members."""
 
     def __init__(
@@ -33,7 +40,8 @@ class SwitchGroup(NestedGroupMixin, SwitchEntity):
         device_info: dict,
         member_entity_ids: list[str],
     ) -> None:
-        super().__init__()
+        HASwitchGroup.__init__(self, unique_id, "", list(member_entity_ids), None)
+        del self._attr_name
         self._init_group(
             hass,
             unique_id=unique_id,
@@ -45,28 +53,7 @@ class SwitchGroup(NestedGroupMixin, SwitchEntity):
         )
 
     def _recompute(self) -> None:
-        attrs = compute_group_attributes(
-            self.hass,
-            domain="switch",
-            device_class=None,
-            member_entity_ids=self._member_entity_ids,
-        )
-        self._attr_is_on = len(attrs["active_entity_ids"]) > 0
-        self._attr_extra_state_attributes = attrs
-
-    async def async_turn_on(self, **kwargs) -> None:
-        if not self._member_entity_ids:
-            return
-        await self.hass.services.async_call(
-            "switch", "turn_on", {"entity_id": self._member_entity_ids}, blocking=False
-        )
-
-    async def async_turn_off(self, **kwargs) -> None:
-        if not self._member_entity_ids:
-            return
-        await self.hass.services.async_call(
-            "switch", "turn_off", {"entity_id": self._member_entity_ids}, blocking=False
-        )
+        self._sync_ha_group_state(domain="switch")
 
 
 def _make_switch_group(

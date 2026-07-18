@@ -1,14 +1,20 @@
 """
 Fan platform for Linus Dashboard: nested area/floor/global fan groups.
 
-Feature aggregation follows the same pattern as light.py's LightGroup (ported
-from Linus Brain): supported_features is the intersection of members (only
-forward what every member understands), percentage is the average across
-currently-on members, and adjustments (percentage/preset_mode) only target
-already-on members — same "don't wake a fan just to nudge a setting" spirit
-Brain applies to light brightness — except a percentage adjustment with
-nothing on turns everything on at that percentage, since there's no "off"
-state to preserve.
+State computation (percentage/oscillating/direction/feature aggregation)
+delegates to HA core's own homeassistant.components.group.fan.FanGroup
+(multiply-inherited below) — see light.py's module docstring for the general
+pattern. Gains oscillate/direction support and per-feature-flag-safe
+turn_off targeting for free, neither of which this platform had before.
+
+One real gap in HA's own FanGroup: it doesn't track preset_mode at all (not
+in its own SUPPORTED_FLAGS) — _recompute patches that back in, same
+intersection-for-features/union-for-values spirit as everything else here.
+
+async_turn_on/async_set_percentage/async_set_preset_mode stay fully
+overridden for the smart on-members-only adjustment filtering — HA's own
+versions forward to every member supporting the feature, regardless of
+current on/off state.
 """
 
 import logging
@@ -17,21 +23,17 @@ from typing import Any
 from homeassistant.components.fan import (
     ATTR_PERCENTAGE,
     ATTR_PRESET_MODE,
-    FanEntity,
     FanEntityFeature,
 )
+from homeassistant.components.group.fan import FanGroup as HAFanGroup
+from homeassistant.components.group.util import find_state_attributes
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .entity_group import (
-    ExclusionConfig,
-    NestedGroupMixin,
-    build_nested_domain_groups,
-    compute_group_attributes,
-)
+from .entity_group import ExclusionConfig, NestedGroupMixin, build_nested_domain_groups
 from .group_manager import PlatformGroupManager
 
 _LOGGER = logging.getLogger(__name__)
@@ -39,7 +41,7 @@ _LOGGER = logging.getLogger(__name__)
 _FAN_GROUPS: dict[str, "FanGroup"] = {}
 
 
-class FanGroup(NestedGroupMixin, FanEntity):
+class FanGroup(NestedGroupMixin, HAFanGroup):
     """A fan entity that forwards on/off/percentage/preset_mode to its members."""
 
     def __init__(
@@ -51,7 +53,8 @@ class FanGroup(NestedGroupMixin, FanEntity):
         device_info: dict,
         member_entity_ids: list[str],
     ) -> None:
-        super().__init__()
+        HAFanGroup.__init__(self, unique_id, "", list(member_entity_ids))
+        del self._attr_name
         self._init_group(
             hass,
             unique_id=unique_id,
@@ -61,71 +64,45 @@ class FanGroup(NestedGroupMixin, FanEntity):
             device_info=device_info,
             member_entity_ids=member_entity_ids,
         )
-        self._fans_on: list[str] = []
-        self._attr_supported_features = FanEntityFeature(0)
-        self._attr_preset_modes: list[str] | None = None
-
-    def _detect_features_from_members(self) -> None:
-        """Intersection of supported_features, union of preset_modes."""
-        all_features: list[int] = []
-        all_presets: list[str] = []
-
-        for entity_id in self._member_entity_ids:
-            state = self.hass.states.get(entity_id)
-            if not state or state.state == STATE_UNAVAILABLE:
-                continue
-            all_features.append(state.attributes.get("supported_features", 0))
-            all_presets.extend(state.attributes.get("preset_modes") or [])
-
-        if not all_features:
-            self._attr_supported_features = FanEntityFeature(0)
-            self._attr_preset_modes = None
-            return
-
-        common_features = all_features[0]
-        for features in all_features[1:]:
-            common_features &= features
-        self._attr_supported_features = FanEntityFeature(common_features)
-        self._attr_preset_modes = sorted(set(all_presets)) if all_presets else None
 
     def _recompute(self) -> None:
-        self._detect_features_from_members()
+        self._sync_ha_group_state(domain="fan")
 
-        fans_on: list[str] = []
-        percentages: list[int] = []
+        # HA's own group.fan has no concept of preset_mode at all (missing
+        # from its own SUPPORTED_FLAGS) — same intersection-for-features/
+        # union-for-values pattern as the rest of this integration, just
+        # filled in by hand since HA's doesn't cover it.
+        states = [
+            state
+            for entity_id in self._member_entity_ids
+            if (state := self.hass.states.get(entity_id)) is not None
+            and state.state != STATE_UNAVAILABLE
+        ]
+
         presets: list[str] = []
+        for preset_list in find_state_attributes(states, "preset_modes"):
+            presets.extend(preset_list or [])
+        self._attr_preset_modes = sorted(set(presets)) if presets else None
 
-        for entity_id in self._member_entity_ids:
-            state = self.hass.states.get(entity_id)
-            if not state:
-                continue
-            if state.state == STATE_ON:
-                fans_on.append(entity_id)
-                if (v := state.attributes.get(ATTR_PERCENTAGE)) is not None:
-                    percentages.append(int(v))
-                if v := state.attributes.get(ATTR_PRESET_MODE):
-                    presets.append(str(v))
+        features = list(find_state_attributes(states, "supported_features"))
+        if features:
+            common_features = features[0]
+            for f in features[1:]:
+                common_features &= f
+            if common_features & FanEntityFeature.PRESET_MODE:
+                self._attr_supported_features |= FanEntityFeature.PRESET_MODE
 
-        self._fans_on = fans_on
-
-        # Average percentage across on members — same averaging spirit as
-        # light.py's brightness (and the numeric temperature/humidity sensors).
-        self._attr_percentage = (
-            int(sum(percentages) / len(percentages)) if percentages else None
-        )
+        on_presets = [
+            preset
+            for state in states
+            if state.state == STATE_ON
+            and (preset := state.attributes.get(ATTR_PRESET_MODE))
+        ]
         self._attr_preset_mode = (
-            presets[0] if presets and all(p == presets[0] for p in presets) else None
+            on_presets[0]
+            if on_presets and all(p == on_presets[0] for p in on_presets)
+            else None
         )
-
-        attrs = compute_group_attributes(
-            self.hass,
-            domain="fan",
-            device_class=None,
-            member_entity_ids=self._member_entity_ids,
-        )
-        self._attr_is_on = len(fans_on) > 0
-        attrs["fans_on"] = fans_on
-        self._attr_extra_state_attributes = attrs
 
     def _fan_supports_preset(self, entity_id: str, preset_mode: str) -> bool:
         state = self.hass.states.get(entity_id)
@@ -133,17 +110,32 @@ class FanGroup(NestedGroupMixin, FanEntity):
             return False
         return preset_mode in (state.attributes.get("preset_modes") or [])
 
+    def _members_on(self) -> list[str]:
+        return [
+            entity_id
+            for entity_id in self._member_entity_ids
+            if (state := self.hass.states.get(entity_id)) is not None
+            and state.state == STATE_ON
+        ]
+
     async def async_turn_on(
         self,
         percentage: int | None = None,
         preset_mode: str | None = None,
         **kwargs: Any,
     ) -> None:
-        """Turn the group on — see module docstring for the smart-filtering rules."""
+        """
+        Turn the group on — a bare turn_on() targets every member, but an
+        adjustment (percentage/preset_mode) only applies to members already
+        on, except a percentage adjustment with nothing on turns everything
+        on at that percentage (no "on" state to preserve). HA's own
+        FanGroup.async_turn_on has no such filtering — deliberately not
+        inherited.
+        """
         is_adjustment = percentage is not None or preset_mode is not None
 
         if is_adjustment:
-            targets = list(self._fans_on)
+            targets = self._members_on()
             if not targets:
                 if percentage is not None:
                     targets = list(self._member_entity_ids)
@@ -171,26 +163,20 @@ class FanGroup(NestedGroupMixin, FanEntity):
             "fan", "turn_on", service_data, blocking=False
         )
 
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn every member off."""
-        if not self._member_entity_ids:
-            return
-        await self.hass.services.async_call(
-            "fan", "turn_off", {"entity_id": self._member_entity_ids}, blocking=False
-        )
-
     async def async_set_percentage(self, percentage: int) -> None:
         """
         Set fan speed — same on-members-only targeting as async_turn_on,
         except percentage=0 (== turn_off in HA's fan convention) always
-        applies to every member, and a nonzero percentage with nothing
-        currently on turns every member on at that percentage.
+        applies to every member (HA's own FanGroup.async_turn_off, inherited
+        — per-feature-flag safe, only targets members that actually support
+        TURN_OFF), and a nonzero percentage with nothing currently on turns
+        every member on at that percentage.
         """
         if percentage == 0:
             await self.async_turn_off()
             return
 
-        targets = list(self._fans_on) or list(self._member_entity_ids)
+        targets = self._members_on() or list(self._member_entity_ids)
         if not targets:
             return
         await self.hass.services.async_call(
@@ -203,7 +189,7 @@ class FanGroup(NestedGroupMixin, FanEntity):
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set preset mode on already-on members that support it."""
         targets = [
-            e for e in self._fans_on if self._fan_supports_preset(e, preset_mode)
+            e for e in self._members_on() if self._fan_supports_preset(e, preset_mode)
         ]
         if not targets:
             return

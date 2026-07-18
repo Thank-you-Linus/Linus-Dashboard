@@ -456,6 +456,18 @@ class NestedGroupMixin:
     (`_recompute`) and control forwarding (turn_on/turn_off/...) stay in each
     platform's own entity class — this mixin only owns the parts that are
     identical across light/switch/fan/cover/siren/binary_sensor.
+
+    Several platforms (light.py, switch.py, fan.py, cover.py,
+    binary_sensor.py's per-device_class groups) additionally inherit HA
+    core's own homeassistant.components.group.<domain> class alongside this
+    mixin, to reuse its state-computation logic (async_update_group_state)
+    instead of hand-rolling it — see _sync_ha_group_state below. Those core
+    classes are themselves built on GroupEntity, whose own
+    async_added_to_hass sets up an *undebounced* subscription — exactly what
+    this mixin's own debounce (DEBOUNCE_SECONDS) exists to avoid (see PR
+    #152's "flatline" performance issue). async_added_to_hass below
+    deliberately does not call super() to avoid ever reaching that
+    ancestor's version through the MRO.
     """
 
     _attr_has_entity_name = True
@@ -519,7 +531,14 @@ class NestedGroupMixin:
         self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
-        await super().async_added_to_hass()
+        """
+        Deliberately does NOT call super().async_added_to_hass() — see class
+        docstring. When a platform also inherits an HA core group.* class,
+        that ancestor's own async_added_to_hass (via GroupEntity) would set
+        up its own undebounced subscription if reached through the MRO;
+        skipping the chain entirely here is simpler than fighting the MRO to
+        bypass just that one ancestor.
+        """
         await self._async_resubscribe()
         self._recompute()
 
@@ -534,3 +553,47 @@ class NestedGroupMixin:
 
     def _recompute(self) -> None:
         raise NotImplementedError
+
+    def _sync_ha_group_state(
+        self, *, domain: str, device_class: str | None = None
+    ) -> None:
+        """
+        Drive an inherited HA core group.<domain> class's own
+        async_update_group_state() using this mixin's debounced
+        subscription instead of GroupEntity's own. For use by _recompute()
+        implementations that multiply-inherit e.g.
+        homeassistant.components.group.light.LightGroup alongside this
+        mixin — see class docstring.
+
+        - `self._entity_ids` is kept as an alias of `self._member_entity_ids`
+          because that's the attribute name every HA core group.* class
+          reads from internally; we can't rename theirs, so we mirror ours.
+        - async_update_supported_features(entity_id, state) is called for
+          every member first, for platforms whose HA class tracks features
+          incrementally per-member (fan.py/cover.py's FanGroup/CoverGroup);
+          it's a no-op on the base GroupEntity for platforms that don't
+          (light/switch/binary_sensor), so calling it unconditionally here
+          is harmless.
+        - async_update_group_state() is HA's own — sets is_on/brightness/
+          hvac_mode/percentage/position/etc. depending on which class this
+          is mixed into.
+        - compute_group_attributes() then *replaces*
+          extra_state_attributes wholesale with our own entity_id/total/
+          active_entity_ids/icon/color, same as every non-HA-inherited
+          platform (climate.py, media_player.py, siren.py) — it already
+          covers everything HA's own init sets there (just entity_id), so
+          there's nothing worth preserving from it.
+        """
+        self._entity_ids = self._member_entity_ids
+        for entity_id in self._member_entity_ids:
+            self.async_update_supported_features(
+                entity_id, self.hass.states.get(entity_id)
+            )
+        self.async_update_group_state()
+
+        self._attr_extra_state_attributes = compute_group_attributes(
+            self.hass,
+            domain=domain,
+            device_class=device_class,
+            member_entity_ids=self._member_entity_ids,
+        )

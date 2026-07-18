@@ -24,6 +24,9 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
+from homeassistant.components.group.binary_sensor import (
+    BinarySensorGroup as HABinarySensorGroup,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, EntityCategory
 from homeassistant.core import HomeAssistant
@@ -39,7 +42,6 @@ from .entity_group import (
     ExclusionConfig,
     NestedGroupMixin,
     ScopedMembers,
-    compute_group_attributes,
     domain_is_excluded,
     ensure_area_device_placed,
     resolve_floors_for_areas,
@@ -109,8 +111,17 @@ class PresenceGroup(NestedGroupMixin, BinarySensorEntity):
         self._attr_extra_state_attributes = attrs
 
 
-class BinarySensorDeviceClassGroup(NestedGroupMixin, BinarySensorEntity):
-    """Generic per-device_class binary_sensor group (door, window, smoke, ...)."""
+class BinarySensorDeviceClassGroup(NestedGroupMixin, HABinarySensorGroup):
+    """
+    Generic per-device_class binary_sensor group (door, window, smoke, ...).
+
+    State computation (is_on = any member on) delegates to HA core's own
+    homeassistant.components.group.binary_sensor.BinarySensorGroup
+    (multiply-inherited) — see light.py's module docstring for the general
+    pattern. device_class itself is also HA's own here: its __init__ takes
+    device_class directly and backs a plain `device_class` property, so
+    there's no separate _attr_device_class to manage ourselves.
+    """
 
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
@@ -125,9 +136,10 @@ class BinarySensorDeviceClassGroup(NestedGroupMixin, BinarySensorEntity):
         member_entity_ids: list[str],
         device_class: str,
     ) -> None:
-        super().__init__()
-        self._device_class = device_class
-        self._attr_device_class = device_class
+        HABinarySensorGroup.__init__(
+            self, unique_id, "", device_class, list(member_entity_ids), None
+        )
+        del self._attr_name
         self._init_group(
             hass,
             unique_id=unique_id,
@@ -139,14 +151,9 @@ class BinarySensorDeviceClassGroup(NestedGroupMixin, BinarySensorEntity):
         )
 
     def _recompute(self) -> None:
-        attrs = compute_group_attributes(
-            self.hass,
-            domain="binary_sensor",
-            device_class=self._device_class,
-            member_entity_ids=self._member_entity_ids,
+        self._sync_ha_group_state(
+            domain="binary_sensor", device_class=self.device_class
         )
-        self._attr_is_on = attrs["total"] > 0 and len(attrs["active_entity_ids"]) > 0
-        self._attr_extra_state_attributes = attrs
 
 
 def _merge_presence_scans(

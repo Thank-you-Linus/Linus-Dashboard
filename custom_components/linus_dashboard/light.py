@@ -1,33 +1,31 @@
 """
 Light platform for Linus Dashboard: nested area/floor/global light groups.
 
-Ported from Linus Brain's AreaLightGroup — including its full feature
-aggregation (dynamic supported_color_modes/supported_features detection,
-brightness/color averaging, smart on-members-only filtering for
-adjustments), not just on/off. Activity-based learning stays in Brain; this
-is the "dumb" grouping/forwarding behavior only. See entity_group.py for the
-shared nested-hierarchy scanning logic and NestedGroupMixin for the shared
-state-tracking plumbing.
+Ported from Linus Brain's AreaLightGroup — including its smart on-members-
+only filtering for adjustments, not just on/off. Activity-based learning
+stays in Brain; this is the "dumb" grouping/forwarding behavior only.
 
-State/attribute reduction (brightness/color averaging, "all members agree or
-show nothing" for color) reuses HA core's own homeassistant.components.
-group.util helpers (the same ones HA's own light.group platform is built
-on) instead of hand-rolled loops — same math, one less thing to maintain
-ourselves. supported_features/supported_color_modes stay intersection-based
-via our own logic though, not HA's group.light (which unions features and
-restricts to a fixed EFFECT/FLASH/TRANSITION mask): we deliberately want a
-feature the group exposes to actually work on every member, not just one of
-them — see _detect_features_from_members.
+State computation (brightness/color/effect/feature aggregation) delegates
+entirely to HA core's own homeassistant.components.group.light.LightGroup
+(multiply-inherited below) via NestedGroupMixin._sync_ha_group_state — same
+class HA's own light.group platform (and Magic Areas) is built on. We only
+add two things on top, both gaps in HA's own implementation:
+- supported_features narrowed to the intersection across members (HA's own
+  unions them) — a feature we expose must actually work on every member.
+- min/max_color_temp_kelvin computed from real members' actual range (HA's
+  own hardcodes a fixed 2000-6500K regardless of what members support).
+
+async_turn_on/async_turn_off stay fully overridden for the smart on-members-
+only adjustment filtering — HA's own versions just forward blindly to every
+member. See entity_group.py's NestedGroupMixin for the shared nested-
+hierarchy scanning/debounced-subscription plumbing every platform uses.
 """
 
 import logging
 from typing import Any
 
-from homeassistant.components.group.util import (
-    attribute_equal,
-    find_state_attributes,
-    reduce_attribute,
-)
+from homeassistant.components.group.light import LightGroup as HALightGroup
+from homeassistant.components.group.util import find_state_attributes, reduce_attribute
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP_KELVIN,
@@ -39,7 +37,6 @@ from homeassistant.components.light import (
     ATTR_RGBWW_COLOR,
     ATTR_WHITE,
     ColorMode,
-    LightEntity,
     LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -48,32 +45,18 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .entity_group import (
-    ExclusionConfig,
-    NestedGroupMixin,
-    build_nested_domain_groups,
-    compute_group_attributes,
-)
+from .entity_group import ExclusionConfig, NestedGroupMixin, build_nested_domain_groups
 from .group_manager import PlatformGroupManager
 
 _LOGGER = logging.getLogger(__name__)
 
 _LIGHT_GROUPS: dict[str, "LightGroup"] = {}
 
-# Color modes that HA doesn't allow combining with BRIGHTNESS (mirrors
-# Linus Brain's _compute_valid_color_modes — HA rejects BRIGHTNESS alongside
-# XY/RGB/RGBW/RGBWW/HS/COLOR_TEMP in supported_color_modes).
-_COLOR_MODES: set[ColorMode] = {
-    ColorMode.XY,
-    ColorMode.RGB,
-    ColorMode.RGBW,
-    ColorMode.RGBWW,
-    ColorMode.HS,
-    ColorMode.COLOR_TEMP,
-}
+DEFAULT_MIN_COLOR_TEMP_KELVIN = 2000
+DEFAULT_MAX_COLOR_TEMP_KELVIN = 6535
 
 
-class LightGroup(NestedGroupMixin, LightEntity):
+class LightGroup(NestedGroupMixin, HALightGroup):
     """A light entity that forwards on/off/brightness/color to its members."""
 
     def __init__(
@@ -85,7 +68,27 @@ class LightGroup(NestedGroupMixin, LightEntity):
         device_info: dict,
         member_entity_ids: list[str],
     ) -> None:
-        super().__init__()
+        # HALightGroup.__init__ sets up everything its own
+        # async_update_group_state() reads (_entity_ids, color_mode,
+        # supported_color_modes, ...) — called directly (not via super())
+        # since it doesn't itself chain up, and we want its concrete
+        # initialization without also invoking GroupEntity/Entity's.
+        HALightGroup.__init__(self, unique_id, "", list(member_entity_ids), None)
+        # HA's own __init__ sets _attr_name to the "name" param above; we
+        # want translation_key-based naming instead (_init_group below).
+        # Entity._name_internal checks `hasattr(self, "_attr_name")` — not
+        # truthiness — so setting it to None here would still short-circuit
+        # translation lookup. Has to be deleted, not nulled.
+        del self._attr_name
+        # HALightGroup itself sets a *class-level* _attr_icon =
+        # "mdi:lightbulb-group" default. Entity.icon has the same
+        # hasattr-based lookup as name above, but here we actually want it
+        # to resolve to None (not fall through to anything) — the entity's
+        # own `icon` property, when non-None, overwrites our own dynamic
+        # on/off icon inside extra_state_attributes (compute_group_
+        # attributes, read by the frontend via state_attr(id, 'icon')) in
+        # HA's final flattened state attributes, same key name colliding.
+        self._attr_icon = None
         self._init_group(
             hass,
             unique_id=unique_id,
@@ -95,27 +98,10 @@ class LightGroup(NestedGroupMixin, LightEntity):
             device_info=device_info,
             member_entity_ids=member_entity_ids,
         )
-        self._lights_on: list[str] = []
-        self._lights_off: list[str] = []
-        self._attr_supported_color_modes: set[ColorMode] = {ColorMode.ONOFF}
-        self._attr_supported_features = LightEntityFeature(0)
-        self._attr_color_mode: ColorMode = ColorMode.ONOFF
 
-    def _detect_features_from_members(self) -> None:
-        """
-        Detect supported_features/supported_color_modes/effect_list from
-        currently-available members.
+    def _recompute(self) -> None:
+        self._sync_ha_group_state(domain="light")
 
-        supported_features: intersection (only features every member
-        supports, so a group action never silently no-ops on a member that
-        doesn't understand it) — deliberately not HA's own group.light
-        behavior (which unions features and masks to a fixed EFFECT/FLASH/
-        TRANSITION set), see module docstring. supported_color_modes: valid
-        combination per HA's rules (color modes exclude BRIGHTNESS; only one
-        "family" wins, priority color > brightness > onoff). effect_list:
-        union (any member offering an effect makes it selectable — actual
-        application is filtered per-member in async_turn_on).
-        """
         states = [
             state
             for entity_id in self._member_entity_ids
@@ -123,151 +109,35 @@ class LightGroup(NestedGroupMixin, LightEntity):
             and state.state != STATE_UNAVAILABLE
         ]
 
-        all_features = list(find_state_attributes(states, "supported_features"))
-        if not all_features:
-            self._attr_supported_features = LightEntityFeature(0)
-            self._attr_supported_color_modes = {ColorMode.ONOFF}
-            self._attr_effect_list = None
-            return
+        # Narrower than HA's own union-based supported_features: a feature
+        # this group exposes must actually work on every member, not just
+        # one of them.
+        features = list(find_state_attributes(states, "supported_features"))
+        if features:
+            common_features = features[0]
+            for f in features[1:]:
+                common_features &= f
+            self._attr_supported_features = (
+                LightEntityFeature(common_features)
+                | LightEntityFeature.TRANSITION
+                | LightEntityFeature.FLASH
+            )
 
-        common_features = all_features[0]
-        for features in all_features[1:]:
-            common_features &= features
-        common_features |= LightEntityFeature.TRANSITION | LightEntityFeature.FLASH
-        self._attr_supported_features = LightEntityFeature(common_features)
-
-        modes: set[str] = set()
-        for member_modes in find_state_attributes(states, "supported_color_modes"):
-            modes.update(member_modes)
-        modes.discard(ColorMode.ONOFF)
-        color_modes_present = modes & _COLOR_MODES
-        if color_modes_present:
-            self._attr_supported_color_modes = color_modes_present
-        elif ColorMode.BRIGHTNESS in modes:
-            self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
-        else:
-            self._attr_supported_color_modes = {ColorMode.ONOFF}
-
-        all_effects: list[str] = []
-        for effect_list in find_state_attributes(states, ATTR_EFFECT_LIST):
-            all_effects.extend(effect_list or [])
-        self._attr_effect_list = sorted(set(all_effects)) if all_effects else None
-
-    @staticmethod
-    def _agree_or_none(states: list, key: str) -> Any:
-        """
-        Return the shared value of `key` across `states` if every state that
-        reports it agrees, else None. Deliberately not an average: averaging
-        RGB/HS values can produce a color no member is actually displaying,
-        which is worse than showing nothing. attribute_equal/
-        find_state_attributes are HA's own group.util primitives for exactly
-        this "do all states agree" check.
-        """
-        if not attribute_equal(states, key):
-            return None
-        return next(find_state_attributes(states, key), None)
-
-    @classmethod
-    def _agree_or_none_tuple(cls, states: list, key: str) -> tuple | None:
-        """
-        Same as _agree_or_none, but cast to a tuple — color attributes
-        come back from the state machine as lists (JSON round-trip), while
-        LightEntity's own typing (and the members' _light_supports_color
-        checks elsewhere in this file) expect a tuple.
-        """
-        value = cls._agree_or_none(states, key)
-        return tuple(value) if value is not None else None
-
-    def _recompute(self) -> None:
-        self._detect_features_from_members()
-
-        lights_on: list[str] = []
-        lights_off: list[str] = []
-
-        for entity_id in self._member_entity_ids:
-            state = self.hass.states.get(entity_id)
-            if not state:
-                continue
-            if state.state == STATE_ON:
-                lights_on.append(entity_id)
-            elif state.state != STATE_UNAVAILABLE:
-                lights_off.append(entity_id)
-
-        self._lights_on = lights_on
-        self._lights_off = lights_off
-
-        on_states = [
-            state
-            for entity_id in lights_on
-            if (state := self.hass.states.get(entity_id)) is not None
-        ]
-
-        # Brightness: averaged across ON members via reduce_attribute's
-        # default reducer (mean_int) — same sum/len/int() math as before,
-        # just HA's own implementation of it.
-        self._attr_brightness = reduce_attribute(on_states, ATTR_BRIGHTNESS)
-        self._attr_color_temp_kelvin = self._agree_or_none(
-            on_states, ATTR_COLOR_TEMP_KELVIN
-        )
-        self._attr_rgb_color = self._agree_or_none_tuple(on_states, ATTR_RGB_COLOR)
-        self._attr_hs_color = self._agree_or_none_tuple(on_states, ATTR_HS_COLOR)
-        self._attr_rgbw_color = self._agree_or_none_tuple(on_states, ATTR_RGBW_COLOR)
-        self._attr_rgbww_color = self._agree_or_none_tuple(on_states, ATTR_RGBWW_COLOR)
-        self._attr_effect = self._agree_or_none(on_states, ATTR_EFFECT)
-
-        modes = self._attr_supported_color_modes
-        if self._attr_rgbww_color is not None and ColorMode.RGBWW in modes:
-            self._attr_color_mode = ColorMode.RGBWW
-        elif self._attr_rgbw_color is not None and ColorMode.RGBW in modes:
-            self._attr_color_mode = ColorMode.RGBW
-        elif self._attr_rgb_color is not None or self._attr_hs_color is not None:
-            if ColorMode.HS in modes:
-                self._attr_color_mode = ColorMode.HS
-            elif ColorMode.RGB in modes:
-                self._attr_color_mode = ColorMode.RGB
-            elif ColorMode.XY in modes:
-                self._attr_color_mode = ColorMode.XY
-            elif ColorMode.COLOR_TEMP in modes:
-                self._attr_color_mode = ColorMode.COLOR_TEMP
-            else:
-                self._attr_color_mode = (
-                    ColorMode.BRIGHTNESS
-                    if self._attr_brightness is not None
-                    else ColorMode.ONOFF
-                )
-        elif self._attr_color_temp_kelvin is not None and ColorMode.COLOR_TEMP in modes:
-            self._attr_color_mode = ColorMode.COLOR_TEMP
-        elif self._attr_brightness is not None and ColorMode.BRIGHTNESS in modes:
-            self._attr_color_mode = ColorMode.BRIGHTNESS
-        else:
-            self._attr_color_mode = ColorMode.ONOFF
-
-        # min/max_color_temp_kelvin: widest range any member supports (not
-        # just ON ones — this is a static capability, not a live value), so
-        # the group's slider never rejects a value a member could actually
-        # take.
-        all_states = [
-            state
-            for entity_id in self._member_entity_ids
-            if (state := self.hass.states.get(entity_id)) is not None
-        ]
+        # HA's own group.light hardcodes a fixed 2000-6500K range regardless
+        # of members; compute the real widest range any member supports so
+        # the group's slider never rejects a value a member could take.
         self._attr_min_color_temp_kelvin = reduce_attribute(
-            all_states, "min_color_temp_kelvin", default=2000, reduce=min
+            states,
+            "min_color_temp_kelvin",
+            default=DEFAULT_MIN_COLOR_TEMP_KELVIN,
+            reduce=min,
         )
         self._attr_max_color_temp_kelvin = reduce_attribute(
-            all_states, "max_color_temp_kelvin", default=6535, reduce=max
+            states,
+            "max_color_temp_kelvin",
+            default=DEFAULT_MAX_COLOR_TEMP_KELVIN,
+            reduce=max,
         )
-
-        attrs = compute_group_attributes(
-            self.hass,
-            domain="light",
-            device_class=None,
-            member_entity_ids=self._member_entity_ids,
-        )
-        self._attr_is_on = len(lights_on) > 0
-        attrs["lights_on"] = lights_on
-        attrs["lights_off"] = lights_off
-        self._attr_extra_state_attributes = attrs
 
     def _light_supports_effect(self, entity_id: str, effect: str) -> bool:
         state = self.hass.states.get(entity_id)
@@ -302,7 +172,9 @@ class LightGroup(NestedGroupMixin, LightEntity):
         nudging a color shouldn't unexpectedly light up dark rooms. The one
         exception (also from Brain): a brightness-only adjustment with
         nothing currently on turns everything on at that brightness, since
-        there's no "on" light to preserve the darkness of.
+        there's no "on" light to preserve the darkness of. HA's own
+        LightGroup.async_turn_on has no such filtering (blind forward) —
+        deliberately not inherited.
         """
         has_brightness = ATTR_BRIGHTNESS in kwargs
         is_adjustment = any(
@@ -320,7 +192,12 @@ class LightGroup(NestedGroupMixin, LightEntity):
         )
 
         if is_adjustment:
-            targets = list(self._lights_on)
+            targets = [
+                entity_id
+                for entity_id in self._member_entity_ids
+                if (state := self.hass.states.get(entity_id)) is not None
+                and state.state == STATE_ON
+            ]
             if not targets:
                 if has_brightness:
                     targets = list(self._member_entity_ids)
@@ -353,17 +230,6 @@ class LightGroup(NestedGroupMixin, LightEntity):
             return
         await self.hass.services.async_call(
             "light", "turn_on", {"entity_id": targets, **kwargs}, blocking=False
-        )
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn every member off."""
-        if not self._member_entity_ids:
-            return
-        await self.hass.services.async_call(
-            "light",
-            "turn_off",
-            {"entity_id": self._member_entity_ids, **kwargs},
-            blocking=False,
         )
 
 

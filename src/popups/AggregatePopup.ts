@@ -129,6 +129,12 @@ class AggregatePopup extends AbstractPopup {
     const readOnlyDomains = ["binary_sensor", "sensor", "camera"];
     const isReadOnly = readOnlyDomains.includes(domain);
 
+    // Dashboard-native group entity for this scope/domain, if one exists —
+    // dedicatedGroupEntity covers light/switch/fan/cover/siren at every
+    // scope (area/floor/global); groupEntity is the area-only Magic
+    // Areas/Brain fallback for domains with no dedicated group (climate).
+    const tileEntity = dedicatedGroupEntity ?? groupEntity;
+
     // 1. First line: Status + Navigation button (horizontal)
     const statusCard = needsStatistics
       ? this.buildStatisticsCard(configWithEntities)
@@ -150,19 +156,17 @@ class AggregatePopup extends AbstractPopup {
       cards.push(statusCard);
     }
 
-    // 2. Second line: Control buttons (Turn All On / Turn All Off) - only for controllable domains
-    if (!isReadOnly) {
+    // 2. Second line: Control buttons (Turn All On / Turn All Off) - only for
+    // controllable domains, and only when there's no group control tile
+    // (step 3) — that tile's own toggle already turns every member on/off,
+    // so the buttons would be a redundant, less capable duplicate control.
+    if (!isReadOnly && !tileEntity) {
       const controlButtons = this.buildControlButtons(configWithEntities);
       // Control buttons are already in horizontal-stack
       cards.push(controlButtons);
     }
 
-    // 3. Group control tile (if a group entity exists) - positioned AFTER control buttons.
-    // dedicatedGroupEntity covers light/switch/fan/cover/siren at every scope
-    // (area/floor/global); groupEntity is the area-only Magic Areas/Brain
-    // fallback for domains with no dedicated group (climate) — prefer the
-    // dedicated one when both would resolve (same entity in practice today).
-    const tileEntity = dedicatedGroupEntity ?? groupEntity;
+    // 3. Group control tile (if a group entity exists) - positioned AFTER control buttons
     if (tileEntity) {
       cards.push(this.buildGroupControlSection(tileEntity, domain));
     }

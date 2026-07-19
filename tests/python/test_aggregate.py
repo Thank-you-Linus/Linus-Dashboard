@@ -1,8 +1,12 @@
 """
 Unit tests for the pure aggregation helpers in aggregate.py.
 
-No hass/mocking needed — every function here takes plain dicts/lists and
-returns a plain value.
+Most functions here take plain dicts/lists and need no mocking. compute_icon
+is the exception — it reads HA's own icon_translations data from
+hass.data[DOMAIN]["icons"] (populated at integration setup via
+homeassistant.helpers.icon.async_get_icons) rather than a hardcoded table,
+so its tests populate that cache with the same shape HA core's real
+icons.json files use.
 """
 
 from custom_components.linus_dashboard.aggregate import (
@@ -13,6 +17,12 @@ from custom_components.linus_dashboard.aggregate import (
     compute_numeric_aggregate,
     resolve_numeric_aggregation_mode,
 )
+from custom_components.linus_dashboard.const import DOMAIN
+
+
+def set_icon_cache(hass, icons: dict) -> None:
+    """icons: {domain: {device_class_or_'_': {"default": ..., "state": {...}}}}."""
+    hass.data[DOMAIN] = {"icons": icons}
 
 
 def test_compute_active_count_light():
@@ -34,19 +44,138 @@ def test_compute_active_entity_ids_returns_only_active():
     assert compute_active_entity_ids(states, "switch") == ["switch.a"]
 
 
-def test_compute_icon_generic_domain_on_vs_off():
-    assert compute_icon("light", 1) == "mdi:lightbulb-on"
-    assert compute_icon("light", 0) == "mdi:lightbulb-off"
+def test_compute_icon_generic_domain_on_vs_off(mock_hass):
+    # Shape taken directly from HA core's light/icons.json entity_component._.
+    set_icon_cache(
+        mock_hass,
+        {
+            "light": {
+                "_": {"default": "mdi:lightbulb", "state": {"off": "mdi:lightbulb-off"}}
+            }
+        },
+    )
+    assert compute_icon(mock_hass, "light", {"light.a": "on"}) == "mdi:lightbulb"
+    assert compute_icon(mock_hass, "light", {"light.a": "off"}) == "mdi:lightbulb-off"
 
 
-def test_compute_icon_binary_sensor_uses_device_class_pair():
-    assert compute_icon("binary_sensor", 1, "motion") == "mdi:motion-sensor"
-    assert compute_icon("binary_sensor", 0, "motion") == "mdi:motion-sensor-off"
+def test_compute_icon_binary_sensor_uses_device_class_pair(mock_hass):
+    # Shape taken directly from HA core's binary_sensor/icons.json.
+    set_icon_cache(
+        mock_hass,
+        {
+            "binary_sensor": {
+                "motion": {
+                    "default": "mdi:motion-sensor-off",
+                    "state": {"on": "mdi:motion-sensor"},
+                }
+            }
+        },
+    )
+    assert (
+        compute_icon(mock_hass, "binary_sensor", {"binary_sensor.a": "on"}, "motion")
+        == "mdi:motion-sensor"
+    )
+    assert (
+        compute_icon(mock_hass, "binary_sensor", {"binary_sensor.a": "off"}, "motion")
+        == "mdi:motion-sensor-off"
+    )
 
 
-def test_compute_icon_binary_sensor_unknown_device_class_falls_back_to_generic():
-    icon = compute_icon("binary_sensor", 1, "some_future_device_class")
+def test_compute_icon_binary_sensor_unknown_device_class_falls_back_to_generic(
+    mock_hass,
+):
+    set_icon_cache(
+        mock_hass,
+        {
+            "binary_sensor": {
+                "_": {
+                    "default": "mdi:radiobox-blank",
+                    "state": {"on": "mdi:checkbox-marked-circle"},
+                }
+            }
+        },
+    )
+    icon = compute_icon(
+        mock_hass,
+        "binary_sensor",
+        {"binary_sensor.a": "on"},
+        "some_future_device_class",
+    )
     assert icon == "mdi:checkbox-marked-circle"
+
+
+def test_compute_icon_cover_uses_device_class_specific_icon_not_generic_opening(
+    mock_hass,
+):
+    # The exact bug reported live: cover.gate/garage always showed the
+    # generic "Opening" icon instead of their own — shape taken directly
+    # from HA core's cover/icons.json (note: cover has no explicit "open"
+    # state key at all; "default" covers it).
+    set_icon_cache(
+        mock_hass,
+        {
+            "cover": {
+                "_": {
+                    "default": "mdi:window-open",
+                    "state": {"closed": "mdi:window-closed"},
+                },
+                "gate": {
+                    "default": "mdi:gate-open",
+                    "state": {
+                        "closed": "mdi:gate",
+                        "closing": "mdi:arrow-right",
+                        "opening": "mdi:arrow-right",
+                    },
+                },
+            }
+        },
+    )
+    assert (
+        compute_icon(mock_hass, "cover", {"cover.a": "open"}, "gate") == "mdi:gate-open"
+    )
+    assert compute_icon(mock_hass, "cover", {"cover.a": "closed"}, "gate") == "mdi:gate"
+    # No device_class given still falls back to the generic cover icon.
+    assert compute_icon(mock_hass, "cover", {"cover.a": "open"}) == "mdi:window-open"
+
+
+def test_compute_icon_media_player_prefers_specific_state_icon_over_default(mock_hass):
+    set_icon_cache(
+        mock_hass,
+        {
+            "media_player": {
+                "tv": {
+                    "default": "mdi:television",
+                    "state": {
+                        "off": "mdi:television-off",
+                        "playing": "mdi:television-play",
+                    },
+                }
+            }
+        },
+    )
+    # "playing" has its own icon distinct from the generic active default.
+    assert (
+        compute_icon(mock_hass, "media_player", {"media_player.a": "playing"}, "tv")
+        == "mdi:television-play"
+    )
+    assert (
+        compute_icon(mock_hass, "media_player", {"media_player.a": "off"}, "tv")
+        == "mdi:television-off"
+    )
+
+
+def test_compute_icon_no_matching_state_falls_back_to_default(mock_hass):
+    set_icon_cache(
+        mock_hass, {"light": {"_": {"default": "mdi:lightbulb", "state": {}}}}
+    )
+    assert compute_icon(mock_hass, "light", {}) == "mdi:lightbulb"
+
+
+def test_compute_icon_missing_domain_in_cache_falls_back_to_generic_help_icon(
+    mock_hass,
+):
+    set_icon_cache(mock_hass, {})
+    assert compute_icon(mock_hass, "vacuum", {"vacuum.a": "on"}) == "mdi:help-circle"
 
 
 def test_compute_color_picks_first_matching_active_state():

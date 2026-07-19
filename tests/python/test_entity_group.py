@@ -1,5 +1,6 @@
 """Unit tests for entity_group.py's exclusion parsing and group-attribute helpers."""
 
+from custom_components.linus_dashboard.const import DOMAIN
 from custom_components.linus_dashboard.entity_group import (
     ExclusionConfig,
     compute_group_attributes,
@@ -56,6 +57,13 @@ def test_compute_group_attributes_uses_entity_id_key_for_more_info_dialog(
     # Must be exactly "entity_id" (ATTR_ENTITY_ID), not "entity_ids" — that's
     # the literal HA convention the more-info dialog looks for to recognize
     # and render a group's members.
+    mock_hass.data[DOMAIN] = {
+        "icons": {
+            "light": {
+                "_": {"default": "mdi:lightbulb", "state": {"off": "mdi:lightbulb-off"}}
+            }
+        }
+    }
     fake_states.set("light.a", "on")
     fake_states.set("light.b", "off")
     attrs = compute_group_attributes(
@@ -67,7 +75,7 @@ def test_compute_group_attributes_uses_entity_id_key_for_more_info_dialog(
     assert attrs["entity_id"] == ["light.a", "light.b"]
     assert attrs["total"] == 2
     assert attrs["active_entity_ids"] == ["light.a"]
-    assert attrs["icon"] == "mdi:lightbulb-on"
+    assert attrs["icon"] == "mdi:lightbulb"
     assert attrs["color"] == "amber"
 
 

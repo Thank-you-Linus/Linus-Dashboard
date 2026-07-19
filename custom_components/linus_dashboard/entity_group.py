@@ -46,7 +46,6 @@ from homeassistant.helpers import (
 from homeassistant.helpers.event import async_call_later, async_track_state_change_event
 
 from .aggregate import (
-    compute_active_count,
     compute_active_entity_ids,
     compute_color,
     compute_icon,
@@ -290,9 +289,8 @@ def compute_group_attributes(
         if state_obj and state_obj.state not in ("unavailable", "unknown"):
             entity_states[entity_id] = state_obj.state
 
-    active_count = compute_active_count(entity_states, domain)
     active_ids = compute_active_entity_ids(entity_states, domain)
-    icon = compute_icon(domain, active_count, device_class)
+    icon = compute_icon(hass, domain, entity_states, device_class)
     color = compute_color(domain, device_class, entity_states)
 
     return {

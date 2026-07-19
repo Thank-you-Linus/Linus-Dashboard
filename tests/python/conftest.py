@@ -49,6 +49,7 @@ def mock_hass(fake_states: FakeStates) -> HomeAssistant:
     """
     hass = MagicMock(spec=HomeAssistant)
     hass.states = fake_states
+    hass.data = {}
     loop = asyncio.new_event_loop()
     hass.loop = loop
     yield hass

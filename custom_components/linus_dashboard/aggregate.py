@@ -1,5 +1,12 @@
 """Aggregate computation logic for Linus Dashboard sensors."""
 
+from typing import TYPE_CHECKING
+
+from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+
 DOMAIN_ACTIVE_STATES: dict[str, list[str]] = {
     "light": ["on"],
     "switch": ["on"],
@@ -9,20 +16,6 @@ DOMAIN_ACTIVE_STATES: dict[str, list[str]] = {
     "cover": ["open", "opening"],
     "binary_sensor": ["on"],
     "siren": ["on"],
-}
-
-DOMAIN_ICONS: dict[str, tuple[str, str]] = {
-    "light": ("mdi:lightbulb-on", "mdi:lightbulb-off"),
-    "switch": ("mdi:toggle-switch", "mdi:toggle-switch-off"),
-    "fan": ("mdi:fan", "mdi:fan-off"),
-    "media_player": ("mdi:cast-connected", "mdi:cast-off"),
-    "climate": ("mdi:thermostat", "mdi:thermostat-box"),
-    "cover": ("mdi:window-open", "mdi:window-closed"),
-    "binary_sensor": (
-        "mdi:checkbox-marked-circle",
-        "mdi:checkbox-blank-circle-outline",
-    ),
-    "siren": ("mdi:alarm-light", "mdi:alarm-light-off"),
 }
 
 DOMAIN_COLORS: dict[str, dict[str, str]] = {
@@ -40,33 +33,6 @@ DOMAIN_COLORS: dict[str, dict[str, str]] = {
     "cover": {"open": "purple", "opening": "purple"},
     "media_player": {"playing": "light-blue", "paused": "grey", "on": "light-blue"},
     "siren": {"on": "red"},
-}
-
-BINARY_SENSOR_ICONS: dict[str, tuple[str, str]] = {
-    "motion": ("mdi:motion-sensor", "mdi:motion-sensor-off"),
-    "door": ("mdi:door-open", "mdi:door-closed"),
-    "window": ("mdi:window-open", "mdi:window-closed"),
-    "smoke": ("mdi:smoke-detector-variant-alert", "mdi:smoke-detector-variant"),
-    "gas": ("mdi:gas-cylinder", "mdi:gas-cylinder"),
-    "moisture": ("mdi:water", "mdi:water-off"),
-    "tamper": ("mdi:shield-alert", "mdi:shield-check"),
-    "battery_charging": ("mdi:battery-charging", "mdi:battery"),
-    "carbon_monoxide": ("mdi:molecule-co", "mdi:molecule-co"),
-    "cold": ("mdi:snowflake", "mdi:thermometer"),
-    "connectivity": ("mdi:wifi", "mdi:wifi-off"),
-    "garage_door": ("mdi:garage-open", "mdi:garage"),
-    "heat": ("mdi:fire", "mdi:thermometer"),
-    "lock": ("mdi:lock-open-variant", "mdi:lock"),
-    "occupancy": ("mdi:home", "mdi:home-outline"),
-    "opening": ("mdi:square-outline", "mdi:square"),
-    "plug": ("mdi:power-plug", "mdi:power-plug-off"),
-    "presence": ("mdi:home", "mdi:home-outline"),
-    "problem": ("mdi:alert-circle", "mdi:check-circle"),
-    "running": ("mdi:play", "mdi:stop"),
-    "safety": ("mdi:shield-alert", "mdi:shield-check"),
-    "sound": ("mdi:volume-high", "mdi:volume-off"),
-    "update": ("mdi:package-up", "mdi:package"),
-    "vibration": ("mdi:vibrate", "mdi:vibrate-off"),
 }
 
 BINARY_SENSOR_COLORS: dict[str, dict[str, str]] = {
@@ -109,23 +75,56 @@ def compute_active_entity_ids(entity_states: dict[str, str], domain: str) -> lis
     return [eid for eid, state in entity_states.items() if state in active_states]
 
 
+FALLBACK_ICON = "mdi:help-circle"
+
+
 def compute_icon(
-    domain: str, active_count: int, device_class: str | None = None
+    hass: "HomeAssistant",
+    domain: str,
+    entity_states: dict[str, str],
+    device_class: str | None = None,
 ) -> str:
     """
-    Compute the appropriate icon based on active state.
+    Compute the appropriate icon from HA core's own icon_translations data
+    (icons.json's entity_component section, fetched once at setup via
+    homeassistant.helpers.icon.async_get_icons and cached in
+    hass.data[DOMAIN]["icons"]) rather than a hardcoded per-device_class
+    table — stays correct across HA versions and covers every device_class
+    HA defines, not just the ones we'd remember to hardcode (this is
+    exactly the bug that shipped: cover's gate/garage and media_player's
+    tv/speaker/receiver were silently ignored, always falling back to the
+    flat per-domain icon, because only binary_sensor had a hardcoded table).
 
-    binary_sensor device classes get their own icon pair (a door/motion/
-    smoke group looks nothing like a generic checkbox) — same device_class
-    override pattern as compute_color, just for icons instead of colors.
+    Picks the icon for whichever state actually appears among the group's
+    members — preferring one of the domain's active states (DOMAIN_ACTIVE_STATES)
+    when any member is active, matching the "show the active icon if
+    anything in the group is active" behavior this replaces. HA's
+    icons.json convention is {"default": ..., "state": {state_name: icon}},
+    where "default" covers whichever state(s) aren't explicitly listed
+    (e.g. cover's "open" has no separate entry — it's covered by default),
+    so state.get(target, default) is correct for every domain without
+    needing to know which one "default" represents.
     """
-    if domain == "binary_sensor" and device_class:
-        icons = BINARY_SENSOR_ICONS.get(device_class)
-        if icons:
-            return icons[0] if active_count > 0 else icons[1]
+    domain_icons = hass.data.get(DOMAIN, {}).get("icons", {}).get(domain, {})
+    dc_data = domain_icons.get(device_class or "_") or domain_icons.get("_") or {}
+    state_icons = dc_data.get("state", {})
+    default_icon = dc_data.get("default", FALLBACK_ICON)
 
-    icons = DOMAIN_ICONS.get(domain, ("mdi:help-circle", "mdi:help-circle-outline"))
-    return icons[0] if active_count > 0 else icons[1]
+    active_states = DOMAIN_ACTIVE_STATES.get(domain, ["on"])
+    observed = set(entity_states.values())
+
+    active_observed = [s for s in active_states if s in observed]
+    if active_observed:
+        target = active_observed[0]
+    else:
+        inactive_observed = [s for s in observed if s not in active_states]
+        target = next((s for s in inactive_observed if s in state_icons), None) or (
+            inactive_observed[0] if inactive_observed else None
+        )
+
+    if target is None:
+        return default_icon
+    return state_icons.get(target, default_icon)
 
 
 # --- Numeric sensor aggregation (area/floor/global temperature, humidity,

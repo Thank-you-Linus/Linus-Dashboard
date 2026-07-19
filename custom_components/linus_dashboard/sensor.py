@@ -387,7 +387,9 @@ class LinusDashboardAggregateSensor(SensorEntity):
 
         active_count = compute_active_count(entity_states, self._domain)
         active_ids = compute_active_entity_ids(entity_states, self._domain)
-        icon = compute_icon(self._domain, active_count, self._device_class_filter)
+        icon = compute_icon(
+            self.hass, self._domain, entity_states, self._device_class_filter
+        )
         color = compute_color(self._domain, self._device_class_filter, entity_states)
 
         self._attr_native_value = active_count

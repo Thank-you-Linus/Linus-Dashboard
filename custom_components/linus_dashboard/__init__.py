@@ -20,8 +20,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers import floor_registry as fr
+from homeassistant.helpers.icon import async_get_icons
 
 from custom_components.linus_dashboard import utils
+from custom_components.linus_dashboard.aggregate import DOMAIN_ACTIVE_STATES
 from custom_components.linus_dashboard.const import (
     CONF_ALARM_ENTITY_IDS,
     CONF_EMBEDDED_DASHBOARDS,
@@ -251,6 +253,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # platforms load (same ordering as the equivalent cleanup in Linus Brain)
     await async_cleanup_orphaned_aggregate_sensors(hass, entry)
     await async_unhide_domain_level_aggregate_sensors(hass, entry)
+
+    # Warm the entity_component icon cache (HA core's own icons.json data,
+    # e.g. cover.gate/garage, media_player.tv/speaker/receiver) before
+    # platforms load — aggregate.py's compute_icon reads this synchronously
+    # from hass.data, since it's called from @callback state-change handlers
+    # that can't await. Sourcing icons from HA's own translation data instead
+    # of a hardcoded per-device_class table means this stays correct as HA
+    # adds/changes icons, for every domain this integration aggregates, not
+    # just the handful we'd remember to update by hand.
+    hass.data.setdefault(DOMAIN, {})["icons"] = await async_get_icons(
+        hass, "entity_component", list(DOMAIN_ACTIVE_STATES)
+    )
 
     # Forward platforms (aggregate sensors + area/floor/global group entities)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

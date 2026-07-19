@@ -112,7 +112,7 @@ class PresenceGroup(NestedGroupMixin, BinarySensorEntity):
         # device_class motion/presence/occupancy groups binary_sensor.py
         # also builds from the same raw sensors), so there's no risk of a
         # dependency loop between this composite and them.
-        icon = compute_icon("binary_sensor", len(active_ids), "occupancy")
+        icon = compute_icon(self.hass, "binary_sensor", entity_states, "occupancy")
         color = compute_color("binary_sensor", "occupancy", entity_states)
         attrs = {
             ATTR_ENTITY_ID: list(self._member_entity_ids),

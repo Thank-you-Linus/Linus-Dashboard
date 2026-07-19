@@ -703,7 +703,17 @@ async def _build_numeric_sensors(
 
 
 class LinusDashboardHealthSensor(SensorEntity):
-    """Count and list of unavailable/unknown entities in a zone/floor/global."""
+    """
+    Count and list of unavailable/unknown entities in a zone/floor/global.
+
+    Subscribes to its tracked entities and recomputes on change (debounced),
+    same pattern as LinusDashboardAggregateSensor above — it used to just
+    compute once in __init__ and never again, so it permanently froze
+    whatever a handful of entities happened to report during the first
+    second of HA startup (many integrations report "unknown" for a moment
+    before their first real state lands), never noticing when they became
+    available again, or when something newly went down after that snapshot.
+    """
 
     _attr_has_entity_name = True
     _attr_should_poll = False
@@ -718,9 +728,20 @@ class LinusDashboardHealthSensor(SensorEntity):
         translation_key: str,
         translation_placeholders: dict[str, str] | None,
         device_info: dict,
-        unavailable_entity_ids: list[str],
+        tracked_entity_ids: list[str],
+        nested: bool,
     ) -> None:
+        """
+        tracked_entity_ids: raw entities to check directly (area scope,
+        nested=False) or the child health-sensor entity_ids to read each
+        one's own already-computed unavailable list from (floor/global
+        scope, nested=True) — same "floor/global read the area-scope
+        sensor's own computed value instead of re-scanning" pattern as every
+        other nested sensor in this integration.
+        """
         self.hass = hass
+        self._tracked_entity_ids = list(tracked_entity_ids)
+        self._nested = nested
         self._attr_unique_id = unique_id
         self._attr_suggested_object_id = unique_id
         self._attr_translation_key = translation_key
@@ -728,11 +749,60 @@ class LinusDashboardHealthSensor(SensorEntity):
             self._attr_translation_placeholders = translation_placeholders
         self._attr_device_info = device_info
         self.entity_id = f"sensor.{unique_id}"
-        self._attr_native_value = len(unavailable_entity_ids)
+        self._attr_native_value: int = 0
+        self._attr_extra_state_attributes: dict[str, Any] = {}
+        self._unsub_state_changed: CALLBACK_TYPE | None = None
+        self._debounce_unsub: CALLBACK_TYPE | None = None
+
+    def _update_state(self) -> None:
+        if self._nested:
+            unavailable: list[str] = []
+            for child_id in self._tracked_entity_ids:
+                child_state = self.hass.states.get(child_id)
+                if not child_state:
+                    continue
+                unavailable.extend(child_state.attributes.get(ATTR_ENTITY_ID, []))
+        else:
+            unavailable = [
+                eid
+                for eid in self._tracked_entity_ids
+                if (state := self.hass.states.get(eid)) is not None
+                and state.state in ("unavailable", "unknown")
+            ]
+
+        self._attr_native_value = len(unavailable)
         self._attr_extra_state_attributes = {
-            ATTR_ENTITY_ID: unavailable_entity_ids,
-            "total": len(unavailable_entity_ids),
+            ATTR_ENTITY_ID: unavailable,
+            "total": len(unavailable),
         }
+
+    async def async_added_to_hass(self) -> None:
+        self._update_state()
+        self._unsub_state_changed = async_track_state_change_event(
+            self.hass, self._tracked_entity_ids, self._async_state_changed
+        )
+
+    async def async_will_remove_from_hass(self) -> None:
+        if self._unsub_state_changed:
+            self._unsub_state_changed()
+            self._unsub_state_changed = None
+        if self._debounce_unsub:
+            self._debounce_unsub()
+            self._debounce_unsub = None
+
+    @callback
+    def _async_state_changed(self, _event: Event) -> None:
+        if self._debounce_unsub:
+            self._debounce_unsub()
+        self._debounce_unsub = async_call_later(
+            self.hass, DEBOUNCE_SECONDS, self._async_debounced_update
+        )
+
+    @callback
+    def _async_debounced_update(self, _now=None) -> None:
+        self._debounce_unsub = None
+        self._update_state()
+        self.async_write_ha_state()
 
 
 def _scan_all_entities_by_area(
@@ -797,17 +867,8 @@ async def _build_health_sensors(
 
     area_entities, area_names = _scan_all_entities_by_area(hass, exclusions)
     area_group_ids: dict[str, str] = {}
-    area_unavailable: dict[str, list[str]] = {}
 
     for area_id, entity_ids in area_entities.items():
-        unavailable = [
-            eid
-            for eid in entity_ids
-            if (state := hass.states.get(eid)) is not None
-            and state.state in ("unavailable", "unknown")
-        ]
-        area_unavailable[area_id] = unavailable
-
         unique_id = f"{DOMAIN}_unavailable_area_{area_id}"
         sensor = LinusDashboardHealthSensor(
             hass,
@@ -815,7 +876,8 @@ async def _build_health_sensors(
             translation_key="unavailable",
             translation_placeholders={"name": area_names[area_id]},
             device_info=get_area_device_info(entry_id, area_id, area_names[area_id]),
-            unavailable_entity_ids=unavailable,
+            tracked_entity_ids=entity_ids,
+            nested=False,
         )
         entities.append(sensor)
         area_group_ids[area_id] = sensor.entity_id
@@ -823,14 +885,11 @@ async def _build_health_sensors(
     floor_areas, floor_names = resolve_floors_for_areas(
         hass, set(area_group_ids), exclusions
     )
-    floor_unavailable_ids: list[str] = []
+    floor_group_ids: list[str] = []
     for floor_id, areas_on_floor in floor_areas.items():
-        unavailable = [
-            eid
-            for a in areas_on_floor
-            if a in area_group_ids
-            for eid in area_unavailable.get(a, [])
-        ]
+        member_ids = [area_group_ids[a] for a in areas_on_floor if a in area_group_ids]
+        if not member_ids:
+            continue
         unique_id = f"{DOMAIN}_unavailable_floor_{floor_id}"
         sensor = LinusDashboardHealthSensor(
             hass,
@@ -840,13 +899,13 @@ async def _build_health_sensors(
             device_info=get_floor_device_info(
                 entry_id, floor_id, floor_names.get(floor_id, floor_id)
             ),
-            unavailable_entity_ids=unavailable,
+            tracked_entity_ids=member_ids,
+            nested=True,
         )
         entities.append(sensor)
-        floor_unavailable_ids.append(sensor.entity_id)
+        floor_group_ids.append(sensor.entity_id)
 
-    if area_group_ids:
-        all_unavailable = [eid for ids in area_unavailable.values() for eid in ids]
+    if floor_group_ids:
         unique_id = f"{DOMAIN}_unavailable_global"
         sensor = LinusDashboardHealthSensor(
             hass,
@@ -854,7 +913,8 @@ async def _build_health_sensors(
             translation_key="unavailable_global",
             translation_placeholders=None,
             device_info=get_global_device_info(entry_id),
-            unavailable_entity_ids=all_unavailable,
+            tracked_entity_ids=floor_group_ids,
+            nested=True,
         )
         entities.append(sensor)
 

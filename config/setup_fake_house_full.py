@@ -174,6 +174,8 @@ RANDOM_BINARY_SENSORS = [
 #    helpers above) ────────────────────────────────────────────────────
 OTHER_ENTITY_AREAS = {
     "light.entree_lumiere": "entree",
+    "cover.portail": "entree",
+    "cover.porte_de_garage": "entree",
     "light.chambre_lumiere": "chambre",
     "light.chambre_chevet": "chambre",
     "cover.volet_chambre": "chambre",
@@ -198,6 +200,7 @@ OTHER_ENTITY_AREAS = {
     "climate.thermostat_salon": "salon",
     "media_player.tv_salon": "salon",
     "media_player.enceinte_salon": "salon",
+    "media_player.ampli_salon": "salon",
 }
 
 

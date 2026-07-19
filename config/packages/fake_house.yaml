@@ -42,6 +42,14 @@ input_boolean:
     initial: off
   fake_bureau_volet:
     initial: off
+  # Covers with a non-shutter device_class — exercises the
+  # getDomainTranslationKey device_class label bug (gate/garage were falling
+  # back to the generic "Opening"/"Ouverture" name instead of "Portail"/
+  # "Garage").
+  fake_entree_portail:
+    initial: off
+  fake_entree_garage:
+    initial: off
   # Fans (backing)
   fake_bureau_fan:
     initial: off
@@ -93,6 +101,10 @@ input_select:
     options: ["off", "idle", "playing", "paused"]
     initial: "off"
   fake_bureau_screen:
+    options: ["off", "idle", "playing", "paused"]
+    initial: "off"
+  # device_class: receiver — no existing media_player exercises this class
+  fake_salon_ampli:
     options: ["off", "idle", "playing", "paused"]
     initial: "off"
 
@@ -257,6 +269,7 @@ media_player:
   - platform: universal
     name: "TV Salon"
     unique_id: "fake_mp_tv_salon"
+    device_class: "tv"
     state_template: "{{ states('input_select.fake_salon_tv') }}"
     commands:
       turn_on:
@@ -274,6 +287,7 @@ media_player:
   - platform: universal
     name: "Enceinte Salon"
     unique_id: "fake_mp_enceinte_salon"
+    device_class: "speaker"
     state_template: "{{ states('input_select.fake_salon_speaker') }}"
     commands:
       turn_on:
@@ -291,6 +305,7 @@ media_player:
   - platform: universal
     name: "Enceinte Chambre"
     unique_id: "fake_mp_enceinte_chambre"
+    device_class: "speaker"
     state_template: "{{ states('input_select.fake_chambre_speaker') }}"
     commands:
       turn_on:
@@ -308,6 +323,7 @@ media_player:
   - platform: universal
     name: "Ecran Bureau"
     unique_id: "fake_mp_ecran_bureau"
+    device_class: "tv"
     state_template: "{{ states('input_select.fake_bureau_screen') }}"
     commands:
       turn_on:
@@ -322,6 +338,25 @@ media_player:
           entity_id: input_select.fake_bureau_screen
         data:
           option: "off"
+  # device_class: receiver — no existing media_player exercised this class
+  - platform: universal
+    name: "Ampli Salon"
+    unique_id: "fake_mp_ampli_salon"
+    device_class: "receiver"
+    state_template: "{{ states('input_select.fake_salon_ampli') }}"
+    commands:
+      turn_on:
+        action: input_select.select_option
+        target:
+          entity_id: input_select.fake_salon_ampli
+        data:
+          option: "idle"
+      turn_off:
+        action: input_select.select_option
+        target:
+          entity_id: input_select.fake_salon_ampli
+        data:
+          option: "off"
 
 # ─────────────────────────────────────────────
 # COVERS (volets)
@@ -332,6 +367,7 @@ cover:
       volet_salon:
         friendly_name: "Volet Salon"
         unique_id: "fake_cover_salon"
+        device_class: "shutter"
         value_template: "{{ is_state('input_boolean.fake_salon_volet', 'on') }}"
         open_cover:
           action: input_boolean.turn_on
@@ -349,6 +385,7 @@ cover:
       volet_chambre:
         friendly_name: "Volet Chambre"
         unique_id: "fake_cover_chambre"
+        device_class: "shutter"
         value_template: "{{ is_state('input_boolean.fake_chambre_volet', 'on') }}"
         open_cover:
           action: input_boolean.turn_on
@@ -366,6 +403,7 @@ cover:
       volet_cuisine:
         friendly_name: "Volet Cuisine"
         unique_id: "fake_cover_cuisine"
+        device_class: "shutter"
         value_template: "{{ is_state('input_boolean.fake_cuisine_volet', 'on') }}"
         open_cover:
           action: input_boolean.turn_on
@@ -383,6 +421,7 @@ cover:
       volet_bureau:
         friendly_name: "Volet Bureau"
         unique_id: "fake_cover_bureau"
+        device_class: "shutter"
         value_template: "{{ is_state('input_boolean.fake_bureau_volet', 'on') }}"
         open_cover:
           action: input_boolean.turn_on
@@ -397,6 +436,45 @@ cover:
           target:
             entity_id: input_boolean.fake_bureau_volet
         position_template: "{{ 100 if is_state('input_boolean.fake_bureau_volet', 'on') else 0 }}"
+      # device_class: gate / garage — neither existed before; both were
+      # falling back to the generic "Opening"/"Ouverture" name (this
+      # session's bug report) instead of "Portail"/"Garage".
+      portail:
+        friendly_name: "Portail"
+        unique_id: "fake_cover_portail"
+        device_class: "gate"
+        value_template: "{{ is_state('input_boolean.fake_entree_portail', 'on') }}"
+        open_cover:
+          action: input_boolean.turn_on
+          target:
+            entity_id: input_boolean.fake_entree_portail
+        close_cover:
+          action: input_boolean.turn_off
+          target:
+            entity_id: input_boolean.fake_entree_portail
+        stop_cover:
+          action: input_boolean.turn_on
+          target:
+            entity_id: input_boolean.fake_entree_portail
+        position_template: "{{ 100 if is_state('input_boolean.fake_entree_portail', 'on') else 0 }}"
+      porte_de_garage:
+        friendly_name: "Porte de Garage"
+        unique_id: "fake_cover_garage"
+        device_class: "garage"
+        value_template: "{{ is_state('input_boolean.fake_entree_garage', 'on') }}"
+        open_cover:
+          action: input_boolean.turn_on
+          target:
+            entity_id: input_boolean.fake_entree_garage
+        close_cover:
+          action: input_boolean.turn_off
+          target:
+            entity_id: input_boolean.fake_entree_garage
+        stop_cover:
+          action: input_boolean.turn_on
+          target:
+            entity_id: input_boolean.fake_entree_garage
+        position_template: "{{ 100 if is_state('input_boolean.fake_entree_garage', 'on') else 0 }}"
 
 # ─────────────────────────────────────────────
 # FANS

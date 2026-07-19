@@ -15,6 +15,7 @@ from custom_components.linus_dashboard.aggregate import (
     compute_color,
     compute_icon,
     compute_numeric_aggregate,
+    resolve_device_class_name,
     resolve_numeric_aggregation_mode,
 )
 from custom_components.linus_dashboard.const import DOMAIN
@@ -176,6 +177,30 @@ def test_compute_icon_missing_domain_in_cache_falls_back_to_generic_help_icon(
 ):
     set_icon_cache(mock_hass, {})
     assert compute_icon(mock_hass, "vacuum", {"vacuum.a": "on"}) == "mdi:help-circle"
+
+
+def test_resolve_device_class_name_looks_up_cached_translation(mock_hass):
+    # cover/media_player don't auto-name after device_class like
+    # binary_sensor does (CoverEntity/MediaPlayerEntity hardcode
+    # _default_to_device_class_name to False) — this is what makes their
+    # device_class groups distinguishable from the flat "all X" group and
+    # from each other instead of all sharing one name.
+    mock_hass.data[DOMAIN] = {
+        "names": {"component.cover.entity_component.gate.name": "Gate"}
+    }
+    assert resolve_device_class_name(mock_hass, "cover", "gate") == "Gate"
+
+
+def test_resolve_device_class_name_returns_none_without_device_class(mock_hass):
+    mock_hass.data[DOMAIN] = {
+        "names": {"component.cover.entity_component.gate.name": "Gate"}
+    }
+    assert resolve_device_class_name(mock_hass, "cover", None) is None
+
+
+def test_resolve_device_class_name_returns_none_when_not_cached(mock_hass):
+    mock_hass.data[DOMAIN] = {"names": {}}
+    assert resolve_device_class_name(mock_hass, "cover", "gate") is None
 
 
 def test_compute_color_picks_first_matching_active_state():

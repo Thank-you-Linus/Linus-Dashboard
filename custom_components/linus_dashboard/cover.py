@@ -27,8 +27,14 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from .aggregate import resolve_device_class_name
 from .const import DOMAIN
-from .entity_group import ExclusionConfig, NestedGroupMixin, build_nested_domain_groups
+from .entity_group import (
+    ExclusionConfig,
+    NestedGroupMixin,
+    build_nested_device_class_groups,
+    build_nested_domain_groups,
+)
 from .group_manager import PlatformGroupManager
 
 _LOGGER = logging.getLogger(__name__)
@@ -39,19 +45,37 @@ _OPEN_STATES = ("open", "opening")
 
 
 class CoverGroup(NestedGroupMixin, HACoverGroup):
-    """A cover entity that forwards open/close/stop/position/tilt to its members."""
+    """
+    A cover entity that forwards open/close/stop/position/tilt to its members.
+
+    device_class is optional: None for the flat "all covers in this area"
+    group, or a real cover device_class (gate, garage, shutter, ...) for a
+    per-device_class group — same entity class either way, just with
+    _attr_device_class set. HA's own group.cover.CoverGroup doesn't take
+    device_class in its constructor (unlike group.binary_sensor's), so it's
+    set directly here instead.
+    """
 
     def __init__(
         self,
         hass: HomeAssistant,
         unique_id: str,
-        translation_key: str,
+        translation_key: str | None,
         translation_placeholders: dict[str, str] | None,
         device_info: dict,
         member_entity_ids: list[str],
+        device_class: str | None = None,
     ) -> None:
         HACoverGroup.__init__(self, unique_id, "", list(member_entity_ids))
         del self._attr_name
+        self._attr_device_class = device_class
+        # CoverEntity doesn't auto-name after device_class like
+        # BinarySensorEntity does — without this, every device_class group
+        # in an area would show the exact same name as the flat "all
+        # covers" group and each other. See resolve_device_class_name.
+        device_class_name = resolve_device_class_name(hass, "cover", device_class)
+        if device_class_name:
+            self._attr_name = device_class_name
         self._init_group(
             hass,
             unique_id=unique_id,
@@ -63,7 +87,7 @@ class CoverGroup(NestedGroupMixin, HACoverGroup):
         )
 
     def _recompute(self) -> None:
-        self._sync_ha_group_state(domain="cover")
+        self._sync_ha_group_state(domain="cover", device_class=self.device_class)
 
     def _cover_supports(self, entity_id: str, feature: CoverEntityFeature) -> bool:
         state = self.hass.states.get(entity_id)
@@ -108,8 +132,14 @@ def _make_cover_group(
     translation_placeholders,
     device_info,
     member_entity_ids,
+    device_class=None,
 ):
-    """Idempotent factory — see light.py's _make_light_group for the full rationale."""
+    """
+    Idempotent factory — see light.py's _make_light_group for the full
+    rationale. Serves both build_nested_domain_groups (flat, no
+    device_class, 6 positional args) and build_nested_device_class_groups
+    (7 args including device_class).
+    """
     existing = _COVER_GROUPS.get(unique_id)
     if existing is not None:
         hass.async_create_task(existing.async_update_members(member_entity_ids))
@@ -121,9 +151,40 @@ def _make_cover_group(
         translation_placeholders,
         device_info,
         member_entity_ids,
+        device_class,
     )
     _COVER_GROUPS[unique_id] = group
     return group
+
+
+async def _build_all_cover_groups(
+    hass: HomeAssistant, config_entry: ConfigEntry, exclusions: ExclusionConfig
+) -> list[CoverGroup]:
+    """Flat 'all covers' groups plus one set per device_class present (gate, garage, shutter, ...)."""
+    entities: list[CoverGroup] = []
+    entities.extend(
+        await build_nested_domain_groups(
+            hass,
+            config_entry,
+            exclusions,
+            domain="cover",
+            unique_id_prefix=f"{DOMAIN}_all_covers",
+            translation_key="cover_group",
+            translation_key_global="cover_group_global",
+            entity_factory=_make_cover_group,
+        )
+    )
+    entities.extend(
+        await build_nested_device_class_groups(
+            hass,
+            config_entry,
+            exclusions,
+            domain="cover",
+            unique_id_prefix=DOMAIN,
+            entity_factory=_make_cover_group,
+        )
+    )
+    return entities
 
 
 async def async_setup_entry(
@@ -131,30 +192,18 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up Linus Dashboard cover groups (area/floor/global)."""
+    """Set up Linus Dashboard cover groups (flat + per device_class, area/floor/global)."""
     exclusions = ExclusionConfig.from_config_entry(config_entry)
     _COVER_GROUPS.clear()
 
-    build_kwargs = {
-        "domain": "cover",
-        "unique_id_prefix": f"{DOMAIN}_all_covers",
-        "translation_key": "cover_group",
-        "translation_key_global": "cover_group_global",
-        "entity_factory": _make_cover_group,
-    }
-
-    entities = await build_nested_domain_groups(
-        hass, config_entry, exclusions, **build_kwargs
-    )
+    entities = await _build_all_cover_groups(hass, config_entry, exclusions)
     if entities:
         async_add_entities(entities)
         _LOGGER.info("Created %d cover group entities", len(entities))
 
     async def _rebuild(*_args) -> None:
         before_ids = set(_COVER_GROUPS.keys())
-        new_groups = await build_nested_domain_groups(
-            hass, config_entry, exclusions, **build_kwargs
-        )
+        new_groups = await _build_all_cover_groups(hass, config_entry, exclusions)
         after_ids = {group.unique_id for group in new_groups}
         to_add = [group for group in new_groups if group.unique_id not in before_ids]
 

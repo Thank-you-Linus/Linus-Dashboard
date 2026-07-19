@@ -127,6 +127,31 @@ def compute_icon(
     return state_icons.get(target, default_icon)
 
 
+def resolve_device_class_name(
+    hass: "HomeAssistant", domain: str, device_class: str | None
+) -> str | None:
+    """
+    Look up HA's own translated per-device_class entity name ("Portail",
+    "Récepteur", ...), fetched once at setup via
+    homeassistant.helpers.translation.async_get_translations and cached in
+    hass.data[DOMAIN]["names"].
+
+    Only needed for domains where HA doesn't already auto-name an unnamed
+    entity after its device_class — BinarySensorEntity does this
+    automatically (_default_to_device_class_name returns True when
+    device_class is set), CoverEntity/MediaPlayerEntity hardcode False, so
+    those two must set _attr_name explicitly or every device_class group in
+    an area would show the exact same name as the flat group and each
+    other. Returns None if device_class is None or has no known name (the
+    caller should leave _attr_name unset in that case, same as HA's own
+    fallback).
+    """
+    if not device_class:
+        return None
+    names = hass.data.get(DOMAIN, {}).get("names", {})
+    return names.get(f"component.{domain}.entity_component.{device_class}.name")
+
+
 # --- Numeric sensor aggregation (area/floor/global temperature, humidity,
 # illuminance, battery, ...) ---
 #

@@ -46,6 +46,7 @@ from .entity_group import (
     ExclusionConfig,
     NestedGroupMixin,
     ScopedMembers,
+    build_nested_device_class_groups,
     domain_is_excluded,
     ensure_area_device_placed,
     resolve_floors_for_areas,
@@ -307,41 +308,7 @@ async def _build_presence_groups(
     return entities
 
 
-def _discover_generic_device_classes(
-    hass: HomeAssistant, exclusions: ExclusionConfig
-) -> set[str]:
-    """
-    Find binary_sensor device_classes present.
-
-    Includes motion/presence/occupancy too, even though they're also folded
-    into the composite presence_detection group above — that composite is an
-    OR-gate meant to answer "is anyone home", not a substitute for "how many
-    motion sensors are triggered right now", which is what a per-device_class
-    group like the others answers. Same sensor can legitimately be a member
-    of both.
-    """
-    from homeassistant.helpers import entity_registry as er
-
-    entity_reg = er.async_get(hass)
-    device_classes: set[str] = set()
-    for entity_entry in entity_reg.entities.values():
-        if entity_entry.domain != "binary_sensor" or entity_entry.platform == DOMAIN:
-            continue
-        if entity_entry.hidden_by or entity_entry.disabled_by:
-            continue
-        state_obj = hass.states.get(entity_entry.entity_id)
-        if not state_obj:
-            continue
-        device_class = state_obj.attributes.get("device_class")
-        if not device_class:
-            continue
-        if device_class in exclusions.excluded_device_classes:
-            continue
-        device_classes.add(device_class)
-    return device_classes
-
-
-def _get_or_create_device_class_group(
+def _make_device_class_group(
     hass: HomeAssistant,
     unique_id: str,
     translation_key: str | None,
@@ -350,7 +317,7 @@ def _get_or_create_device_class_group(
     member_entity_ids: list[str],
     device_class: str,
 ) -> BinarySensorDeviceClassGroup:
-    """Idempotent get-or-create, same reasoning as _get_or_create_presence_group."""
+    """Idempotent factory for build_nested_device_class_groups (entity_group.py)."""
     existing = _DEVICE_CLASS_GROUPS.get(unique_id)
     if existing is not None:
         hass.async_create_task(existing.async_update_members(member_entity_ids))
@@ -372,84 +339,23 @@ def _get_or_create_device_class_group(
 async def _build_device_class_groups(
     hass: HomeAssistant, config_entry: ConfigEntry, exclusions: ExclusionConfig
 ) -> list[BinarySensorDeviceClassGroup]:
-    """Build one group per remaining binary_sensor device_class, nested area/floor/global."""
-    entry_id = config_entry.entry_id
-    entities: list[BinarySensorDeviceClassGroup] = []
-
-    for device_class in _discover_generic_device_classes(hass, exclusions):
-        scoped = scan_domain_members(
-            hass,
-            domain="binary_sensor",
-            device_class=device_class,
-            exclusions=exclusions,
-        )
-        area_group_ids: dict[str, str] = {}
-
-        for area_id, member_ids in scoped.area_entities.items():
-            if not member_ids:
-                continue
-            area_device_info = get_area_device_info(
-                entry_id, area_id, scoped.area_names[area_id]
-            )
-            ensure_area_device_placed(hass, entry_id, area_id, area_device_info)
-            unique_id = f"{DOMAIN}_{device_class}_area_{area_id}"
-            group = _get_or_create_device_class_group(
-                hass,
-                unique_id,
-                # No custom translation_key/placeholders here: with
-                # _attr_device_class set (below) and no translation_key, HA
-                # falls back to its own core per-device_class entity name
-                # (e.g. "Door", already localized) combined with the
-                # device's own name (e.g. "Linus Dashboard - Salon") for the
-                # area distinction — exactly what a hand-rolled
-                # "{device_class}" placeholder string used to fake, except
-                # that string was never actually translated (it just echoed
-                # the raw English slug back verbatim in every language).
-                None,
-                None,
-                area_device_info,
-                member_ids,
-                device_class,
-            )
-            entities.append(group)
-            area_group_ids[area_id] = group.entity_id
-
-        floor_group_ids: list[str] = []
-        for floor_id, areas_on_floor in scoped.floor_areas.items():
-            member_ids = [
-                area_group_ids[a] for a in areas_on_floor if a in area_group_ids
-            ]
-            if not member_ids:
-                continue
-            unique_id = f"{DOMAIN}_{device_class}_floor_{floor_id}"
-            group = _get_or_create_device_class_group(
-                hass,
-                unique_id,
-                None,
-                None,
-                get_floor_device_info(
-                    entry_id, floor_id, scoped.floor_names.get(floor_id, floor_id)
-                ),
-                member_ids,
-                device_class,
-            )
-            entities.append(group)
-            floor_group_ids.append(group.entity_id)
-
-        if floor_group_ids:
-            unique_id = f"{DOMAIN}_{device_class}_global"
-            group = _get_or_create_device_class_group(
-                hass,
-                unique_id,
-                None,
-                None,
-                get_global_device_info(entry_id),
-                floor_group_ids,
-                device_class,
-            )
-            entities.append(group)
-
-    return entities
+    """
+    Build one group per binary_sensor device_class present, nested area/
+    floor/global — includes motion/presence/occupancy too, even though
+    they're also folded into the composite presence_detection group above
+    (that composite is an OR-gate meant to answer "is anyone home", not a
+    substitute for "how many motion sensors are triggered right now", which
+    is what a per-device_class group like the others answers — same sensor
+    can legitimately be a member of both).
+    """
+    return await build_nested_device_class_groups(
+        hass,
+        config_entry,
+        exclusions,
+        domain="binary_sensor",
+        unique_id_prefix=DOMAIN,
+        entity_factory=_make_device_class_group,
+    )
 
 
 async def async_setup_entry(

@@ -21,6 +21,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers import floor_registry as fr
 from homeassistant.helpers.icon import async_get_icons
+from homeassistant.helpers.translation import async_get_translations
 
 from custom_components.linus_dashboard import utils
 from custom_components.linus_dashboard.aggregate import DOMAIN_ACTIVE_STATES
@@ -264,6 +265,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # just the handful we'd remember to update by hand.
     hass.data.setdefault(DOMAIN, {})["icons"] = await async_get_icons(
         hass, "entity_component", list(DOMAIN_ACTIVE_STATES)
+    )
+
+    # Same reasoning, for names instead of icons: HA only auto-names an
+    # unnamed entity after its device_class for binary_sensor
+    # (BinarySensorEntity._default_to_device_class_name returns True when
+    # device_class is set; CoverEntity/MediaPlayerEntity hardcode False) —
+    # so cover/media_player device_class groups need their translated name
+    # ("Portail", "Récepteur", ...) fetched and set explicitly, or every
+    # device_class group in an area would show the exact same name as the
+    # flat "all covers" group and each other, indistinguishable in the UI.
+    hass.data[DOMAIN]["names"] = await async_get_translations(
+        hass, hass.config.language, "entity_component", list(DOMAIN_ACTIVE_STATES)
     )
 
     # Forward platforms (aggregate sensors + area/floor/global group entities)

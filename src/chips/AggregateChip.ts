@@ -453,6 +453,18 @@ class AggregateChip extends AbstractChip {
   };
 
   /**
+   * Domains that also get a dedicated group entity per device_class
+   * (binary_sensor.py/cover.py/media_player.py's build_nested_device_class_groups),
+   * in addition to their flat DEDICATED_GROUP_DOMAINS entry above. climate
+   * has no device_class concept in HA core, so it's not in this list.
+   */
+  private static readonly DEVICE_CLASS_GROUP_DOMAINS = [
+    "binary_sensor",
+    "cover",
+    "media_player",
+  ];
+
+  /**
    * Get the server-side aggregate entity for this chip's configuration —
    * preferring a dedicated group entity when one exists for this
    * domain/device_class, falling back to the generic hidden counting
@@ -499,10 +511,13 @@ class AggregateChip extends AbstractChip {
       }
     }
 
-    // 2. Dedicated binary_sensor-by-device_class group — also exists at
-    // every scope, including area.
-    if (config.domain === "binary_sensor" && hasDeviceClass) {
-      const entityId = `binary_sensor.linus_dashboard_${config.device_class}${scopeSuffix}`;
+    // 2. Dedicated by-device_class group (binary_sensor/cover/media_player)
+    // — also exists at every scope, including area.
+    if (
+      hasDeviceClass &&
+      AggregateChip.DEVICE_CLASS_GROUP_DOMAINS.includes(config.domain)
+    ) {
+      const entityId = `${config.domain}.linus_dashboard_${config.device_class}${scopeSuffix}`;
       if (tryEntity(entityId)) {
         return { entityId, isDedicatedGroup: true };
       }

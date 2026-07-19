@@ -442,6 +442,135 @@ async def build_nested_domain_groups(
     return entities
 
 
+def discover_device_classes(
+    hass: HomeAssistant, domain: str, exclusions: ExclusionConfig
+) -> set[str]:
+    """
+    Find every device_class actually present among `domain`'s entities.
+
+    Used to build one set of area/floor/global groups per device_class
+    without a hardcoded list — a fixed list can't cover every device_class
+    an integration might report, and silently ignoring unlisted ones is
+    exactly the shape of bug this replaces (cover's gate/garage groups
+    never existed at all until device_class discovery was generalized
+    beyond binary_sensor).
+    """
+    entity_reg = er.async_get(hass)
+    device_classes: set[str] = set()
+    for entity_entry in entity_reg.entities.values():
+        if entity_entry.domain != domain or entity_entry.platform == DOMAIN:
+            continue
+        if entity_entry.hidden_by or entity_entry.disabled_by:
+            continue
+        state_obj = hass.states.get(entity_entry.entity_id)
+        if not state_obj:
+            continue
+        device_class = state_obj.attributes.get("device_class")
+        if not device_class:
+            continue
+        if device_class in exclusions.excluded_device_classes:
+            continue
+        device_classes.add(device_class)
+    return device_classes
+
+
+# Entity factory signature for build_nested_device_class_groups: like
+# EntityFactory above, but with a trailing device_class argument.
+DeviceClassEntityFactory = Callable[
+    [HomeAssistant, str, str | None, dict[str, str] | None, dict, list[str], str],  # noqa: UP007
+    object,
+]
+
+
+async def build_nested_device_class_groups(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    exclusions: ExclusionConfig,
+    *,
+    domain: str,
+    unique_id_prefix: str,
+    entity_factory: DeviceClassEntityFactory,
+) -> list:
+    """
+    Build one set of area/floor/global group entities per device_class
+    discovered for `domain` (e.g. cover's gate/garage/shutter/...).
+
+    `entity_factory(hass, unique_id, translation_key, placeholders,
+    device_info, member_entity_ids, device_class)` must construct or reuse
+    (idempotently) one group entity. translation_key/placeholders are
+    always None here: with the group's own _attr_device_class set instead,
+    HA falls back to its own core per-device_class entity name combined
+    with the device's own name — see binary_sensor.py's
+    BinarySensorDeviceClassGroup for why that's preferred over a hand-
+    rolled placeholder string.
+    """
+    entry_id = config_entry.entry_id
+    entities: list = []
+
+    for device_class in discover_device_classes(hass, domain, exclusions):
+        scoped = scan_domain_members(
+            hass, domain=domain, device_class=device_class, exclusions=exclusions
+        )
+        area_group_ids: dict[str, str] = {}
+
+        for area_id, member_ids in scoped.area_entities.items():
+            if not member_ids:
+                continue
+            area_device_info = get_area_device_info(
+                entry_id, area_id, scoped.area_names[area_id]
+            )
+            ensure_area_device_placed(hass, entry_id, area_id, area_device_info)
+            unique_id = f"{unique_id_prefix}_{device_class}_area_{area_id}"
+            entity = entity_factory(
+                hass,
+                unique_id,
+                None,
+                None,
+                area_device_info,
+                member_ids,
+                device_class,
+            )
+            entities.append(entity)
+            area_group_ids[area_id] = entity.entity_id
+
+        floor_group_ids: list[str] = []
+        for floor_id, areas_on_floor in scoped.floor_areas.items():
+            member_ids = [
+                area_group_ids[a] for a in areas_on_floor if a in area_group_ids
+            ]
+            if not member_ids:
+                continue
+            unique_id = f"{unique_id_prefix}_{device_class}_floor_{floor_id}"
+            entity = entity_factory(
+                hass,
+                unique_id,
+                None,
+                None,
+                get_floor_device_info(
+                    entry_id, floor_id, scoped.floor_names.get(floor_id, floor_id)
+                ),
+                member_ids,
+                device_class,
+            )
+            entities.append(entity)
+            floor_group_ids.append(entity.entity_id)
+
+        if floor_group_ids:
+            unique_id = f"{unique_id_prefix}_{device_class}_global"
+            entity = entity_factory(
+                hass,
+                unique_id,
+                None,
+                None,
+                get_global_device_info(entry_id),
+                floor_group_ids,
+                device_class,
+            )
+            entities.append(entity)
+
+    return entities
+
+
 DEBOUNCE_SECONDS = 0.1
 
 

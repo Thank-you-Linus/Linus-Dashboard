@@ -28,11 +28,12 @@ from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .aggregate import DOMAIN_ACTIVE_STATES
+from .aggregate import DOMAIN_ACTIVE_STATES, resolve_device_class_name
 from .const import DOMAIN
 from .entity_group import (
     ExclusionConfig,
     NestedGroupMixin,
+    build_nested_device_class_groups,
     build_nested_domain_groups,
     compute_group_attributes,
     mean_float,
@@ -51,18 +52,35 @@ _ACTIVE_STATES = DOMAIN_ACTIVE_STATES["media_player"]
 
 
 class MediaPlayerGroup(NestedGroupMixin, MediaPlayerEntity):
-    """A media_player entity that forwards playback/volume to its members."""
+    """
+    A media_player entity that forwards playback/volume to its members.
+
+    device_class is optional: None for the flat "all media players in this
+    area" group, or a real media_player device_class (tv, speaker,
+    receiver) for a per-device_class group — same entity class either way.
+    """
 
     def __init__(
         self,
         hass: HomeAssistant,
         unique_id: str,
-        translation_key: str,
+        translation_key: str | None,
         translation_placeholders: dict[str, str] | None,
         device_info: dict,
         member_entity_ids: list[str],
+        device_class: str | None = None,
     ) -> None:
         super().__init__()
+        self._attr_device_class = device_class
+        # MediaPlayerEntity doesn't auto-name after device_class like
+        # BinarySensorEntity does — without this, every device_class group
+        # in an area would show the exact same name as the flat "all
+        # media players" group and each other. See resolve_device_class_name.
+        device_class_name = resolve_device_class_name(
+            hass, "media_player", device_class
+        )
+        if device_class_name:
+            self._attr_name = device_class_name
         self._attr_supported_features = (
             MediaPlayerEntityFeature.PLAY
             | MediaPlayerEntityFeature.PAUSE
@@ -111,7 +129,7 @@ class MediaPlayerGroup(NestedGroupMixin, MediaPlayerEntity):
         attrs = compute_group_attributes(
             self.hass,
             domain="media_player",
-            device_class=None,
+            device_class=self.device_class,
             member_entity_ids=self._member_entity_ids,
         )
         self._attr_extra_state_attributes = attrs
@@ -155,12 +173,17 @@ class MediaPlayerGroup(NestedGroupMixin, MediaPlayerEntity):
 def _make_media_player_group(
     hass: HomeAssistant,
     unique_id: str,
-    translation_key: str,
+    translation_key: str | None,
     translation_placeholders: dict[str, str] | None,
     device_info: dict,
     member_entity_ids: list[str],
+    device_class: str | None = None,
 ) -> MediaPlayerGroup:
-    """Idempotent factory — see light.py's _make_light_group for the full rationale."""
+    """
+    Idempotent factory — see light.py's _make_light_group for the full
+    rationale. Serves both build_nested_domain_groups (flat, no
+    device_class) and build_nested_device_class_groups (tv/speaker/receiver).
+    """
     existing = _MEDIA_PLAYER_GROUPS.get(unique_id)
     if existing is not None:
         hass.async_create_task(existing.async_update_members(member_entity_ids))
@@ -173,9 +196,40 @@ def _make_media_player_group(
         translation_placeholders,
         device_info,
         member_entity_ids,
+        device_class,
     )
     _MEDIA_PLAYER_GROUPS[unique_id] = group
     return group
+
+
+async def _build_all_media_player_groups(
+    hass: HomeAssistant, config_entry: ConfigEntry, exclusions: ExclusionConfig
+) -> list[MediaPlayerGroup]:
+    """Flat 'all media players' groups plus one set per device_class present (tv, speaker, receiver)."""
+    entities: list[MediaPlayerGroup] = []
+    entities.extend(
+        await build_nested_domain_groups(
+            hass,
+            config_entry,
+            exclusions,
+            domain="media_player",
+            unique_id_prefix=f"{DOMAIN}_all_media_players",
+            translation_key="media_player_group",
+            translation_key_global="media_player_group_global",
+            entity_factory=_make_media_player_group,
+        )
+    )
+    entities.extend(
+        await build_nested_device_class_groups(
+            hass,
+            config_entry,
+            exclusions,
+            domain="media_player",
+            unique_id_prefix=DOMAIN,
+            entity_factory=_make_media_player_group,
+        )
+    )
+    return entities
 
 
 async def async_setup_entry(
@@ -183,29 +237,19 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up Linus Dashboard media_player groups (area/floor/global)."""
+    """Set up Linus Dashboard media_player groups (flat + per device_class, area/floor/global)."""
     exclusions = ExclusionConfig.from_config_entry(config_entry)
     _MEDIA_PLAYER_GROUPS.clear()
 
-    build_kwargs = {
-        "domain": "media_player",
-        "unique_id_prefix": f"{DOMAIN}_all_media_players",
-        "translation_key": "media_player_group",
-        "translation_key_global": "media_player_group_global",
-        "entity_factory": _make_media_player_group,
-    }
-
-    entities = await build_nested_domain_groups(
-        hass, config_entry, exclusions, **build_kwargs
-    )
+    entities = await _build_all_media_player_groups(hass, config_entry, exclusions)
     if entities:
         async_add_entities(entities)
         _LOGGER.info("Created %d media_player group entities", len(entities))
 
     async def _rebuild(*_args) -> None:
         before_ids = set(_MEDIA_PLAYER_GROUPS.keys())
-        new_groups = await build_nested_domain_groups(
-            hass, config_entry, exclusions, **build_kwargs
+        new_groups = await _build_all_media_player_groups(
+            hass, config_entry, exclusions
         )
         after_ids = {group.unique_id for group in new_groups}
         to_add = [group for group in new_groups if group.unique_id not in before_ids]

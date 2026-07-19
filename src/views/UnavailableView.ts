@@ -123,6 +123,21 @@ class UnavailableView {
       }
     }
 
+    // Nothing unavailable anywhere — show a confirmation card instead of a
+    // blank page, same pattern as TagsView's no-labels message.
+    if (viewSections.length === 0) {
+      viewSections.push({
+        type: "grid",
+        cards: [{
+          type: "custom:mushroom-template-card",
+          primary: Helper.localize("component.linus_dashboard.entity.text.unavailable_view.state.all_good_title") || "Everything is fine",
+          secondary: Helper.localize("component.linus_dashboard.entity.text.unavailable_view.state.all_good_subtitle") || "No unavailable entities",
+          icon: "mdi:check-circle",
+          icon_color: "green",
+        } as LovelaceCardConfig],
+      } as LovelaceGridCardConfig);
+    }
+
     return viewSections;
   }
 

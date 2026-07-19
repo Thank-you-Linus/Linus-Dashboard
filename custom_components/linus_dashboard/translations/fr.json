@@ -323,6 +323,13 @@
           "entities": "entités",
           "no_entities": "Aucune entité avec cette étiquette"
         }
+      },
+      "unavailable_view": {
+        "name": "Indisponibles",
+        "state": {
+          "all_good_title": "Tout va bien",
+          "all_good_subtitle": "Aucune entité indisponible"
+        }
       }
     },
     "binary_sensor": {

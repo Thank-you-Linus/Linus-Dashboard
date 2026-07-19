@@ -323,6 +323,13 @@
           "entities": "entities",
           "no_entities": "No entities with this label"
         }
+      },
+      "unavailable_view": {
+        "name": "Unavailable",
+        "state": {
+          "all_good_title": "Everything is fine",
+          "all_good_subtitle": "No unavailable entities"
+        }
       }
     },
     "binary_sensor": {

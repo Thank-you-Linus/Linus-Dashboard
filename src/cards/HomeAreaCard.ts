@@ -269,20 +269,37 @@ class HomeAreaCard {
     `;
   }
 
-  getLightCardModStyle(): string {
-    return `
-      ha-card {
-        box-shadow: none!important;
-        border: none;
-        margin-top: -12px;
-      }
-      ha-tile-icon {
-        display: none;
-      }
-      ha-tile-info {
-        display: none;
-      }
-    `;
+  getLightCardModStyle(): Record<string, string> {
+    return {
+      // "." is card_mod's own marker for "plain CSS applied directly" —
+      // ha-tile-icon/ha-tile-info are light-DOM children card_mod can reach
+      // this way, same as everywhere else in this file.
+      ".": `
+        ha-card {
+          box-shadow: none!important;
+          border: none;
+          margin-top: -12px;
+        }
+        ha-tile-icon {
+          display: none;
+        }
+        ha-tile-info {
+          display: none;
+        }
+      `,
+      // ha-tile-icon/info are slotted into ha-tile-container's OWN shadow
+      // root, inside a ".content" div with flex:1 + padding:10px. Hiding
+      // the slotted elements above leaves that div's flex/padding in place
+      // (it doesn't collapse just because its slotted content is display:
+      // none), which is what caused the oversized empty zone above the
+      // brightness slider. card_mod's "<selector>$" syntax pierces into
+      // that element's shadow root so this rule can actually reach it.
+      "ha-tile-container$": `
+        .content {
+          display: none!important;
+        }
+      `
+    };
   }
 
   /**

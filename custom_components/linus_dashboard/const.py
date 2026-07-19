@@ -63,10 +63,15 @@ def get_area_device_info(entry_id: str, area_id: str, area_name: str) -> dict:
     clean human-readable slug (same pitfall documented in Linus Brain's
     get_area_device_info). Placement in the real area must go through the
     device registry (area_id=...) after creation, not this heuristic field.
+
+    The device name is just the area name, no "Linus Dashboard -" prefix:
+    the attribution already lives in manufacturer/model (visible on the
+    device's own info page), and a bare area name reads naturally if any of
+    these entities ever get exposed to a voice assistant.
     """
     return {
         "identifiers": {(DOMAIN, f"{entry_id}_area_{area_id}")},
-        "name": f"Linus Dashboard - {area_name}",
+        "name": area_name,
         "manufacturer": "Linus Dashboard",
         "model": "Area Group",
         "sw_version": VERSION,
@@ -85,7 +90,7 @@ def get_floor_device_info(entry_id: str, floor_id: str, floor_name: str) -> dict
     """
     return {
         "identifiers": {(DOMAIN, f"{entry_id}_floor_{floor_id}")},
-        "name": f"Linus Dashboard - {floor_name}",
+        "name": floor_name,
         "manufacturer": "Linus Dashboard",
         "model": "Floor Group",
         "sw_version": VERSION,
@@ -93,10 +98,18 @@ def get_floor_device_info(entry_id: str, floor_id: str, floor_name: str) -> dict
 
 
 def get_global_device_info(entry_id: str) -> dict:
-    """Get device_info for the whole-house Linus Dashboard group device."""
+    """
+    Get device_info for the whole-house Linus Dashboard group device.
+
+    Unlike area/floor devices, there's no HA-native name to reuse here, so
+    the name is resolved from the "device" translation category
+    (device.global_group.name in translations/*.json) instead of a literal
+    English string — this is the same translation_key mechanism entities
+    already use, applied to the device name.
+    """
     return {
         "identifiers": {(DOMAIN, f"{entry_id}_global")},
-        "name": "Linus Dashboard - Whole House",
+        "translation_key": "global_group",
         "manufacturer": "Linus Dashboard",
         "model": "Global Group",
         "sw_version": VERSION,

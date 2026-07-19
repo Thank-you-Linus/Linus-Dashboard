@@ -40,6 +40,11 @@
       }
     }
   },
+  "device": {
+    "global_group": {
+      "name": "Whole House"
+    }
+  },
   "entity": {
     "button": {
       "add_new_area": {

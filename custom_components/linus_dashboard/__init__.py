@@ -86,16 +86,52 @@ _DEAD_GENERIC_SENSOR_DOMAINS = (
     "media_player",
 )
 
+# Domains whose device_class-specific hidden counting-sensor buckets
+# (motion, door, gate, garage, tv, speaker, ...) were dropped in favor of a
+# real dedicated group entity per device_class — see entity_group.py's
+# build_nested_device_class_groups. Includes binary_sensor: its
+# per-device_class dedicated groups (BinarySensorDeviceClassGroup) already
+# existed before this, but _build_aggregate_sensors kept generating this
+# domain's device_class buckets too until the same change that added
+# cover/media_player's dedicated groups also removed device_class-bucket
+# generation for every domain at once — confirmed live: e.g.
+# sensor.linus_dashboard_binary_sensor_motion_active went from a real
+# value to permanently "unavailable" the moment that shipped.
+_DEAD_DEVICE_CLASS_SENSOR_DOMAINS = (
+    "binary_sensor",
+    "cover",
+    "media_player",
+)
+
 
 async def async_cleanup_orphaned_aggregate_sensors(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> None:
     """
-    Remove the now-dead domain-level (no device_class) generic counting
-    sensors for _DEAD_GENERIC_SENSOR_DOMAINS, at global and every current
-    floor scope. Built from exact expected unique_ids (not a prefix match)
-    so this can't accidentally catch a same-domain device_class bucket,
-    which is a different, still-live unique_id shape.
+    Remove now-dead hidden counting sensors: domain-level (no device_class)
+    buckets for _DEAD_GENERIC_SENSOR_DOMAINS (exact unique_id match, at
+    global and every current floor scope), plus device_class buckets for
+    _DEAD_DEVICE_CLASS_SENSOR_DOMAINS (prefix+suffix match, since
+    device_class is dynamically discovered — there's no fixed set of
+    exact unique_ids to build like the domain-level case).
+
+    The device_class-bucket cleanup is a second, later install-upgrade
+    case: binary_sensor/cover/media_player used to each get one of these
+    per device_class (motion, door, gate, tv, speaker, ...) from sensor.py's
+    old generic system, before every device_class got a real dedicated
+    group entity of its own instead (entity_group.py's
+    build_nested_device_class_groups). Anyone who ran an earlier version
+    has these lingering as permanently "unavailable".
+
+    Prefix+suffix match, since device_class is dynamically discovered — no
+    fixed set of exact unique_ids to build like the domain-level case. This
+    needs one explicit guard: binary_sensor (unlike cover/media_player)
+    still has a legitimate, currently-alive domain-level bucket (from
+    GENERIC_DOMAIN_LEVEL_DOMAINS in sensor.py), whose exact unique_id
+    (f"{DOMAIN}_binary_sensor_active", optionally +floor_id) happens to
+    share the same prefix+suffix shape as its now-dead device_class
+    buckets — protected_unique_ids exists so the prefix match below can't
+    delete it by mistake.
     """
     entity_reg = er.async_get(hass)
     floor_reg = fr.async_get(hass)
@@ -109,15 +145,30 @@ async def async_cleanup_orphaned_aggregate_sensors(
             for domain in _DEAD_GENERIC_SENSOR_DOMAINS
         )
 
+    dead_prefixes = tuple(
+        f"{DOMAIN}_{domain}_" for domain in _DEAD_DEVICE_CLASS_SENSOR_DOMAINS
+    )
+    protected_unique_ids = {
+        f"{DOMAIN}_{domain}_active" for domain in _UNHIDE_DOMAIN_LEVEL_SENSOR_DOMAINS
+    }
+    for floor in floor_reg.floors.values():
+        protected_unique_ids.update(
+            f"{DOMAIN}_{domain}_{floor.floor_id}_active"
+            for domain in _UNHIDE_DOMAIN_LEVEL_SENSOR_DOMAINS
+        )
+
     for entity_entry in list(entity_reg.entities.values()):
-        if (
-            entity_entry.config_entry_id == entry.entry_id
-            and entity_entry.unique_id in dead_unique_ids
+        if entity_entry.config_entry_id != entry.entry_id:
+            continue
+        unique_id = entity_entry.unique_id
+        if unique_id in protected_unique_ids:
+            continue
+        if unique_id in dead_unique_ids or (
+            unique_id.endswith("_active") and unique_id.startswith(dead_prefixes)
         ):
             entity_reg.async_remove(entity_entry.entity_id)
             _LOGGER.info(
-                "Removed orphaned generic aggregate sensor: %s",
-                entity_entry.entity_id,
+                "Removed orphaned aggregate sensor: %s", entity_entry.entity_id
             )
 
 

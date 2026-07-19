@@ -630,7 +630,12 @@ export function createFloorScopeChips(
  */
 export const getDomainTranslationKey = memoize(function getDomainTranslationKey(domain: string, device_class?: string) {
     if (domain === 'scene') return 'ui.dialogs.quick-bar.commands.navigation.scene'
-    if (AGGREGATE_DOMAINS.includes(domain) && device_class) return `component.${domain}.entity_component.${device_class}.name`
+    // Any domain can have a device_class-specific name (cover: gate/garage/...,
+    // media_player: tv/speaker/..., not just binary_sensor/sensor) — gating this
+    // on AGGREGATE_DOMAINS made every cover show HA's generic "Opening" name
+    // instead of its actual device_class name everywhere covers are grouped
+    // (Home/Area/Floor/Security views).
+    if (device_class) return `component.${domain}.entity_component.${device_class}.name`
     return `component.${domain}.entity_component._.name`
 }, { name: 'getDomainTranslationKey', maxSize: 150 });
 

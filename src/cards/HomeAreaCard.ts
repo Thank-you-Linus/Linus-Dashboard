@@ -2,7 +2,7 @@ import { cards } from "../types/strategy/cards";
 import { TemplateCardConfig } from "../types/lovelace-mushroom/cards/template-card-config";
 import { Helper } from "../Helper";
 import { ControlChip } from "../chips/ControlChip";
-import { AggregateChip } from "../chips/AggregateChip";
+import { AggregateChip, AggregateChipOptions } from "../chips/AggregateChip";
 import { ActivityDetectionChip } from "../chips/ActivityDetectionChip";
 import { generic } from "../types/strategy/generic";
 import { getAreaName } from "../utils";
@@ -44,7 +44,7 @@ class HomeAreaCard {
 
   getDefaultConfig(): TemplateCardConfig {
 
-    // Use EntityResolver to get all_lights entity (Linus Brain only)
+    // Dashboard-native all_lights group entity, Magic Areas as fallback
     const resolver = Helper.entityResolver;
     const allLightsResolution = resolver.resolveAllLights(this.area.slug);
     const all_lights_entity = allLightsResolution.entity_id;
@@ -91,7 +91,7 @@ class HomeAreaCard {
 
   getMainCard(): any {
 
-    // Use EntityResolver for area state (Linus Brain only)
+    // Linus Brain, falls back to Magic Areas — no Dashboard-native equivalent
     const resolver = Helper.entityResolver;
     const areaStateResolution = resolver.resolveAreaState(this.area.slug);
     const area_state_entity = areaStateResolution.entity_id;
@@ -157,10 +157,11 @@ class HomeAreaCard {
 
   getChipsCard(): any {
 
-    // Use EntityResolver for Linus Brain support
     const resolver = Helper.entityResolver;
+    // light_control_entity: Linus Brain, falls back to Magic Areas
     const lightControlResolution = resolver.resolveLightControlSwitch(this.area.slug);
     const light_control_entity = lightControlResolution.entity_id;
+    // all_lights_entity: Dashboard-native group entity, Magic Areas as fallback
     const allLightsResolution = resolver.resolveAllLights(this.area.slug);
     const all_lights_entity = allLightsResolution.entity_id;
 
@@ -179,30 +180,12 @@ class HomeAreaCard {
       chips: [
         // Show ActivityDetectionChip for all areas (will handle its own display logic)
         new ActivityDetectionChip({ area_slug: this.area.slug }).getChip(),
-        health?.length && new ConditionalChip(
-          health.map(entity => ({ entity, state: "on" })),
-          new AggregateChip({ domain: "health", device_class: "health" }).getChip()
-        ).getChip(),
-        window?.length && new ConditionalChip(
-          window.map(entity => ({ entity, state: "on" })),
-          new AggregateChip({ domain: "binary_sensor", device_class: "window", area_slug: this.area.slug, show_content: false }).getChip()
-        ).getChip(),
-        door?.length && new ConditionalChip(
-          door.map(entity => ({ entity, state: "on" })),
-          new AggregateChip({ domain: "binary_sensor", device_class: "door", area_slug: this.area.slug, show_content: false }).getChip()
-        ).getChip(),
-        cover?.length && new ConditionalChip(
-          cover.map(entity => ({ entity, state: "on" })),
-          new AggregateChip({ domain: "cover", area_slug: this.area.slug, show_content: false }).getChip()
-        ).getChip(),
-        climate?.length && new ConditionalChip(
-          climate.map(entity => ({ entity, state: "on" })),
-          new AggregateChip({ domain: "climate", area_slug: this.area.slug, show_content: false }).getChip(),
-        ).getChip(),
-        fan?.length && new ConditionalChip(
-          fan.map(entity => ({ entity, state: "on" })),
-          new AggregateChip({ domain: "fan", area_slug: this.area.slug, show_content: false }).getChip()
-        ).getChip(),
+        this.buildConditionalDomainChip(health, { domain: "health", device_class: "health" }),
+        this.buildConditionalDomainChip(window, { domain: "binary_sensor", device_class: "window", area_slug: this.area.slug, show_content: false }),
+        this.buildConditionalDomainChip(door, { domain: "binary_sensor", device_class: "door", area_slug: this.area.slug, show_content: false }),
+        this.buildConditionalDomainChip(cover, { domain: "cover", area_slug: this.area.slug, show_content: false }),
+        this.buildConditionalDomainChip(climate, { domain: "climate", area_slug: this.area.slug, show_content: false }),
+        this.buildConditionalDomainChip(fan, { domain: "fan", area_slug: this.area.slug, show_content: false }),
         light?.length && new AggregateChip({ domain: "light", area_slug: this.area.slug, show_content: false }).getChip(),
         // Light control switch - supports Linus Brain
         all_lights_entity && light_control_entity && new ConditionalChip(
@@ -214,10 +197,33 @@ class HomeAreaCard {
     };
   }
 
+  /**
+   * Build a chip that only shows when at least one of the given entities
+   * is "on" — the shared shape behind every per-domain badge chip above
+   * (health/window/door/cover/climate/fan): same wrapping, only the watched
+   * entities and the wrapped AggregateChip's options differ.
+   */
+  private buildConditionalDomainChip(entities: string[] | undefined, chipOptions: AggregateChipOptions) {
+    if (!entities?.length) {
+      return false;
+    }
+    return new ConditionalChip(
+      entities.map(entity => ({ entity, state: "on" })),
+      new AggregateChip(chipOptions).getChip()
+    ).getChip();
+  }
+
   getLightCard(all_lights_entity_id: string): any {
+    // light-brightness renders an empty slider when the group has no
+    // dimmable member (supported_color_modes is just ["onoff"]) — omit it
+    // in that case rather than showing a blank feature area; the tile's own
+    // tap-to-toggle still turns the group on/off either way.
+    const features = Helper.lightSupportsBrightness(all_lights_entity_id)
+      ? [{ type: "light-brightness" }]
+      : [];
     return {
       type: "tile",
-      features: [{ type: "light-brightness" }],
+      features,
       hide_state: true,
       entity: all_lights_entity_id,
       card_mod: { style: this.getLightCardModStyle() }

@@ -44,7 +44,7 @@ export interface AggregateChipOptions extends chips.ChipOptions {
  * Supports device_class for binary_sensor, sensor, and cover domains.
  * 
  * **Features**:
- * - Automatic Linus Brain/Magic Areas detection (passed to popup as linusBrainEntity)
+ * - Automatic group entity detection (Dashboard native / Magic Areas, passed to popup as groupEntity)
  * - Scope-aware (adapts behavior for global/floor/area)
  * - EntityResolver integration (consistent entity resolution)
  * - Centralized color management (uses colorMapping from variables.ts)
@@ -108,20 +108,30 @@ class AggregateChip extends AbstractChip {
       return;
     }
 
-    // 2. Check for Linus Brain group entity (only for area scope)
-    const linusBrainEntity = this.getLinusBrainEntity(config);
+    // 2. Check for the area's group entity (only for area scope)
+    const groupEntity = this.getGroupEntity(config);
 
     // 3. Configure chip appearance
-    const sensorId = this.getAggregateSensorId(config);
+    const aggregateSource = this.getAggregateSensorId(config);
 
-    if (sensorId) {
-      // Server-side aggregate: trivial single-entity template reads
+    if (aggregateSource) {
+      // Server-side aggregate: trivial single-entity template reads.
+      // Dedicated group entities (light.py/switch.py/.../binary_sensor.py)
+      // report the count via the active_entity_ids attribute (their own
+      // state is on/off, not a number) — the generic hidden counting
+      // sensor's own state IS the count. Same icon/color attribute either
+      // way (both come from aggregate.py's compute_group_attributes /
+      // compute_icon / compute_color).
+      const { entityId: sensorId, isDedicatedGroup } = aggregateSource;
       (this.#defaultConfig as any).entity_id = [sensorId];
       this.#defaultConfig.icon = `{{ state_attr('${sensorId}', 'icon') }}`;
       this.#defaultConfig.icon_color = `{{ state_attr('${sensorId}', 'color') }}`;
 
       if (config.show_content) {
-        this.#defaultConfig.content = `{% set count = states('${sensorId}') | int(0) %}{% if count > 0 %}{{ count }}{% endif %}`;
+        const countExpr = isDedicatedGroup
+          ? `state_attr('${sensorId}', 'active_entity_ids') | count`
+          : `states('${sensorId}') | int(0)`;
+        this.#defaultConfig.content = `{% set count = ${countExpr} %}{% if count > 0 %}{{ count }}{% endif %}`;
       }
     } else {
       // Fallback: inline template approach (area scope or sensor unavailable)
@@ -150,7 +160,8 @@ class AggregateChip extends AbstractChip {
       serviceOff: config.serviceOff,
       activeStates: config.activeStates,
       translationKey: config.translationKey,
-      linusBrainEntity: linusBrainEntity,
+      groupEntity: groupEntity,
+      dedicatedGroupEntity: aggregateSource?.isDedicatedGroup ? aggregateSource.entityId : null,
       features: config.features,
       device_class: config.device_class,
     });
@@ -350,14 +361,20 @@ class AggregateChip extends AbstractChip {
   }
 
   /**
-   * Get Linus Brain or Magic Areas group entity if available
-   * 
+   * Get the area's group entity for this chip's domain, if one exists —
+   * Linus Dashboard native, or Magic Areas as fallback where Dashboard has
+   * no equivalent (climate). Passed to the popup so it can show a quick
+   * group-control tile (see AggregatePopup.buildGroupControlSection).
+   *
    * @param options - Chip options
    * @returns Entity ID or null
    * @private
    */
-  private getLinusBrainEntity(options: AggregateChipOptions): string | null {
-    // Only check for Linus Brain in area scope
+  private getGroupEntity(options: AggregateChipOptions): string | null {
+    // Only relevant in area scope — floor/global already get their own
+    // dedicated group entity as the chip's main entity_id (see
+    // getAggregateSensorId), so there's no separate "quick control tile"
+    // entity to resolve there.
     if (options.scope !== "area") {
       return null;
     }
@@ -369,27 +386,42 @@ class AggregateChip extends AbstractChip {
 
     const resolver = Helper.entityResolver;
 
-    // Check by domain
     switch (options.domain) {
       case "light": {
         const lightResolution = resolver.resolveAllLights(options.area_slug);
-        // Return entity for both Linus Brain AND Magic Areas
+        // Resolves to the Linus Dashboard-native light group by default
         return lightResolution.entity_id;
       }
 
       case "climate": {
-        // Try Magic Areas climate_group entity
+        // Secondary fallback only — getAggregateSensorId already tries the
+        // native dedicated group (climate.py) first, at every scope. This
+        // only matters if that entity happens to be unavailable, in which
+        // case Magic Areas' climate_group is still worth falling back to
+        // for this area-scope quick-control tile.
         const climateResolution = resolver.resolveClimateGroup(options.area_slug);
         return climateResolution.entity_id;
       }
 
-      case "cover":
-      case "fan":
-      case "media_player":
       case "switch":
-        // Linus Brain doesn't have these domain group entities yet
-        // Magic Areas doesn't provide group entities for these domains either
-        return null;
+      case "fan":
+      case "cover":
+      case "siren": {
+        const slug = AggregateChip.DEDICATED_GROUP_DOMAINS[options.domain];
+        const resolution = resolver.resolveGroupEntity(options.domain, slug, options.area_slug);
+        return resolution.entity_id;
+      }
+
+      case "media_player": {
+        // Secondary fallback only, same reasoning as climate above —
+        // getAggregateSensorId already tries the native dedicated group
+        // (media_player.py) first, at every scope. Magic Areas does have a
+        // real media_player_group entity to fall back to here (unlike
+        // media_player_control, a boolean switch that can't serve as this
+        // tile's target).
+        const mediaPlayerResolution = resolver.resolveMediaPlayerGroup(options.area_slug);
+        return mediaPlayerResolution.entity_id;
+      }
 
       default:
         return null;
@@ -397,15 +429,94 @@ class AggregateChip extends AbstractChip {
   }
 
   /**
-   * Get the server-side aggregate sensor ID for this chip's configuration.
-   * Returns null for area scope (stays client-side) or if sensor doesn't exist.
+   * Domains with their own dedicated group entity platform (light.py,
+   * switch.py, fan.py, cover.py, siren.py, climate.py, media_player.py) —
+   * value is the "all_X" slug each platform uses in its unique_id (see e.g.
+   * light.py's `unique_id_prefix=f"{DOMAIN}_all_lights"`). These are richer
+   * than the generic hidden counting sensor (controllable, list members via
+   * entity_id) and cover the same ground at floor/global scope, so they're
+   * preferred over it. Only applies with no device_class filter — cover's
+   * own device_class variants (if any) still fall through to the generic
+   * sensor below, same as binary_sensor's presence-related device classes
+   * (motion/presence/occupancy — folded into the presence composite
+   * instead of their own device_class group, see binary_sensor.py's
+   * PRESENCE_DEVICE_CLASSES).
    */
-  private getAggregateSensorId(config: AggregateChipOptions): string | null {
-    if (config.scope === "area") return null;
+  private static readonly DEDICATED_GROUP_DOMAINS: Record<string, string> = {
+    light: "all_lights",
+    switch: "all_switches",
+    fan: "all_fans",
+    cover: "all_covers",
+    siren: "all_sirens",
+    climate: "all_climates",
+    media_player: "all_media_players",
+  };
 
+  /**
+   * Get the server-side aggregate entity for this chip's configuration —
+   * preferring a dedicated group entity when one exists for this
+   * domain/device_class, falling back to the generic hidden counting
+   * sensor (sensor.py's LinusDashboardAggregateSensor) otherwise. Every
+   * domain in DOMAIN_ACTIVE_STATES now has its own dedicated group; that
+   * generic sensor only still exists for "every binary_sensor regardless of
+   * device_class" (no sensible single group for that) and for device_class
+   * buckets that don't get their own dedicated group (binary_sensor's
+   * presence-related classes, cover's device_class variants). It also has
+   * no area tier at all (sensor.py only builds it at floor/global —
+   * AggregateChip never used to query it at area scope), so at area scope
+   * this only ever tries the dedicated group, never that fallback.
+   *
+   * Returns null (client-side rendering, same as always) if nothing
+   * server-side exists for this scope/domain/device_class.
+   */
+  private getAggregateSensorId(
+    config: AggregateChipOptions
+  ): { entityId: string; isDedicatedGroup: boolean } | null {
+    const hasDeviceClass = !!config.device_class && config.device_class !== "_";
+
+    let scopeSuffix: string;
+    if (config.scope === "area") {
+      if (Array.isArray(config.area_slug) || !config.area_slug) return null;
+      scopeSuffix = `_area_${config.area_slug}`;
+    } else if (config.scope === "floor" && config.floor_id) {
+      scopeSuffix = `_floor_${config.floor_id}`;
+    } else {
+      scopeSuffix = "_global";
+    }
+
+    const tryEntity = (entityId: string): boolean => {
+      const state = Helper.getEntityState(entityId);
+      return !!state && state.state !== "unavailable";
+    };
+
+    // 1. Dedicated single-domain group (light/switch/fan/cover/siren) —
+    // exists at every scope, including area.
+    const dedicatedSlug = AggregateChip.DEDICATED_GROUP_DOMAINS[config.domain];
+    if (dedicatedSlug && !hasDeviceClass) {
+      const entityId = `${config.domain}.linus_dashboard_${dedicatedSlug}${scopeSuffix}`;
+      if (tryEntity(entityId)) {
+        return { entityId, isDedicatedGroup: true };
+      }
+    }
+
+    // 2. Dedicated binary_sensor-by-device_class group — also exists at
+    // every scope, including area.
+    if (config.domain === "binary_sensor" && hasDeviceClass) {
+      const entityId = `binary_sensor.linus_dashboard_${config.device_class}${scopeSuffix}`;
+      if (tryEntity(entityId)) {
+        return { entityId, isDedicatedGroup: true };
+      }
+    }
+
+    if (config.scope === "area") {
+      // No area tier for the generic hidden sensor — see docstring.
+      return null;
+    }
+
+    // 3. Fallback: generic hidden counting sensor (floor/global only)
     const parts = ["linus_dashboard", config.domain];
-    if (config.device_class && config.device_class !== '_') {
-      parts.push(config.device_class);
+    if (hasDeviceClass) {
+      parts.push(config.device_class as string);
     }
     if (config.scope === "floor" && config.floor_id) {
       parts.push(config.floor_id);
@@ -413,12 +524,11 @@ class AggregateChip extends AbstractChip {
     parts.push("active");
 
     const sensorId = `sensor.${parts.join("_")}`;
-    const sensorState = Helper.getEntityState(sensorId);
-    if (!sensorState || sensorState.state === "unavailable") {
-      return null;
+    if (tryEntity(sensorId)) {
+      return { entityId: sensorId, isDedicatedGroup: false };
     }
 
-    return sensorId;
+    return null;
   }
 }
 

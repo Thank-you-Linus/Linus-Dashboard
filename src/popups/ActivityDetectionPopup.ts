@@ -181,8 +181,12 @@ class ActivityDetectionPopup extends AbstractPopup {
             audioEntities: audio_entities,
         };
 
-        // Get entities from Linus Brain presence detection group if it exists
-        const presenceGroupEntity = `binary_sensor.linus_brain_presence_detection_${area_slug}`;
+        // Get entities from Linus Dashboard's native presence detection group
+        // if it exists (moved here from Linus Brain — same OR-gate over
+        // motion/presence/occupancy/media, so its member list is the same
+        // safety net this always relied on: entities that don't match the
+        // standard device_class filters above but still feed presence).
+        const presenceGroupEntity = `binary_sensor.linus_dashboard_presence_detection_area_${area_slug}`;
         const presenceGroupState = Helper.getEntityState(presenceGroupEntity);
         const groupMemberEntities: string[] = [];
 
@@ -195,7 +199,7 @@ class ActivityDetectionPopup extends AbstractPopup {
         }
 
         // Combine all entities and remove duplicates
-        // Group members are included to ensure all Linus Brain sensors appear
+        // Group members are included to ensure all presence sensors appear
         // even if they don't match the standard device_class filters
         const allPresenceEntities = [
             ...motion_entities,
@@ -255,19 +259,20 @@ class ActivityDetectionPopup extends AbstractPopup {
             });
         }
 
-        // Chip 3: Presence (ONLY if Linus Brain)
-        if (isLinusBrain) {
+        // Chip 3: Presence — binary_sensor.linus_dashboard_presence_detection_area_X
+        // is native (works without Linus Brain), so this no longer needs to
+        // be gated on isLinusBrain — only Chips 2/4 and the sections below
+        // that read genuinely Brain-only entities/attributes still are.
+        if (presenceSensorEntity) {
             const presenceLabel = Helper.localize("component.linus_dashboard.entity.text.activity_detection_popup.state.presence");
-            if (presenceSensorEntity) {
-                statusChips.push({
-                    type: "template",
-                    entity: presenceSensorEntity,
-                    content: `${presenceLabel}`,
-                    icon: `{{ state_attr('${presenceSensorEntity}', 'icon') or 'mdi:home-search' }}`,
-                    icon_color: `{{ 'red' if is_state('${presenceSensorEntity}', 'on') else 'grey' }}`,
-                    tap_action: { action: "more-info", entity: presenceSensorEntity }
-                });
-            }
+            statusChips.push({
+                type: "template",
+                entity: presenceSensorEntity,
+                content: `${presenceLabel}`,
+                icon: `{{ state_attr('${presenceSensorEntity}', 'icon') or 'mdi:home-search' }}`,
+                icon_color: `{{ 'red' if is_state('${presenceSensorEntity}', 'on') else 'grey' }}`,
+                tap_action: { action: "more-info", entity: presenceSensorEntity }
+            });
         }
 
         // Chip 4: Duration (ONLY if Linus Brain)
@@ -316,21 +321,26 @@ class ActivityDetectionPopup extends AbstractPopup {
             });
         }
 
-        // === HISTORY SECTION (ONLY if Linus Brain) ===
-        if (isLinusBrain && activityEntity) {
+        // === HISTORY SECTION ===
+        // activityEntity is still Brain-only (no native equivalent), but
+        // presenceSensorEntity works without Brain — show the section (and
+        // its presence line) whenever either one is available, not just
+        // when Brain provides the activity entity.
+        if (activityEntity || presenceSensorEntity) {
             cards.push({
                 type: "custom:mushroom-title-card",
                 title: Helper.localize("component.linus_dashboard.entity.text.activity_detection_popup.state.history_title"),
                 subtitle: Helper.localize("component.linus_dashboard.entity.text.activity_detection_popup.state.history_subtitle")
             });
 
-            // Show activity + presence graphs
-            const historyEntities: any[] = [
-                {
+            const historyEntities: any[] = [];
+
+            if (activityEntity) {
+                historyEntities.push({
                     entity: activityEntity,
                     name: Helper.localize("component.linus_dashboard.entity.text.activity_detection_popup.state.activity")
-                }
-            ];
+                });
+            }
 
             if (presenceSensorEntity) {
                 historyEntities.push({
@@ -507,6 +517,72 @@ class ActivityDetectionPopup extends AbstractPopup {
                         cards: row
                     });
                 }
+            }
+        }
+
+        // === Controls Section (ONLY if Linus Brain) ===
+        // Used to live in a separate LinusBrainAreaPopup/chip, shown
+        // alongside this one whenever Brain was installed — two popups
+        // covering overlapping activity/presence/duration/stats ground with
+        // different layouts (one localized with graphs, one flat hardcoded-
+        // English cards). Everything that popup showed beyond this one is
+        // already covered above (activity/presence/duration chips, the
+        // history graphs, the Occupied stat) — automatic lighting and the
+        // device config link were the only genuinely Brain-only additions
+        // with no home elsewhere, so those are what got folded in here
+        // instead of keeping a second popup just for them. All-lights
+        // control was dropped as redundant — the area's own light card
+        // already provides it.
+        if (isLinusBrain) {
+            const automaticLightingEntity = `switch.linus_brain_feature_automatic_lighting_${area_slug}`;
+            const automaticLightingState = Helper.getEntityState(automaticLightingEntity);
+
+            if (automaticLightingState && automaticLightingState.state !== "unavailable") {
+                cards.push({
+                    type: "custom:mushroom-title-card",
+                    title: Helper.localize("component.linus_dashboard.entity.text.activity_detection_popup.state.controls_title") || "Controls",
+                    subtitle: Helper.localize("component.linus_dashboard.entity.text.activity_detection_popup.state.controls_subtitle") || "Area automation"
+                });
+
+                cards.push({
+                    type: "tile",
+                    entity: automaticLightingEntity,
+                    name: Helper.localize("component.linus_dashboard.entity.text.activity_detection_popup.state.automatic_lighting") || "Automatic Lighting",
+                    icon: "mdi:lightbulb-auto",
+                    card_mod: {
+                        style: "ha-card { box-shadow: none; margin: 2px 0; }"
+                    }
+                });
+            }
+
+            const linusBrainDevice = Object.values(Helper.devices).find(
+                device => device.manufacturer === "Linus Brain" &&
+                          device.model === "Area Intelligence" &&
+                          device.area_id === area_slug
+            );
+
+            if (linusBrainDevice) {
+                cards.push({
+                    type: "custom:mushroom-template-card",
+                    primary: Helper.localize("component.linus_dashboard.entity.text.activity_detection_popup.state.view_device_config") || "View Device Configuration",
+                    icon: "mdi:cog",
+                    icon_color: "cyan",
+                    tap_action: {
+                        action: "fire-dom-event",
+                        browser_mod: {
+                            service: "browser_mod.sequence",
+                            data: {
+                                sequence: [
+                                    { service: "browser_mod.close_popup", data: {} },
+                                    { service: "browser_mod.navigate", data: { path: `/config/devices/device/${linusBrainDevice.id}` } }
+                                ]
+                            }
+                        }
+                    },
+                    card_mod: {
+                        style: "ha-card { box-shadow: none; margin-top: 4px; }"
+                    }
+                });
             }
         }
 

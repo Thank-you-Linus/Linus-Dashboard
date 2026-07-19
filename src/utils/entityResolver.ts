@@ -18,18 +18,33 @@ export interface EntityResolution {
 /**
  * Entity Resolver
  *
- * Resolves entities by prioritizing Linus Brain when available,
- * then falling back to Magic Areas, then native HA.
+ * Resolves entities from Linus Brain when available, otherwise returns null
+ * (for the two entities Brain still owns) or a Linus Dashboard-native entity
+ * (for the two that moved here — see below).
  *
- * **Entities provided by Linus Brain (highest priority):**
+ * **Entities still provided by Linus Brain (unchanged):**
  * - area_state → sensor.linus_brain_activity_{area}
- * - presence → binary_sensor.linus_brain_presence_detection_{area}
  * - light_control → switch.linus_brain_feature_automatic_lighting_{area}
- * - all_lights → light.linus_brain_all_lights_{area}
  *
- * **Entities kept from Magic Areas (fallback):**
- * - area_state, light_control, all_lights, climate_group
- * - All aggregates (aggregate_*), groups (climate_group)
+ * **Entities now provided natively by Linus Dashboard (no Brain needed):**
+ * - presence → binary_sensor.linus_dashboard_presence_detection_area_{area}
+ * - all_lights → light.linus_dashboard_all_lights_area_{area}
+ *
+ * Presence and all_lights used to be Brain-only (`source: "linus_brain"` with
+ * a `null` fallback when Brain wasn't installed). They're mechanical
+ * aggregation (an OR-gate over motion/presence/occupancy sensors, a group of
+ * every light in the area) rather than anything AI-driven, so they moved to
+ * Dashboard to be available to every user, not just those with the
+ * (optional, experimental) Brain companion integration installed. No
+ * backward compatibility with the old `linus_brain_presence_detection_*` /
+ * `linus_brain_all_lights_*` entity_id is kept — clean cut, not a dual
+ * fallback (see PR description for the reasoning).
+ *
+ * **Entities kept from Magic Areas (fallback, when Brain doesn't provide them,
+ * or — for the dedicated-group domains below — when the native entity is
+ * unavailable):**
+ * - area_state, light_control, all_lights, climate_group, media_player_group
+ * - All aggregates (aggregate_*), groups (climate_group, media_player_group)
  * - TOD scene services, presence_hold
  */
 export class EntityResolver {
@@ -75,24 +90,33 @@ export class EntityResolver {
   }
 
   /**
-   * Resolves the presence detection binary sensor
+   * Resolves the presence detection binary sensor for an area
    *
-   * Priority: Linus Brain > null
+   * Source: Linus Dashboard native (binary_sensor.linus_dashboard_presence_detection_area_{area}).
+   * No Linus Brain fallback — see class docstring.
    *
    * @param area_slug - The area slug
    * @returns EntityResolution with the resolved entity
    */
   resolvePresenceSensor(area_slug: string): EntityResolution {
-    if (this.hasLinusBrain) {
-      const linusEntity = `binary_sensor.linus_brain_presence_detection_${area_slug}`;
-      if (this.hass.states[linusEntity]) {
-        const state = this.hass.states[linusEntity];
-        if (state.state !== "unavailable" && state.state !== "unknown") {
-          return { entity_id: linusEntity, source: "linus_brain" };
-        }
-      }
+    const entity_id = `binary_sensor.linus_dashboard_presence_detection_area_${area_slug}`;
+    if (this.hass.states[entity_id]) {
+      return { entity_id, source: "native" };
     }
+    return { entity_id: null, source: "native" };
+  }
 
+  /**
+   * Resolves the presence detection binary sensor for a floor
+   *
+   * @param floor_slug - The floor slug
+   * @returns EntityResolution with the resolved entity
+   */
+  resolvePresenceSensorForFloor(floor_slug: string): EntityResolution {
+    const entity_id = `binary_sensor.linus_dashboard_presence_detection_floor_${floor_slug}`;
+    if (this.hass.states[entity_id]) {
+      return { entity_id, source: "native" };
+    }
     return { entity_id: null, source: "native" };
   }
 
@@ -130,26 +154,18 @@ export class EntityResolver {
   }
 
   /**
-   * Resolves the all lights group entity
+   * Resolves the all-lights group entity for an area
    *
-   * Priority: Linus Brain > Magic Areas > native
+   * Priority: Linus Dashboard native (light.linus_dashboard_all_lights_area_{area})
+   * > Magic Areas > native. No Linus Brain branch — see class docstring.
    *
    * @param area_slug - The area slug
    * @returns EntityResolution with the resolved entity
    */
   resolveAllLights(area_slug: string): EntityResolution {
-    if (this.hasLinusBrain) {
-      const linusEntity = `light.linus_brain_all_lights_${area_slug}`;
-      if (this.hass.states[linusEntity]) {
-        const state = this.hass.states[linusEntity];
-        if (state.state !== "unavailable" && state.state !== "unknown") {
-          return {
-            entity_id: linusEntity,
-            source: "linus_brain",
-            fallback: Helper.magicAreasDevices[area_slug]?.entities?.all_lights?.entity_id
-          };
-        }
-      }
+    const entity_id = `light.linus_dashboard_all_lights_area_${area_slug}`;
+    if (this.hass.states[entity_id]) {
+      return { entity_id, source: "native" };
     }
 
     if (this.hasMagicAreas) {
@@ -159,6 +175,43 @@ export class EntityResolver {
       }
     }
 
+    return { entity_id: null, source: "native" };
+  }
+
+  /**
+   * Resolves the all-lights group entity for a floor
+   *
+   * Linus Dashboard native only — Magic Areas has no floor concept.
+   *
+   * @param floor_slug - The floor slug
+   * @returns EntityResolution with the resolved entity
+   */
+  resolveAllLightsForFloor(floor_slug: string): EntityResolution {
+    const entity_id = `light.linus_dashboard_all_lights_floor_${floor_slug}`;
+    if (this.hass.states[entity_id]) {
+      return { entity_id, source: "native" };
+    }
+    return { entity_id: null, source: "native" };
+  }
+
+  /**
+   * Resolves a Linus Dashboard native area-scope group entity for domains
+   * with no Magic Areas equivalent (switch/fan/cover/siren — Magic Areas
+   * only provides light/climate/media_player groups). One generic method
+   * rather than one per domain since the resolution logic is identical;
+   * only the entity_id's domain and "all_X" slug vary.
+   *
+   * @param domain - switch/fan/cover/siren
+   * @param groupSlug - the slug each platform uses in its unique_id, e.g.
+   *   "all_switches" for switch.py, "all_fans" for fan.py
+   * @param area_slug - The area slug
+   * @returns EntityResolution with the resolved entity
+   */
+  resolveGroupEntity(domain: string, groupSlug: string, area_slug: string): EntityResolution {
+    const entity_id = `${domain}.linus_dashboard_${groupSlug}_area_${area_slug}`;
+    if (this.hass.states[entity_id]) {
+      return { entity_id, source: "native" };
+    }
     return { entity_id: null, source: "native" };
   }
 
@@ -173,6 +226,30 @@ export class EntityResolver {
   resolveClimateGroup(area_slug: string): EntityResolution {
     if (this.hasMagicAreas) {
       return this.resolveMagicAreasEntity(area_slug, "climate_group");
+    }
+
+    return { entity_id: null, source: "native" };
+  }
+
+  /**
+   * Resolves the media player group entity
+   *
+   * Priority: Magic Areas > native. Unlike climate, there IS a Linus
+   * Dashboard-native media_player group too (media_player.py) — but
+   * AggregateChip's getAggregateSensorId already tries that one first, at
+   * every scope, before this ever gets called (see AggregateChip's
+   * getGroupEntity, area-scope only, secondary fallback for when the native
+   * entity happens to be unavailable). Magic Areas' own media_player_group
+   * (homeassistant.components.group.media_player.MediaPlayerGroup under the
+   * hood) is a real media_player entity, unlike media_player_control
+   * (a boolean switch — can't serve as this tile's target).
+   *
+   * @param area_slug - The area slug
+   * @returns EntityResolution with the resolved entity
+   */
+  resolveMediaPlayerGroup(area_slug: string): EntityResolution {
+    if (this.hasMagicAreas) {
+      return this.resolveMagicAreasEntity(area_slug, "media_player_group");
     }
 
     return { entity_id: null, source: "native" };

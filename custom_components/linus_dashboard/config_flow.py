@@ -39,6 +39,7 @@ from .const import (
     CONF_EXCLUDED_INTEGRATIONS,
     CONF_EXCLUDED_TARGETS,
     CONF_HIDE_GREETING,
+    CONF_HIDE_GROUPS_FROM_VOICE_ASSISTANTS,
     CONF_WEATHER_ENTITY,
     DOMAIN,
 )
@@ -567,6 +568,15 @@ class LinusDashboardEditFlow(config_entries.OptionsFlow):
                 CONF_HIDE_GREETING,
                 default=current_options.get(CONF_HIDE_GREETING, False),
                 description={"name": "Masquer la salutation"},
+            ): BooleanSelector(),
+            vol.Optional(
+                CONF_HIDE_GROUPS_FROM_VOICE_ASSISTANTS,
+                default=current_options.get(
+                    CONF_HIDE_GROUPS_FROM_VOICE_ASSISTANTS, True
+                ),
+                description={
+                    "name": "Masquer les groupes de zone/étage des assistants vocaux"
+                },
             ): BooleanSelector(),
         }
 

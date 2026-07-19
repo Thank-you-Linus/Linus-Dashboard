@@ -5,10 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.4.0-beta.8] - 2026-01-05
+## [1.6.0-beta.1] - 2026-07-08
 
 ### Added
 
+
+ differentiate activity detection by device class
+- feat: add 17 supplemental domains to exclusion options
+- feat: add CameraPopup with live camera feed in aggregate popups
+- feat: add TagsView and TagsChip for Home Assistant labels management
+- feat: add SecurityView enhancements and siren domain support for 1.5.0-beta.1
+- feat: add siren domain and improve SecurityView with aggregate cards
+- feat: add floor_id support to excluded_targets and fix popup navigation
+- feat: improve Activity Detection popup UX with explanatory text
+- feat: improve Discord notifications and release notes format
+- feat: add Claude Code skills and fix npm scripts
 - feat: improve aggregate popups with Linus Brain integration and enhanced layouts
 - feat: add auto-detected frontend debug logging from Home Assistant logger
 - feat: Implement Component Registry for dynamic imports and caching
@@ -87,6 +98,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+
+
+- fix: use tile card for activity sensors to get real entity icons
+- fix: use reactive Jinja2 templates instead of static state values in popups and chips
+- fix: resolve devcontainer venv installation
+
+ update bundled libs and add custom-elements-guard
+ remove turn on/off from popup and fix icon resolution
+ resolve ruff formatting and PLC0207 lint errors
+ hide badge icon when count is zero
+ use Jinja2 templates for real-time updates in security view
+ prevent duplicate cover entities in chips and badges
+ remove UNDISCLOSED entities from global popups and fix cover icon color
+ use floor scope for aggregate chips instead of area scope
+ skip release workflow for prereleases created via GitHub UI
+ prevent release workflow from triggering on beta/alpha tags
+- fix: use correct scope for badges in AreaView and FloorView
+
+- fix: harmonize badge popups with hierarchical Floor → Area → Entity grouping
+- fix: preserve RELEASE_NOTES.md in stable release workflow
+- fix: improve cover popup UX with side-by-side buttons and individual entities
+- fix: improve Discord webhook selection logic for beta vs stable releases
+- fix: remove memoization from groupEntitiesByDomain to fix entity retrieval bug
+- fix: exclude Magic Areas entities from binary_sensor/sensor popups and improve navigation labels
+- fix: enhance domain checking logic for device classes in createItemsFromList function
+ prevent false positives for unknown backend version
+- fix: improve Discord notifications for stable releases
+- fix: update release workflow to trigger on tag push
+- fix: resolve Ruff formatting issues and remove deprecated rule
 - fix: rename babel.config.js to .cjs for ES modules compatibility
 - fix: improve domain handling and type safety
 - fix: resolve TypeScript type errors in RegistryManager and CardFactory
@@ -212,6 +252,15 @@ mushroom-entity-card
 
 ### Changed
 
+- Update/ha 2026.4.0 (#132)
+
+- refactor: improve aggregate popup UX with cleaner status display
+- refactor: organize sensor constants and reduce Area/Floor chips
+- refactor: improve SecurityView layout and remove stats card
+- refactor: add exclusion utility methods to reduce code duplication
+- refactor: consolidate domain tag construction and improve code maintainability
+- Refactor HomeAreaCard to simplify light chip creation
+- Refactor light chip handling and improve aggregate popup behavior
 - refactor: simplify version retrieval by using const.py instead of manifest.json
 - Refactor time-related attributes in Helper and popups
 - refactor: remove unused imports and debug console logs
@@ -255,6 +304,10 @@ mushroom-entity-card
 <details>
 <summary>Documentation Updates</summary>
 
+- docs: add proper release notes for 1.4.1 stable release
+- docs: add Discord webhooks configuration guide
+- docs: Add comprehensive release notes for 1.4.1-beta.1
+- docs: add critical warning about tag format in all release skills
 - docs: finalize release notes for v1.4.0-beta.7
 - docs: prepare release notes for v1.4.0-beta.7
 - docs: comprehensive documentation overhaul for v1.4.0 release
@@ -275,6 +328,14 @@ mushroom-entity-card
 
 ### Other Changes
 
+- build(deps): update pip requirement from >=26.1 to >=26.1.1 (#141)
+- build(deps): bump ruff from 0.15.9 to 0.15.12 (#140)
+- build(deps): bump softprops/action-gh-release from 2 to 3 (#133)
+- build(deps): bump actions/github-script from 8 to 9 (#134)
+- build(deps): update pip requirement from >=21.3.1 to >=26.1 (#139)
+- build(deps): bump actions/setup-python from 6.1.0 to 6.2.0 (#107)
+- build(deps): bump ruff from 0.14.10 to 0.15.9 (#130)
+- perf: defer component preload, parallelize embedded dashboards and resource registration
 - build: rebuild after babel config fix
 - build: rebuild after cleanup
 - build(deps): bump actions/upload-artifact from 4 to 6
@@ -354,6 +415,109 @@ mushroom-entity-card
 - remove console error
 - Initial commit
 
+## [1.5.1-beta.3] - 2026-03-29
+
+## [1.5.1-beta.2] - 2026-03-09
+
+## [1.5.1-beta.1] - 2026-03-07
+
+## [1.5.1] - 2026-04-11
+
+### Added
+
+ differentiate activity detection by device class
+
+### Fixed
+
+- fix: use tile card for activity sensors to get real entity icons
+- fix: use reactive Jinja2 templates instead of static state values in popups and chips
+- fix: resolve devcontainer venv installation
+
+### Changed
+
+- Update/ha 2026.4.0 (#132)
+
+
+### Other Changes
+
+- build(deps): bump actions/setup-python from 6.1.0 to 6.2.0 (#107)
+- build(deps): bump ruff from 0.14.10 to 0.15.9 (#130)
+
+## [1.5.0-beta.3] - 2026-02-17
+
+## [1.5.0-beta.2] - 2026-02-12
+
+## [1.5.0-beta.1] - 2026-02-05
+
+## [1.5.0] - 2026-03-04
+
+### Added
+
+- feat: add 17 supplemental domains to exclusion options
+- feat: add CameraPopup with live camera feed in aggregate popups
+- feat: add TagsView and TagsChip for Home Assistant labels management
+
+### Fixed
+
+ remove turn on/off from popup and fix icon resolution
+ resolve ruff formatting and PLC0207 lint errors
+ hide badge icon when count is zero
+ use Jinja2 templates for real-time updates in security view
+ prevent duplicate cover entities in chips and badges
+ remove UNDISCLOSED entities from global popups and fix cover icon color
+ use floor scope for aggregate chips instead of area scope
+ skip release workflow for prereleases created via GitHub UI
+ prevent release workflow from triggering on beta/alpha tags
+- fix: use correct scope for badges in AreaView and FloorView
+
+### Changed
+
+- refactor: improve aggregate popup UX with cleaner status display
+- refactor: organize sensor constants and reduce Area/Floor chips
+- refactor: improve SecurityView layout and remove stats card
+
+### Other Changes
+
+- perf: defer component preload, parallelize embedded dashboards and resource registration
+
+## [1.4.3-beta.1] - 2026-02-07
+
+## [1.4.1-beta.4] - 2026-01-10
+
+## [1.4.1-beta.3] - 2026-01-10
+
+## [1.4.1-beta.2] - 2026-01-10
+
+## [1.4.1-beta.1] - 2026-01-08
+
+## [1.4.1] - 2026-01-11
+
+### Added
+
+- feat: improve Activity Detection popup UX with explanatory text
+- feat: improve Discord notifications and release notes format
+
+### Fixed
+
+- fix: preserve RELEASE_NOTES.md in stable release workflow
+- fix: improve cover popup UX with side-by-side buttons and individual entities
+- fix: improve Discord webhook selection logic for beta vs stable releases
+- fix: remove memoization from groupEntitiesByDomain to fix entity retrieval bug
+
+<details>
+<summary>Documentation Updates</summary>
+
+- docs: add proper release notes for 1.4.1 stable release
+- docs: add Discord webhooks configuration guide
+- docs: Add comprehensive release notes for 1.4.1-beta.1
+- docs: add critical warning about tag format in all release skills
+
+</details>
+
+## [1.4.0-beta.9] - 2026-01-06
+
+## [1.4.0-beta.8] - 2026-01-05
+
 ## [1.4.0-beta.7] - 2025-12-31
 
 ## [1.4.0-beta.6] - 2025-12-31
@@ -367,6 +531,119 @@ mushroom-entity-card
 ### Added
 
 - feat: Add comprehensive release management system
+
+## [1.4.0] - 2026-01-06
+
+### Added
+
+- feat: add Claude Code skills and fix npm scripts
+- feat: improve aggregate popups with Linus Brain integration and enhanced layouts
+- feat: add auto-detected frontend debug logging from Home Assistant logger
+- feat: Implement Component Registry for dynamic imports and caching
+- feat: enhance card styling and chip functionality
+- feat: add state-aware dynamic icons for StandardDomainView badges
+- feat: add navigation mode for HomeView chips and debug logs for CoverView
+- feat: add device_class-specific chips for covers and filter empty area badges
+- feat: add smart control chips for Switch, Fan, and MediaPlayer views
+- feat: add RefreshChip to all dashboard views with improved user feedback
+- feat: add manual registry refresh with browser_mod.javascript
+- feat: Add AI-powered intelligent release system
+- feat: Implement smart version management with package.json as single source of truth
+- feat: Add one-command release system with improved Discord notifications
+- feat: mise à jour des notes de version pour inclure le support de la réorganisation manuelle des zones et étages
+- feat: ajout de la prise en charge des tableaux de bord intégrés et amélioration de l'ordre manuel des zones et étages
+- feat: enhance area and floor sorting with manual order support
+- feat: Update to Home Assistant 20251203.2 and add automated update process
+- feat: Add comprehensive release management scripts and documentation
+- feat: Ajoute des scripts pour la validation et l'envoi de notifications de version sur Discord
+- feat: Améliore le système de notification et formatage des notes de version
+- feat: Met à jour la version à 1.4.0-beta.1
+- feat: Add comprehensive release management system
+
+### Fixed
+
+- fix: update release workflow to trigger on tag push
+- fix: resolve Ruff formatting issues and remove deprecated rule
+- fix: rename babel.config.js to .cjs for ES modules compatibility
+- fix: improve domain handling and type safety
+- fix: resolve TypeScript type errors in RegistryManager and CardFactory
+- fix: correct EntityResolver import path case sensitivity
+- fix: resolve cover chip issues with device_class filtering and badge layout
+- fix: use literal import paths in factories for webpack compatibility
+- fix: correct CardFactory basePath - remove incorrect relative paths
+- fix: display entity count in global badges and disable sensor/binary_sensor chips
+- fix: enable control chips for all domains in AreaView and FloorView
+- fix: allow extraControls for aggregate domains without device_class
+- fix: correct floor aggregate chips and cover extraControls
+- fix: exclude Magic Areas entities and improve chip colors
+- fix: update tag validation to disallow 'v' prefix and reflect changes in release guide
+- fix: accept 'v' prefix in pre-release tag validation
+- fix: Improve release notifications formatting and Discord URL display
+- fix: Update version consistency check to use Python import for CONST_VERSION
+- fix: Add eslint-disable for __VERSION__ naming convention and enforce linting rule
+- fix: Automatically clean up duplicate resource versions to prevent CustomElementRegistry conflicts
+- fix: eliminate blocking I/O operations in async event loop
+- fix: modernize linting configuration and resolve all CI errors
+- fix: Improve tag detection to include pre-releases in generate-release-notes
+- fix: Fix smoke tests script arithmetic with set -e
+- fix: Resolve lint pipeline errors with ruff formatting and rule adjustments
+
+### Changed
+
+- Refactor light chip handling and improve aggregate popup behavior
+- refactor: simplify version retrieval by using const.py instead of manifest.json
+- Refactor time-related attributes in Helper and popups
+- refactor: remove unused imports and debug console logs
+- Enhance domain label localization in AggregatePopup
+- Enhance documentation and clean up debug logs in Helper.ts
+- Refactor ActivityDetectionPopup: Clean up code by removing unnecessary lines and comments
+- Refactor Helper class sorting logic and improve badge creation in StandardDomainView
+- refactor: implement factories and services for Phase 3 completion
+- refactor: eliminate domain view duplication with StandardDomainView
+- refactor: simplify domain configuration and remove unused options
+- refactor: add floor_id filtering and eliminate code duplication
+- refactor: unify chip system with AggregateChip and specialized popups
+- refactor: remove redundant titles from domain views and move global chips to badges
+- refactor: simplify activity detection with clear Linus Brain distinction
+- refactor: Simplify release notes system to single file
+- refactor: Unify beta release commands into single /release-beta
+- Enhance HomeAreaCard icon color logic and update version mismatch notification
+- refactor: Simplify release system and make CI checks blocking
+- refactor: Clean up scripts directory - remove obsolete and redundant scripts
+- Refactor code structure for improved readability and maintainability
+
+<details>
+<summary>Documentation Updates</summary>
+
+- docs: finalize release notes for v1.4.0-beta.7
+- docs: prepare release notes for v1.4.0-beta.7
+- docs: comprehensive documentation overhaul for v1.4.0 release
+- docs: add comprehensive chip system architecture documentation
+- docs: Prepare release notes for v1.4.0-beta.4
+- docs: Add comprehensive automated beta release documentation and OpenCode command
+- docs: Prepare release notes for v1.4.0-beta.2
+- docs: Add quick reference guide for new release system
+- docs: Update release notes for v1.4.1
+- docs: update release notes with "Embed Anything" title and enhanced custom dashboard focus
+
+</details>
+
+### Other Changes
+
+- build: rebuild after babel config fix
+- build: rebuild after cleanup
+- build(deps): bump actions/upload-artifact from 4 to 6
+- build(deps): bump actions/github-script from 7 to 8
+- build(deps): bump ruff from 0.14.8 to 0.14.10
+- build: rebuild bundle after translation additions
+- revert: Remove problematic dependency detection logic that prevented cards from loading
+- ci: Streamline workflows
+- ci: Add TypeScript and ESLint checks on push
+- ci: Add confirmation message after lint/type-check step
+- Remove unused utilities and refactor dashboard configuration
+- build(deps): bump actions/setup-python from 6.0.0 to 6.1.0 (#94)
+- build(deps): bump actions/setup-python from 6.0.0 to 6.1.0 (#94)
+- build(deps): bump ruff from 0.13.1 to 0.14.8 (#95)
 
 ## [1.3.0] - 2025-10-24
 

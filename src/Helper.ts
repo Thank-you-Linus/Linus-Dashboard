@@ -3,7 +3,7 @@ import merge from "lodash.merge";
 
 import { configurationDefaults } from "./configurationDefaults";
 import { generic } from "./types/strategy/generic";
-import { DEVICE_CLASSES, LINUS_BRAIN_DOMAIN, MAGIC_AREAS_DOMAIN, MAGIC_AREAS_NAME, SENSOR_STATE_CLASS_TOTAL, SENSOR_STATE_CLASS_TOTAL_INCREASING, UNDISCLOSED, colorMapping, ALL_HOME_ASSISTANT_DOMAINS, STANDARD_DOMAIN_ICONS } from "./variables";
+import { DEVICE_CLASSES, LINUS_BRAIN_DOMAIN, LINUS_DASHBOARD_DOMAIN, MAGIC_AREAS_DOMAIN, MAGIC_AREAS_NAME, SENSOR_STATE_CLASS_TOTAL, SENSOR_STATE_CLASS_TOTAL_INCREASING, UNDISCLOSED, colorMapping, ALL_HOME_ASSISTANT_DOMAINS, STANDARD_DOMAIN_ICONS } from "./variables";
 import { getEntityDomain, getGlobalEntitiesExceptUndisclosed, getMAEntity, getMagicAreaSlug, groupEntitiesByDomain, slugify } from "./utils";
 import { createDomainTag } from "./utils/domainTagHelper";
 import { IconResources } from "./types/homeassistant/data/frontend";
@@ -194,13 +194,23 @@ class Helper {
    * Defines which states count as "active" (show on-icon) for aggregate chips.
    * Kept as a static field so it is allocated once, not on every getIcon() call.
    */
+  // Kept in sync with aggregate.py's DOMAIN_ACTIVE_STATES/DOMAIN_ICONS —
+  // that's the source of truth (this only exists as the client-side
+  // fallback for area scope / a momentarily-unavailable server entity, see
+  // AggregateChip.getAggregateSensorId's else branch). binary_sensor and
+  // siren were missing here even after aggregate.py gained them: without an
+  // entry, getIcon() falls back to Path A (HA's own per-entity icon state
+  // map), which the comment below already warns is unreliable for a group
+  // of entities in mixed states.
   static readonly #DOMAIN_ACTIVE_STATES: Record<string, { activeStates: string[]; on: string; off: string }> = {
-    light:        { activeStates: ['on'],                                                       on: "mdi:lightbulb-on",   off: "mdi:lightbulb-off"      },
-    switch:       { activeStates: ['on'],                                                       on: "mdi:toggle-switch",  off: "mdi:toggle-switch-off"   },
-    fan:          { activeStates: ['on'],                                                       on: "mdi:fan",            off: "mdi:fan-off"             },
-    media_player: { activeStates: ['playing', 'paused', 'on'],                                 on: "mdi:cast-connected", off: "mdi:cast-off"            },
-    climate:      { activeStates: ['heat', 'cool', 'auto', 'heat_cool', 'dry', 'fan_only'],    on: "mdi:thermostat",     off: "mdi:thermostat-box"      },
-    cover:        { activeStates: ['open', 'opening'],                                         on: "mdi:window-open",    off: "mdi:window-closed"       },
+    light:         { activeStates: ['on'],                                                       on: "mdi:lightbulb-on",           off: "mdi:lightbulb-off"                    },
+    switch:        { activeStates: ['on'],                                                       on: "mdi:toggle-switch",           off: "mdi:toggle-switch-off"                },
+    fan:           { activeStates: ['on'],                                                       on: "mdi:fan",                     off: "mdi:fan-off"                          },
+    media_player:  { activeStates: ['playing', 'paused', 'on'],                                 on: "mdi:cast-connected",          off: "mdi:cast-off"                          },
+    climate:       { activeStates: ['heat', 'cool', 'auto', 'heat_cool', 'dry', 'fan_only'],    on: "mdi:thermostat",              off: "mdi:thermostat-box"                    },
+    cover:         { activeStates: ['open', 'opening'],                                         on: "mdi:window-open",             off: "mdi:window-closed"                     },
+    binary_sensor: { activeStates: ['on'],                                                       on: "mdi:checkbox-marked-circle",  off: "mdi:checkbox-blank-circle-outline"     },
+    siren:         { activeStates: ['on'],                                                       on: "mdi:alarm-light",             off: "mdi:alarm-light-off"                   },
   };
 
   /**
@@ -794,7 +804,21 @@ class Helper {
 
       acc[entity.entity_id] = enrichedEntity;
 
-      if (entity.platform !== MAGIC_AREAS_DOMAIN && entity.platform !== LINUS_BRAIN_DOMAIN) {
+      // Exclude Magic Areas/Linus Brain's own aggregate entities (as before)
+      // and now also Linus Dashboard's own group entities — the same
+      // self-inclusion risk documented in entity_group.py's CRITICAL
+      // PATTERN comment applies here too, now that area-scoped group
+      // devices are actually placed in their real HA area (see
+      // ensure_area_device_placed): without this, e.g.
+      // light.linus_dashboard_all_lights_area_salon would show up as an
+      // extra "individual" tile in the Salon light popup, indistinguishable
+      // from a real light.
+      const isOwnAggregateEntity =
+        entity.platform === MAGIC_AREAS_DOMAIN ||
+        entity.platform === LINUS_BRAIN_DOMAIN ||
+        entity.platform === LINUS_DASHBOARD_DOMAIN;
+
+      if (!isOwnAggregateEntity) {
         const areaId = entity.area_id ?? deviceAreaMap.get(entity.device_id ?? "") ?? UNDISCLOSED;
         if (!entitiesByAreaId.has(areaId)) {
           entitiesByAreaId.set(areaId, []);
@@ -809,7 +833,7 @@ class Helper {
         entitiesByDeviceId.get(entity.device_id)!.push(enrichedEntity);
       }
 
-      if (entity.platform !== MAGIC_AREAS_DOMAIN && entity.platform !== LINUS_BRAIN_DOMAIN) this.#domains[domainTag].push(enrichedEntity);
+      if (!isOwnAggregateEntity) this.#domains[domainTag].push(enrichedEntity);
 
       return acc;
     }, {} as Record<string, StrategyEntity>);
@@ -1403,6 +1427,23 @@ class Helper {
    */
   static getEntityState(entity_id: string): HassEntity {
     return this.#hassStates[entity_id]!;
+  }
+
+  /**
+   * Whether a light entity currently reports a color mode beyond plain
+   * on/off (brightness, color, color temp, ...). A light-brightness tile
+   * feature on a light group whose supported_color_modes is only ["onoff"]
+   * renders empty — nothing to bind the slider to — so callers building a
+   * feature list should check this first and fall back to no feature at
+   * all (the tile's own tap-to-toggle still works either way) rather than
+   * unconditionally assuming every light supports dimming.
+   *
+   * @param entity_id - The light entity to check.
+   * @return {boolean}
+   */
+  static lightSupportsBrightness(entity_id: string): boolean {
+    const modes: string[] = this.getEntityState(entity_id)?.attributes?.supported_color_modes ?? [];
+    return modes.some(mode => mode !== "onoff");
   }
 
 

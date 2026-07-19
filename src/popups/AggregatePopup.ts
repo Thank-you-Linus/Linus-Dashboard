@@ -30,8 +30,15 @@ export interface AggregatePopupConfig {
   activeStates: string[];
   /** Translation key prefix for domain-specific text */
   translationKey: string;
-  /** Linus Brain entity (if available, will use more-info instead of popup) */
-  linusBrainEntity?: string | null;
+  /** Area's group entity, if one exists (Dashboard native or Magic Areas) */
+  groupEntity?: string | null;
+  /**
+   * The dedicated group entity backing this popup's own scope (area, or
+   * floor/global too — unlike groupEntity above, which is area-only), when
+   * one exists for this domain. buildControlButtons targets this single
+   * entity instead of every raw member when present.
+   */
+  dedicatedGroupEntity?: string | null;
   /** Features for tile cards (e.g., [{ type: "light-brightness" }]) */
   features?: any[];
   /** Device class (for covers, sensors, binary_sensors) */
@@ -85,7 +92,7 @@ class AggregatePopup extends AbstractPopup {
   }
 
   getDefaultConfig(config: AggregatePopupConfig): PopupActionConfig {
-    const { linusBrainEntity, domain, scope, floor_id, area_slug, device_class } = config;
+    const { groupEntity, dedicatedGroupEntity, domain, scope, floor_id, area_slug, device_class } = config;
 
     // Query entities dynamically based on scope
     const queryOptions: any = {
@@ -122,6 +129,24 @@ class AggregatePopup extends AbstractPopup {
     const readOnlyDomains = ["binary_sensor", "sensor", "camera"];
     const isReadOnly = readOnlyDomains.includes(domain);
 
+    // Dashboard-native group entity for this scope/domain, if one exists —
+    // dedicatedGroupEntity covers light/switch/fan/cover/siren at every
+    // scope (area/floor/global); groupEntity is the area-only Magic
+    // Areas/Brain fallback for domains with no dedicated group (climate).
+    // groupEntity is only checked for existence in the Magic Areas device
+    // registry by EntityResolver, not for actual availability — Magic Areas
+    // registers a climate_group entity even when its underlying climate
+    // control is misconfigured (e.g. "Climate entity not set"), which would
+    // otherwise leave the popup with a broken tile and no working fallback
+    // once the Turn All buttons are hidden below. dedicatedGroupEntity is
+    // already availability-checked upstream (AggregateChip's
+    // getAggregateSensorId), so this only re-checks the groupEntity case.
+    const rawTileEntity = dedicatedGroupEntity ?? groupEntity;
+    const tileEntity =
+      rawTileEntity && Helper.getEntityState(rawTileEntity)?.state !== "unavailable"
+        ? rawTileEntity
+        : null;
+
     // 1. First line: Status + Navigation button (horizontal)
     const statusCard = needsStatistics
       ? this.buildStatisticsCard(configWithEntities)
@@ -143,18 +168,27 @@ class AggregatePopup extends AbstractPopup {
       cards.push(statusCard);
     }
 
-    // 2. Second line: Control buttons (Turn All On / Turn All Off) - only for controllable domains
-    if (!isReadOnly) {
+    // 2. Second line: Control buttons (Turn All On / Turn All Off) - only for
+    // controllable domains, and only when there's no group control tile
+    // (step 3) — that tile's own toggle already turns every member on/off,
+    // so the buttons would be a redundant, less capable duplicate control.
+    if (!isReadOnly && !tileEntity) {
       const controlButtons = this.buildControlButtons(configWithEntities);
       // Control buttons are already in horizontal-stack
       cards.push(controlButtons);
     }
 
-    // 3. Linus Brain section (if exists) - positioned AFTER control buttons
-    if (linusBrainEntity) {
-      cards.push(this.buildLinusBrainSection(linusBrainEntity));
+    // 3. Group control tile (if a group entity exists) - positioned AFTER control buttons
+    if (tileEntity) {
+      cards.push(this.buildGroupControlSection(tileEntity, domain));
     }
 
+    // 3b. History graph for numeric sensors — the individual tiles below
+    // only show the current value, not the trend that's usually the actual
+    // point of looking at a temperature/humidity/etc. popup.
+    if (needsStatistics) {
+      cards.push(this.buildHistoryGraph(configWithEntities));
+    }
 
     // 4. Separator (only if multiple entities)
     const separator = this.buildSeparator(configWithEntities);
@@ -326,11 +360,38 @@ class AggregatePopup extends AbstractPopup {
   }
 
   /**
+   * Build a history graph of every entity in scope — one line per entity,
+   * same set as the statistics card sums/averages and the individual tiles
+   * below list. Deliberately per-entity rather than a single aggregate line:
+   * there's no dedicated "official" history for the client-side sum/average
+   * computed above (it's not backed by its own recorded entity), and seeing
+   * each room's trend side by side is more informative than one blended line
+   * for a temperature/humidity popup covering several areas.
+   */
+  protected buildHistoryGraph(config: AggregatePopupConfigWithEntities) {
+    const { entity_ids } = config;
+
+    return {
+      type: "history-graph",
+      entities: entity_ids.map(entity => ({ entity })),
+      hours_to_show: 24,
+      refresh_interval: 0
+    };
+  }
+
+  /**
    * Build control buttons (Turn All On / Turn All Off)
    * Uses Home Assistant service names
    */
   protected buildControlButtons(config: AggregatePopupConfigWithEntities) {
-    const { domain, serviceOn, serviceOff, entity_ids, translationKey } = config;
+    const { domain, serviceOn, serviceOff, entity_ids, translationKey, dedicatedGroupEntity } = config;
+
+    // Target the dedicated group entity when one exists for this domain/
+    // scope (light/switch/fan/cover/siren) instead of every raw member —
+    // one entity instead of N, and it goes through the group's own
+    // async_turn_on/off (climate/media_player have no dedicated group, so
+    // they keep targeting entity_ids directly, same as before).
+    const controlTarget = dedicatedGroupEntity ? [dedicatedGroupEntity] : entity_ids;
 
     // Use custom translations for action labels
     const actionOn = Helper.localize(`component.linus_dashboard.entity.text.aggregate_popup.state.action_on_${translationKey}`)
@@ -352,7 +413,7 @@ class AggregatePopup extends AbstractPopup {
             action: "call-service",
             service: `${domain}.${serviceOn}`,
             data: {
-              entity_id: entity_ids
+              entity_id: controlTarget
             }
           },
           hold_action: {
@@ -374,7 +435,7 @@ class AggregatePopup extends AbstractPopup {
             action: "call-service",
             service: `${domain}.${serviceOff}`,
             data: {
-              entity_id: entity_ids
+              entity_id: controlTarget
             }
           },
           hold_action: {
@@ -433,15 +494,37 @@ class AggregatePopup extends AbstractPopup {
   }
 
   /**
-   * Build Linus Brain section (tile card for Linus Brain group entity)
+   * Domain-appropriate tile card feature(s) for the group control tile below
+   * — mirrors what each dedicated group entity actually supports
+   * (light.py/fan.py/cover.py/climate.py/media_player.py's feature
+   * aggregation). switch/siren have no HA tile feature beyond the toggle
+   * already built into the tile itself.
    */
-  protected buildLinusBrainSection(linusBrainEntity: string) {
+  private static readonly GROUP_TILE_FEATURES: Record<string, any[]> = {
+    light: [{ type: "light-brightness" }],
+    fan: [{ type: "fan-speed" }],
+    cover: [{ type: "cover-open-close" }, { type: "cover-position" }],
+    climate: [{ type: "climate-hvac-modes" }],
+    media_player: [{ type: "media-player-playback" }, { type: "media-player-volume-slider" }],
+  };
+
+  /**
+   * Build the group control tile (quick on/off + domain-appropriate feature
+   * slider for the area's group entity — light/switch/fan/cover/siren, or
+   * Magic Areas' climate_group).
+   */
+  protected buildGroupControlSection(groupEntity: string, domain: string) {
+    // light-brightness renders an empty slider when the group has no
+    // dimmable member — see Helper.lightSupportsBrightness. Falling back to
+    // no feature at all still leaves the tile's own tap-to-toggle working.
+    const features =
+      domain === "light" && !Helper.lightSupportsBrightness(groupEntity)
+        ? []
+        : AggregatePopup.GROUP_TILE_FEATURES[domain] ?? [];
     return {
       type: "tile",
-      entity: linusBrainEntity,
-      features: [
-        { type: "light-brightness" },
-      ],
+      entity: groupEntity,
+      features,
       features_position: "inline"
     };
   }
@@ -450,8 +533,12 @@ class AggregatePopup extends AbstractPopup {
    * Build separator title (only shown if multiple entities)
    */
   protected buildSeparator(config: AggregatePopupConfigWithEntities) {
-    // Only show separator if more than one entity
-    if (config.entity_ids.length <= 1) {
+    // Show whenever there's at least one entity to introduce — a single
+    // entity is still worth labeling "Individual Controls" so the section
+    // looks the same regardless of how many members an area happens to
+    // have (an area with 1 light shouldn't look like a different popup
+    // layout than one with 3).
+    if (config.entity_ids.length === 0) {
       return null;
     }
 
@@ -503,33 +590,19 @@ class AggregatePopup extends AbstractPopup {
     const floor = Helper.floors[floorId];
     if (!floor) return [];
 
-    // Build sub-popup configuration for floor scope
-    const { PopupFactory } = require("../services/PopupFactory");
-
-    const subPopupAction = PopupFactory.createPopup({
-      domain,
-      device_class,
-      scope: "floor",
-      scopeName: floor.name,
-      floor_id: floorId,
-      serviceOn: config.serviceOn,
-      serviceOff: config.serviceOff,
-      activeStates: config.activeStates,
-      translationKey: config.translationKey,
-      linusBrainEntity: null,
-      features: config.features,
-      showNavigationButton: true,
-    });
-
-    // Create aggregate chip for floor control
+    // Create aggregate chip for floor control. Its own tap_action already
+    // resolves the correct dedicatedGroupEntity (see AggregateChip's
+    // getAggregateSensorId) for this floor/domain — reuse it as the
+    // heading's tap_action instead of building a second, separate popup
+    // config that used to hardcode dedicatedGroupEntity/groupEntity to null,
+    // silently losing the Turn All On/Off single-entity targeting whenever a
+    // floor popup was reached by drilling down from a parent (global) one.
     const { AggregateChip } = require("../chips/AggregateChip");
     const chip = new AggregateChip({
       domain,
       device_class,
       scope: "floor",
       floor_id: floorId,
-      magic_device_id: "global",
-      area_slug: "global",
       show_content: true
     }).getChip();
 
@@ -549,7 +622,7 @@ class AggregatePopup extends AbstractPopup {
       heading: floor.name,
       heading_style: "title",
       icon: floor.icon ?? "mdi:floor-plan",
-      tap_action: subPopupAction,
+      tap_action: chip.tap_action,
       badges
     }];
   }
@@ -585,32 +658,15 @@ class AggregatePopup extends AbstractPopup {
     const area = Helper.areas[areaSlug];
     if (!area) return [];
 
-    // Build sub-popup configuration for area scope
-    const { PopupFactory } = require("../services/PopupFactory");
-
-    const subPopupAction = PopupFactory.createPopup({
-      domain,
-      device_class,
-      scope: "area",
-      scopeName: area.name,
-      area_slug: areaSlug,
-      serviceOn: config.serviceOn,
-      serviceOff: config.serviceOff,
-      activeStates: config.activeStates,
-      translationKey: config.translationKey,
-      linusBrainEntity: null,
-      features: config.features,
-      showNavigationButton: true,
-    });
-
-    // Create aggregate chip for area control
+    // Create aggregate chip for area control — reuse its own tap_action as
+    // the heading's, same reasoning as buildFloorSeparator above (it already
+    // resolves groupEntity/dedicatedGroupEntity correctly for this area).
     const { AggregateChip } = require("../chips/AggregateChip");
     const chip = new AggregateChip({
       domain,
       device_class,
       scope: "area",
       area_slug: areaSlug,
-      magic_device_id: areaSlug,
       show_content: true
     }).getChip();
 
@@ -630,7 +686,7 @@ class AggregatePopup extends AbstractPopup {
       heading: area.name,
       heading_style: "subtitle",
       icon: area.icon ?? "mdi:home",
-      tap_action: subPopupAction,
+      tap_action: chip.tap_action,
       badges
     }];
   }
@@ -662,95 +718,6 @@ class AggregatePopup extends AbstractPopup {
       activeStates: []
     });
   }
-
-  /**
-   * Build clickable floor/area separator with aggregate badge
-   * Shows status and opens sub-popup when clicked
-   *
-   * @param config - Aggregate popup configuration
-   * @param floorId - Floor ID for the separator
-   * @param areaSlug - Optional area slug (for area separators in floor scope)
-   * @returns Array of cards [heading with badge] or empty array if no entities
-   */
-  protected buildFloorAreaSeparators(
-    config: AggregatePopupConfig,
-    floorId: string,
-    areaSlug?: string | null
-  ): any[] {
-    const { domain, device_class, activeStates } = config;
-
-    // Get entities for this floor/area
-    const getOptions: any = {
-      domain,
-      device_class
-    };
-
-    if (areaSlug) {
-      // Area separator (in floor scope popup)
-      getOptions.area_slug = areaSlug;
-    } else {
-      // Floor separator (in global scope popup)
-      getOptions.floor_id = floorId;
-    }
-
-    const entityIds = Helper.getEntityIds(getOptions);
-
-    if (entityIds.length === 0) {
-      return [];
-    }
-
-    // Get floor/area info
-    const floor = Helper.floors[floorId];
-    const area = areaSlug ? Helper.areas[areaSlug] : null;
-    const name = area ? area.name : (floor ? floor.name : "Unknown");
-    const icon = area ? area.icon : (floor ? floor.icon : "mdi:home");
-
-    // Build sub-popup configuration
-    const { PopupFactory } = require("../services/PopupFactory");
-
-    const subPopupScope = areaSlug ? "area" : "floor";
-    const subPopupConfig: any = {
-      domain,
-      device_class,
-      scope: subPopupScope,
-      scopeName: name,
-      entity_ids: entityIds,
-      serviceOn: config.serviceOn,
-      serviceOff: config.serviceOff,
-      activeStates: config.activeStates,
-      translationKey: config.translationKey,
-      linusBrainEntity: null,
-      features: config.features,
-      showNavigationButton: true  // Don't show nav button in sub-popups
-    };
-
-    if (areaSlug) {
-      subPopupConfig.area_slug = areaSlug;
-    } else {
-      subPopupConfig.floor_id = floorId;
-    }
-
-    const subPopupAction = PopupFactory.createPopup(subPopupConfig);
-
-    // Use SectionBuilder to create heading + badge
-    const { SectionBuilder } = require("../builders/SectionBuilder");
-
-    return SectionBuilder.buildSection({
-      heading: name,
-      heading_style: "subtitle",
-      icon: icon ?? "mdi:home",
-      tap_action: subPopupAction,
-      showBadge: true,
-      showAggregateChip: true,
-      badgeTapAction: subPopupAction,
-      entity_ids: entityIds,
-      domain,
-      device_class,
-      activeStates
-    });
-  }
-
-
 
   /**
    * Build individual cards using hierarchical floor → area iteration

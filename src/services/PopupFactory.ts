@@ -24,8 +24,18 @@ export interface PopupConfig {
   activeStates: string[];
   /** Translation key for domain */
   translationKey: string;
-  /** Linus Brain entity if available */
-  linusBrainEntity: string | null;
+  /** Area's group entity if available (Dashboard native or Magic Areas) */
+  groupEntity: string | null;
+  /**
+   * The dedicated group entity backing this chip's own scope, not just
+   * area (light.linus_dashboard_all_lights_floor_X / _global too), when
+   * one exists for this domain. Lets the popup's Turn All On/Off buttons
+   * target this single controllable entity instead of every raw member —
+   * same resolution AggregateChip already did for its own rendering
+   * (getAggregateSensorId), just threaded through instead of re-derived
+   * here.
+   */
+  dedicatedGroupEntity?: string | null;
   /** Optional features for tile cards */
   features?: any[];
   /** Optional device class. Pass null to get ONLY entities without device_class */
@@ -93,7 +103,8 @@ export class PopupFactory {
       serviceOff: config.serviceOff,
       activeStates: config.activeStates,
       translationKey: config.translationKey,
-      linusBrainEntity: config.linusBrainEntity,
+      groupEntity: config.groupEntity,
+      dedicatedGroupEntity: config.dedicatedGroupEntity,
       features: config.features,
       device_class: config.device_class,
       showNavigationButton: config.showNavigationButton,
@@ -120,7 +131,13 @@ export class PopupFactory {
       serviceOff: config.serviceOff,
       activeStates: config.activeStates,
       translationKey: config.translationKey,
-      linusBrainEntity: null,
+      groupEntity: null,
+      // No Magic Areas media_player *group* equivalent (groupEntity stays
+      // null, see AggregateChip's getGroupEntity), but media_player.py now
+      // provides a real dedicated group — this was missing entirely here,
+      // so the group control tile never showed and Play All/Pause All
+      // always targeted the raw entity list even when the group existed.
+      dedicatedGroupEntity: config.dedicatedGroupEntity,
       features: config.features,
       device_class: config.device_class,
       showNavigationButton: config.showNavigationButton,
@@ -147,7 +164,8 @@ export class PopupFactory {
       serviceOff: config.serviceOff,
       activeStates: config.activeStates,
       translationKey: config.translationKey,
-      linusBrainEntity: null,
+      groupEntity: config.groupEntity,
+      dedicatedGroupEntity: config.dedicatedGroupEntity,
       features: config.features,
       device_class: config.device_class,
       showNavigationButton: config.showNavigationButton,
@@ -174,7 +192,7 @@ export class PopupFactory {
       serviceOff: config.serviceOff,
       activeStates: config.activeStates,
       translationKey: config.translationKey,
-      linusBrainEntity: null,
+      groupEntity: null,
       features: config.features,
       device_class: config.device_class,
       showNavigationButton: config.showNavigationButton,
@@ -201,7 +219,8 @@ export class PopupFactory {
       serviceOff: config.serviceOff,
       activeStates: config.activeStates,
       translationKey: config.translationKey,
-      linusBrainEntity: null,
+      groupEntity: config.groupEntity,
+      dedicatedGroupEntity: config.dedicatedGroupEntity,
       features: config.features,
       device_class: config.device_class,
       showNavigationButton: config.showNavigationButton,

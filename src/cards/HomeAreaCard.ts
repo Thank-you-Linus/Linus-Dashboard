@@ -276,7 +276,10 @@ class HomeAreaCard {
         border: none;
         margin-top: -12px;
       }
-      .content {
+      ha-tile-icon {
+        display: none;
+      }
+      ha-tile-info {
         display: none;
       }
     `;

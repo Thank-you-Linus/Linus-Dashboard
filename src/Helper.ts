@@ -1171,7 +1171,7 @@ class Helper {
 
     const formattedValue = Array.isArray(value) ? JSON.stringify(value).replaceAll('"', "'") : `'${value}'`;
 
-    return `{% set entities = [${states}] %}{% set count = entities ${allowUnavailable ? "" : "| selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable')"}| selectattr('state','${operator}',${formattedValue}) | list | count %}{% if count > 0 %}{{ '${prefix ?? ""}' ~ count }}{% else %}{% endif %}`;
+    return `{% set entities = [${states}] | reject('none') | list %}{% set count = entities ${allowUnavailable ? "" : "| selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable')"}| selectattr('state','${operator}',${formattedValue}) | list | count %}{% if count > 0 %}{{ '${prefix ?? ""}' ~ count }}{% else %}{% endif %}`;
   }
 
   /**
@@ -1760,7 +1760,7 @@ class Helper {
     // See: https://github.com/home-assistant/core/issues/97358
     // Removed now().strftime() trick — it forced ALL template cards to re-evaluate every minute.
     // The template still updates on state changes (which update last_changed).
-    return `{% set entities = [${states}] %}{% set valid = entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | list %}{% if valid %}{{ relative_time(valid | map(attribute='last_changed') | max) }}{% endif %}`;
+    return `{% set entities = [${states}] | reject('none') | list %}{% set valid = entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | list %}{% if valid %}{{ relative_time(valid | map(attribute='last_changed') | max) }}{% endif %}`;
   }
 
   static getLastChangedEntityIdTemplate({ domain, device_class, area_slug }: { domain: string, device_class?: string, area_slug?: string | string[] }): string {
@@ -1771,7 +1771,7 @@ class Helper {
       ...(area_slug && { area_slug })
     }));
 
-    return `{% set entities = [${states}] %}{{ entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | sort(attribute='last_changed', reverse=True) | first }}`;
+    return `{% set entities = [${states}] | reject('none') | list %}{{ entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | sort(attribute='last_changed', reverse=True) | first }}`;
   }
   static getFromDomainState({ domain, device_class, operator = 'eq', value, ifReturn, elseReturn, area_slug, allowUnavailable }: { domain: string, device_class?: string, operator?: string, value?: string | string[], ifReturn?: string, elseReturn?: string, area_slug?: string | string[], allowUnavailable?: boolean }): string {
 
@@ -1802,7 +1802,7 @@ class Helper {
 
     const formattedValue = Array.isArray(value) ? JSON.stringify(value).replaceAll('"', "'") : `'${value ?? 'on'}'`;
 
-    return `{% set entities = [${states}] %}{{ '${ifReturn}' if entities ${allowUnavailable ? "" : "| selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable')"}| selectattr('state','${operator}', ${formattedValue}) | list | count > 0 else '${elseReturn ?? 'grey'}' }}`;
+    return `{% set entities = [${states}] | reject('none') | list %}{{ '${ifReturn}' if entities ${allowUnavailable ? "" : "| selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable')"}| selectattr('state','${operator}', ${formattedValue}) | list | count > 0 else '${elseReturn ?? 'grey'}' }}`;
   }
 
   /**
@@ -1834,7 +1834,7 @@ class Helper {
     if (domain === "sensor" && device_class === "battery") {
       // Handle battery level icons
       if (states.length) {
-        return `{% set entities = [${states}] %}{% set valid_states = entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | map(attribute='state') | map('float') | list %}{% if valid_states | length > 0 %}{% set battery_level = valid_states | max %}{% if battery_level >= 95 %}mdi:battery{% elif battery_level >= 85 %}mdi:battery-90{% elif battery_level >= 75 %}mdi:battery-80{% elif battery_level >= 65 %}mdi:battery-70{% elif battery_level >= 55 %}mdi:battery-60{% elif battery_level >= 45 %}mdi:battery-50{% elif battery_level >= 35 %}mdi:battery-40{% elif battery_level >= 25 %}mdi:battery-30{% elif battery_level >= 15 %}mdi:battery-20{% elif battery_level >= 5 %}mdi:battery-10{% else %}mdi:battery-outline{% endif %}{% else %}mdi:battery-outline{% endif %}`;
+        return `{% set entities = [${states}] | reject('none') | list %}{% set valid_states = entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | map(attribute='state') | map('float') | list %}{% if valid_states | length > 0 %}{% set battery_level = valid_states | max %}{% if battery_level >= 95 %}mdi:battery{% elif battery_level >= 85 %}mdi:battery-90{% elif battery_level >= 75 %}mdi:battery-80{% elif battery_level >= 65 %}mdi:battery-70{% elif battery_level >= 55 %}mdi:battery-60{% elif battery_level >= 45 %}mdi:battery-50{% elif battery_level >= 35 %}mdi:battery-40{% elif battery_level >= 25 %}mdi:battery-30{% elif battery_level >= 15 %}mdi:battery-20{% elif battery_level >= 5 %}mdi:battery-10{% else %}mdi:battery-outline{% endif %}{% else %}mdi:battery-outline{% endif %}`;
       }
       return "mdi:battery-outline"; // Default battery icon if no states are available
     }
@@ -1842,7 +1842,7 @@ class Helper {
     if (domain === "sensor" && device_class === "temperature") {
       // Handle temperature icons
       if (states.length) {
-        return `{% set entities = [${states}] %}{% set valid_states = entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | map(attribute='state') | map('float') | list %}{% set temperature = valid_states | max if valid_states | length > 0 else 0 %}{% if temperature >= 30 %}mdi:thermometer-high{% elif temperature >= 20 %}mdi:thermometer{% elif temperature >= 10 %}mdi:thermometer-low{% else %}mdi:snowflake{% endif %}`;
+        return `{% set entities = [${states}] | reject('none') | list %}{% set valid_states = entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | map(attribute='state') | map('float') | list %}{% set temperature = valid_states | max if valid_states | length > 0 else 0 %}{% if temperature >= 30 %}mdi:thermometer-high{% elif temperature >= 20 %}mdi:thermometer{% elif temperature >= 10 %}mdi:thermometer-low{% else %}mdi:snowflake{% endif %}`;
       }
       return "mdi:thermometer"; // Default temperature icon if no states are available
     }
@@ -1853,7 +1853,7 @@ class Helper {
       const defaultResource = domainIcons._ || domainIcons;
 
       if (states.length) {
-        const statePrefix = `{% set entities = [${states}] %}{% set state = entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | map(attribute='state') | list %}`;
+        const statePrefix = `{% set entities = [${states}] | reject('none') | list %}{% set state = entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | map(attribute='state') | list %}`;
         const iconConfig = Helper.#DOMAIN_ACTIVE_STATES[domain];
 
         if (iconConfig) {
@@ -1884,7 +1884,7 @@ class Helper {
 
       if (device_class !== '_' && deviceClassIcons?.state) {
         let stateIconTemplate = states.length
-          ? `{% set entities = [${states}] %}{% set state = entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | map(attribute='state') | list %}`
+          ? `{% set entities = [${states}] | reject('none') | list %}{% set state = entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | map(attribute='state') | list %}`
           : '{% set state = [] %}';
         for (const [stateKey, icon] of Object.entries(deviceClassIcons.state)) {
           stateIconTemplate += `{% if state | select('eq', '${stateKey}') | list | count > 0 %}${icon}{% else %}`;
@@ -1899,7 +1899,7 @@ class Helper {
     const fallbackResource = domainIcons._ || domainIcons;
 
     if (fallbackResource.state && states.length) {
-      let stateIconTemplate = `{% set entities = [${states}] %}{% set state = entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | map(attribute='state') | list %}`
+      let stateIconTemplate = `{% set entities = [${states}] | reject('none') | list %}{% set state = entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | map(attribute='state') | list %}`
 
       for (const [stateKey, icon] of Object.entries(fallbackResource.state)) {
         stateIconTemplate += `{% if state | select('eq', '${stateKey}') | list | count > 0 %}${icon}{% else %}`;
@@ -1936,7 +1936,7 @@ class Helper {
         const thresholdKeys = Object.keys(thresholds).map(Number).sort((a, b) => b - a); // Sort descending for maximum value
         const aggregation = SENSOR_STATE_CLASS_TOTAL.includes(effectiveDeviceClass) || SENSOR_STATE_CLASS_TOTAL_INCREASING.includes(effectiveDeviceClass) ? 'sum' : 'sum / valid_states | length';
         defaultColor = states.length
-          ? `{% set entities = [${states}] %}{% set valid_states = entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | map(attribute='state') | map('float') | list %}{% set aggregated_state = valid_states | ${aggregation} if valid_states | length > 0 else 0 %}`
+          ? `{% set entities = [${states}] | reject('none') | list %}{% set valid_states = entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | map(attribute='state') | map('float') | list %}{% set aggregated_state = valid_states | ${aggregation} if valid_states | length > 0 else 0 %}`
           : `{% set aggregated_state = 0 %}`;
         for (const threshold of thresholdKeys) {
           defaultColor += `{% if aggregated_state >= ${threshold} %}${thresholds[threshold]}{% else %}`;
@@ -1946,7 +1946,7 @@ class Helper {
       } else if (deviceClassColors.state) {
         // Handle state-based color mapping for non-sensors
         let stateColorTemplate = states.length
-          ? `{% set entities = [${states}] %}{% set state = entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | map(attribute='state') | list %}`
+          ? `{% set entities = [${states}] | reject('none') | list %}{% set state = entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | map(attribute='state') | list %}`
           : '';
         for (const [stateKey, color] of Object.entries(deviceClassColors.state)) {
           stateColorTemplate += `{% if state | select('eq', '${stateKey}') | list | count > 0 %}${color}{% else %}`;
@@ -1958,7 +1958,7 @@ class Helper {
       // Handle state-based color mapping even without device_class
       if (domainColors?.state) {
         let stateColorTemplate = states.length
-          ? `{% set entities = [${states}] %}{% set state = entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | map(attribute='state') | list %}`
+          ? `{% set entities = [${states}] | reject('none') | list %}{% set state = entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | map(attribute='state') | list %}`
           : '';
         for (const [stateKey, color] of Object.entries(domainColors.state)) {
           stateColorTemplate += `{% if state | select('eq', '${stateKey}') | list | count > 0 %}${color}{% else %}`;
@@ -1973,7 +1973,7 @@ class Helper {
     }
 
     return states.length
-      ? `{% set entities = [${states}] %}{% set valid_states = entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | map(attribute='state') | list %}{% if valid_states | count > 0 %}${defaultColor}{% else %}grey{% endif %}`
+      ? `{% set entities = [${states}] | reject('none') | list %}{% set valid_states = entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | map(attribute='state') | list %}{% if valid_states | count > 0 %}${defaultColor}{% else %}grey{% endif %}`
       : defaultColor;
   }
 
@@ -2074,7 +2074,7 @@ class Helper {
     // Returns nothing when count is 0 (no badge displayed)
     if (as_icon) {
       return `
-        {% set entities = [${stateStrings}] %}
+        {% set entities = [${stateStrings}] | reject('none') | list %}
         {% set ${template.filter} %}
         {% set count = ${filterVar} | length %}
         {% if count > 9 %}
@@ -2087,7 +2087,7 @@ class Helper {
 
     // Default: return the count only if > 0, otherwise empty
     return `
-      {% set entities = [${stateStrings}] %}
+      {% set entities = [${stateStrings}] | reject('none') | list %}
       {% set ${template.filter} %}
       {% if ${filterVar} | length > 0 %}
       ${template.default}

@@ -311,7 +311,7 @@ class AggregatePopup extends AbstractPopup {
     return {
       type: "markdown",
       content: `
-        {% set entities = [${statesArray}] %}
+        {% set entities = [${statesArray}] | reject('none') | list %}
         {% set active = entities | selectattr('state', 'in', [${activeStatesCondition}]) | list | count %}
         {% set total = entities | count %}
         **{{ active }}/{{ total }}** ${labels.active}
@@ -343,10 +343,10 @@ class AggregatePopup extends AbstractPopup {
       : (Helper.localize('component.linus_dashboard.entity.text.aggregate_popup.state.average') || 'Average');
 
     const jinjaCalculation = useSum
-      ? `{% set entities = [${statesArray}] %}
+      ? `{% set entities = [${statesArray}] | reject('none') | list %}
          {% set valid = entities | selectattr('state', 'is_number') | map(attribute='state') | map('float') | list %}
          {% set result = valid | sum | round(1) if valid | length > 0 else '—' %}`
-      : `{% set entities = [${statesArray}] %}
+      : `{% set entities = [${statesArray}] | reject('none') | list %}
          {% set valid = entities | selectattr('state', 'is_number') | map(attribute='state') | map('float') | list %}
          {% set result = (valid | sum / valid | length) | round(1) if valid | length > 0 else '—' %}`;
 

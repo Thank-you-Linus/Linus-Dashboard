@@ -75,14 +75,14 @@ export function createSmartControlChip(config: SmartControlChipConfig): Template
 
   // Icon color: domain color when active, grey when all inactive
   const iconColor = `
-    {% set entities = [${statesArray}] %}
+    {% set entities = [${statesArray}] | reject('none') | list %}
     {% set active_count = entities | selectattr('state', 'in', [${activeStatesCondition}]) | list | count %}
     {{ '${domainColor}' if active_count > 0 else 'grey' }}
   `.trim();
 
   // Content: Just show the count of active entities
   const content = `
-    {% set entities = [${statesArray}] %}
+    {% set entities = [${statesArray}] | reject('none') | list %}
     {% set active_count = entities | selectattr('state', 'in', [${activeStatesCondition}]) | list | count %}
     {{ active_count }}
   `.trim();
@@ -108,7 +108,7 @@ export function createSmartControlChip(config: SmartControlChipConfig): Template
             {
               type: "markdown",
               content: `
-                {% set entities = [${statesArray}] %}
+                {% set entities = [${statesArray}] | reject('none') | list %}
                 {% set active = entities | selectattr('state', 'in', [${activeStatesCondition}]) | list | count %}
                 {% set inactive = entities | count - active %}
                 **{{ active }}** ${stateOn} • **{{ inactive }}** ${stateOff}

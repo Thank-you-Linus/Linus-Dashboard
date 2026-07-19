@@ -701,6 +701,11 @@ async def _build_numeric_sensors(
 # Health / availability sensor
 # ---------------------------------------------------------------------------
 
+# Keeps the entity_id attribute list well under HA's 16KB state-attribute
+# limit even on a large house with many entities down at once (global scope
+# concatenates every floor's already-concatenated area list).
+MAX_UNAVAILABLE_ENTITY_IDS = 200
+
 
 class LinusDashboardHealthSensor(SensorEntity):
     """
@@ -772,7 +777,13 @@ class LinusDashboardHealthSensor(SensorEntity):
 
         self._attr_native_value = len(unavailable)
         self._attr_extra_state_attributes = {
-            ATTR_ENTITY_ID: unavailable,
+            # Nested tiers concatenate every child's list — on a real house
+            # (hundreds of entities) with many entities down at once, this
+            # flat list can exceed HA's 16KB state-attribute limit and get
+            # silently dropped entirely. total stays the real, uncapped
+            # count; only the list itself is capped since it's meant to help
+            # pinpoint what's down, not be an exhaustive audit trail.
+            ATTR_ENTITY_ID: unavailable[:MAX_UNAVAILABLE_ENTITY_IDS],
             "total": len(unavailable),
         }
 

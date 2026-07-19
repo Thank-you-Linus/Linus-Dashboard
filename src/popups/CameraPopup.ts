@@ -46,7 +46,7 @@ class CameraPopup extends AggregatePopup {
     return {
       type: "markdown",
       content: `
-        {% set entities = [${statesArray}] %}
+        {% set entities = [${statesArray}] | reject('none') | list %}
         {% set available = entities | rejectattr('state', 'in', ['unavailable', 'unknown']) | list | count %}
         {% set total = entities | count %}
         **{{ available }}/{{ total }}** ${label}

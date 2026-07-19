@@ -19,7 +19,10 @@ construction-time count forever.
 import asyncio
 from unittest.mock import MagicMock
 
-from custom_components.linus_dashboard.sensor import LinusDashboardHealthSensor
+from custom_components.linus_dashboard.sensor import (
+    MAX_UNAVAILABLE_ENTITY_IDS,
+    LinusDashboardHealthSensor,
+)
 
 
 def make_sensor(mock_hass, tracked_entity_ids, nested=False):
@@ -59,6 +62,31 @@ def test_area_scope_all_available_reports_zero(mock_hass, fake_states):
 
     assert sensor._attr_native_value == 0
     assert sensor._attr_extra_state_attributes["entity_id"] == []
+
+
+def test_entity_id_list_is_capped_but_total_stays_the_real_count(
+    mock_hass, fake_states
+):
+    # Reported live on a real (large) house: the global tier concatenates
+    # every floor's already-concatenated area list, and with many entities
+    # down at once this flat list exceeded HA's 16KB state-attribute limit
+    # and got silently dropped entirely. total must stay accurate even
+    # though the list itself is capped.
+    entity_ids = [f"light.entity_{i}" for i in range(MAX_UNAVAILABLE_ENTITY_IDS + 50)]
+    for eid in entity_ids:
+        fake_states.set(eid, "unavailable")
+    sensor = make_sensor(mock_hass, entity_ids, nested=False)
+
+    sensor._update_state()
+
+    assert sensor._attr_native_value == MAX_UNAVAILABLE_ENTITY_IDS + 50
+    assert (
+        sensor._attr_extra_state_attributes["total"] == MAX_UNAVAILABLE_ENTITY_IDS + 50
+    )
+    assert (
+        len(sensor._attr_extra_state_attributes["entity_id"])
+        == MAX_UNAVAILABLE_ENTITY_IDS
+    )
 
 
 def test_area_scope_missing_state_entirely_is_not_counted_as_unavailable(

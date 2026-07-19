@@ -172,7 +172,7 @@ export class SectionBuilder {
       icon: Helper.getIcon(domain || "", device_class || undefined, entity_ids),
       icon_color: Helper.getIconColor(domain || "", device_class || undefined, entity_ids),
       content: `
-        {% set entities = [${statesArray}] %}
+        {% set entities = [${statesArray}] | reject('none') | list %}
         {% set active = entities | selectattr('state', 'in', [${activeStatesCondition}]) | list | count %}
         {{ active }}
       `.trim(),

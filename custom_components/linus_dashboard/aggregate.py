@@ -131,37 +131,21 @@ def compute_icon(
 # --- Numeric sensor aggregation (area/floor/global temperature, humidity,
 # illuminance, battery, ...) ---
 #
-# Ported from the frontend's own sum-vs-average heuristic (src/variables.ts:
-# SENSOR_STATE_CLASS_TOTAL / SENSOR_STATE_CLASS_TOTAL_INCREASING, and
-# src/Helper.ts:1208 / src/popups/AggregatePopup.ts:296) so the backend and
-# frontend agree on which device_class gets summed vs averaged. Kept as a
-# separate reference list in Python rather than importing from the TS file
-# (no cross-language import) — if variables.ts's lists change, mirror the
-# change here too.
-
-SENSOR_STATE_CLASS_TOTAL: set[str] = {
-    "energy",
-    "water",
-    "gas",
-    "monetary",
-    "weight",
-    "volume",
-    "duration",
-    "count",
-}
-
-SENSOR_STATE_CLASS_TOTAL_INCREASING: set[str] = {
-    "energy",
-    "water",
-    "gas",
-    "monetary",
-    "count",
-}
+# Reads each entity's own real state_class (HA's SensorStateClass enum:
+# "total"/"total_increasing"/"measurement") rather than a hardcoded
+# device_class allowlist — a device_class list can't cover every current and
+# future integration, but state_class is a property every numeric sensor
+# already reports. The frontend's own SENSOR_STATE_CLASS_TOTAL(_INCREASING)
+# lists in src/variables.ts serve a different, device_class-keyed heuristic
+# (src/Helper.ts:1240/1937, src/popups/AggregatePopup.ts:331) — not the same
+# check, and not a source to port from here.
 
 # Device classes where the worst case (lowest value) matters more than the
 # average — a single depleted battery shouldn't be hidden by an average with
 # healthy ones. Checked before the state_class-based sum/average rule.
 MIN_MODE_DEVICE_CLASSES: set[str] = {"battery"}
+
+SUM_STATE_CLASSES: set[str] = {"total", "total_increasing"}
 
 
 def resolve_numeric_aggregation_mode(
@@ -177,10 +161,7 @@ def resolve_numeric_aggregation_mode(
     """
     if device_class in MIN_MODE_DEVICE_CLASSES:
         return "min"
-    if (
-        state_class in SENSOR_STATE_CLASS_TOTAL
-        or state_class in SENSOR_STATE_CLASS_TOTAL_INCREASING
-    ):
+    if state_class in SUM_STATE_CLASSES:
         return "sum"
     return "average"
 

@@ -167,12 +167,12 @@ class HomeAreaCard {
 
     const { health } = this.area.domains ?? {};
 
-    const climate = Helper.getEntityIds({ domain: "climate", area_slug: this.area.slug });
-    const fan = Helper.getEntityIds({ domain: "fan", area_slug: this.area.slug });
-    const door = Helper.getEntityIds({ domain: "binary_sensor", device_class: "door", area_slug: this.area.slug });
-    const window = Helper.getEntityIds({ domain: "binary_sensor", device_class: "window", area_slug: this.area.slug });
-    const cover = Helper.getEntityIds({ domain: "cover", area_slug: this.area.slug });
-    const light = Helper.getEntityIds({ domain: "light", area_slug: this.area.slug });
+    const climate = this.filterMasked(Helper.getEntityIds({ domain: "climate", area_slug: this.area.slug }));
+    const fan = this.filterMasked(Helper.getEntityIds({ domain: "fan", area_slug: this.area.slug }));
+    const door = this.filterMasked(Helper.getEntityIds({ domain: "binary_sensor", device_class: "door", area_slug: this.area.slug }));
+    const window = this.filterMasked(Helper.getEntityIds({ domain: "binary_sensor", device_class: "window", area_slug: this.area.slug }));
+    const cover = this.filterMasked(Helper.getEntityIds({ domain: "cover", area_slug: this.area.slug }));
+    const light = this.filterMasked(Helper.getEntityIds({ domain: "light", area_slug: this.area.slug }));
 
     return {
       type: "custom:mushroom-chips-card",
@@ -195,6 +195,23 @@ class HomeAreaCard {
       ].filter(Boolean),
       card_mod: { style: this.getChipsCardModStyle() }
     };
+  }
+
+  /**
+   * Drop entities hidden via card_options (entity- or device-level) — the
+   * same "hidden" flag AbstractView/UnavailableView already honor when
+   * building area/floor cards. Without this, an entity masked by the user
+   * still counts toward and shows up in these Home-overview domain chips.
+   */
+  private filterMasked(entity_ids: string[]): string[] {
+    const cardOptions = Helper.strategyOptions.card_options;
+    if (!cardOptions) {
+      return entity_ids;
+    }
+    return entity_ids.filter(entity_id => {
+      const device_id = Helper.entities[entity_id]?.device_id ?? "null";
+      return !cardOptions[entity_id]?.hidden && !cardOptions[device_id]?.hidden;
+    });
   }
 
   /**

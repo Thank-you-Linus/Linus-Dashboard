@@ -4,23 +4,41 @@
   },
   "permissions": {
     "allow": [
+      "Bash(./ha-env/bin/ruff check:*)",
+      "Bash(awk:*)",
       "Bash(cat:*)",
-      "Bash(wc:*)",
+      "Bash(df:*)",
+      "Bash(du:*)",
+      "Bash(echo:*)",
+      "Bash(env)",
+      "Bash(export:*)",
+      "Bash(find:*)",
+      "Bash(gh issue view:*)",
+      "Bash(git:*)",
       "Bash(grep:*)",
-      "Bash(npm run build:*)",
+      "Bash(head:*)",
+      "Bash(jq:*)",
       "Bash(ls:*)",
-      "Bash(xargs:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run build:*)",
       "Bash(npm run lint)",
       "Bash(npm run lint:check:*)",
       "Bash(npm run type-check:*)",
-      "Bash(npm install:*)",
-      "Bash(gh issue view:*)",
-      "WebFetch(domain:github.com)",
+      "Bash(pip:*)",
       "Bash(python3:*)",
-      "Bash(./ha-env/bin/ruff check:*)",
+      "Bash(rtk:*)",
       "Bash(ruff:*)",
+      "Bash(sed:*)",
+      "Bash(sort:*)",
+      "Bash(tail:*)",
+      "Bash(uniq:*)",
+      "Bash(wc:*)",
+      "Bash(which:*)",
+      "Bash(xargs:*)",
+      "WebFetch(domain:api.github.com)",
+      "WebFetch(domain:github.com)",
       "WebFetch(domain:raw.githubusercontent.com)",
-      "WebFetch(domain:api.github.com)"
+      "WebSearch"
     ]
   },
   "hooks": {
@@ -33,6 +51,12 @@
             "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/sapiens-notifications.sh",
             "timeout": 5,
             "statusMessage": "SAPIENS notification"
+          },
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/sapiens-next-action.sh",
+            "timeout": 5,
+            "statusMessage": "SAPIENS next action"
           }
         ]
       }

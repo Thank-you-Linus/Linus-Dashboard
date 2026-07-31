@@ -1,0 +1,1 @@
+../../../sapiens/commands/validate-spec.md

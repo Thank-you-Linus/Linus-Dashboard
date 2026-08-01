@@ -29,7 +29,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
     area_registry as ar,
@@ -115,6 +115,21 @@ def _resolve_entity_area_id(
     return None
 
 
+def should_skip_entity_entry(
+    entity_entry: er.RegistryEntry, state_obj=None
+) -> bool:
+    """Whether an entity should be excluded from backend aggregate/group generation."""
+    if entity_entry.platform == DOMAIN:
+        return True
+    if entity_entry.hidden_by or entity_entry.disabled_by:
+        return True
+    if getattr(entity_entry, "entity_category", None) in (EntityCategory.CONFIG, "config"):
+        return True
+    if state_obj and ATTR_ENTITY_ID in state_obj.attributes:
+        return True
+    return False
+
+
 def domain_is_excluded(domain: str, exclusions: ExclusionConfig) -> bool:
     """
     Whether a whole domain's group platform should skip entity creation.
@@ -160,11 +175,7 @@ def scan_domain_members(
         if entity_entry.domain != domain:
             continue
 
-        # Self-exclusion: never let a Dashboard-created entity include itself.
-        if entity_entry.platform == DOMAIN:
-            continue
-
-        if entity_entry.hidden_by or entity_entry.disabled_by:
+        if should_skip_entity_entry(entity_entry):
             continue
 
         entity_id = entity_entry.entity_id
@@ -186,7 +197,7 @@ def scan_domain_members(
             continue
 
         # Foreign group exclusion: see docstring above.
-        if ATTR_ENTITY_ID in state_obj.attributes:
+        if should_skip_entity_entry(entity_entry, state_obj):
             continue
 
         entity_device_class = state_obj.attributes.get("device_class")
@@ -458,9 +469,7 @@ def discover_device_classes(
     entity_reg = er.async_get(hass)
     device_classes: set[str] = set()
     for entity_entry in entity_reg.entities.values():
-        if entity_entry.domain != domain or entity_entry.platform == DOMAIN:
-            continue
-        if entity_entry.hidden_by or entity_entry.disabled_by:
+        if entity_entry.domain != domain or should_skip_entity_entry(entity_entry):
             continue
         state_obj = hass.states.get(entity_entry.entity_id)
         if not state_obj:

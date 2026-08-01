@@ -733,6 +733,13 @@ export const getGlobalEntitiesExceptUndisclosed = memoize(function getGlobalEnti
     }).map(e => e.entity_id) ?? [];
 }, { name: 'getGlobalEntitiesExceptUndisclosed', maxSize: 200 }) as (domain: string, device_class?: string | null) => string[];
 
+function isCardHidden(entity: Pick<generic.StrategyEntity, "entity_id" | "device_id">): boolean {
+    if (Helper.strategyOptions.card_options?.[entity.entity_id]?.hidden) return true;
+    if (Helper.strategyOptions.card_options?.[entity.device_id ?? "null"]?.hidden) return true;
+
+    return false;
+}
+
 /**
  * Add light groups to entities.
  * @param {generic.StrategyArea} area - The area.
@@ -747,16 +754,24 @@ export function addLightGroupsToEntities(area: generic.StrategyArea, entities: g
 
     for (const lightGroup of lightGroups) {
         if (!lightGroup) continue;
+        if (isCardHidden(lightGroup)) continue;
+
         const lightGroupState = Helper.getEntityState(lightGroup.entity_id);
-        if (lightGroupState.attributes.entity_id?.length) {
-            entities.unshift(lightGroup as generic.StrategyEntity);
-            lightGroupState.attributes.entity_id.forEach((entity_id: string) => {
-                const index = entities.findIndex(entity => entity.entity_id === entity_id);
-                if (index !== -1) {
-                    entities.splice(index, 1);
-                }
-            });
-        }
+        const memberEntityIds = lightGroupState.attributes.entity_id ?? [];
+        const visibleMemberIds = memberEntityIds.filter((entity_id: string) => {
+            const memberEntity = entities.find(entity => entity.entity_id === entity_id);
+            return memberEntity ? !isCardHidden(memberEntity) : false;
+        });
+
+        if (visibleMemberIds.length === 0) continue;
+
+        entities.unshift(lightGroup as generic.StrategyEntity);
+        memberEntityIds.forEach((entity_id: string) => {
+            const index = entities.findIndex(entity => entity.entity_id === entity_id);
+            if (index !== -1) {
+                entities.splice(index, 1);
+            }
+        });
     }
 
     return entities;
@@ -1148,21 +1163,7 @@ async function processEntities(entities: any[]): Promise<any[]> {
     });
 
     // Pre-filter entities to avoid processing hidden ones
-    const filteredEntities = entities.filter(entity => {
-        const state = Helper.getEntityState(entity.entity_id);
-        const entityDomain = state?.entity_id?.split(".")[0];
-        const domainOptions = entityDomain && Helper.strategyOptions.domains
-            ? Helper.strategyOptions.domains[entityDomain]
-            : undefined;
-        const configEntityHidden = (domainOptions?.hide_config_entities ?? false)
-            || (Helper.strategyOptions.domains?.["_"]?.hide_config_entities ?? false);
-
-        if (Helper.strategyOptions.card_options?.[entity.entity_id]?.hidden) return false;
-        if (Helper.strategyOptions.card_options?.[entity.device_id ?? "null"]?.hidden) return false;
-        if (entity.entity_category === "config" && configEntityHidden) return false;
-
-        return true;
-    });
+    const filteredEntities = entities.filter(entity => !isCardHidden(entity));
 
     // Parallel card creation with batching to avoid browser concurrency limits
     const BATCH_SIZE = 10; // Optimal for browser import concurrency

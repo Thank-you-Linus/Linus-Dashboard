@@ -742,7 +742,12 @@ class Helper {
     const entityKey = PerformanceProfiler.start('Helper.initialize.entities');
     this.#entities = entities.reduce((acc: any, entity: any) => {
       // Exclusion par entité
-      if (!(entity.entity_id in this.#hassStates) || entity.hidden_by) return acc;
+      if (!(entity.entity_id in this.#hassStates)) return acc;
+      const cardOption = this.#strategyOptions.card_options?.[entity.entity_id];
+      const deviceCardOption = this.#strategyOptions.card_options?.[entity.device_id ?? "null"];
+      if (cardOption?.hidden || deviceCardOption?.hidden) {
+        return acc;
+      }
       const effectiveAreaId = entity.area_id ?? deviceAreaMap.get(entity.device_id ?? "");
 
       // Filter entities from excluded floors

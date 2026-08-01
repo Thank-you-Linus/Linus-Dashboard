@@ -67,7 +67,12 @@ from .const import (
     get_floor_device_info,
     get_global_device_info,
 )
-from .entity_group import ExclusionConfig, resolve_floors_for_areas, scan_domain_members
+from .entity_group import (
+    ExclusionConfig,
+    resolve_floors_for_areas,
+    scan_domain_members,
+    should_skip_entity_entry,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -151,7 +156,7 @@ async def _build_aggregate_sensors(
     floor_domain_entities: dict[tuple[str, str], list[str]] = {}
 
     for entity_entry in ent_reg.entities.values():
-        if entity_entry.hidden_by or entity_entry.disabled_by:
+        if should_skip_entity_entry(entity_entry):
             continue
 
         entity_id = entity_entry.entity_id
@@ -512,9 +517,7 @@ def _discover_numeric_device_classes(
     entity_reg = er.async_get(hass)
     device_classes: set[str] = set()
     for entity_entry in entity_reg.entities.values():
-        if entity_entry.domain != "sensor" or entity_entry.platform == DOMAIN:
-            continue
-        if entity_entry.hidden_by or entity_entry.disabled_by:
+        if entity_entry.domain != "sensor" or should_skip_entity_entry(entity_entry):
             continue
         device_class = entity_entry.device_class or entity_entry.original_device_class
         if not device_class or device_class in NUMERIC_DEVICE_CLASS_EXCLUSIONS:

@@ -82,8 +82,7 @@ class UnavailableView {
         const entityCards = (await Promise.all(
           unavailableEntities
             .filter(entity => !Helper.strategyOptions.card_options?.[entity.entity_id]?.hidden
-              && !Helper.strategyOptions.card_options?.[entity.device_id ?? "null"]?.hidden
-              && !(entity.entity_category === "config"))
+              && !Helper.strategyOptions.card_options?.[entity.device_id ?? "null"]?.hidden)
             .map(async entity => await CardFactory.createCardByName("MiscellaneousCard", {}, entity))
         )).filter((card): card is LovelaceCardConfig => card !== null);
 
@@ -165,8 +164,7 @@ class UnavailableView {
     return {
       entity_id: Helper.domains[domain]?.filter(
         entity =>
-          !entity.hidden_by
-          && !Helper.strategyOptions.card_options?.[entity.entity_id]?.hidden
+          !Helper.strategyOptions.card_options?.[entity.entity_id]?.hidden
       ).map(entity => entity.entity_id),
     };
   }

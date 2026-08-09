@@ -1442,7 +1442,14 @@ class Helper {
    * @return {boolean}
    */
   static lightSupportsBrightness(entity_id: string): boolean {
-    const modes: string[] = this.getEntityState(entity_id)?.attributes?.supported_color_modes ?? [];
+    const modes: string[] | undefined = this.getEntityState(entity_id)?.attributes?.supported_color_modes;
+    // No color-mode data yet (e.g. the group is still "unavailable" right after a HA
+    // restart, before the strategy has ever seen it report real attributes) — assume
+    // dimmable rather than permanently baking "no slider" into the generated dashboard;
+    // the caller's conditional wrapper already hides the tile while unavailable.
+    if (!modes || modes.length === 0) {
+      return true;
+    }
     return modes.some(mode => mode !== "onoff");
   }
 

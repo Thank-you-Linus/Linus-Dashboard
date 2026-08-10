@@ -3,11 +3,13 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 // Mock Helper before importing EntityResolver
 const mockMagicAreasDevices: Record<string, any> = {};
 const mockDevices: Record<string, any> = {};
+const mockAreas: Record<string, any> = {};
 
 vi.mock('../../src/Helper', () => ({
   Helper: {
     magicAreasDevices: mockMagicAreasDevices,
     devices: mockDevices,
+    areas: mockAreas,
   },
 }));
 
@@ -21,6 +23,7 @@ describe('EntityResolver', () => {
     // Clear mocks
     Object.keys(mockMagicAreasDevices).forEach(k => delete mockMagicAreasDevices[k]);
     Object.keys(mockDevices).forEach(k => delete mockDevices[k]);
+    Object.keys(mockAreas).forEach(k => delete mockAreas[k]);
 
     // Re-import (dynamic import bypasses cached mock issues)
     const mod = await import('../../src/utils/entityResolver');
@@ -113,6 +116,46 @@ describe('EntityResolver', () => {
 
       expect(result.entity_id).toBeNull();
       expect(result.source).toBe('native');
+    });
+  });
+
+  describe('native entities are named after area_id, not the name-derived slug', () => {
+    // Regression: Danish "Køkken" has area_id "kokken", but slugify(name) keeps
+    // the "ø" (no canonical NFD decomposition) and yields "køkken". Building the
+    // entity_id from the slug pointed at an entity that does not exist, so the
+    // area silently lost its light card entirely.
+    it('resolves all_lights via area_id when the slug differs', () => {
+      mockAreas['køkken'] = { slug: 'køkken', area_id: 'kokken', name: 'Køkken' };
+
+      const resolver = new EntityResolver(makeHass({
+        'light.linus_dashboard_all_lights_area_kokken': { state: 'on' },
+      }));
+
+      const result = resolver.resolveAllLights('køkken');
+      expect(result.entity_id).toBe('light.linus_dashboard_all_lights_area_kokken');
+      expect(result.source).toBe('native');
+    });
+
+    // HA keeps the original area_id when an area is renamed, so no name-based
+    // slug can reproduce it — the registry lookup is the only correct source.
+    it('resolves a renamed area via its original area_id', () => {
+      mockAreas['kayas_værelse'] = { slug: 'kayas_værelse', area_id: 'kayas_rum', name: 'Kayas værelse' };
+
+      const resolver = new EntityResolver(makeHass({
+        'binary_sensor.linus_dashboard_presence_detection_area_kayas_rum': { state: 'off' },
+      }));
+
+      const result = resolver.resolvePresenceSensor('kayas_værelse');
+      expect(result.entity_id).toBe('binary_sensor.linus_dashboard_presence_detection_area_kayas_rum');
+    });
+
+    it('falls back to the slug when the area is unknown', () => {
+      const resolver = new EntityResolver(makeHass({
+        'light.linus_dashboard_all_lights_area_stue': { state: 'off' },
+      }));
+
+      expect(resolver.resolveAllLights('stue').entity_id)
+        .toBe('light.linus_dashboard_all_lights_area_stue');
     });
   });
 

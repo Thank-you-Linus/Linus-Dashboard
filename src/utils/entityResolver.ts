@@ -57,6 +57,35 @@ export class EntityResolver {
   }
 
   /**
+   * Map a strategy area slug to the area_id its native entities are named after.
+   *
+   * Linus Dashboard's own group entities take their object_id straight from the
+   * unique_id, which entity_group.py builds as `{prefix}_area_{area_id}` — i.e.
+   * Home Assistant's area_id. The strategy, however, keys areas by
+   * `slugify(area.name)` (see Helper.initialize), and the two are NOT
+   * interchangeable:
+   *
+   * - Transliteration differs. Our slugify only strips combining marks after
+   *   NFD, which leaves "ø"/"æ" untouched (they have no canonical
+   *   decomposition), while HA transliterates them. Danish "Køkken" is area_id
+   *   "kokken" but slug "køkken"; "Soveværelse" is "sovevaerelse" vs
+   *   "soveværelse".
+   * - Renames break it outright. HA keeps the original area_id when an area is
+   *   renamed, so "Kayas værelse" can have area_id "kayas_rum" — no name-based
+   *   slug can ever reproduce that.
+   *
+   * Using the slug directly meant those areas silently resolved to a
+   * non-existent entity_id, so their cards lost the corresponding controls
+   * entirely. Always go through the registry instead.
+   *
+   * Only applies to linus_dashboard-native entities. Linus Brain owns its own
+   * naming for the `linus_brain_*` entities and is left alone here.
+   */
+  private areaIdFor(area_slug: string): string {
+    return Helper.areas?.[area_slug]?.area_id ?? area_slug;
+  }
+
+  /**
    * Resolves the area state entity
    *
    * Priority: Linus Brain > Magic Areas > native
@@ -99,7 +128,7 @@ export class EntityResolver {
    * @returns EntityResolution with the resolved entity
    */
   resolvePresenceSensor(area_slug: string): EntityResolution {
-    const entity_id = `binary_sensor.linus_dashboard_presence_detection_area_${area_slug}`;
+    const entity_id = `binary_sensor.linus_dashboard_presence_detection_area_${this.areaIdFor(area_slug)}`;
     if (this.hass.states[entity_id]) {
       return { entity_id, source: "native" };
     }
@@ -163,7 +192,7 @@ export class EntityResolver {
    * @returns EntityResolution with the resolved entity
    */
   resolveAllLights(area_slug: string): EntityResolution {
-    const entity_id = `light.linus_dashboard_all_lights_area_${area_slug}`;
+    const entity_id = `light.linus_dashboard_all_lights_area_${this.areaIdFor(area_slug)}`;
     if (this.hass.states[entity_id]) {
       return { entity_id, source: "native" };
     }
@@ -208,7 +237,7 @@ export class EntityResolver {
    * @returns EntityResolution with the resolved entity
    */
   resolveGroupEntity(domain: string, groupSlug: string, area_slug: string): EntityResolution {
-    const entity_id = `${domain}.linus_dashboard_${groupSlug}_area_${area_slug}`;
+    const entity_id = `${domain}.linus_dashboard_${groupSlug}_area_${this.areaIdFor(area_slug)}`;
     if (this.hass.states[entity_id]) {
       return { entity_id, source: "native" };
     }

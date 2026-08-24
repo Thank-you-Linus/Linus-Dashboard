@@ -84,28 +84,44 @@ def test_compute_group_attributes_uses_entity_id_key_for_more_info_dialog(
 
 def test_should_skip_entity_entry_excludes_dashboard_entities_and_config_entities():
     assert should_skip_entity_entry(
-        SimpleNamespace(platform=DOMAIN, hidden_by=None, disabled_by=None, entity_category=None)
+        SimpleNamespace(
+            platform=DOMAIN, hidden_by=None, disabled_by=None, entity_category=None
+        )
     )
     assert should_skip_entity_entry(
-        SimpleNamespace(platform="mqtt", hidden_by="integration", disabled_by=None, entity_category=None)
+        SimpleNamespace(
+            platform="mqtt",
+            hidden_by="integration",
+            disabled_by=None,
+            entity_category=None,
+        )
     )
     assert should_skip_entity_entry(
-        SimpleNamespace(platform="mqtt", hidden_by=None, disabled_by=None, entity_category="config")
+        SimpleNamespace(
+            platform="mqtt", hidden_by=None, disabled_by=None, entity_category="config"
+        )
     )
 
 
 def test_should_skip_entity_entry_excludes_group_members_from_other_groups():
     state_obj = SimpleNamespace(attributes={"entity_id": ["light.a"]})
     assert should_skip_entity_entry(
-        SimpleNamespace(platform="mqtt", hidden_by=None, disabled_by=None, entity_category=None),
+        SimpleNamespace(
+            platform="mqtt", hidden_by=None, disabled_by=None, entity_category=None
+        ),
         state_obj,
     )
 
 
 def test_should_skip_entity_entry_keeps_regular_visible_entities():
-    assert should_skip_entity_entry(
-        SimpleNamespace(platform="mqtt", hidden_by=None, disabled_by=None, entity_category=None)
-    ) is False
+    assert (
+        should_skip_entity_entry(
+            SimpleNamespace(
+                platform="mqtt", hidden_by=None, disabled_by=None, entity_category=None
+            )
+        )
+        is False
+    )
 
 
 def test_compute_group_attributes_excludes_unavailable_members_from_active_states(

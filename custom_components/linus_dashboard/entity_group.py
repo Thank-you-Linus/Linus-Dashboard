@@ -115,15 +115,16 @@ def _resolve_entity_area_id(
     return None
 
 
-def should_skip_entity_entry(
-    entity_entry: er.RegistryEntry, state_obj=None
-) -> bool:
+def should_skip_entity_entry(entity_entry: er.RegistryEntry, state_obj=None) -> bool:
     """Whether an entity should be excluded from backend aggregate/group generation."""
     if entity_entry.platform == DOMAIN:
         return True
     if entity_entry.hidden_by or entity_entry.disabled_by:
         return True
-    if getattr(entity_entry, "entity_category", None) in (EntityCategory.CONFIG, "config"):
+    if getattr(entity_entry, "entity_category", None) in (
+        EntityCategory.CONFIG,
+        "config",
+    ):
         return True
     if state_obj and ATTR_ENTITY_ID in state_obj.attributes:
         return True

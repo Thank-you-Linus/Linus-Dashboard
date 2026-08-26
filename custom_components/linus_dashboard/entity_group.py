@@ -29,7 +29,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
     area_registry as ar,
@@ -165,6 +165,8 @@ def scan_domain_members(
             continue
 
         if entity_entry.hidden_by or entity_entry.disabled_by:
+            continue
+        if entity_entry.entity_category == EntityCategory.CONFIG:
             continue
 
         entity_id = entity_entry.entity_id
@@ -461,6 +463,8 @@ def discover_device_classes(
         if entity_entry.domain != domain or entity_entry.platform == DOMAIN:
             continue
         if entity_entry.hidden_by or entity_entry.disabled_by:
+            continue
+        if entity_entry.entity_category == EntityCategory.CONFIG:
             continue
         state_obj = hass.states.get(entity_entry.entity_id)
         if not state_obj:

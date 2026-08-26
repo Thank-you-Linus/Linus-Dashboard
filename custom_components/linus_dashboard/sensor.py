@@ -38,7 +38,7 @@ from typing import Any
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, EntityCategory
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.helpers import (
     area_registry as ar,
@@ -152,6 +152,8 @@ async def _build_aggregate_sensors(
 
     for entity_entry in ent_reg.entities.values():
         if entity_entry.hidden_by or entity_entry.disabled_by:
+            continue
+        if entity_entry.entity_category == EntityCategory.CONFIG:
             continue
 
         entity_id = entity_entry.entity_id
@@ -515,6 +517,8 @@ def _discover_numeric_device_classes(
         if entity_entry.domain != "sensor" or entity_entry.platform == DOMAIN:
             continue
         if entity_entry.hidden_by or entity_entry.disabled_by:
+            continue
+        if entity_entry.entity_category == EntityCategory.CONFIG:
             continue
         device_class = entity_entry.device_class or entity_entry.original_device_class
         if not device_class or device_class in NUMERIC_DEVICE_CLASS_EXCLUSIONS:

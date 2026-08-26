@@ -239,9 +239,7 @@ def test_discover_device_classes_excludes_hidden_and_disabled_entities(
         "custom_components.linus_dashboard.entity_group.er.async_get",
         return_value=entity_reg,
     ):
-        result = discover_device_classes(
-            mock_hass, "binary_sensor", ExclusionConfig()
-        )
+        result = discover_device_classes(mock_hass, "binary_sensor", ExclusionConfig())
 
     assert result == {"motion"}
 
@@ -267,8 +265,6 @@ def test_discover_device_classes_excludes_config_category_entities(
         "custom_components.linus_dashboard.entity_group.er.async_get",
         return_value=entity_reg,
     ):
-        result = discover_device_classes(
-            mock_hass, "binary_sensor", ExclusionConfig()
-        )
+        result = discover_device_classes(mock_hass, "binary_sensor", ExclusionConfig())
 
     assert result == {"motion"}

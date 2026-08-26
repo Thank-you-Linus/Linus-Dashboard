@@ -71,3 +71,6 @@ pour le détail de ce changement de cadrage.
 - Commit `8750a84` — tentative de correction backend, jamais mergée ; le filtrage
   config-category qu'elle introduisait est repris dans le ticket 02, à l'exclusion de
   l'auto-exclusion et du filtrage DIAGNOSTIC
+- Ticket 03 (investigation séparée) — `tickets/03-invalidation-cache-hidden-by-disabled-by.md`
+  : les scans se recalculent seulement sur refresh, et le listener de groupe ignore
+  `hidden_by` / `disabled_by`.

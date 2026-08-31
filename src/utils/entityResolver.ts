@@ -99,7 +99,7 @@ export class EntityResolver {
    * @returns EntityResolution with the resolved entity
    */
   resolvePresenceSensor(area_slug: string): EntityResolution {
-    const entity_id = `binary_sensor.linus_dashboard_presence_detection_area_${area_slug}`;
+    const entity_id = `binary_sensor.linus_dashboard_presence_detection_area_${Helper.areaIdFor(area_slug)}`;
     if (this.hass.states[entity_id]) {
       return { entity_id, source: "native" };
     }
@@ -109,7 +109,12 @@ export class EntityResolver {
   /**
    * Resolves the presence detection binary sensor for a floor
    *
-   * @param floor_slug - The floor slug
+   * No Helper.areaIdFor() equivalent here, unlike the area variant above:
+   * Helper keys floors by HA's own floor_id (not a name-derived slug), which is
+   * exactly what entity_group.py names floor-scoped entities after. There is no
+   * transliteration seam to bridge.
+   *
+   * @param floor_slug - The floor slug (i.e. HA's floor_id)
    * @returns EntityResolution with the resolved entity
    */
   resolvePresenceSensorForFloor(floor_slug: string): EntityResolution {
@@ -163,7 +168,7 @@ export class EntityResolver {
    * @returns EntityResolution with the resolved entity
    */
   resolveAllLights(area_slug: string): EntityResolution {
-    const entity_id = `light.linus_dashboard_all_lights_area_${area_slug}`;
+    const entity_id = `light.linus_dashboard_all_lights_area_${Helper.areaIdFor(area_slug)}`;
     if (this.hass.states[entity_id]) {
       return { entity_id, source: "native" };
     }
@@ -183,7 +188,10 @@ export class EntityResolver {
    *
    * Linus Dashboard native only — Magic Areas has no floor concept.
    *
-   * @param floor_slug - The floor slug
+   * Deliberately no Helper.areaIdFor() equivalent — floors are already keyed by
+   * HA's floor_id, so there is no name-derived slug to translate.
+   *
+   * @param floor_slug - The floor slug (i.e. HA's floor_id)
    * @returns EntityResolution with the resolved entity
    */
   resolveAllLightsForFloor(floor_slug: string): EntityResolution {
@@ -208,7 +216,7 @@ export class EntityResolver {
    * @returns EntityResolution with the resolved entity
    */
   resolveGroupEntity(domain: string, groupSlug: string, area_slug: string): EntityResolution {
-    const entity_id = `${domain}.linus_dashboard_${groupSlug}_area_${area_slug}`;
+    const entity_id = `${domain}.linus_dashboard_${groupSlug}_area_${Helper.areaIdFor(area_slug)}`;
     if (this.hass.states[entity_id]) {
       return { entity_id, source: "native" };
     }

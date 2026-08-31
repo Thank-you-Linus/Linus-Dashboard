@@ -58,7 +58,13 @@ class HomeAreaCard {
       cards.push(chipsCard);
     }
 
-    if (all_lights_entity && Helper.getEntityState(all_lights_entity).state !== UNAVAILABLE) {
+    // Include whenever the group entity exists, regardless of its state right now —
+    // the strategy only runs once per dashboard load, and all_lights groups are
+    // routinely "unavailable" for a few seconds after a HA restart (before their
+    // members report in). Gating on live state here would bake that transient
+    // unavailability into the generated config permanently. getLightCard() wraps the
+    // tile in a `conditional` card instead, which HA re-evaluates continuously.
+    if (all_lights_entity) {
       cards.push(this.getLightCard(all_lights_entity));
     }
 
@@ -68,7 +74,23 @@ class HomeAreaCard {
       grid_options: {
         columns: 6,
       },
-
+      // The stack's own ha-card has no bottom padding, so whichever card ends up
+      // last (chips row if there's no light group, the light tile otherwise) sits
+      // flush against the bottom rounded corner. Padding the stack covers every
+      // card combination at once.
+      //
+      // Deliberately bottom-only: padding-right here would narrow *every* child,
+      // cutting the main card's hover fill short of the right edge (leaving a dead
+      // strip) and double-padding the brightness slider, which already carries its
+      // own 12px inset. The chips row gets its right inset from
+      // getChipsCardModStyle() instead.
+      card_mod: {
+        style: `
+          ha-card {
+            padding-bottom: 8px;
+          }
+        `,
+      },
     };
   }
 
@@ -222,11 +244,20 @@ class HomeAreaCard {
       ? [{ type: "light-brightness" }]
       : [];
     return {
-      type: "tile",
-      features,
-      hide_state: true,
-      entity: all_lights_entity_id,
-      card_mod: { style: this.getLightCardModStyle() }
+      // Wrapped in `conditional` (not pushed straight into the stack) because the
+      // group can be transiently "unavailable" right after a HA restart — the
+      // strategy runs once, but this condition is re-checked live by HA, so the
+      // tile appears on its own once the group reports in instead of the dashboard
+      // needing a manual regenerate.
+      type: "conditional",
+      conditions: [{ entity: all_lights_entity_id, state_not: UNAVAILABLE }],
+      card: {
+        type: "tile",
+        features,
+        hide_state: true,
+        entity: all_lights_entity_id,
+        card_mod: { style: this.getLightCardModStyle() }
+      }
     };
   }
 
@@ -266,6 +297,24 @@ class HomeAreaCard {
         width: -webkit-fill-available;
         margin-top: -12px;
       }
+      /* The chips are right-aligned (alignment: "end") and the card fills the
+         full width, so the trailing chip would otherwise sit flush against the
+         card's rounded corner. Inset the container rather than the whole stack,
+         which would also narrow the main card (clipping its hover fill) and
+         double-pad the brightness slider.
+         Deliberately NOT ":last-child" on a chip: most chips here are
+         ConditionalChips, and mushroom's conditional chip (via HA's
+         hui-conditional-base) stays in the DOM with display:none when its
+         condition is unmet. The last DOM child is therefore often a hidden
+         chip, where a margin has no layout effect, leaving the last *visible*
+         chip flush against the edge. Padding the container is independent of
+         which chips happen to be hidden.
+         .chip-container is mushroom-chips-card's own wrapper and lives in the
+         same shadow root as the ha-card rule above, so plain card_mod CSS
+         reaches it without needing shadow-piercing. */
+      .chip-container {
+        padding-right: 8px;
+      }
     `;
   }
 
@@ -278,7 +327,6 @@ class HomeAreaCard {
         ha-card {
           box-shadow: none!important;
           border: none;
-          margin-top: -12px;
         }
         ha-tile-icon {
           display: none;

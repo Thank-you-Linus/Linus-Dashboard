@@ -10,6 +10,8 @@ vi.mock('../../src/Helper', () => ({
     magicAreasDevices: mockMagicAreasDevices,
     devices: mockDevices,
     areas: mockAreas,
+    // Mirrors the real Helper.areaIdFor(): registry lookup, slug as fallback.
+    areaIdFor: (area_slug: string) => mockAreas[area_slug]?.area_id ?? area_slug,
   },
 }));
 

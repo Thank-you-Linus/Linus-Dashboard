@@ -489,7 +489,11 @@ class AggregateChip extends AbstractChip {
     let scopeSuffix: string;
     if (config.scope === "area") {
       if (Array.isArray(config.area_slug) || !config.area_slug) return null;
-      scopeSuffix = `_area_${config.area_slug}`;
+      // area_id, not the slug: the native group entities are named after HA's
+      // area_id, which a name-derived slug does not always match (see
+      // Helper.areaIdFor). Using the slug made tryEntity() miss for those
+      // areas, silently and permanently falling back to client-side rendering.
+      scopeSuffix = `_area_${Helper.areaIdFor(config.area_slug)}`;
     } else if (config.scope === "floor" && config.floor_id) {
       scopeSuffix = `_floor_${config.floor_id}`;
     } else {

@@ -278,6 +278,38 @@ class Helper {
   }
 
   /**
+   * Map a strategy area slug to the area_id its native entities are named after.
+   *
+   * Linus Dashboard's own group entities take their object_id straight from the
+   * unique_id, which entity_group.py builds as `{prefix}_area_{area_id}` — i.e.
+   * Home Assistant's area_id. Areas here, however, are keyed by
+   * `slugify(area.name)` (see initialize()), and the two are NOT interchangeable:
+   *
+   * - Transliteration differs. slugify() only strips combining marks after NFD,
+   *   so characters with no canonical decomposition ("ø", "æ", "ß", "ł") survive
+   *   untouched while HA transliterates them ("o", "ae", "ss", "l"). Characters
+   *   that do decompose ("é", "ü", "ç", "å") happen to agree.
+   * - Renames break it outright. HA keeps the original area_id when an area is
+   *   renamed, so an area_id can bear no resemblance to the current name and no
+   *   name-derived slug can reproduce it.
+   *
+   * Using the slug directly made affected areas resolve to a non-existent
+   * entity_id, silently dropping their light tile, presence chip and group
+   * chips. Always go through the registry instead.
+   *
+   * Only for linus_dashboard-native entities — Linus Brain owns the naming of
+   * the `linus_brain_*` entities, and floor-scoped entities already use HA's
+   * floor_id directly, so neither needs this.
+   *
+   * @param area_slug - The area slug (key into Helper.areas)
+   * @return {string} The area_id, or the slug unchanged if the area is unknown.
+   * @static
+   */
+  static areaIdFor(area_slug: string): string {
+    return this.#areas?.[area_slug]?.area_id ?? area_slug;
+  }
+
+  /**
    * Get the entities from Home Assistant's floor registry.
    *
    * Sorting priority:

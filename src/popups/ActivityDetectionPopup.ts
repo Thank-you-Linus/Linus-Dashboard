@@ -186,8 +186,15 @@ class ActivityDetectionPopup extends AbstractPopup {
         // motion/presence/occupancy/media, so its member list is the same
         // safety net this always relied on: entities that don't match the
         // standard device_class filters above but still feed presence).
-        const presenceGroupEntity = `binary_sensor.linus_dashboard_presence_detection_area_${area_slug}`;
-        const presenceGroupState = Helper.getEntityState(presenceGroupEntity);
+        // Reuse the entity resolved above rather than rebuilding the id from
+        // area_slug: the native entity is named after HA's area_id, which the
+        // slug does not always match (see Helper.areaIdFor). Hand-building it
+        // here silently missed the group for those areas, dropping its members
+        // from the list below.
+        const presenceGroupEntity = presenceSensorEntity;
+        const presenceGroupState = presenceGroupEntity
+            ? Helper.getEntityState(presenceGroupEntity)
+            : undefined;
         const groupMemberEntities: string[] = [];
 
         if (presenceGroupState?.attributes?.entity_id) {

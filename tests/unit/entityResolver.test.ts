@@ -151,6 +151,20 @@ describe('EntityResolver', () => {
       expect(result.entity_id).toBe('binary_sensor.linus_dashboard_presence_detection_area_kayas_rum');
     });
 
+    // The "group chips" half of the bug: a missed id here makes AggregateChip
+    // fall back to client-side rendering, silently and permanently.
+    it('resolves a device-class group entity via area_id', () => {
+      mockAreas['køkken'] = { slug: 'køkken', area_id: 'kokken', name: 'Køkken' };
+
+      const resolver = new EntityResolver(makeHass({
+        'binary_sensor.linus_dashboard_motion_area_kokken': { state: 'off' },
+      }));
+
+      const result = resolver.resolveGroupEntity('binary_sensor', 'motion', 'køkken');
+      expect(result.entity_id).toBe('binary_sensor.linus_dashboard_motion_area_kokken');
+      expect(result.source).toBe('native');
+    });
+
     it('falls back to the slug when the area is unknown', () => {
       const resolver = new EntityResolver(makeHass({
         'light.linus_dashboard_all_lights_area_stue': { state: 'off' },

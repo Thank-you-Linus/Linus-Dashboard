@@ -11,6 +11,10 @@ const fx = vi.hoisted(() => {
     AREA_SLUG,
     AREA_ID,
     GROUP_ENTITY: `light.linus_dashboard_all_lights_area_${AREA_ID}`,
+    // Mutable so a test can drive both branches of the features decision.
+    // Helper.lightSupportsBrightness itself is covered against its real
+    // implementation in helperAreaId.test.ts.
+    supportsBrightness: true,
     areas: {
       [AREA_SLUG]: {
         slug: AREA_SLUG,
@@ -33,7 +37,7 @@ vi.mock('../../src/Helper', () => ({
     getEntityState: () => ({ state: 'unavailable', attributes: {} }),
     getEntityIds: () => [],
     getSensorStateTemplate: () => '',
-    lightSupportsBrightness: () => true,
+    lightSupportsBrightness: () => fx.supportsBrightness,
     entityResolver: {
       resolveAllLights: () => ({ entity_id: fx.GROUP_ENTITY, source: 'native' }),
       resolveAreaState: () => ({ entity_id: null, source: 'native' }),
@@ -97,6 +101,26 @@ describe('HomeAreaCard', () => {
       expect(card.conditions).toEqual([{ entity: fx.GROUP_ENTITY, state_not: UNAVAILABLE }]);
       expect(card.card.type).toBe('tile');
       expect(card.card.entity).toBe(fx.GROUP_ENTITY);
+    });
+
+    // The slider is the whole point of the card, so assert the feature list
+    // rather than only the wrapper — an empty features array renders a tile
+    // with no control at all.
+    it('gives the tile a brightness feature when the group is dimmable', () => {
+      fx.supportsBrightness = true;
+      const self = { getLightCardModStyle: () => ({}) };
+      const card: any = (HomeAreaCard.prototype as any).getLightCard.call(self, fx.GROUP_ENTITY);
+
+      expect(card.card.features).toEqual([{ type: 'light-brightness' }]);
+    });
+
+    it('omits the feature for an onoff-only group', () => {
+      fx.supportsBrightness = false;
+      const self = { getLightCardModStyle: () => ({}) };
+      const card: any = (HomeAreaCard.prototype as any).getLightCard.call(self, fx.GROUP_ENTITY);
+
+      expect(card.card.features).toEqual([]);
+      fx.supportsBrightness = true;
     });
   });
 });

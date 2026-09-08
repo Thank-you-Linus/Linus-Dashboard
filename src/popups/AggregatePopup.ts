@@ -48,10 +48,10 @@ export interface AggregatePopupConfig {
 }
 
 /**
- * Internal config type with entity_ids populated (used by build methods)
- * @private
+ * Config type with entity_ids populated (used by build methods, and by
+ * subclasses overriding the protected build hooks).
  */
-type AggregatePopupConfigWithEntities = AggregatePopupConfig & {
+export type AggregatePopupConfigWithEntities = AggregatePopupConfig & {
   entity_ids: string[];
 };
 
@@ -182,6 +182,11 @@ class AggregatePopup extends AbstractPopup {
     if (tileEntity) {
       cards.push(this.buildGroupControlSection(tileEntity, domain));
     }
+
+    // 3a. Domain-specific extra sections (e.g. LightPopup's scene shortcuts).
+    // They sit at the same level as the group control tile — ambience/bulk
+    // controls — hence above the "Individual Controls" separator.
+    cards.push(...this.buildExtraSections(configWithEntities));
 
     // 3b. History graph for numeric sensors — the individual tiles below
     // only show the current value, not the trend that's usually the actual
@@ -527,6 +532,22 @@ class AggregatePopup extends AbstractPopup {
       features,
       features_position: "inline"
     };
+  }
+
+  /**
+   * Build domain-specific extra sections, inserted between the group control
+   * tile and the "Individual Controls" separator.
+   *
+   * The base implementation renders nothing: subclasses override it to add
+   * their own cards (e.g. LightPopup's scene shortcuts). Returning an empty
+   * array must render nothing at all — no title, no empty block.
+   *
+   * @param _config - Popup configuration with resolved entity_ids
+   * @returns Array of card configurations (empty by default)
+   * @protected
+   */
+  protected buildExtraSections(_config: AggregatePopupConfigWithEntities): any[] {
+    return [];
   }
 
   /**

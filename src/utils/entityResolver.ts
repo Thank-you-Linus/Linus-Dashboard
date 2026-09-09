@@ -90,16 +90,48 @@ export class EntityResolver {
   }
 
   /**
+   * Translates an area slug into the `area_id` the Linus Dashboard backend
+   * names its area-scope entities from.
+   *
+   * Areas are indexed here by a slug derived from the area *name*, while
+   * `entity_group.py`/`binary_sensor.py` build their unique_ids from the
+   * registry's `area_id`. The two diverge as soon as an area is renamed or
+   * has a non-ASCII name (ha-test: `area_id` "cuisine", name « Køkken »),
+   * and every group lookup built on the slug then misses.
+   *
+   * Returns `undefined` for an unknown slug — callers must give up rather
+   * than fall back to the slug: two areas can be each other's rename
+   * (`cuisine`/« Køkken » and `salon`/« Stuen »), so a slug fallback could
+   * hand back *another room's* group entity as a control target.
+   *
+   * Note this deliberately does NOT apply to `Helper.magicAreasDevices`,
+   * which is keyed by a slug derived from the Magic Areas device name
+   * (see `getMagicAreaSlug`), never by `area_id`.
+   *
+   * @param area_slug - The area slug
+   * @returns The matching area_id, or undefined if the slug is unknown
+   * @private
+   */
+  private areaKey(area_slug: string): string | undefined {
+    return Helper.getAreaIdBySlug(area_slug);
+  }
+
+  /**
    * Resolves the presence detection binary sensor for an area
    *
-   * Source: Linus Dashboard native (binary_sensor.linus_dashboard_presence_detection_area_{area}).
+   * Source: Linus Dashboard native (binary_sensor.linus_dashboard_presence_detection_area_{area_id}).
    * No Linus Brain fallback — see class docstring.
    *
    * @param area_slug - The area slug
    * @returns EntityResolution with the resolved entity
    */
   resolvePresenceSensor(area_slug: string): EntityResolution {
-    const entity_id = `binary_sensor.linus_dashboard_presence_detection_area_${area_slug}`;
+    const area_id = this.areaKey(area_slug);
+    if (!area_id) {
+      return { entity_id: null, source: "native" };
+    }
+
+    const entity_id = `binary_sensor.linus_dashboard_presence_detection_area_${area_id}`;
     if (this.hass.states[entity_id]) {
       return { entity_id, source: "native" };
     }
@@ -156,16 +188,25 @@ export class EntityResolver {
   /**
    * Resolves the all-lights group entity for an area
    *
-   * Priority: Linus Dashboard native (light.linus_dashboard_all_lights_area_{area})
+   * Priority: Linus Dashboard native (light.linus_dashboard_all_lights_area_{area_id})
    * > Magic Areas > native. No Linus Brain branch — see class docstring.
+   *
+   * The native entity is keyed on the area_id (see areaKey); the Magic Areas
+   * fallback stays keyed on the name slug, which is how magicAreasDevices is
+   * indexed. An unresolvable area_id skips the native branch only — Magic
+   * Areas is still tried.
    *
    * @param area_slug - The area slug
    * @returns EntityResolution with the resolved entity
    */
   resolveAllLights(area_slug: string): EntityResolution {
-    const entity_id = `light.linus_dashboard_all_lights_area_${area_slug}`;
-    if (this.hass.states[entity_id]) {
-      return { entity_id, source: "native" };
+    const area_id = this.areaKey(area_slug);
+
+    if (area_id) {
+      const entity_id = `light.linus_dashboard_all_lights_area_${area_id}`;
+      if (this.hass.states[entity_id]) {
+        return { entity_id, source: "native" };
+      }
     }
 
     if (this.hasMagicAreas) {
@@ -208,7 +249,12 @@ export class EntityResolver {
    * @returns EntityResolution with the resolved entity
    */
   resolveGroupEntity(domain: string, groupSlug: string, area_slug: string): EntityResolution {
-    const entity_id = `${domain}.linus_dashboard_${groupSlug}_area_${area_slug}`;
+    const area_id = this.areaKey(area_slug);
+    if (!area_id) {
+      return { entity_id: null, source: "native" };
+    }
+
+    const entity_id = `${domain}.linus_dashboard_${groupSlug}_area_${area_id}`;
     if (this.hass.states[entity_id]) {
       return { entity_id, source: "native" };
     }

@@ -489,7 +489,13 @@ class AggregateChip extends AbstractChip {
     let scopeSuffix: string;
     if (config.scope === "area") {
       if (Array.isArray(config.area_slug) || !config.area_slug) return null;
-      scopeSuffix = `_area_${config.area_slug}`;
+      // The backend names its area-scope group entities from the real
+      // area_id, not from the name-derived slug areas are indexed by here
+      // (they diverge on a renamed or non-ASCII named area). No slug
+      // fallback: it could resolve another area's group entity.
+      const areaId = Helper.getAreaIdBySlug(config.area_slug);
+      if (!areaId) return null;
+      scopeSuffix = `_area_${areaId}`;
     } else if (config.scope === "floor" && config.floor_id) {
       scopeSuffix = `_floor_${config.floor_id}`;
     } else {

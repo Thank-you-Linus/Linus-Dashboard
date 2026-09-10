@@ -348,6 +348,12 @@ class LinusDashboardAggregateSensor(SensorEntity):
             "color": color,
             ATTR_ENTITY_ID: sorted(self._tracked_entities),
             "active_entity_ids": active_ids,
+            # Redundant with this sensor's own state (which IS the count), but
+            # published so every aggregate entity answers `active_count` the
+            # same way and a chip template never has to branch on which kind
+            # of aggregate it is reading. This sensor only ever tracks raw
+            # entities, so no leaf-level recursion applies here.
+            "active_count": active_count,
         }
 
 

@@ -31,11 +31,10 @@ from homeassistant.components.group.binary_sensor import (
     BinarySensorGroup as HABinarySensorGroup,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID, EntityCategory
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .aggregate import compute_color, compute_icon
 from .const import (
     DOMAIN,
     get_area_device_info,
@@ -47,6 +46,7 @@ from .entity_group import (
     NestedGroupMixin,
     ScopedMembers,
     build_nested_device_class_groups,
+    compute_group_attributes,
     domain_is_excluded,
     ensure_area_device_placed,
     resolve_floors_for_areas,
@@ -57,6 +57,12 @@ from .group_manager import PlatformGroupManager
 _LOGGER = logging.getLogger(__name__)
 
 PRESENCE_DEVICE_CLASSES = ("motion", "presence", "occupancy")
+
+# The composite's own active-state set, deliberately not either member
+# domain's: wider than DOMAIN_ACTIVE_STATES["binary_sensor"] (just "on") so a
+# playing media_player marks presence, narrower than
+# DOMAIN_ACTIVE_STATES["media_player"] so a paused one does not.
+PRESENCE_ACTIVE_STATES = ["on", "playing"]
 
 # Platform-level registries of live entities, keyed by unique_id, so dynamic
 # refreshes can update existing entities (update_members) instead of
@@ -97,31 +103,26 @@ class PresenceGroup(NestedGroupMixin, BinarySensorEntity):
         self._breakdown = breakdown or {}
 
     def _recompute(self) -> None:
-        active_ids: list[str] = []
-        entity_states: dict[str, str] = {}
-        for entity_id in self._member_entity_ids:
-            state_obj = self.hass.states.get(entity_id)
-            if not state_obj or state_obj.state in ("unavailable", "unknown"):
-                continue
-            entity_states[entity_id] = state_obj.state
-            if state_obj.state in ("on", "playing"):
-                active_ids.append(entity_id)
-
-        self._attr_is_on = len(active_ids) > 0
-        # icon/color reuse the exact member scan/state read above — no new
-        # entity lookups (in particular, never references the per-
-        # device_class motion/presence/occupancy groups binary_sensor.py
-        # also builds from the same raw sensors), so there's no risk of a
-        # dependency loop between this composite and them.
-        icon = compute_icon(self.hass, "binary_sensor", entity_states, "occupancy")
-        color = compute_color("binary_sensor", "occupancy", entity_states)
-        attrs = {
-            ATTR_ENTITY_ID: list(self._member_entity_ids),
-            "total": len(self._member_entity_ids),
-            "active_entity_ids": active_ids,
-            "icon": icon,
-            "color": color,
-        }
+        # Routed through the shared compute_group_attributes rather than a
+        # hand-built dict: the duplicate was what kept this group out of the
+        # leaf-level count fix (a floor presence chip counted rooms, not
+        # sensors). PRESENCE_ACTIVE_STATES is passed explicitly because this
+        # group is a composite — its members mix binary_sensors with raw
+        # media_players, so neither domain's own table describes it.
+        #
+        # icon/color stay on the DIRECT members' states (compute_group_
+        # attributes' own rule) — in particular this never reads the per-
+        # device_class motion/presence/occupancy groups binary_sensor.py also
+        # builds from the same raw sensors, so there is no dependency loop
+        # between this composite and them.
+        attrs = compute_group_attributes(
+            self.hass,
+            domain="binary_sensor",
+            device_class="occupancy",
+            member_entity_ids=self._member_entity_ids,
+            active_states=PRESENCE_ACTIVE_STATES,
+        )
+        self._attr_is_on = attrs["active_count"] > 0
         for key, entity_ids in self._breakdown.items():
             attrs[f"{key}_entity_ids"] = entity_ids
         self._attr_extra_state_attributes = attrs

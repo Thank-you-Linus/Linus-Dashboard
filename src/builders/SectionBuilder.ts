@@ -171,10 +171,12 @@ export class SectionBuilder {
       type: "template",
       icon: Helper.getIcon(domain || "", device_class || undefined, entity_ids),
       icon_color: Helper.getIconColor(domain || "", device_class || undefined, entity_ids),
+      // Same zero-suppression as AggregateChip: no badge at all rather than a
+      // literal "0" when nothing in the section is active.
       content: `
         {% set entities = [${statesArray}] | reject('none') | list %}
         {% set active = entities | selectattr('state', 'in', [${activeStatesCondition}]) | list | count %}
-        {{ active }}
+        {% if active > 0 %}{{ active }}{% endif %}
       `.trim(),
       tap_action: config.badgeTapAction || { action: "none" }
     };

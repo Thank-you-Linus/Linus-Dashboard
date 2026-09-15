@@ -90,6 +90,19 @@ class Helper {
   static #areaIdToSlugMap = new Map<string, string>();
 
   /**
+   * Index for O(1) slug to area_id lookup.
+   *
+   * Reverse of #areaIdToSlugMap. Needed because the backend names its
+   * area-scope group entities from the real `area_id`, while the frontend
+   * indexes areas by a slug derived from the area *name* — the two diverge
+   * as soon as an area is renamed or has a non-ASCII name.
+   *
+   * @type {Map<string, string>}
+   * @private
+   */
+  static #slugToAreaIdMap = new Map<string, string>();
+
+  /**
    * Sets for O(1) exclusion checks.
    *
    * @private
@@ -455,6 +468,23 @@ class Helper {
    */
   static getAreaSlugById(areaId: string): string | undefined {
     return this.#areaIdToSlugMap.get(areaId);
+  }
+
+  /**
+   * Get area_id by area slug (O(1) lookup).
+   *
+   * Use this before building any backend-named entity_id for an area: the
+   * Python side names its area-scope entities from `area_id`, not from the
+   * name-derived slug areas are indexed by here. Returns `undefined` for an
+   * unknown slug — callers must bail out rather than fall back to the slug,
+   * which could otherwise resolve a *different* area's group entity.
+   *
+   * @param {string} slug - The area slug to look up
+   * @returns {string | undefined} The area_id or undefined if not found
+   * @static
+   */
+  static getAreaIdBySlug(slug: string): string | undefined {
+    return this.#slugToAreaIdMap.get(slug);
   }
 
   /**
@@ -970,10 +1000,12 @@ class Helper {
       return (a.name ?? '').localeCompare(b.name ?? '');
     });
 
-    // Phase 2: Build area_id → slug index for O(1) lookups
+    // Phase 2: Build area_id ⇄ slug indexes for O(1) lookups
     this.#areaIdToSlugMap.clear();
+    this.#slugToAreaIdMap.clear();
     for (const [slug, area] of Object.entries(this.#areas)) {
       this.#areaIdToSlugMap.set(area.area_id, slug);
+      this.#slugToAreaIdMap.set(slug, area.area_id);
     }
 
     // Note: Exclusion Sets (#excludedEntityIds, etc.) were already built before entity processing
@@ -982,6 +1014,7 @@ class Helper {
       orderedAreas: this.#orderedAreasList.length,
       orderedFloors: this.#orderedFloorsList.length,
       areaIdToSlug: this.#areaIdToSlugMap.size,
+      slugToAreaId: this.#slugToAreaIdMap.size,
       excludedEntities: this.#excludedEntityIds.size,
       excludedAreas: this.#excludedAreaIds.size,
       excludedDevices: this.#excludedDeviceIds.size,

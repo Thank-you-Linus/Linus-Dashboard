@@ -3,8 +3,18 @@ import { chips } from "../types/strategy/chips";
 import { TemplateChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
 import { navigateTo } from "../utils";
 import { PopupFactory } from "../services/PopupFactory";
+import { DEFAULT_ACTIVE_STATES, DOMAIN_ACTIVE_STATES } from "../variables";
 
 import { AbstractChip } from "./AbstractChip";
+
+/** Per-domain defaults applied to an AggregateChip's options. */
+interface AggregateChipDefaults {
+  serviceOn: string;
+  serviceOff: string;
+  activeStates: string[];
+  translationKey: string;
+  features: any[];
+}
 
 /**
  * Aggregate Chip Options
@@ -128,8 +138,12 @@ class AggregateChip extends AbstractChip {
       this.#defaultConfig.icon_color = `{{ state_attr('${sensorId}', 'color') }}`;
 
       if (config.show_content) {
+        // A dedicated group publishes its own leaf-level count as an integer
+        // (entity_group.py's active_count); `| count` on active_entity_ids is
+        // the fallback for an installation whose backend hasn't been updated
+        // yet, and stays correct there because both describe the same list.
         const countExpr = isDedicatedGroup
-          ? `state_attr('${sensorId}', 'active_entity_ids') | count`
+          ? `state_attr('${sensorId}', 'active_count') | int((state_attr('${sensorId}', 'active_entity_ids') or []) | count)`
           : `states('${sensorId}') | int(0)`;
         this.#defaultConfig.content = `{% set count = ${countExpr} %}{% if count > 0 %}{{ count }}{% endif %}`;
       }
@@ -199,18 +213,16 @@ class AggregateChip extends AbstractChip {
    * @returns Default configuration
    * @private
    */
-  private getDefaultsForDomain(domain: string): {
-    serviceOn: string;
-    serviceOff: string;
-    activeStates: string[];
-    translationKey: string;
-    features: any[];
-  } {
-    const defaults: Record<string, any> = {
+  private getDefaultsForDomain(domain: string): AggregateChipDefaults {
+    // activeStates always comes from the shared DOMAIN_ACTIVE_STATES table
+    // (an exact mirror of aggregate.py's), never from a per-domain literal
+    // here: this list is what the popup opened from this very chip recounts
+    // its own perimeter with, so a local variant made the chip and its popup
+    // report different numbers for the same entities.
+    const defaults: Record<string, Omit<AggregateChipDefaults, 'activeStates'>> = {
       light: {
         serviceOn: "turn_on",
         serviceOff: "turn_off",
-        activeStates: ["on"],
         translationKey: "light",
         features: [
           { type: "light-brightness" }
@@ -219,67 +231,61 @@ class AggregateChip extends AbstractChip {
       climate: {
         serviceOn: "turn_on",
         serviceOff: "turn_off",
-        activeStates: ["heat", "cool", "heat_cool", "auto", "dry", "fan_only"],
         translationKey: "climate",
         features: [{ type: "climate-hvac-modes" }],
       },
       cover: {
         serviceOn: "open_cover",
         serviceOff: "close_cover",
-        activeStates: ["open", "opening"],
         translationKey: "cover",
         features: [],
       },
       fan: {
         serviceOn: "turn_on",
         serviceOff: "turn_off",
-        activeStates: ["on"],
         translationKey: "fan",
         features: [{ type: "fan-speed" }],
       },
       switch: {
         serviceOn: "turn_on",
         serviceOff: "turn_off",
-        activeStates: ["on"],
         translationKey: "switch",
         features: [],
       },
       media_player: {
         serviceOn: "media_play",
         serviceOff: "media_pause",
-        activeStates: ["playing", "paused"],
         translationKey: "media_player",
         features: [],
       },
       binary_sensor: {
         serviceOn: "turn_on",
         serviceOff: "turn_off",
-        activeStates: ["on"],
         translationKey: "binary_sensor",
         features: [],
       },
       sensor: {
         serviceOn: "turn_on",
         serviceOff: "turn_off",
-        activeStates: ["on"],
         translationKey: "sensor",
         features: [],
       },
       siren: {
         serviceOn: "turn_on",
         serviceOff: "turn_off",
-        activeStates: ["on"],
         translationKey: "siren",
         features: [],
       },
     };
 
-    return defaults[domain] ?? {
-      serviceOn: "turn_on",
-      serviceOff: "turn_off",
-      activeStates: ["on"],
-      translationKey: domain,
-      features: [],
+    return {
+      ...(defaults[domain] ?? {
+        serviceOn: "turn_on",
+        serviceOff: "turn_off",
+        translationKey: domain,
+        features: [],
+      }),
+      activeStates: DOMAIN_ACTIVE_STATES[domain] ?? DEFAULT_ACTIVE_STATES,
     };
   }
 

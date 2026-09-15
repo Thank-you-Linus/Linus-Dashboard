@@ -3,7 +3,7 @@ import merge from "lodash.merge";
 
 import { configurationDefaults } from "./configurationDefaults";
 import { generic } from "./types/strategy/generic";
-import { DEVICE_CLASSES, LINUS_BRAIN_DOMAIN, LINUS_DASHBOARD_DOMAIN, MAGIC_AREAS_DOMAIN, MAGIC_AREAS_NAME, SENSOR_STATE_CLASS_TOTAL, SENSOR_STATE_CLASS_TOTAL_INCREASING, UNDISCLOSED, colorMapping, ALL_HOME_ASSISTANT_DOMAINS, STANDARD_DOMAIN_ICONS } from "./variables";
+import { DEVICE_CLASSES, DOMAIN_ACTIVE_STATES, LINUS_BRAIN_DOMAIN, LINUS_DASHBOARD_DOMAIN, MAGIC_AREAS_DOMAIN, MAGIC_AREAS_NAME, SENSOR_STATE_CLASS_TOTAL, SENSOR_STATE_CLASS_TOTAL_INCREASING, UNDISCLOSED, colorMapping, ALL_HOME_ASSISTANT_DOMAINS, STANDARD_DOMAIN_ICONS } from "./variables";
 import { getEntityDomain, getGlobalEntitiesExceptUndisclosed, getMAEntity, getMagicAreaSlug, groupEntitiesByDomain, slugify } from "./utils";
 import { createDomainTag } from "./utils/domainTagHelper";
 import { IconResources } from "./types/homeassistant/data/frontend";
@@ -203,27 +203,27 @@ class Helper {
   static #linus_dashboard_config: LinusDashboardConfig;
 
   /**
-   * Per-domain active-state configuration used by getIcon() Path B.
-   * Defines which states count as "active" (show on-icon) for aggregate chips.
+   * Per-domain on/off icon pair used by getIcon() Path B.
    * Kept as a static field so it is allocated once, not on every getIcon() call.
+   *
+   * Which states count as "active" is NOT declared here: it comes from the
+   * shared DOMAIN_ACTIVE_STATES table in variables.ts (an exact mirror of
+   * aggregate.py's). This used to carry its own `activeStates` per domain,
+   * which is how the client-side count and the server-side one drifted apart
+   * for media_player and climate. A domain missing from DOMAIN_ACTIVE_STATES
+   * has no Path B and falls back to Path A (HA's own per-entity icon state
+   * map), which the comment below warns is unreliable for a group of entities
+   * in mixed states — so keep the two tables covering the same domains.
    */
-  // Kept in sync with aggregate.py's DOMAIN_ACTIVE_STATES/DOMAIN_ICONS —
-  // that's the source of truth (this only exists as the client-side
-  // fallback for area scope / a momentarily-unavailable server entity, see
-  // AggregateChip.getAggregateSensorId's else branch). binary_sensor and
-  // siren were missing here even after aggregate.py gained them: without an
-  // entry, getIcon() falls back to Path A (HA's own per-entity icon state
-  // map), which the comment below already warns is unreliable for a group
-  // of entities in mixed states.
-  static readonly #DOMAIN_ACTIVE_STATES: Record<string, { activeStates: string[]; on: string; off: string }> = {
-    light:         { activeStates: ['on'],                                                       on: "mdi:lightbulb-on",           off: "mdi:lightbulb-off"                    },
-    switch:        { activeStates: ['on'],                                                       on: "mdi:toggle-switch",           off: "mdi:toggle-switch-off"                },
-    fan:           { activeStates: ['on'],                                                       on: "mdi:fan",                     off: "mdi:fan-off"                          },
-    media_player:  { activeStates: ['playing', 'paused', 'on'],                                 on: "mdi:cast-connected",          off: "mdi:cast-off"                          },
-    climate:       { activeStates: ['heat', 'cool', 'auto', 'heat_cool', 'dry', 'fan_only'],    on: "mdi:thermostat",              off: "mdi:thermostat-box"                    },
-    cover:         { activeStates: ['open', 'opening'],                                         on: "mdi:window-open",             off: "mdi:window-closed"                     },
-    binary_sensor: { activeStates: ['on'],                                                       on: "mdi:checkbox-marked-circle",  off: "mdi:checkbox-blank-circle-outline"     },
-    siren:         { activeStates: ['on'],                                                       on: "mdi:alarm-light",             off: "mdi:alarm-light-off"                   },
+  static readonly #DOMAIN_ICONS: Record<string, { on: string; off: string }> = {
+    light:         { on: "mdi:lightbulb-on",           off: "mdi:lightbulb-off"                    },
+    switch:        { on: "mdi:toggle-switch",          off: "mdi:toggle-switch-off"                },
+    fan:           { on: "mdi:fan",                    off: "mdi:fan-off"                          },
+    media_player:  { on: "mdi:cast-connected",         off: "mdi:cast-off"                         },
+    climate:       { on: "mdi:thermostat",             off: "mdi:thermostat-box"                   },
+    cover:         { on: "mdi:window-open",            off: "mdi:window-closed"                    },
+    binary_sensor: { on: "mdi:checkbox-marked-circle", off: "mdi:checkbox-blank-circle-outline"    },
+    siren:         { on: "mdi:alarm-light",            off: "mdi:alarm-light-off"                  },
   };
 
   /**
@@ -1887,14 +1887,15 @@ class Helper {
 
       if (states.length) {
         const statePrefix = `{% set entities = [${states}] | reject('none') | list %}{% set state = entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | map(attribute='state') | list %}`;
-        const iconConfig = Helper.#DOMAIN_ACTIVE_STATES[domain];
+        const iconConfig = Helper.#DOMAIN_ICONS[domain];
+        const activeStates = DOMAIN_ACTIVE_STATES[domain];
 
-        if (iconConfig) {
+        if (iconConfig && activeStates) {
           // Path B — known domain: show on-icon if at least one entity is in an active state.
           // This is always preferred over Path A for known domains because the HA icon registry
           // only maps inactive states (e.g. 'off', 'closed'), which would incorrectly fire even
           // when other entities are still active.
-          const stateChecks = iconConfig.activeStates.map(s => `'${s}'`).join(', ');
+          const stateChecks = activeStates.map(s => `'${s}'`).join(', ');
           return `${statePrefix}{% if state | select('in', [${stateChecks}]) | list | count > 0 %}${iconConfig.on}{% else %}${iconConfig.off}{% endif %}`;
         }
 
@@ -2021,6 +2022,18 @@ class Helper {
   static getContent(domain: string, device_class?: string | null, entity_ids: string[] = [], as_icon = false): string {
     const stateStrings = Helper.getStateStrings(entity_ids);
 
+    const deviceClassFilter = device_class
+      ? ` | selectattr('attributes.device_class', 'eq', '${device_class}')`
+      : "";
+
+    /** "How many of these entities are active" — one shape for every domain. */
+    const activeCountTemplate = (activeStates: string[]) => ({
+      filter: `active_entities = entities${deviceClassFilter} | selectattr('state', 'in', [${activeStates.map(s => `'${s}'`).join(', ')}]) | list`,
+      default: `{{ active_entities | length }}`,
+      icon: "mdi:numeric-{count}",
+      icon_max: "mdi:numeric-9-plus"
+    });
+
     // Define templates for each domain/device_class combination
     const templates: Record<string, { filter: string, default: string, icon?: string, icon_max?: string }> = {
       "sensor:battery": {
@@ -2047,49 +2060,19 @@ class Helper {
         icon: "mdi:numeric-{count}",
         icon_max: "mdi:numeric-9-plus"
       },
-      binary_sensor: {
-        filter: `active_states = entities${device_class ? " | selectattr('attributes.device_class', 'eq', '" + device_class + "')" : ""} | selectattr('state', 'eq', 'on') | list`,
-        default: `{{ active_states | length }}`,
-        icon: "mdi:numeric-{count}",
-        icon_max: "mdi:numeric-9-plus"
-      },
-      light: {
-        filter: `active_lights = entities | selectattr('state', 'eq', 'on')${device_class ? " | selectattr('attributes.device_class', 'eq', '" + device_class + "')" : ""} | list`,
-        default: `{{ active_lights | length }}`,
-        icon: "mdi:numeric-{count}",
-        icon_max: "mdi:numeric-9-plus"
-      },
-      cover: {
-        filter: `active_covers = entities | selectattr('state', 'in', ['open', 'opening'])${device_class ? " | selectattr('attributes.device_class', 'eq', '" + device_class + "')" : ""} | list`,
-        default: `{{ active_covers | length }}`,
-        icon: "mdi:numeric-{count}",
-        icon_max: "mdi:numeric-9-plus"
-      },
-      climate: {
-        filter: `active_climates = entities | selectattr('state', 'in', ['heat', 'cool', 'auto'])${device_class ? " | selectattr('attributes.device_class', 'eq', '" + device_class + "')" : ""} | list`,
-        default: `{{ active_climates | length }}`,
-        icon: "mdi:numeric-{count}",
-        icon_max: "mdi:numeric-9-plus"
-      },
-      switch: {
-        filter: `active_switches = entities | selectattr('state', 'eq', 'on')${device_class ? " | selectattr('attributes.device_class', 'eq', '" + device_class + "')" : ""} | list`,
-        default: `{{ active_switches | length }}`,
-        icon: "mdi:numeric-{count}",
-        icon_max: "mdi:numeric-9-plus"
-      },
-      media_player: {
-        filter: `active_players = entities | selectattr('state', 'in', ['playing', 'on'])${device_class ? " | selectattr('attributes.device_class', 'eq', '" + device_class + "')" : ""} | list`,
-        default: `{{ active_players | length }}`,
-        icon: "mdi:numeric-{count}",
-        icon_max: "mdi:numeric-9-plus"
-      },
-      default: {
-        filter: `interesting_states = entities${device_class ? " | selectattr('attributes.device_class', 'eq', '" + device_class + "')" : ""} | selectattr('state', 'in', ['on', 'open', 'playing', 'heat', 'cool', 'auto']) | list`,
-        default: `{{ interesting_states | length }}`,
-        icon: "mdi:numeric-{count}",
-        icon_max: "mdi:numeric-9-plus"
-      }
+      // Unknown domain: no entry in DOMAIN_ACTIVE_STATES to read, so keep the
+      // historical grab-bag of "looks active in some domain" states.
+      default: activeCountTemplate(['on', 'open', 'playing', 'heat', 'cool', 'auto'])
     };
+
+    // One "count the active entities" template per known domain, all built
+    // from the same DOMAIN_ACTIVE_STATES table the chip and the popup use.
+    // These used to be hand-written per domain and had drifted from it
+    // (climate ignored heat_cool/dry/fan_only, media_player ignored paused),
+    // so a chip and the popup opened from it disagreed on the same entities.
+    for (const knownDomain of Object.keys(DOMAIN_ACTIVE_STATES)) {
+      templates[knownDomain] = activeCountTemplate(DOMAIN_ACTIVE_STATES[knownDomain]!);
+    }
 
     // Prefer device_class-specific template if available
     const templateKey = createDomainTag(domain, device_class);

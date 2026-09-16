@@ -23,6 +23,8 @@ This directory contains the **SAPIENS** configuration for this project.
 See `.sapiens/core/agents/` for details.
 
 ### Available Commands
+- `/value-analysis "idea"` - Structure a product need before creating tickets
+- `/create-epic NEED-BRIEF.md` - Break down a product need into a structured track with sequenced tickets
 - `/implement-ticket TICKET-123` - Implement feature ticket
 - `/create-ticket` - Create structured ticket
 - `/sapiens/04-quality-check [package]` - Run quality checks

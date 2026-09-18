@@ -1,7 +1,7 @@
-aiohasupervisor==0.5.0
+aiohasupervisor==0.6.0
 colorlog==6.12.0
 # run this command to install the requirements : ./scripts/setup
 homeassistant==2026.4.0
-pip>=26.1.2
+pip>=26.2
 ruff==0.15.20
-websockets>=13.0  # used by config/setup_fake_house_full.py and config/bootstrap_ha_onboarding.py (HA registry/auth websocket API)
+websockets>=17.0.1  # used by config/setup_fake_house_full.py and config/bootstrap_ha_onboarding.py (HA registry/auth websocket API)

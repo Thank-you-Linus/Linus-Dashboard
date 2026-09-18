@@ -90,7 +90,7 @@ class SirenGroup(NestedGroupMixin, SirenEntity):
             device_class=None,
             member_entity_ids=self._member_entity_ids,
         )
-        self._attr_is_on = len(attrs["active_entity_ids"]) > 0
+        self._attr_is_on = attrs["active_count"] > 0
         self._attr_extra_state_attributes = attrs
 
     async def async_turn_on(self, **kwargs: Any) -> None:

@@ -297,10 +297,6 @@ class LinusDashboardAggregateSensor(SensorEntity):
             self._async_state_changed,
         )
 
-        self.async_on_remove(
-            self._config_entry.add_update_listener(self._async_config_updated)
-        )
-
     async def async_will_remove_from_hass(self) -> None:
         """Clean up subscriptions."""
         if self._unsub_state_changed:
@@ -352,14 +348,13 @@ class LinusDashboardAggregateSensor(SensorEntity):
             "color": color,
             ATTR_ENTITY_ID: sorted(self._tracked_entities),
             "active_entity_ids": active_ids,
+            # Redundant with this sensor's own state (which IS the count), but
+            # published so every aggregate entity answers `active_count` the
+            # same way and a chip template never has to branch on which kind
+            # of aggregate it is reading. This sensor only ever tracks raw
+            # entities, so no leaf-level recursion applies here.
+            "active_count": active_count,
         }
-
-    @staticmethod
-    async def _async_config_updated(
-        hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> None:
-        """Handle config entry update — reload the platform."""
-        await hass.config_entries.async_reload(config_entry.entry_id)
 
 
 # ---------------------------------------------------------------------------

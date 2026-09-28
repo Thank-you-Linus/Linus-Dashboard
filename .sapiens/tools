@@ -1,3 +1,8 @@
 {
-  "ticket_backend": "filesystem"
+  "ticket_backend": "notion",
+  "schema_version": 3,
+  "backend_config": {
+    "epic_data_source_id": "ffb7de32-b853-824d-8657-071d687f54a5",
+    "ticket_data_source_id": "7307de32-b853-8343-9076-070f3f197751"
+  }
 }

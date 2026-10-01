@@ -257,10 +257,10 @@ export function memoize<T extends (...args: any[]) => any>(
  * @example
  * const getDeviceName = memoizeWeak((device: Device) => device.name);
  */
-export function memoizeWeak<T extends (arg: object) => any>(fn: T): T {
-  const cache = new WeakMap<object, ReturnType<T>>();
+export function memoizeWeak<A extends object, R>(fn: (arg: A) => R): (arg: A) => R {
+  const cache = new WeakMap<A, R>();
 
-  return function (this: any, arg: object): ReturnType<T> {
+  return function (this: any, arg: A): R {
     if (cache.has(arg)) {
       return cache.get(arg)!;
     }
@@ -268,7 +268,7 @@ export function memoizeWeak<T extends (arg: object) => any>(fn: T): T {
     const result = fn.call(this, arg);
     cache.set(arg, result);
     return result;
-  } as T;
+  };
 }
 
 export { LRUCache, createCacheKey, hashString };

@@ -1,5 +1,6 @@
 import { Helper } from "./Helper";
 import { EntityRegistryEntry } from "./types/homeassistant/data/entity_registry";
+import { DeviceRegistryEntry } from "./types/homeassistant/data/device_registry";
 import { generic } from "./types/strategy/generic";
 import { ActionConfig, LovelaceCardConfig } from "./types/homeassistant/data/lovelace";
 import {
@@ -22,7 +23,7 @@ import { ImageAreaCard } from "./cards/ImageAreaCard";
 import { AggregateChip } from "./chips/AggregateChip";
 import { AggregateCard } from "./cards/AggregateCard";
 import { CardFactory } from "./factories/CardFactory";
-import { memoize } from "./utils/memoization";
+import { memoize, memoizeWeak } from "./utils/memoization";
 import { PerformanceProfiler } from "./utils/performanceProfiler";
 
 const DEVICE_CLASS_DOMAINS = new Set(Object.keys(DEVICE_CLASSES));
@@ -669,6 +670,30 @@ export const getFloorName = memoize(function getFloorName(floor: StrategyFloor):
 export const getAreaName = memoize(function getAreaName(area: StrategyArea): string {
     return area.area_id === UNDISCLOSED ? Helper.localize("ui.card.area.area_not_found") : area.name
 }, { name: 'getAreaName', maxSize: 100 });
+
+/**
+ * Get the display name of a device.
+ *
+ * Resolution order: non-empty `name_by_user`, then `name`, then `model`, then
+ * Home Assistant's own "unnamed device" translation, then "Unnamed device".
+ * Never falls back to `device.id` (an opaque registry UUID).
+ * Memoized by object identity (WeakMap), as the argument is an object.
+ *
+ * @param {DeviceRegistryEntry} device - The device.
+ * @returns {string} - The device name.
+ */
+export const getDeviceName = memoizeWeak(function getDeviceName(device: DeviceRegistryEntry): string {
+    for (const candidate of [device.name_by_user, device.name, device.model]) {
+        if (candidate && candidate.trim() !== "") return candidate;
+    }
+
+    const localized = Helper.localize("ui.panel.config.devices.unnamed_device");
+    if (localized && localized !== "translation not found" && !localized.includes("{")) {
+        return localized;
+    }
+
+    return "Unnamed device";
+});
 
 /**
  * Get global entities except undisclosed.

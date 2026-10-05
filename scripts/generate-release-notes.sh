@@ -181,7 +181,8 @@ echo "" >> "$TEMP_FILE"
 
 echo "### Contributors" >> "$TEMP_FILE"
 echo "" >> "$TEMP_FILE"
-git log $COMMIT_RANGE --pretty=format:"%an" --no-merges | sort -u | sed 's/^/- @/' >> "$TEMP_FILE"
+# GitHub accounts, never git author names ("Juicy" would mention someone else): see the script.
+bash "$SCRIPT_DIR/release-contributors.sh" "$COMMIT_RANGE" >> "$TEMP_FILE"
 echo "" >> "$TEMP_FILE"
 
 # Check for breaking changes

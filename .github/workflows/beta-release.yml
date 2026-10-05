@@ -1,0 +1,242 @@
+name: "Beta Release (manual)"
+
+# One-click pre-release from the GitHub UI (Actions -> Beta Release (manual) -> Run workflow).
+# Runs the quality gates, bumps the version, tags, pushes main + tag atomically and publishes the
+# GitHub pre-release. The existing "Pre-Release" workflow (tag push) is untouched; tags pushed with
+# GITHUB_TOKEN do not trigger it, so the release is created here.
+
+on:
+  workflow_dispatch:
+    inputs:
+      channel:
+        description: "Pre-release channel"
+        type: choice
+        options:
+          - beta
+          - alpha
+        default: beta
+      dry_run:
+        description: "Dry run: run every check and the local bump, stop right before the push (allowed outside main)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: prerelease
+  cancel-in-progress: false
+
+jobs:
+  beta-release:
+    name: "Create Pre-Release"
+    runs-on: "ubuntu-latest"
+    env:
+      CHANNEL: ${{ inputs.channel }}
+      DRY_RUN: ${{ inputs.dry_run }}
+      CI: "true"
+    steps:
+      - name: "Guard branch"
+        id: guard
+        run: |
+          if [ "$DRY_RUN" != "true" ] && [ "$GITHUB_REF" != "refs/heads/main" ]; then
+            echo "::error::A real release can only run from main (got $GITHUB_REF). Select 'main' in 'Use workflow from', or tick dry_run."
+            exit 1
+          fi
+          echo "Ref: $GITHUB_REF (dry_run=$DRY_RUN, channel=$CHANNEL)"
+
+      - name: "Checkout the repository"
+        id: checkout
+        uses: "actions/checkout@v7"
+        with:
+          fetch-depth: 0
+
+      - name: "Set up Node.js"
+        id: node
+        uses: "actions/setup-node@v7"
+        with:
+          node-version: 24
+
+      - name: "Install dependencies"
+        id: install
+        run: npm ci
+
+      - name: "Configure git identity"
+        id: identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: "Lint, type check and build"
+        id: checks
+        run: |
+          npm run lint:check
+          npm run type-check
+          npm run build
+
+      - name: "Compute next version and run guards"
+        id: version
+        run: |
+          set -euo pipefail
+          CURRENT=$(node -p "require('./package.json').version")
+          BASE="${CURRENT%%-*}"
+          echo "Current version: $CURRENT"
+
+          # Guard: package.json must be the latest tagged version (pre-release or stable)
+          LATEST_TAG=$(git -c versionsort.suffix=- tag --sort=-version:refname | head -1)
+          if [ "$LATEST_TAG" != "$CURRENT" ]; then
+            echo "::error::package.json version ($CURRENT) is not the latest tag (${LATEST_TAG:-none}). Refusing to release from an inconsistent state."
+            echo "::error::If a previous run failed after the push, delete the leftover tag/release and make package.json match the last tagged version (revert the bump commit) before re-running."
+            exit 1
+          fi
+
+          # Same computation as scripts/bump-version.sh (auto mode)
+          if [[ ! "$CURRENT" =~ (alpha|beta) ]]; then
+            IFS='.' read -r MAJOR MINOR PATCH <<< "$BASE"
+            NEW="${MAJOR}.${MINOR}.$((PATCH + 1))-${CHANNEL}.1"
+          elif [[ "$CURRENT" =~ -${CHANNEL}\.([0-9]+)$ ]]; then
+            NEW="${BASE}-${CHANNEL}.$((BASH_REMATCH[1] + 1))"
+          else
+            # Switching channel on the same base version
+            if [ "$CHANNEL" = "alpha" ] && [[ "$CURRENT" =~ -beta\. ]]; then
+              echo "::error::Cannot release an alpha after a beta of the same base: ${BASE}-alpha.1 would be lower than $CURRENT for semver/HACS. Use the beta channel instead."
+              exit 1
+            fi
+            NEW="${BASE}-${CHANNEL}.1"
+          fi
+
+          # Guard: tag must not already exist on the remote
+          if [ -n "$(git ls-remote --tags origin "refs/tags/$NEW")" ]; then
+            echo "::error::Tag $NEW already exists on origin."
+            exit 1
+          fi
+
+          echo "Next version: $NEW"
+          echo "tag=$NEW" >> "$GITHUB_OUTPUT"
+
+      - name: "Generate release notes"
+        id: notes
+        run: |
+          # Must run on HEAD before the bump commit so the range is "last tag..HEAD"
+          bash scripts/generate-release-notes.sh --ci
+          cp RELEASE_NOTES.md "$RUNNER_TEMP/release_notes.md"
+          echo "path=$RUNNER_TEMP/release_notes.md" >> "$GITHUB_OUTPUT"
+
+      - name: "Bump version, commit and tag (local)"
+        id: bump
+        env:
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          printf 'y' | bash scripts/bump-version.sh "$CHANNEL"
+          ACTUAL=$(node -p "require('./package.json').version")
+          if [ "$ACTUAL" != "$TAG" ]; then
+            echo "::error::Bump produced $ACTUAL but $TAG was expected."
+            exit 1
+          fi
+          git rev-parse -q --verify "refs/tags/$TAG" > /dev/null
+
+      - name: "Run smoke tests"
+        id: smoke
+        run: npm run test:smoke
+
+      - name: "ZIP the integration directory"
+        id: zip
+        shell: "bash"
+        run: |
+          cd "${{ github.workspace }}/custom_components/linus_dashboard"
+          zip linus_dashboard.zip -r ./
+
+      - name: "Push commit and tag"
+        id: push
+        if: ${{ inputs.dry_run != true }}
+        env:
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          git push --atomic origin HEAD:main "refs/tags/$TAG"
+
+      - name: "Create GitHub Pre-Release"
+        id: release
+        if: ${{ inputs.dry_run != true }}
+        uses: "softprops/action-gh-release@v3"
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: "🧪 ${{ steps.version.outputs.tag }} (Pre-Release)"
+          body_path: ${{ steps.notes.outputs.path }}
+          draft: false
+          prerelease: true
+          files: ${{ github.workspace }}/custom_components/linus_dashboard/linus_dashboard.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: "Send Discord Notification"
+        id: discord
+        if: ${{ inputs.dry_run != true && success() }}
+        continue-on-error: true
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          TAG: ${{ steps.version.outputs.tag }}
+          RELEASE_URL: ${{ steps.release.outputs.url }}
+        run: |
+          if [ -n "$DISCORD_WEBHOOK_URL" ]; then
+            bash scripts/notify-discord.sh prerelease "$TAG" "$RELEASE_URL" || {
+              echo "⚠️ Discord notification failed, but the release is published"
+              exit 0
+            }
+          else
+            echo "⚠️ Discord webhook not configured, skipping notification"
+          fi
+
+      - name: "Dry run summary"
+        id: dry_summary
+        if: ${{ inputs.dry_run == true && success() }}
+        env:
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          echo "Dry run OK: would have released $TAG. Nothing was pushed." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: "Report failure"
+        id: report
+        if: failure()
+        env:
+          STEPS_JSON: ${{ toJSON(steps) }}
+          TAG: ${{ steps.version.outputs.tag }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          FAILED_ID=$(echo "$STEPS_JSON" | jq -r 'to_entries[] | select(.value.outcome == "failure") | .key' | head -1)
+          case "$FAILED_ID" in
+            guard) STEP="Guard branch" ;;
+            checkout) STEP="Checkout the repository" ;;
+            node) STEP="Set up Node.js" ;;
+            install) STEP="Install dependencies" ;;
+            identity) STEP="Configure git identity" ;;
+            checks) STEP="Lint, type check and build" ;;
+            version) STEP="Compute next version and run guards" ;;
+            notes) STEP="Generate release notes" ;;
+            bump) STEP="Bump version, commit and tag (local)" ;;
+            smoke) STEP="Run smoke tests" ;;
+            zip) STEP="ZIP the integration directory" ;;
+            push) STEP="Push commit and tag" ;;
+            release) STEP="Create GitHub Pre-Release" ;;
+            *) STEP="${FAILED_ID:-unknown step}" ;;
+          esac
+
+          case "$FAILED_ID" in
+            release|discord)
+              # The push succeeded: the tag and the bump commit are already on origin
+              MSG="Failed at: $STEP — the tag \`$TAG\` already exists on origin and main contains the bump commit. Delete the tag (and any partial release), then re-run the workflow."
+              ;;
+            *)
+              MSG="Failed at: $STEP — nothing was pushed."
+              ;;
+          esac
+          echo "$MSG" >> "$GITHUB_STEP_SUMMARY"
+          echo "::error::$MSG"
+
+          if [ -n "$DISCORD_WEBHOOK_URL" ]; then
+            RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            CONTENT=$(printf '❌ **Pre-Release Failed** ❌\n\n**Version:** %s\n**Failed at:** %s\n**Workflow:** %s\n**Run:** %s' \
+              "${TAG:-n/a}" "$STEP" "${{ github.workflow }}" "$RUN_URL")
+            curl -H "Content-Type: application/json" \
+              -d "$(jq -n --arg c "$CONTENT" '{content: $c}')" \
+              "$DISCORD_WEBHOOK_URL" || echo "Failed to send Discord failure notification"
+          fi

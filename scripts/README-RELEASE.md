@@ -5,20 +5,24 @@
 ### Pour créer une pré-release beta (le plus courant)
 
 ```bash
-npm run create:beta
+bash scripts/create-prerelease.sh beta
 ```
 
 ### Pour créer une pré-release alpha (tests précoces)
 
 ```bash
-npm run create:alpha
+bash scripts/create-prerelease.sh alpha
 ```
 
 ### Pour créer une release stable
 
 ```bash
-npm run create:release
+bash scripts/create-release.sh
 ```
+
+> Note : il n'existe pas de script npm `create:beta` / `create:alpha` / `create:release`
+> dans `package.json`. Utilisez les scripts shell ci-dessus, ou le bouton GitHub
+> (section « Release from GitHub » plus bas).
 
 ## Ce que fait le script automatiquement
 
@@ -40,6 +44,49 @@ npm run create:release
 - Publication de la release
 - Notification Discord
 - Nettoyage automatique
+
+## Release from GitHub
+
+Sortir une pré-release sans terminal, depuis l'interface GitHub :
+
+1. Aller dans **Actions** -> **Beta Release (manual)** -> **Run workflow**.
+2. Choisir la branche `main` (obligatoire pour une vraie release).
+3. Choisir le **channel** : `beta` (défaut) ou `alpha`.
+4. Cliquer sur **Run workflow**.
+
+Le workflow (`.github/workflows/beta-release.yml`, un seul job) enchaîne : lint, type-check, build,
+calcul de la version suivante (ex. `2.0.0-beta.2` -> `2.0.0-beta.3`), génération des notes FR/EN depuis
+les commits depuis le dernier tag, bump + commit + tag (sans préfixe `v`), smoke tests, ZIP,
+`git push --atomic` du commit et du tag, publication de la pré-release GitHub et notification Discord.
+
+Garde-fous (le workflow s'arrête avant tout push) :
+
+- le tag de la version calculée existe déjà sur `origin` ;
+- la version de `package.json` n'est pas le dernier tag ;
+- canal `alpha` demandé alors que la version courante est une beta de la même base
+  (`2.0.0-alpha.1` serait inférieur à `2.0.0-beta.N` pour semver/HACS) ;
+- hors `dry_run`, la branche n'est pas `main`.
+
+### Dry run
+
+Cocher **dry_run** pour exécuter tous les contrôles et le bump local, puis s'arrêter juste avant le
+push (rien n'est poussé, rien n'est publié). Autorisé depuis n'importe quelle branche : pratique pour
+tester le chemin d'échec ou valider une modification du workflow.
+
+### En cas d'échec
+
+Le résumé du run (`$GITHUB_STEP_SUMMARY`) indique l'étape en échec :
+
+- **Avant le push** : « Failed at: <étape> — nothing was pushed. » Corriger puis relancer.
+- **Après le push** (étape de release GitHub) : le tag existe déjà sur `origin` et `main` contient le
+  commit de bump. Supprimer le tag (`git push --delete origin <tag>`, et la release partielle
+  éventuelle), puis relancer. Comme `package.json` doit correspondre au dernier tag, il faut aussi
+  annuler le commit de bump sur `main` (ou recréer le tag dessus) avant de relancer.
+
+### Protection de `main`
+
+Le workflow pousse directement sur `main` avec `GITHUB_TOKEN`. Si la règle « Protect main » est un jour
+activée, ajouter **GitHub Actions** comme bypass actor, sinon le push échouera (rien ne sera publié).
 
 ## Documentation Complète
 

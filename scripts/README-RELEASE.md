@@ -16,6 +16,10 @@ bash scripts/create-prerelease.sh alpha
 
 ### Pour créer une release stable
 
+Voie recommandée : le bouton GitHub **Stable Release (manual)** (voir « Stable Release (GitHub
+button) » dans `docs/RELEASE_GUIDE.md`, avec un `dry_run` pour prévisualiser la note). Le script
+ci-dessous reste la voie de secours :
+
 ```bash
 bash scripts/create-release.sh
 ```

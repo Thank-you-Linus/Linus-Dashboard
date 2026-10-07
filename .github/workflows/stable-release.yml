@@ -1,0 +1,242 @@
+name: "Stable Release (manual)"
+
+# One-click stable release from the GitHub UI (Actions -> Stable Release (manual) -> Run workflow).
+# Finalises the current pre-release (2.0.0-beta.3 -> 2.0.0): runs the quality gates, builds ONE release
+# note covering everything since the previous stable tag (all the betas in between), bumps the version,
+# tags, pushes main + tag atomically and publishes the final GitHub release (HACS offers it).
+# Tick dry_run to see the note and the target version in the run summary without tagging or publishing.
+#
+# No automatic announcement (no Discord call): announce by hand (Discord + `npm run forums:open`).
+#
+# IMPORTANT: do not replace GITHUB_TOKEN by a PAT in this workflow. A tag pushed with a PAT would
+# trigger release.yml (on: push tags / release) and the release would be published twice.
+# Tags pushed with GITHUB_TOKEN do not trigger other workflows, so the release is created here.
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Dry run: run every check and the local bump, show the release note, stop right before the push (allowed outside main)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: prerelease
+  cancel-in-progress: false
+
+jobs:
+  stable-release:
+    name: "Create Stable Release"
+    runs-on: "ubuntu-latest"
+    env:
+      DRY_RUN: ${{ inputs.dry_run }}
+      CI: "true"
+    steps:
+      - name: "Guard branch"
+        id: guard
+        run: |
+          if [ "$DRY_RUN" != "true" ] && [ "$GITHUB_REF" != "refs/heads/main" ]; then
+            echo "::error::A real release can only run from main (got $GITHUB_REF). Select 'main' in 'Use workflow from', or tick dry_run."
+            exit 1
+          fi
+          echo "Ref: $GITHUB_REF (dry_run=$DRY_RUN)"
+
+      - name: "Checkout the repository"
+        id: checkout
+        uses: "actions/checkout@v7"
+        with:
+          fetch-depth: 0
+
+      - name: "Set up Node.js"
+        id: node
+        uses: "actions/setup-node@v7"
+        with:
+          node-version: 24
+
+      - name: "Install dependencies"
+        id: install
+        run: npm ci
+
+      - name: "Configure git identity"
+        id: identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: "Lint, type check and build"
+        id: checks
+        run: |
+          npm run lint:check
+          npm run type-check
+          npm run build
+
+      - name: "Compute stable version and run guards"
+        id: version
+        run: |
+          set -euo pipefail
+          CURRENT=$(node -p "require('./package.json').version")
+          echo "Current version: $CURRENT"
+
+          # Guard: package.json must be the latest tagged version (pre-release or stable)
+          LATEST_TAG=$(git -c versionsort.suffix=- tag --sort=-version:refname | head -1)
+          if [ "$LATEST_TAG" != "$CURRENT" ]; then
+            echo "::error::package.json version ($CURRENT) is not the latest tag (${LATEST_TAG:-none}). Refusing to release from an inconsistent state."
+            echo "::error::If a previous run failed after the push, delete the leftover tag/release and make package.json match the last tagged version (revert the bump commit) before re-running."
+            exit 1
+          fi
+
+          # Guard: a stable release finalises a pre-release; a hotfix goes through a beta first
+          if [[ "$CURRENT" != *-* ]]; then
+            echo "::error::Current version $CURRENT is already stable. A stable release finalises a pre-release: release a beta first (Beta Release (manual)), then run this workflow."
+            exit 1
+          fi
+
+          NEW="${CURRENT%%-*}"
+
+          # Guard: tag must not already exist on the remote
+          if [ -n "$(git ls-remote --tags origin "refs/tags/$NEW")" ]; then
+            echo "::error::Tag $NEW already exists on origin."
+            exit 1
+          fi
+
+          echo "Next version: $NEW"
+          echo "tag=$NEW" >> "$GITHUB_OUTPUT"
+
+      - name: "Generate release notes"
+        id: notes
+        env:
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          # Must run on HEAD before the bump commit. --since-stable: base = last stable tag,
+          # so the note covers every beta released since then.
+          STATS=$(bash scripts/generate-release-notes.sh --ci --since-stable | grep '^base=')
+          cp RELEASE_NOTES.md "$RUNNER_TEMP/release_notes.md"
+          echo "path=$RUNNER_TEMP/release_notes.md" >> "$GITHUB_OUTPUT"
+
+          RANGE=$(echo "$STATS" | sed -E 's/.* range=([^ ]+).*/\1/')
+          KEPT=$(echo "$STATS" | sed -E 's/.* kept=([0-9]+).*/\1/')
+          EXCLUDED=$(echo "$STATS" | sed -E 's/.* excluded=([0-9]+).*/\1/')
+          {
+            echo "## Stable release $TAG"
+            echo ""
+            if [ "$DRY_RUN" = "true" ]; then
+              echo "**Dry run: nothing is tagged or published.**"
+              echo ""
+            fi
+            echo "- Target version: \`$TAG\`"
+            echo "- Range: \`$RANGE\`"
+            echo "- Changes kept: $KEPT (excluded as non-product commits or duplicates: $EXCLUDED)"
+            echo "- Announcement: none is sent automatically. Announce by hand: Discord + \`npm run forums:open\`"
+            echo ""
+            echo "### Release note"
+            echo ""
+            cat "$RUNNER_TEMP/release_notes.md"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: "Bump version, commit and tag (local)"
+        id: bump
+        env:
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          CI=true bash scripts/bump-version.sh release
+          ACTUAL=$(node -p "require('./package.json').version")
+          if [ "$ACTUAL" != "$TAG" ]; then
+            echo "::error::Bump produced $ACTUAL but $TAG was expected."
+            exit 1
+          fi
+          git rev-parse -q --verify "refs/tags/$TAG" > /dev/null
+
+      - name: "Run smoke tests"
+        id: smoke
+        run: npm run test:smoke
+
+      - name: "ZIP the integration directory"
+        id: zip
+        shell: "bash"
+        run: |
+          cd "${{ github.workspace }}/custom_components/linus_dashboard"
+          zip linus_dashboard.zip -r ./
+
+      - name: "Push commit and tag"
+        id: push
+        if: ${{ inputs.dry_run != true }}
+        env:
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          git push --atomic origin HEAD:main "refs/tags/$TAG"
+
+      - name: "Create GitHub Release"
+        id: release
+        if: ${{ inputs.dry_run != true }}
+        uses: "softprops/action-gh-release@v3"
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: "v${{ steps.version.outputs.tag }}"
+          body_path: ${{ steps.notes.outputs.path }}
+          draft: false
+          prerelease: false
+          make_latest: true
+          files: ${{ github.workspace }}/custom_components/linus_dashboard/linus_dashboard.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: "Release summary"
+        id: published_summary
+        if: ${{ inputs.dry_run != true && success() }}
+        env:
+          TAG: ${{ steps.version.outputs.tag }}
+          RELEASE_URL: ${{ steps.release.outputs.url }}
+        run: |
+          {
+            echo ""
+            echo "Published $TAG as the latest stable release: $RELEASE_URL"
+            echo "The release body can still be edited on GitHub. Announcement: Discord + \`npm run forums:open\`."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: "Dry run summary"
+        id: dry_summary
+        if: ${{ inputs.dry_run == true && success() }}
+        env:
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          echo "Dry run OK: would have released $TAG. Nothing was pushed." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: "Report failure"
+        id: report
+        if: failure()
+        env:
+          STEPS_JSON: ${{ toJSON(steps) }}
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          FAILED_ID=$(echo "$STEPS_JSON" | jq -r 'to_entries[] | select(.value.outcome == "failure") | .key' | head -1)
+          case "$FAILED_ID" in
+            guard) STEP="Guard branch" ;;
+            checkout) STEP="Checkout the repository" ;;
+            node) STEP="Set up Node.js" ;;
+            install) STEP="Install dependencies" ;;
+            identity) STEP="Configure git identity" ;;
+            checks) STEP="Lint, type check and build" ;;
+            version) STEP="Compute stable version and run guards" ;;
+            notes) STEP="Generate release notes" ;;
+            bump) STEP="Bump version, commit and tag (local)" ;;
+            smoke) STEP="Run smoke tests" ;;
+            zip) STEP="ZIP the integration directory" ;;
+            push) STEP="Push commit and tag" ;;
+            release) STEP="Create GitHub Release" ;;
+            *) STEP="${FAILED_ID:-unknown step}" ;;
+          esac
+
+          case "$FAILED_ID" in
+            release|published_summary)
+              # The push succeeded: the tag and the bump commit are already on origin
+              MSG="Failed at: $STEP — the tag \`$TAG\` already exists on origin and main contains the bump commit. Delete the tag (and any partial release) AND revert the bump commit, then re-run the workflow."
+              ;;
+            *)
+              MSG="Failed at: $STEP — nothing was pushed."
+              ;;
+          esac
+          echo "$MSG" >> "$GITHUB_STEP_SUMMARY"
+          echo "::error::$MSG"

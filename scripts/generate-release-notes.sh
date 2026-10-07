@@ -3,9 +3,18 @@
 # Generate release notes from git commits since last release
 # Usage: npm run release:notes
 #        bash scripts/generate-release-notes.sh --ci
+#        bash scripts/generate-release-notes.sh --ci --since-stable
 #
 # --ci: non-interactive mode (GitHub Actions). Produces publishable FR/EN notes
 #       without the "Instructions" block, tester placeholders or TODO lines.
+#
+# --since-stable (requires --ci): notes for a stable release. Covers everything since the
+#       previous stable tag (so all the betas in between), each change once, grouped under
+#       new features / fixes / other. Only product changes are kept (src and
+#       custom_components, minus the generated www bundle and the manifest version bump).
+#       No hash, no "type(scope):" prefix, no "All Commits" section: the document can be
+#       inserted as-is in the changelog fields of .github/templates/discord-release.md.
+#       Also prints "kept=<n> excluded=<n> base=<tag>" on stdout for the workflow summary.
 #
 
 set -e
@@ -15,16 +24,23 @@ PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 cd "$PROJECT_ROOT"
 
 CI_MODE=0
+SINCE_STABLE=0
 for arg in "$@"; do
     case "$arg" in
         --ci) CI_MODE=1 ;;
+        --since-stable) SINCE_STABLE=1 ;;
         *)
             echo "Unknown option: $arg" >&2
-            echo "Usage: $0 [--ci]" >&2
+            echo "Usage: $0 [--ci [--since-stable]]" >&2
             exit 1
             ;;
     esac
 done
+
+if [ "$SINCE_STABLE" = "1" ] && [ "$CI_MODE" != "1" ]; then
+    echo "--since-stable requires --ci" >&2
+    exit 1
+fi
 
 # Colors
 RED='\033[0;31m'
@@ -32,6 +48,88 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
+
+# ---------------------------------------------------------------------------
+# --since-stable: notes covering everything since the previous stable release
+# ---------------------------------------------------------------------------
+if [ "$SINCE_STABLE" = "1" ]; then
+    BASE_TAG=$(git describe --tags --abbrev=0 --exclude='*-*' HEAD 2>/dev/null || true)
+    if [ -z "$BASE_TAG" ]; then
+        echo "No stable tag found in the history of HEAD." >&2
+        exit 1
+    fi
+    PRERELEASES=$(git tag --merged HEAD --no-merged "$BASE_TAG" -l '*-*' 2>/dev/null | sort -V | paste -sd, - | sed 's/,/, /g' || true)
+    PATHSPEC=(src custom_components ':(exclude)custom_components/linus_dashboard/www' ':(exclude)custom_components/linus_dashboard/manifest.json')
+    OUTPUT_FILE="$PROJECT_ROOT/RELEASE_NOTES.md"
+
+    TOTAL_COUNT=$(git rev-list --count --no-merges "$BASE_TAG..HEAD")
+    SUBJECTS=$(git log "$BASE_TAG..HEAD" --no-merges --pretty=format:"%s" -- "${PATHSPEC[@]}" || true)
+
+    # One line per change: "<type>|<message>". Message = subject without "type(scope)!:" and
+    # without a trailing "(#123)"; dedupe on the lowercased message; reverts are dropped.
+    ENTRIES=$(printf '%s\n' "$SUBJECTS" | grep -v '^$' | grep -ivE '^revert(\([^)]*\))?!?:|^revert ' | awk '
+        {
+            type = "other"; msg = $0
+            if (match($0, /^[A-Za-z]+(\([^)]*\))?!?: */)) {
+                head = substr($0, 1, RLENGTH); msg = substr($0, RLENGTH + 1)
+                t = tolower(head); sub(/[(!:].*$/, "", t)
+                type = (t == "feat" || t == "fix") ? t : "other"
+            }
+            sub(/ *\(#[0-9]+\)$/, "", msg)
+            key = tolower(msg)
+            if (msg != "" && !seen[key]++) print type "|" msg
+        }' || true)
+    KEPT_COUNT=$(printf '%s\n' "$ENTRIES" | grep -c . || true)
+    EXCLUDED_COUNT=$((TOTAL_COUNT - KEPT_COUNT))
+
+    # Print one titled list. usage: ci_section "<heading>" "<type: feat|fix|other>"
+    ci_section() {
+        local items
+        items=$(printf '%s\n' "$ENTRIES" | awk -F'|' -v t="$2" '$1 == t { sub(/^[^|]*\|/, ""); print "- " $0 }')
+        [ -z "$items" ] && return 0
+        printf '### %s\n\n%s\n\n' "$1" "$items"
+    }
+
+    # Breaking changes: "!" marker in the subject, or a BREAKING CHANGE footer
+    BREAKING=$( {
+        printf '%s\n' "$SUBJECTS" | grep -E '^[A-Za-z]+(\([^)]*\))?!:' | sed -E 's/^[A-Za-z]+(\([^)]*\))?!: */- /' || true
+        git log "$BASE_TAG..HEAD" --no-merges --pretty=format:"%b" -- "${PATHSPEC[@]}" | grep -E '^BREAKING[ -]CHANGE' | sed -E 's/^BREAKING[ -]CHANGE: */- /' || true
+    } | awk '!seen[$0]++')
+
+    ci_breaking() {
+        [ -z "$BREAKING" ] && return 0
+        printf '### ⚠️ Breaking Changes\n\n%s\n\n' "$BREAKING"
+    }
+
+    {
+        echo "## 🇬🇧 English"
+        echo ""
+        if [ -n "$PRERELEASES" ]; then
+            echo "_Everything since ${BASE_TAG}, including the pre-releases: ${PRERELEASES}._"
+            echo ""
+        fi
+        ci_breaking
+        ci_section "✨ New Features" feat
+        ci_section "🐛 Bug Fixes" fix
+        ci_section "⚡ Improvements" other
+        echo "---"
+        echo ""
+        echo "## 🇫🇷 Français"
+        echo ""
+        if [ -n "$PRERELEASES" ]; then
+            echo "_Tout depuis ${BASE_TAG}, pré-releases incluses : ${PRERELEASES}._"
+            echo ""
+        fi
+        ci_breaking
+        ci_section "✨ Nouvelles fonctionnalités" feat
+        ci_section "🐛 Corrections de bugs" fix
+        ci_section "⚡ Améliorations" other
+    } > "$OUTPUT_FILE"
+
+    echo "base=${BASE_TAG} range=${BASE_TAG}..HEAD kept=${KEPT_COUNT} excluded=${EXCLUDED_COUNT}"
+    echo "File: ${OUTPUT_FILE}"
+    exit 0
+fi
 
 echo -e "${BLUE}🔍 Generating release notes...${NC}\n"
 

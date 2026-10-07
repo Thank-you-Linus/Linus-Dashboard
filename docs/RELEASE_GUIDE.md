@@ -38,6 +38,7 @@ These scripts handle **everything automatically**:
 - [Overview | Vue d'ensemble](#overview--vue-densemble)
 - [Release Types | Types de releases](#release-types--types-de-releases)
 - [Pre-Release Process (Alpha/Beta)](#pre-release-process-alphabeta)
+- [Stable Release (GitHub button)](#stable-release-github-button)
 - [Stable Release Process](#stable-release-process)
 - [Automated Workflows](#automated-workflows)
 - [Troubleshooting | Dépannage](#troubleshooting--dépannage)
@@ -249,11 +250,53 @@ GitHub Actions will automatically:
 
 ---
 
+## Stable Release (GitHub button)
+
+The recommended way to publish a stable version: no terminal, one release note that groups every
+beta since the previous stable.
+
+1. Go to **Actions** -> **Stable Release (manual)** -> **Run workflow**.
+2. Pick the `main` branch (required for a real release).
+3. Tick **dry_run** first: the run shows the target version and the full release note in its summary
+   (Actions -> the run -> Summary) without tagging or publishing anything. Allowed from any branch.
+4. Read the note, then run again with **dry_run** unticked.
+
+What it does (`.github/workflows/stable-release.yml`): lint, type-check, build, version check, release
+note, bump to the stable version (`2.0.0-beta.3` -> `2.0.0`), smoke tests, ZIP (`linus_dashboard.zip`),
+atomic push of the commit and the tag (no `v` prefix), then publication as the final GitHub release
+(not a pre-release, marked latest) so HACS offers it.
+
+**Release note.** The base is the last stable tag (for example `1.5.1`), not the last beta: the note
+covers every change since then, so all the betas in between. Each change appears once, under
+New features, Bug fixes or Improvements (breaking changes first, if any). Only product changes are kept
+(`src/` and `custom_components/`, without the built `www/` bundle and the version bump); CI, tooling,
+dependency and internal docs commits are left out. Preview it locally with
+`bash scripts/generate-release-notes.sh --ci --since-stable` (writes `RELEASE_NOTES.md`; do not commit it).
+
+**Guards** (the workflow stops before any push): not on `main` (real run), `package.json` is not the
+latest tag, the current version is already stable (a hotfix goes through a beta first), the stable tag
+already exists on `origin`.
+
+**No automatic announcement.** Nothing is sent to Discord. After publication, announce by hand on
+Discord and with `npm run forums:open`. The release body can be edited on GitHub after publication
+(Releases -> Edit) if the note needs rewording.
+
+**Rollback.** If the run fails after the push (the summary says "the tag already exists on origin"),
+delete the tag AND the partial release, and revert the bump commit on `main` (see
+`/release-rollback`), then re-run. If it fails before the push, nothing was pushed: fix and re-run.
+
+**Never replace `GITHUB_TOKEN` by a personal token** in this workflow: the tag push would also trigger
+`release.yml` and the release would be published twice.
+
+The terminal path below (`bash scripts/create-release.sh`; the `npm run create:release` alias used elsewhere in this guide does not exist in `package.json`) remains available as a fallback.
+
+---
+
 ## Stable Release Process
 
-### 🚀 One-Command Release (Recommended)
+### 🚀 One-Command Release (Fallback)
 
-**The easiest way to create a stable release:**
+**Terminal path, used when the GitHub button is not available** (see [Stable Release (GitHub button)](#stable-release-github-button) for the recommended path):
 
 ```bash
 npm run create:release

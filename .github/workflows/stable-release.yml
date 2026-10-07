@@ -119,6 +119,7 @@ jobs:
           RANGE=$(echo "$STATS" | sed -E 's/.* range=([^ ]+).*/\1/')
           KEPT=$(echo "$STATS" | sed -E 's/.* kept=([0-9]+).*/\1/')
           EXCLUDED=$(echo "$STATS" | sed -E 's/.* excluded=([0-9]+).*/\1/')
+          UNTRANSLATED=$(echo "$STATS" | sed -E 's/.* untranslated=([0-9]+).*/\1/')
           {
             echo "## Stable release $TAG"
             echo ""
@@ -129,6 +130,9 @@ jobs:
             echo "- Target version: \`$TAG\`"
             echo "- Range: \`$RANGE\`"
             echo "- Changes kept: $KEPT (excluded as non-product commits or duplicates: $EXCLUDED)"
+            if [ "$UNTRANSLATED" != "0" ]; then
+              echo "- **$UNTRANSLATED change(s) without a user-facing wording** (raw commit subject, same text in French): add them to \`.github/release-notes-i18n.tsv\` or edit the release body after publication"
+            fi
             echo "- Announcement: none is sent automatically. Announce by hand: Discord + \`npm run forums:open\`"
             echo ""
             echo "### Release note"

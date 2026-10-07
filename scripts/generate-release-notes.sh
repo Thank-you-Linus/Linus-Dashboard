@@ -14,7 +14,7 @@
 #       custom_components, minus the generated www bundle and the manifest version bump).
 #       No hash, no "type(scope):" prefix, no "All Commits" section: the document can be
 #       inserted as-is in the changelog fields of .github/templates/discord-release.md.
-#       Also prints "kept=<n> excluded=<n> base=<tag>" on stdout for the workflow summary.
+#       Also prints "kept=<n> excluded=<n> untranslated=<n> base=<tag>" on stdout for the workflow summary.
 #
 
 set -e
@@ -64,28 +64,64 @@ if [ "$SINCE_STABLE" = "1" ]; then
 
     TOTAL_COUNT=$(git rev-list --count --no-merges "$BASE_TAG..HEAD")
     SUBJECTS=$(git log "$BASE_TAG..HEAD" --no-merges --pretty=format:"%s" -- "${PATHSPEC[@]}" || true)
+    REPO_SLUG="${GITHUB_REPOSITORY:-Thank-you-Linus/Linus-Dashboard}"
+    I18N_FILE="$PROJECT_ROOT/.github/release-notes-i18n.tsv"
+    [ -f "$I18N_FILE" ] || I18N_FILE=/dev/null
 
-    # One line per change: "<type>|<message>". Message = subject without "type(scope)!:" and
-    # without a trailing "(#123)"; dedupe on the lowercased message; reverts are dropped.
-    ENTRIES=$(printf '%s\n' "$SUBJECTS" | grep -v '^$' | grep -ivE '^revert(\([^)]*\))?!?:|^revert ' | awk '
+    # Development noise that means nothing to a user (lint, import sorting, dev environment,
+    # vague one-liners) is dropped before anything else.
+    NOISE_RE='\b(lint|linting|ruff)\b|sort imports|devbox|devcontainer|dev-env|fake house|^performance improvements[[:space:]]'
+
+    # One line per change, tab-separated: "<type>\t<message>\t<pr number or empty>\t<author>".
+    # Message = subject without "type(scope)!:" and without a trailing "(#123)"; dedupe on the
+    # lowercased message; reverts and noise are dropped.
+    RAW_ENTRIES=$(git log "$BASE_TAG..HEAD" --no-merges --pretty=format:"%s%x09%an" -- "${PATHSPEC[@]}" |
+        grep -v '^$' | grep -ivE '^revert(\([^)]*\))?!?:|^revert ' | grep -ivE "$NOISE_RE" | awk -F'\t' '
         {
-            type = "other"; msg = $0
-            if (match($0, /^[A-Za-z]+(\([^)]*\))?!?: */)) {
-                head = substr($0, 1, RLENGTH); msg = substr($0, RLENGTH + 1)
+            type = "other"; msg = $1; author = $2; pr = ""
+            if (match(msg, /^[A-Za-z]+(\([^)]*\))?!?: */)) {
+                head = substr(msg, 1, RLENGTH); msg = substr(msg, RLENGTH + 1)
                 t = tolower(head); sub(/[(!:].*$/, "", t)
                 type = (t == "feat" || t == "fix") ? t : "other"
             }
-            sub(/ *\(#[0-9]+\)$/, "", msg)
+            if (match(msg, / *\(#[0-9]+\)$/)) {
+                pr = substr(msg, RSTART, RLENGTH); gsub(/[^0-9]/, "", pr); msg = substr(msg, 1, RSTART - 1)
+            }
             key = tolower(msg)
-            if (msg != "" && !seen[key]++) print type "|" msg
+            if (msg != "" && !seen[key]++) print type "\t" msg "\t" pr "\t" author
         }' || true)
+
+    # Optional wording file (.github/release-notes-i18n.tsv): "<lowercased message>\t<EN>\t<FR>[\t<type>]".
+    # Gives each change a user-facing English and French wording; "-" as EN drops the change
+    # (e.g. a fix for something that only existed in a beta). Changes without a line keep the raw
+    # commit subject in both languages and are counted in "untranslated".
+    # Authors who are not the maintainers (bots, s4piens, root, Juicy) are credited on their lines.
+    ENTRIES=$(printf '%s\n' "$RAW_ENTRIES" | grep . | awk -F'\t' -v repo="$REPO_SLUG" '
+        BEGIN { OFS = "\t" }
+        FILENAME == ARGV[1] { en[$1] = $2; fr[$1] = $3; ty[$1] = $4; next }
+        {
+            key = tolower($2); type = $1; e = $2; f = $2
+            if (key in en) {
+                if (en[key] == "-") next
+                e = en[key]; f = (fr[key] != "" ? fr[key] : en[key])
+                if (ty[key] != "") type = ty[key]
+            } else missing++
+            link = ""
+            if ($3 != "") link = " ([#" $3 "](https://github.com/" repo "/pull/" $3 "))"
+            credit = ""
+            if ($4 !~ /\[bot\]$/ && $4 != "s4piens" && $4 != "root" && $4 != "Juicy") credit = " — @" $4
+            print type, e link credit, f link credit
+        }
+        END { print "#missing", missing + 0 > "/dev/stderr" }' "$I18N_FILE" - 2> "$PROJECT_ROOT/.release-notes-missing")
+    UNTRANSLATED_COUNT=$(sed -n 's/^#missing\t//p' "$PROJECT_ROOT/.release-notes-missing")
+    rm -f "$PROJECT_ROOT/.release-notes-missing"
     KEPT_COUNT=$(printf '%s\n' "$ENTRIES" | grep -c . || true)
     EXCLUDED_COUNT=$((TOTAL_COUNT - KEPT_COUNT))
 
-    # Print one titled list. usage: ci_section "<heading>" "<type: feat|fix|other>"
+    # Print one titled list. usage: ci_section "<heading>" "<type: feat|fix|other>" "<column: 2 = EN, 3 = FR>"
     ci_section() {
         local items
-        items=$(printf '%s\n' "$ENTRIES" | awk -F'|' -v t="$2" '$1 == t { sub(/^[^|]*\|/, ""); print "- " $0 }')
+        items=$(printf '%s\n' "$ENTRIES" | awk -F'\t' -v t="$2" -v c="$3" '$1 == t { print "- " $c }')
         [ -z "$items" ] && return 0
         printf '### %s\n\n%s\n\n' "$1" "$items"
     }
@@ -109,9 +145,9 @@ if [ "$SINCE_STABLE" = "1" ]; then
             echo ""
         fi
         ci_breaking
-        ci_section "✨ New Features" feat
-        ci_section "🐛 Bug Fixes" fix
-        ci_section "⚡ Improvements" other
+        ci_section "✨ New Features" feat 2
+        ci_section "🐛 Bug Fixes" fix 2
+        ci_section "⚡ Improvements" other 2
         echo "---"
         echo ""
         echo "## 🇫🇷 Français"
@@ -121,12 +157,12 @@ if [ "$SINCE_STABLE" = "1" ]; then
             echo ""
         fi
         ci_breaking
-        ci_section "✨ Nouvelles fonctionnalités" feat
-        ci_section "🐛 Corrections de bugs" fix
-        ci_section "⚡ Améliorations" other
+        ci_section "✨ Nouvelles fonctionnalités" feat 3
+        ci_section "🐛 Corrections de bugs" fix 3
+        ci_section "⚡ Améliorations" other 3
     } > "$OUTPUT_FILE"
 
-    echo "base=${BASE_TAG} range=${BASE_TAG}..HEAD kept=${KEPT_COUNT} excluded=${EXCLUDED_COUNT}"
+    echo "base=${BASE_TAG} range=${BASE_TAG}..HEAD kept=${KEPT_COUNT} excluded=${EXCLUDED_COUNT} untranslated=${UNTRANSLATED_COUNT}"
     echo "File: ${OUTPUT_FILE}"
     exit 0
 fi

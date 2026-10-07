@@ -270,7 +270,12 @@ atomic push of the commit and the tag (no `v` prefix), then publication as the f
 covers every change since then, so all the betas in between. Each change appears once, under
 New features, Bug fixes or Improvements (breaking changes first, if any). Only product changes are kept
 (`src/` and `custom_components/`, without the built `www/` bundle and the version bump); CI, tooling,
-dependency and internal docs commits are left out. Preview it locally with
+dependency and internal docs commits are left out, as are lint and dev-environment commits. Each line links its
+pull request (`#123`) and credits external contributors (`@name`). The wording of each line, in English and
+French, comes from `.github/release-notes-i18n.tsv` (columns: lowercased commit message, English, French,
+optional type `feat`/`fix`/`other`; `-` as English drops the change, for example a fix to something that only
+existed in a beta). A commit missing from that file keeps its raw subject in both languages, and the run summary
+says how many (`untranslated`): add them to the file before the real run. Preview it locally with
 `bash scripts/generate-release-notes.sh --ci --since-stable` (writes `RELEASE_NOTES.md`; do not commit it).
 
 **Guards** (the workflow stops before any push): not on `main` (real run), `package.json` is not the

@@ -249,6 +249,7 @@
           "action_off_cover": "Close All",
           "action_off_climate": "Turn All Off",
           "individual_controls": "Individual Controls",
+          "scenes": "Scenes",
           "no_label": "No label"
         }
       },

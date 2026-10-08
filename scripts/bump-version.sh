@@ -147,12 +147,16 @@ echo -e "  ${GREEN}✓${NC} Build project (injects __VERSION__ into compiled fil
 echo -e "  ${BLUE}ℹ${NC} const.py (reads package.json dynamically at runtime)"
 echo -e "  ${BLUE}ℹ${NC} linus-strategy.ts (uses __VERSION__ injected at build time)"
 echo ""
-read -p "Continue? (y/N) " -n 1 -r
-echo ""
+if [ "${CI:-}" = "true" ]; then
+    echo -e "${BLUE}ℹ CI=true: skipping confirmation prompt${NC}"
+else
+    read -p "Continue? (y/N) " -n 1 -r
+    echo ""
 
-if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    echo -e "${RED}❌ Aborted${NC}"
-    exit 1
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        echo -e "${RED}❌ Aborted${NC}"
+        exit 1
+    fi
 fi
 
 echo -e "${BLUE}📝 Updating version files...${NC}\n"
@@ -184,8 +188,16 @@ MANIFEST_VERSION=$(node -p "require('./custom_components/linus_dashboard/manifes
 # Check Python version by running const.py
 PYTHON_VERSION=$(cd custom_components/linus_dashboard && python3 -c "from const import VERSION; print(VERSION)" 2>/dev/null || echo "unknown")
 
-# Check compiled JS for version string
-JS_VERSION=$(grep -oP "version\s*=\s*\"\K[^\"]*" custom_components/linus_dashboard/www/linus-strategy.js | head -1 || echo "unknown")
+# Check compiled JS for the version string. The bundle is minified (e.g. var S="2.0.0-beta.2"),
+# so look for the quoted version anywhere instead of a `version = "..."` assignment.
+JS_BUNDLE="custom_components/linus_dashboard/www/linus-strategy.js"
+if [ ! -f "$JS_BUNDLE" ]; then
+    JS_VERSION="unknown"
+elif grep -qF "\"$NEW_VERSION\"" "$JS_BUNDLE"; then
+    JS_VERSION="$NEW_VERSION"
+else
+    JS_VERSION="not found"
+fi
 
 echo -e "  package.json:        ${GREEN}${PKG_VERSION}${NC}"
 echo -e "  manifest.json:       ${GREEN}${MANIFEST_VERSION}${NC}"

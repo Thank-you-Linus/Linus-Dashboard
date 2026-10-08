@@ -186,14 +186,12 @@ class ActivityDetectionPopup extends AbstractPopup {
         // motion/presence/occupancy/media, so its member list is the same
         // safety net this always relied on: entities that don't match the
         // standard device_class filters above but still feed presence).
-        // Reuse the entity resolved above rather than rebuilding the id from
-        // area_slug: the native entity is named after HA's area_id, which the
-        // slug does not always match (see Helper.areaIdFor). Hand-building it
-        // here silently missed the group for those areas, dropping its members
-        // from the list below.
-        const presenceGroupEntity = presenceSensorEntity;
-        const presenceGroupState = presenceGroupEntity
-            ? Helper.getEntityState(presenceGroupEntity)
+        // Reuse the sensor already resolved above rather than rebuilding its
+        // entity_id here: the backend names it from the area_id, which the
+        // resolver knows how to derive from the slug (they diverge on a
+        // renamed or non-ASCII named area).
+        const presenceGroupState = presenceSensorEntity
+            ? Helper.getEntityState(presenceSensorEntity)
             : undefined;
         const groupMemberEntities: string[] = [];
 
@@ -365,7 +363,7 @@ class ActivityDetectionPopup extends AbstractPopup {
         }
 
         // Count total sensors (excluding the group entity itself)
-        const sensorCount = allPresenceEntities.filter(e => e !== presenceGroupEntity).length;
+        const sensorCount = allPresenceEntities.filter(e => e !== presenceSensorEntity).length;
 
         // === PRESENCE SENSORS SECTION (ALWAYS visible) ===
         cards.push({
@@ -395,7 +393,7 @@ class ActivityDetectionPopup extends AbstractPopup {
 
             // Sort by state (active first) then by last changed (most recent first)
             const sortedEntities = allPresenceEntities
-                .filter(e => e !== presenceGroupEntity) // Exclude the group itself
+                .filter(e => e !== presenceSensorEntity) // Exclude the group itself
                 .sort((a, b) => {
                     const aState = Helper.getEntityState(a);
                     const bState = Helper.getEntityState(b);

@@ -7,6 +7,10 @@ from .const import DOMAIN
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
 
+# Mirrored client-side in src/variables.ts's DOMAIN_ACTIVE_STATES — the two
+# tables must stay identical: a chip renders its count from a group entity's
+# server-computed active_count, while its popup recounts the same perimeter
+# client-side from these states, and any divergence makes the two disagree.
 DOMAIN_ACTIVE_STATES: dict[str, list[str]] = {
     "light": ["on"],
     "switch": ["on"],
@@ -63,15 +67,33 @@ BINARY_SENSOR_COLORS: dict[str, dict[str, str]] = {
 }
 
 
+def resolve_active_states(
+    domain: str, active_states: list[str] | None = None
+) -> list[str]:
+    """
+    The states that count as "active" for a domain, with an explicit override.
+
+    The override exists for composite groups whose members span several
+    domains, so the domain table can't describe them: binary_sensor.py's
+    presence group mixes motion/presence/occupancy binary_sensors with raw
+    media_players and counts exactly ("on", "playing") — narrower than
+    DOMAIN_ACTIVE_STATES["media_player"] (which includes "paused"), wider
+    than DOMAIN_ACTIVE_STATES["binary_sensor"] (just "on").
+    """
+    if active_states is not None:
+        return list(active_states)
+    return DOMAIN_ACTIVE_STATES.get(domain, ["on"])
+
+
 def compute_active_count(entity_states: dict[str, str], domain: str) -> int:
     """Count entities in active states."""
-    active_states = DOMAIN_ACTIVE_STATES.get(domain, ["on"])
+    active_states = resolve_active_states(domain)
     return sum(1 for state in entity_states.values() if state in active_states)
 
 
 def compute_active_entity_ids(entity_states: dict[str, str], domain: str) -> list[str]:
     """Get list of entity IDs that are currently active."""
-    active_states = DOMAIN_ACTIVE_STATES.get(domain, ["on"])
+    active_states = resolve_active_states(domain)
     return [eid for eid, state in entity_states.items() if state in active_states]
 
 

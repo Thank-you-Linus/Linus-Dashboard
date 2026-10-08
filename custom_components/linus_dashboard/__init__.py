@@ -335,9 +335,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await async_hide_group_entities_from_voice_assistants(hass, entry)
 
+    # Reload on any options-flow change (masked/excluded targets, etc.) so every
+    # aggregate recomputes against the new exclusion set. Previously only
+    # LinusDashboardAggregateSensor registered this listener, and only when a
+    # binary_sensor domain-level aggregate existed — masking an entity while no
+    # such aggregate exists silently invalidated nothing, on any platform.
+    entry.async_on_unload(entry.add_update_listener(_async_options_updated))
+
     # Store the entry
     hass.data[DOMAIN][entry.entry_id] = DOMAIN
     return True
+
+
+async def _async_options_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Reload the entry when its options change (e.g. excluded targets)."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_hide_group_entities_from_voice_assistants(

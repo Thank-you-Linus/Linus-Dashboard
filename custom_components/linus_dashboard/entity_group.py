@@ -46,9 +46,9 @@ from homeassistant.helpers import (
 from homeassistant.helpers.event import async_call_later, async_track_state_change_event
 
 from .aggregate import (
-    compute_active_entity_ids,
     compute_color,
     compute_icon,
+    resolve_active_states,
 )
 from .const import (
     DOMAIN,
@@ -272,31 +272,86 @@ def compute_group_attributes(
     domain: str,
     device_class: str | None,
     member_entity_ids: list[str],
+    active_states: list[str] | None = None,
 ) -> dict:
     """
     Build the standard extra_state_attributes for a group entity.
 
     `entity_id` (ATTR_ENTITY_ID) is the HA convention that makes the more-info
     dialog recognize this entity as a group and display its members — it must
-    use exactly that attribute key, not a custom plural name. Works the same
-    whether members are raw entities (area scope) or nested group entities
-    (floor/global scope): both expose a plain HA state, so reading
-    `hass.states.get(member_id).state` is valid either way.
+    use exactly that attribute key, not a custom plural name, and it keeps
+    listing this group's DIRECT members so the nesting contract stays intact.
+
+    `active_entity_ids`/`active_count`/`total`, on the other hand, are ALWAYS
+    leaf-level, at every scope. A member is recognized as a nested sub-group
+    when its own state exposes an `active_entity_ids` attribute (only this
+    integration's group entities do — a foreign group never gets scanned in as
+    a member in the first place, see scan_domain_members); its list is spliced
+    in instead of the member being counted as one unit, and its `total`
+    replaces the 1 it would otherwise contribute. Without this, a floor chip
+    read "rooms with at least one active entity" and a global chip "floors
+    with at least one active entity" — never the number of active entities,
+    and never the number the popup lists for the same perimeter.
+
+    Reactivity needs nothing extra: async_track_state_change_event also fires
+    on an attribute-only change, so a sub-group publishing a new
+    active_entity_ids already wakes its parent.
+
+    `active_count` is published alongside the list so a chip template reads an
+    integer directly instead of piping the (now possibly several dozen ids
+    long) list through `| count`.
+
+    icon/color deliberately keep consuming the DIRECT members' states, not the
+    flattened leaves: a floor group's members are area groups reporting a
+    plain on/off, which is exactly what "is anything on below me" needs, and
+    flattening would make icon/color depend on entities this group never
+    subscribed to.
+
+    `active_states` overrides the per-domain active-state table for composite
+    groups whose members span domains — see aggregate.resolve_active_states.
     """
+    resolved_active_states = resolve_active_states(domain, active_states)
+
     entity_states: dict[str, str] = {}
+    active_ids: list[str] = []
+    total = 0
+
     for entity_id in member_entity_ids:
         state_obj = hass.states.get(entity_id)
-        if state_obj and state_obj.state not in ("unavailable", "unknown"):
+        if state_obj is None:
+            total += 1
+            continue
+
+        available = state_obj.state not in ("unavailable", "unknown")
+        if available:
             entity_states[entity_id] = state_obj.state
 
-    active_ids = compute_active_entity_ids(entity_states, domain)
+        nested_active = state_obj.attributes.get("active_entity_ids")
+        if isinstance(nested_active, list | tuple):
+            nested_total = state_obj.attributes.get("total")
+            total += (
+                nested_total if isinstance(nested_total, int) else len(nested_active)
+            )
+            if available:
+                active_ids.extend(nested_active)
+            continue
+
+        total += 1
+        if available and state_obj.state in resolved_active_states:
+            active_ids.append(entity_id)
+
+    # A leaf reachable through two sub-groups must not be counted twice;
+    # dict.fromkeys dedups while preserving member order.
+    active_ids = list(dict.fromkeys(active_ids))
+
     icon = compute_icon(hass, domain, entity_states, device_class)
     color = compute_color(domain, device_class, entity_states)
 
     return {
         ATTR_ENTITY_ID: list(member_entity_ids),
-        "total": len(member_entity_ids),
+        "total": total,
         "active_entity_ids": active_ids,
+        "active_count": len(active_ids),
         "icon": icon,
         "color": color,
     }
@@ -706,7 +761,7 @@ class NestedGroupMixin:
           is mixed into.
         - compute_group_attributes() then *replaces*
           extra_state_attributes wholesale with our own entity_id/total/
-          active_entity_ids/icon/color, same as every non-HA-inherited
+          active_entity_ids/active_count/icon/color, same as every non-HA-inherited
           platform (climate.py, media_player.py, siren.py) — it already
           covers everything HA's own init sets there (just entity_id), so
           there's nothing worth preserving from it.

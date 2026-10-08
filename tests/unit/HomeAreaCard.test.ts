@@ -31,7 +31,6 @@ vi.mock('../../src/Helper', () => ({
   Helper: {
     isInitialized: () => true,
     areas: fx.areas,
-    areaIdFor: (slug: string) => fx.areas[slug]?.area_id ?? slug,
     // The group reports "unavailable" — the exact state that used to make
     // getDefaultConfig() drop the light card from the generated config.
     getEntityState: () => ({ state: 'unavailable', attributes: {} }),

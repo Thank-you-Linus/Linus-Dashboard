@@ -133,6 +133,32 @@ export const MEDIA_SCREEN_CLASSES = ["tv", "receiver", "soundbar"] as const;
  */
 export const MEDIA_SCREEN_INACTIVE_STATES = ["off", "standby", "unavailable", "unknown"] as const;
 
+/**
+ * States that count as "active" for each domain — the single client-side
+ * source of truth for every aggregate count (chip content, popup status card,
+ * section badge, aggregate icon).
+ *
+ * DUPLICATED ON PURPOSE, cross-language: this is an exact mirror of
+ * `custom_components/linus_dashboard/aggregate.py`'s `DOMAIN_ACTIVE_STATES`,
+ * which is the authoritative table. A chip renders its count from the server
+ * entity's `active_count`, while the popup opened from that same chip recounts
+ * the same perimeter client-side from this table — so any divergence makes the
+ * chip and its own popup disagree. Change one, change the other.
+ */
+export const DOMAIN_ACTIVE_STATES: Record<string, string[]> = {
+  light: ["on"],
+  switch: ["on"],
+  fan: ["on"],
+  media_player: ["playing", "paused", "on"],
+  climate: ["heat", "cool", "auto", "heat_cool", "dry", "fan_only"],
+  cover: ["open", "opening"],
+  binary_sensor: ["on"],
+  siren: ["on"],
+};
+
+/** Active states for a domain with no entry in DOMAIN_ACTIVE_STATES. */
+export const DEFAULT_ACTIVE_STATES: string[] = ["on"];
+
 export const AREA_CARDS_DOMAINS = [LIGHT_DOMAIN, "switch", "climate", "fan", "vacuum", "media_player", "camera", "cover", "lock", "scene", "plant", "binary_sensor", "sensor", "siren"];
 
 export const ALL_HOME_ASSISTANT_DOMAINS = [

@@ -120,6 +120,51 @@ describe('EntityResolver', () => {
     });
   });
 
+  describe('native entities are named after area_id, not the name-derived slug', () => {
+    // Regression: Danish "Køkken" has area_id "kokken", but slugify(name) keeps
+    // the "ø" (no canonical NFD decomposition) and yields "køkken". Building the
+    // entity_id from the slug pointed at an entity that does not exist, so the
+    // area silently lost its light card entirely.
+    it('resolves all_lights via area_id when the slug differs', () => {
+      mockAreaIdBySlug['køkken'] = 'kokken';
+
+      const resolver = new EntityResolver(makeHass({
+        'light.linus_dashboard_all_lights_area_kokken': { state: 'on' },
+      }));
+
+      const result = resolver.resolveAllLights('køkken');
+      expect(result.entity_id).toBe('light.linus_dashboard_all_lights_area_kokken');
+      expect(result.source).toBe('native');
+    });
+
+    // HA keeps the original area_id when an area is renamed, so no name-based
+    // slug can reproduce it — the registry lookup is the only correct source.
+    it('resolves a renamed area via its original area_id', () => {
+      mockAreaIdBySlug['kayas_værelse'] = 'kayas_rum';
+
+      const resolver = new EntityResolver(makeHass({
+        'binary_sensor.linus_dashboard_presence_detection_area_kayas_rum': { state: 'off' },
+      }));
+
+      const result = resolver.resolvePresenceSensor('kayas_værelse');
+      expect(result.entity_id).toBe('binary_sensor.linus_dashboard_presence_detection_area_kayas_rum');
+    });
+
+    // The "group chips" half of the bug: a missed id here makes AggregateChip
+    // fall back to client-side rendering, silently and permanently.
+    it('resolves a device-class group entity via area_id', () => {
+      mockAreaIdBySlug['køkken'] = 'kokken';
+
+      const resolver = new EntityResolver(makeHass({
+        'binary_sensor.linus_dashboard_motion_area_kokken': { state: 'off' },
+      }));
+
+      const result = resolver.resolveGroupEntity('binary_sensor', 'motion', 'køkken');
+      expect(result.entity_id).toBe('binary_sensor.linus_dashboard_motion_area_kokken');
+      expect(result.source).toBe('native');
+    });
+  });
+
   describe('resolveClimateControlSwitch', () => {
     it('returns MA climate_control entity when MA is available', () => {
       mockMagicAreasDevices['salon'] = {

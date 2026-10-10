@@ -6,7 +6,7 @@ name: "Stable Release (manual)"
 # tags, pushes main + tag atomically and publishes the final GitHub release (HACS offers it).
 # Tick dry_run to see the note and the target version in the run summary without tagging or publishing.
 #
-# No automatic announcement (no Discord call): announce by hand (Discord + `npm run forums:open`).
+# Discord is notified automatically (step "Discord notified" proves it); forums by hand (`npm run forums:open`).
 #
 # IMPORTANT: do not replace GITHUB_TOKEN by a PAT in this workflow. A tag pushed with a PAT would
 # trigger release.yml (on: push tags / release) and the release would be published twice.
@@ -108,6 +108,7 @@ jobs:
       - name: "Generate release notes"
         id: notes
         env:
+          GH_TOKEN: ${{ github.token }}
           TAG: ${{ steps.version.outputs.tag }}
         run: |
           # Must run on HEAD before the bump commit. --since-stable: base = last stable tag,
@@ -133,7 +134,7 @@ jobs:
             if [ "$UNTRANSLATED" != "0" ]; then
               echo "- **$UNTRANSLATED change(s) without a user-facing wording** (raw commit subject, same text in French): add them to \`.github/release-notes-i18n.tsv\` or edit the release body after publication"
             fi
-            echo "- Announcement: none is sent automatically. Announce by hand: Discord + \`npm run forums:open\`"
+            echo "- Announcement: Discord is notified automatically after publishing; forums by hand: \`npm run forums:open\`"
             echo ""
             echo "### Release note"
             echo ""
@@ -187,6 +188,31 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: "Send Discord Notification"
+        id: discord
+        if: ${{ inputs.dry_run != true && success() }}
+        continue-on-error: true
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_STABLE_URL || secrets.DISCORD_WEBHOOK_URL }}
+          TAG: ${{ steps.version.outputs.tag }}
+          RELEASE_URL: ${{ steps.release.outputs.url }}
+        run: |
+          if [ -n "$DISCORD_WEBHOOK_URL" ]; then
+            if bash scripts/notify-discord.sh release "$TAG" "$RELEASE_URL"; then
+              echo "sent=true" >> "$GITHUB_OUTPUT"
+            else
+              echo "⚠️ Discord notification failed, but the release is published"
+            fi
+          else
+            echo "⚠️ Discord webhook not configured, skipping notification"
+          fi
+
+      # Proof step: runs (and succeeds) only if the Discord message was really sent.
+      # LOS checks this exact step name to close the release ticket on its own.
+      - name: "Discord notified"
+        if: ${{ steps.discord.outputs.sent == 'true' }}
+        run: echo "Discord notification sent for ${{ steps.version.outputs.tag }}"
+
       - name: "Release summary"
         id: published_summary
         if: ${{ inputs.dry_run != true && success() }}
@@ -197,7 +223,7 @@ jobs:
           {
             echo ""
             echo "Published $TAG as the latest stable release: $RELEASE_URL"
-            echo "The release body can still be edited on GitHub. Announcement: Discord + \`npm run forums:open\`."
+            echo "The release body can still be edited on GitHub. Discord was notified (see step Discord notified); forums: \`npm run forums:open\`."
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: "Dry run summary"

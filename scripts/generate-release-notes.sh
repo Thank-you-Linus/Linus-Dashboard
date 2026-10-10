@@ -50,6 +50,35 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # ---------------------------------------------------------------------------
+# External contributors (beta and stable): anyone who is neither a maintainer nor a bot
+# (definition in release-contributors.sh). The notes start with a thank-you to their GitHub
+# accounts and each of their lines ends with "by @<account>". Without one, nothing changes.
+# ---------------------------------------------------------------------------
+EXTERNAL_FILE=$(mktemp)
+trap 'rm -f "$EXTERNAL_FILE"' EXIT
+
+# usage: load_external_contributors <range>  ->  "<sha>\t<login>" lines in $EXTERNAL_FILE
+load_external_contributors() {
+    bash "$SCRIPT_DIR/release-contributors.sh" --external "$1" > "$EXTERNAL_FILE" || : > "$EXTERNAL_FILE"
+}
+
+# Prints the thank-you block, or nothing when the release has no external contributor.
+thanks_block() {
+    local logins
+    logins=$(cut -f2 "$EXTERNAL_FILE" | grep . | sort -fu | sed 's/^/@/' | paste -sd, - | sed 's/,/, /g' || true)
+    [ -z "$logins" ] && return 0
+    printf '## 🙏 Thank you %s\n\nThis release includes contributions from the community — thank you!\n\n' "$logins"
+}
+
+# Reads "<sha>\t<line>" lines, prints "<line>" plus " by @<login>" for an external contribution.
+credit_lines() {
+    awk -F'\t' '
+        FILENAME == ARGV[1] { by[$1] = $2; next }
+        { sha = $1; line = substr($0, length(sha) + 2); print line ((sha in by) ? " by @" by[sha] : "") }
+    ' "$EXTERNAL_FILE" -
+}
+
+# ---------------------------------------------------------------------------
 # --since-stable: notes covering everything since the previous stable release
 # ---------------------------------------------------------------------------
 if [ "$SINCE_STABLE" = "1" ]; then
@@ -72,13 +101,15 @@ if [ "$SINCE_STABLE" = "1" ]; then
     # vague one-liners) is dropped before anything else.
     NOISE_RE='\b(lint|linting|ruff)\b|sort imports|devbox|devcontainer|dev-env|fake house|^performance improvements[[:space:]]'
 
-    # One line per change, tab-separated: "<type>\t<message>\t<pr number or empty>\t<author>".
+    load_external_contributors "$BASE_TAG..HEAD"
+
+    # One line per change, tab-separated: "<type>\t<message>\t<pr number or empty>\t<sha>".
     # Message = subject without "type(scope)!:" and without a trailing "(#123)"; dedupe on the
     # lowercased message; reverts and noise are dropped.
-    RAW_ENTRIES=$(git log "$BASE_TAG..HEAD" --no-merges --pretty=format:"%s%x09%an" -- "${PATHSPEC[@]}" |
+    RAW_ENTRIES=$(git log "$BASE_TAG..HEAD" --no-merges --pretty=format:"%s%x09%H" -- "${PATHSPEC[@]}" |
         grep -v '^$' | grep -ivE '^revert(\([^)]*\))?!?:|^revert ' | grep -ivE "$NOISE_RE" | awk -F'\t' '
         {
-            type = "other"; msg = $1; author = $2; pr = ""
+            type = "other"; msg = $1; sha = $2; pr = ""
             if (match(msg, /^[A-Za-z]+(\([^)]*\))?!?: */)) {
                 head = substr(msg, 1, RLENGTH); msg = substr(msg, RLENGTH + 1)
                 t = tolower(head); sub(/[(!:].*$/, "", t)
@@ -88,17 +119,18 @@ if [ "$SINCE_STABLE" = "1" ]; then
                 pr = substr(msg, RSTART, RLENGTH); gsub(/[^0-9]/, "", pr); msg = substr(msg, 1, RSTART - 1)
             }
             key = tolower(msg)
-            if (msg != "" && !seen[key]++) print type "\t" msg "\t" pr "\t" author
+            if (msg != "" && !seen[key]++) print type "\t" msg "\t" pr "\t" sha
         }' || true)
 
     # Optional wording file (.github/release-notes-i18n.tsv): "<lowercased message>\t<EN>\t<FR>[\t<type>]".
     # Gives each change a user-facing English and French wording; "-" as EN drops the change
     # (e.g. a fix for something that only existed in a beta). Changes without a line keep the raw
     # commit subject in both languages and are counted in "untranslated".
-    # Authors who are not the maintainers (bots, s4piens, root, Juicy) are credited on their lines.
+    # External contributors are credited "by @<account>" on their lines (see credit_lines).
     ENTRIES=$(printf '%s\n' "$RAW_ENTRIES" | grep . | awk -F'\t' -v repo="$REPO_SLUG" '
         BEGIN { OFS = "\t" }
-        FILENAME == ARGV[1] { en[$1] = $2; fr[$1] = $3; ty[$1] = $4; next }
+        FILENAME == ARGV[1] { by[$1] = $2; next }
+        FILENAME == ARGV[2] { en[$1] = $2; fr[$1] = $3; ty[$1] = $4; next }
         {
             key = tolower($2); type = $1; e = $2; f = $2
             if (key in en) {
@@ -108,11 +140,10 @@ if [ "$SINCE_STABLE" = "1" ]; then
             } else missing++
             link = ""
             if ($3 != "") link = " ([#" $3 "](https://github.com/" repo "/pull/" $3 "))"
-            credit = ""
-            if ($4 !~ /\[bot\]$/ && $4 != "s4piens" && $4 != "root" && $4 != "Juicy") credit = " — @" $4
+            credit = ($4 in by) ? " by @" by[$4] : ""
             print type, e link credit, f link credit
         }
-        END { print "#missing", missing + 0 > "/dev/stderr" }' "$I18N_FILE" - 2> "$PROJECT_ROOT/.release-notes-missing")
+        END { print "#missing", missing + 0 > "/dev/stderr" }' "$EXTERNAL_FILE" "$I18N_FILE" - 2> "$PROJECT_ROOT/.release-notes-missing")
     UNTRANSLATED_COUNT=$(sed -n 's/^#missing\t//p' "$PROJECT_ROOT/.release-notes-missing")
     rm -f "$PROJECT_ROOT/.release-notes-missing"
     KEPT_COUNT=$(printf '%s\n' "$ENTRIES" | grep -c . || true)
@@ -138,6 +169,7 @@ if [ "$SINCE_STABLE" = "1" ]; then
     }
 
     {
+        thanks_block
         echo "## 🇬🇧 English"
         echo ""
         if [ -n "$PRERELEASES" ]; then
@@ -199,6 +231,8 @@ if [ "$COMMIT_COUNT" -eq "0" ]; then
     exit 0
 fi
 
+load_external_contributors "$COMMIT_RANGE"
+
 # Temporary file for release notes
 TEMP_FILE=$(mktemp)
 OUTPUT_FILE="$PROJECT_ROOT/RELEASE_NOTES.md"
@@ -208,7 +242,11 @@ OUTPUT_FILE="$PROJECT_ROOT/RELEASE_NOTES.md"
 # usage: add_section "<heading>" "<type regex>" "<empty placeholder>" ["todo" -> add FR TODO line, non-CI only]
 add_section() {
     local heading="$1" types="$2" empty="$3" todo="${4:-}" items
-    items=$(git log $COMMIT_RANGE --pretty=format:"%s" --no-merges | grep -iE "^(${types})(\([^)]*\))?!?:" | sed -E 's/^[A-Za-z]+(\([^)]*\))?!?: */- /' || true)
+    items=$(git log $COMMIT_RANGE --pretty=format:"%H%x09%s" --no-merges | awk -F'\t' -v types="$types" '
+        {
+            subject = substr($0, length($1) + 2)
+            if (match(tolower(subject), "^(" types ")(\\([^)]*\\))?!?: *")) print $1 "\t- " substr(subject, RLENGTH + 1)
+        }' | credit_lines || true)
     if [ -z "$items" ] && [ "$CI_MODE" = "1" ]; then
         return 0
     fi
@@ -224,17 +262,15 @@ add_section() {
 }
 
 # Start generating the release notes
+printf '# 🎉 Release Notes\n\n' > "$TEMP_FILE"
+thanks_block >> "$TEMP_FILE"
 if [ "$CI_MODE" = "1" ]; then
-    cat > "$TEMP_FILE" << 'HEADER_CI'
-# 🎉 Release Notes
-
+    cat >> "$TEMP_FILE" << 'HEADER_CI'
 ## 🇬🇧 English
 
 HEADER_CI
 else
-    cat > "$TEMP_FILE" << 'HEADER'
-# 🎉 Release Notes
-
+    cat >> "$TEMP_FILE" << 'HEADER'
 > **Instructions:** This file was auto-generated from git commits.
 > Please review and edit the sections below, especially:
 > - Add detailed explanations in English and French
@@ -309,8 +345,7 @@ cat >> "$TEMP_FILE" << 'FOOTER'
 
 FOOTER
 
-git log $COMMIT_RANGE --pretty=format:"- %s (%h)" --no-merges >> "$TEMP_FILE"
-echo "" >> "$TEMP_FILE"
+git log $COMMIT_RANGE --pretty=format:"%H%x09- %s (%h)" --no-merges | credit_lines >> "$TEMP_FILE"
 echo "" >> "$TEMP_FILE"
 
 echo "### Contributors" >> "$TEMP_FILE"

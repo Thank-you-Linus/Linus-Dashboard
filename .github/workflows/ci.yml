@@ -144,6 +144,9 @@ jobs:
           FILE_SIZE=$(stat -c%s "custom_components/linus_dashboard/www/linus-strategy.js" 2>/dev/null || stat -f%z "custom_components/linus_dashboard/www/linus-strategy.js" 2>/dev/null)
           echo "✅ Build output verified ($FILE_SIZE bytes)"
 
+      - name: "Run release tooling tests"
+        run: npm run test:release
+
       - name: "Run smoke tests"
         run: npm run test:smoke
 

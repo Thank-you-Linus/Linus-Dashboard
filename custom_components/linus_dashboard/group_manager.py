@@ -14,6 +14,7 @@ cold-restart race condition this pattern exists to avoid.
 Used by:
 - binary_sensor.py (presence + per-device_class groups)
 - light.py, switch.py, fan.py, cover.py, siren.py (domain groups)
+- sensor.py (numeric aggregates, rebuilt once after startup via PlatformGroupManager)
 """
 
 import logging
@@ -25,6 +26,35 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.event import async_call_later
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _async_listen_started_once(
+    hass: HomeAssistant, handler: Callable[[Event], None]
+) -> Callable[[], None]:
+    """
+    Run handler once on EVENT_HOMEASSISTANT_STARTED; return a safe unsubscribe.
+
+    A one-time listener removes itself when the event fires, so calling the
+    remove function returned by async_listen_once afterwards makes HA core log
+    "Unable to remove unknown job listener". The returned unsubscribe is a
+    no-op once the event has fired.
+    """
+    fired = False
+
+    @callback
+    def _on_started(event: Event) -> None:
+        nonlocal fired
+        fired = True
+        handler(event)
+
+    remove = hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _on_started)
+
+    @callback
+    def _unsub() -> None:
+        if not fired:
+            remove()
+
+    return _unsub
 
 
 class GroupManager:
@@ -107,10 +137,7 @@ class GroupManager:
 
                 async_call_later(self.hass, self._startup_delay, _delayed_refresh)
 
-            self._unsub_startup = self.hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_STARTED,
-                _ha_started,
-            )
+            self._unsub_startup = _async_listen_started_once(self.hass, _ha_started)
 
         # Register entity registry listener
         @callback
@@ -271,11 +298,7 @@ class PlatformGroupManager:
 
                 async_call_later(self.hass, self._startup_delay, _delayed_refresh)
 
-            unsubs.append(
-                self.hass.bus.async_listen_once(
-                    EVENT_HOMEASSISTANT_STARTED, _ha_started
-                )
-            )
+            unsubs.append(_async_listen_started_once(self.hass, _ha_started))
         else:
             _LOGGER.debug("PlatformGroupManager: HA already running")
 

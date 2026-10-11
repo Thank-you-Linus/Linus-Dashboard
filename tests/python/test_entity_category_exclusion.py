@@ -48,6 +48,7 @@ def make_entry(
         device_id=None,
         config_entry_id=None,
         unique_id=entity_id,
+        capabilities=None,
     )
 
 

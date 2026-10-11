@@ -331,7 +331,8 @@ class AggregateChip extends AbstractChip {
   private getEntitiesForScope(options: AggregateChipOptions): string[] {
     const getOptions: any = {
       domain: options.domain,
-      device_class: options.device_class
+      device_class: options.device_class,
+      aggregate: true
     };
 
     switch (options.scope) {

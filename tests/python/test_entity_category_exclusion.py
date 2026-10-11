@@ -37,7 +37,7 @@ def make_entry(
 ) -> SimpleNamespace:
     return SimpleNamespace(
         entity_id=entity_id,
-        domain=entity_id.split(".")[0],
+        domain=entity_id.split(".", maxsplit=1)[0],
         platform=platform,
         entity_category=entity_category,
         device_class=device_class,
@@ -122,7 +122,9 @@ def test_discover_numeric_device_classes_ignores_diagnostic_only_class(
         {"device_class": "illuminance"},
     )
 
-    assert sensor._discover_numeric_device_classes(mock_hass, ExclusionConfig()) == set()
+    assert (
+        sensor._discover_numeric_device_classes(mock_hass, ExclusionConfig()) == set()
+    )
 
 
 def test_discover_numeric_device_classes_keeps_real_sensor(

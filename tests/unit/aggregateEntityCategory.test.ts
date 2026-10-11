@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeAll, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeAll, beforeEach, afterEach } from 'vitest';
 
 /**
  * TK-159: diagnostic/config `sensor` and `binary_sensor` entities must never
@@ -27,6 +27,10 @@ const TABLE: Array<[string, Category, string | undefined, boolean]> = [
 ];
 
 describe('isAggregatableEntity', () => {
+  beforeEach(() => {
+    vi.spyOn(Helper, 'getEntityState').mockReturnValue(undefined as any);
+  });
+
   afterEach(() => {
     vi.restoreAllMocks();
   });
@@ -37,6 +41,7 @@ describe('isAggregatableEntity', () => {
   });
 
   it('reads device_class from the state when not provided', () => {
+    vi.restoreAllMocks();
     vi.spyOn(Helper, 'getEntityState').mockReturnValue({ attributes: { device_class: 'battery' } } as any);
     const entity = { entity_id: 'sensor.remote_battery', entity_category: 'diagnostic' } as any;
     expect(utils.isAggregatableEntity(entity)).toBe(true);

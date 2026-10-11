@@ -125,6 +125,31 @@ def domain_is_excluded(domain: str, exclusions: ExclusionConfig) -> bool:
     return domain in exclusions.excluded_domains
 
 
+# Domains whose diagnostic/config entities are never aggregated as readings:
+# a threshold or signal-strength sensor is not a measurement of the room.
+CATEGORY_FILTERED_DOMAINS = ("sensor", "binary_sensor")
+
+
+def is_aggregatable_entry(entry: er.RegistryEntry) -> bool:
+    """
+    Whether a registry entry may be counted in any aggregate or group scan.
+
+    Hidden and disabled entries never count. For sensor/binary_sensor only,
+    entities categorised diagnostic or config are not measurements and are
+    left out (e.g. Linus Brain's diagnostic illuminance threshold must not
+    show up as a room's lux reading), except device_class battery, which
+    integrations routinely expose as diagnostic. Every other domain
+    (switch, light, ...) keeps its config entities.
+    """
+    if entry.hidden_by or entry.disabled_by:
+        return False
+    if entry.domain not in CATEGORY_FILTERED_DOMAINS:
+        return True
+    if entry.entity_category is None:
+        return True
+    return (entry.device_class or entry.original_device_class) == "battery"
+
+
 def scan_domain_members(
     hass: HomeAssistant,
     *,
@@ -164,7 +189,7 @@ def scan_domain_members(
         if entity_entry.platform == DOMAIN:
             continue
 
-        if entity_entry.hidden_by or entity_entry.disabled_by:
+        if not is_aggregatable_entry(entity_entry):
             continue
 
         entity_id = entity_entry.entity_id
@@ -515,7 +540,7 @@ def discover_device_classes(
     for entity_entry in entity_reg.entities.values():
         if entity_entry.domain != domain or entity_entry.platform == DOMAIN:
             continue
-        if entity_entry.hidden_by or entity_entry.disabled_by:
+        if not is_aggregatable_entry(entity_entry):
             continue
         state_obj = hass.states.get(entity_entry.entity_id)
         if not state_obj:

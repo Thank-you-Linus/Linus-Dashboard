@@ -90,6 +90,7 @@ class LinusDashboardEditFlow(config_entries.OptionsFlow):
         """Initialize the options flow."""
         self._config_entry = config_entry
         self._dashboard_config = {}  # Store temporary config during multi-step flow
+        self._no_dashboards_detected = False
 
     async def _get_current_language(self) -> str:
         """Get the current user's frontend language dynamically."""
@@ -642,7 +643,8 @@ class LinusDashboardEditFlow(config_entries.OptionsFlow):
 
         # Add embedded dashboards multi-select with reordering
         dashboard_views = await self._get_available_dashboard_views()
-        _LOGGER.info("Available dashboard views for config: %d", len(dashboard_views))
+        _LOGGER.debug("Available dashboard views for config: %d", len(dashboard_views))
+        self._no_dashboards_detected = not dashboard_views
 
         if dashboard_views:
             # Create simple string options (label will be shown in UI)
@@ -680,7 +682,9 @@ class LinusDashboardEditFlow(config_entries.OptionsFlow):
                 )
             )
         else:
-            _LOGGER.warning("No dashboard views found!")
+            # Normal state on an install without other Lovelace dashboards: tell
+            # the user through the form (see _get_dashboards_notice), not the log.
+            _LOGGER.debug("No dashboard views found")
 
         exclusion_config = self._build_exclusion_section(
             current_options,
@@ -693,6 +697,21 @@ class LinusDashboardEditFlow(config_entries.OptionsFlow):
         complete_schema = {**basic_config, **exclusion_config}
 
         return vol.Schema(complete_schema)
+
+    async def _get_dashboards_notice(self) -> str:
+        """Return the localized "no dashboard detected" notice, or "" if some exist."""
+        if not self._no_dashboards_detected:
+            return ""
+        lang = await self._get_current_language()
+        translations = await async_get_translations(
+            self.hass, lang, "options", integrations=[DOMAIN]
+        )
+        key = f"component.{DOMAIN}.options.step.init.no_dashboards_notice"
+        notice = translations.get(key) or (
+            "No other dashboard was detected, so the embedded dashboards option "
+            "is not available."
+        )
+        return f"\n\n{notice}"
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -746,6 +765,7 @@ class LinusDashboardEditFlow(config_entries.OptionsFlow):
             step_id="init",
             data_schema=schema,
             description_placeholders={
-                "docs_url": "https://github.com/Thank-you-Linus/Linus-Dashboard"
+                "docs_url": "https://github.com/Thank-you-Linus/Linus-Dashboard",
+                "dashboards_notice": await self._get_dashboards_notice(),
             },
         )

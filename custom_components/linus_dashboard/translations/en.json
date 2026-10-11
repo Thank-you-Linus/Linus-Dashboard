@@ -14,7 +14,8 @@
     "step": {
       "init": {
         "title": "Customize Linus Dashboard",
-        "description": "Configure your Linus Dashboard according to your preferences. You can select weather and alarm entities, exclude certain domains or devices, and customize the display. For more information, visit the documentation: {docs_url}",
+        "description": "Configure your Linus Dashboard according to your preferences. You can select weather and alarm entities, exclude certain domains or devices, and customize the display. For more information, visit the documentation: {docs_url}{dashboards_notice}",
+        "no_dashboards_notice": "No other dashboard was detected, so the embedded dashboards option is not available. Create another Lovelace dashboard to enable it.",
         "data": {
           "alarm_entity_ids": "Alarms to display",
           "weather_entity": "Weather entity",

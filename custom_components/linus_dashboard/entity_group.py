@@ -131,6 +131,7 @@ def scan_domain_members(
     domain: str,
     device_class: str | None,
     exclusions: ExclusionConfig,
+    require_state: bool = True,
 ) -> ScopedMembers:
     """
     Scan entity/area/floor registries for entities of a domain (optionally
@@ -145,6 +146,15 @@ def scan_domain_members(
     members and skew averaged attributes like brightness), disabled
     entities, entities without a current state, and anything matched by the
     configured exclusions.
+
+    With `require_state=False` (registry-based discovery, used by the numeric
+    sensor aggregates so entities of late-loading integrations — MQTT,
+    tuya_local, ... — that have no state yet at startup are still counted):
+    an entity without a state is kept, its device_class is read from the
+    entity registry (`device_class or original_device_class`, falling back to
+    the state attribute when the registry has none), and the foreign-group
+    exclusion is only applied when a state exists to inspect. The default
+    (`True`) keeps the historical behaviour used by every other platform.
     """
     entity_reg = er.async_get(hass)
     device_reg = dr.async_get(hass)
@@ -182,14 +192,22 @@ def scan_domain_members(
             continue
 
         state_obj = hass.states.get(entity_id)
-        if not state_obj:
+        if not state_obj and require_state:
             continue
 
-        # Foreign group exclusion: see docstring above.
-        if ATTR_ENTITY_ID in state_obj.attributes:
+        # Foreign group exclusion: see docstring above. Only checkable when a
+        # state exists (a stateless entity has no `entity_id` attribute yet).
+        if state_obj and ATTR_ENTITY_ID in state_obj.attributes:
             continue
 
-        entity_device_class = state_obj.attributes.get("device_class")
+        if require_state:
+            entity_device_class = state_obj.attributes.get("device_class")
+        else:
+            entity_device_class = (
+                entity_entry.device_class
+                or entity_entry.original_device_class
+                or (state_obj.attributes.get("device_class") if state_obj else None)
+            )
         if device_class is not None and entity_device_class != device_class:
             continue
         if (

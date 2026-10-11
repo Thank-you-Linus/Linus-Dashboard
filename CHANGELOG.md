@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- fix(sensor): rebuild numeric aggregates after startup so entities from late-loading integrations (MQTT, tuya_local...) are no longer dropped (TK-156, #197)
+- fix(group_manager): no more "Unable to remove unknown job listener" ERROR on reload after a restart (one-time STARTED listener unsubscribed after it fired)
+- fix(config_flow): the options form says when no other dashboard was detected instead of logging a WARNING
+
 ## [1.6.0-beta.1] - 2026-07-08
 
 ### Added

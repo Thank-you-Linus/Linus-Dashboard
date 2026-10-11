@@ -17,7 +17,9 @@ from homeassistant.components.websocket_api.messages import result_message
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import area_registry as ar
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers import floor_registry as fr
 from homeassistant.helpers.icon import async_get_icons
@@ -39,6 +41,10 @@ from custom_components.linus_dashboard.const import (
     DOMAIN,
     VERSION,
     is_logger_debug,
+)
+from custom_components.linus_dashboard.entity_group import (
+    _resolve_entity_area_id,
+    is_aggregatable_entry,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -104,6 +110,35 @@ _DEAD_DEVICE_CLASS_SENSOR_DOMAINS = (
 )
 
 
+def _numeric_aggregate_has_members(
+    unique_id: str,
+    device_class: str,
+    member_areas: set[str],
+    area_reg: ar.AreaRegistry,
+) -> bool | None:
+    """
+    Whether a numeric aggregate (sensor.py's _build_numeric_sensors) still has
+    registry members, or None when unique_id is not one of its shapes for
+    device_class. Area scope: its own area has a member; floor scope: one of
+    the floor's areas has; global scope: any area has.
+    """
+    prefix = f"{DOMAIN}_{device_class}_"
+    if not unique_id.startswith(prefix):
+        return None
+    scope = unique_id[len(prefix) :]
+    if scope == "global":
+        return bool(member_areas)
+    if scope.startswith("area_"):
+        return scope[len("area_") :] in member_areas
+    if scope.startswith("floor_"):
+        floor_id = scope[len("floor_") :]
+        return any(
+            (area := area_reg.async_get_area(area_id)) and area.floor_id == floor_id
+            for area_id in member_areas
+        )
+    return None
+
+
 async def async_cleanup_orphaned_aggregate_sensors(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> None:
@@ -157,14 +192,45 @@ async def async_cleanup_orphaned_aggregate_sensors(
             for domain in _UNHIDE_DOMAIN_LEVEL_SENSOR_DOMAINS
         )
 
+    # Numeric aggregates (sensor.py) that lost every member to the
+    # diagnostic/config exclusion (is_aggregatable_entry) are no longer built
+    # but stay in the registry as permanently "unavailable". Membership is
+    # read from the registry, never from live states, so a sensor that has
+    # not published its state yet at startup cannot get an aggregate removed.
+    device_reg = dr.async_get(hass)
+    area_reg = ar.async_get(hass)
+    areas_by_device_class: dict[str, set[str]] = {}
+    for member in entity_reg.entities.values():
+        if member.domain != "sensor" or member.platform == DOMAIN:
+            continue
+        if not is_aggregatable_entry(member):
+            continue
+        member_class = member.device_class or member.original_device_class
+        member_area = _resolve_entity_area_id(member, device_reg)
+        if member_class and member_area:
+            areas_by_device_class.setdefault(member_class, set()).add(member_area)
+
     for entity_entry in list(entity_reg.entities.values()):
         if entity_entry.config_entry_id != entry.entry_id:
             continue
         unique_id = entity_entry.unique_id
         if unique_id in protected_unique_ids:
             continue
-        if unique_id in dead_unique_ids or (
-            unique_id.endswith("_active") and unique_id.startswith(dead_prefixes)
+        stale_numeric = (
+            entity_entry.domain == "sensor"
+            and entity_entry.original_device_class
+            and _numeric_aggregate_has_members(
+                unique_id,
+                entity_entry.original_device_class,
+                areas_by_device_class.get(entity_entry.original_device_class, set()),
+                area_reg,
+            )
+            is False
+        )
+        if (
+            stale_numeric
+            or unique_id in dead_unique_ids
+            or (unique_id.endswith("_active") and unique_id.startswith(dead_prefixes))
         ):
             entity_reg.async_remove(entity_entry.entity_id)
             _LOGGER.info(

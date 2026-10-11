@@ -46,6 +46,8 @@ def make_entry(
         disabled_by=disabled_by,
         area_id=area_id,
         device_id=None,
+        config_entry_id=None,
+        unique_id=entity_id,
     )
 
 
@@ -299,3 +301,93 @@ def test_scan_all_entities_by_area_still_tracks_config_switch(mock_hass, registr
     )
 
     assert area_entities == {"salon": ["switch.child_lock"]}
+
+
+def _aggregate_entry(unique_id: str, device_class: str, entry_id: str = "e1"):
+    entry = make_entry(
+        f"sensor.{unique_id}", platform=DOMAIN, original_device_class=device_class
+    )
+    entry.unique_id = unique_id
+    entry.config_entry_id = entry_id
+    return entry
+
+
+def _run_cleanup(mock_hass, registries, monkeypatch):
+    from custom_components.linus_dashboard import (
+        async_cleanup_orphaned_aggregate_sensors,
+    )
+
+    entity_reg = er.async_get(mock_hass)
+    removed: list[str] = []
+
+    def async_remove(entity_id):
+        removed.append(entity_id)
+        entity_reg.entities.pop(entity_id)
+
+    entity_reg.async_remove = async_remove
+    monkeypatch.setattr(
+        fr, "async_get", lambda _hass: SimpleNamespace(floors={}, async_get_floor=None)
+    )
+    asyncio.run(
+        async_cleanup_orphaned_aggregate_sensors(
+            mock_hass, SimpleNamespace(entry_id="e1")
+        )
+    )
+    return removed
+
+
+def test_cleanup_removes_aggregate_whose_only_member_was_diagnostic(
+    mock_hass, registries, monkeypatch
+):
+    registries.add(
+        make_entry(
+            "sensor.linus_brain_dark_threshold_lux_allee",
+            platform="linus_brain",
+            entity_category="diagnostic",
+            device_class="illuminance",
+            area_id="allee",
+        )
+    )
+    registries.add(
+        make_entry("sensor.lux_real", device_class="illuminance", area_id="salon")
+    )
+    registries.add(
+        _aggregate_entry("linus_dashboard_illuminance_area_allee", "illuminance")
+    )
+    registries.add(
+        _aggregate_entry("linus_dashboard_illuminance_area_salon", "illuminance")
+    )
+
+    removed = _run_cleanup(mock_hass, registries, monkeypatch)
+
+    assert removed == ["sensor.linus_dashboard_illuminance_area_allee"]
+
+
+def test_cleanup_keeps_battery_and_foreign_entities(mock_hass, registries, monkeypatch):
+    registries.add(
+        make_entry(
+            "sensor.zigbee_battery",
+            entity_category="diagnostic",
+            device_class="battery",
+            area_id="salon",
+        )
+    )
+    registries.add(_aggregate_entry("linus_dashboard_battery_area_salon", "battery"))
+    # Another config entry's aggregate is never touched.
+    registries.add(
+        _aggregate_entry("linus_dashboard_illuminance_area_x", "illuminance", "other")
+    )
+
+    assert _run_cleanup(mock_hass, registries, monkeypatch) == []
+
+
+def test_cleanup_removes_global_aggregate_without_any_member(
+    mock_hass, registries, monkeypatch
+):
+    registries.add(
+        _aggregate_entry("linus_dashboard_illuminance_global", "illuminance")
+    )
+
+    assert _run_cleanup(mock_hass, registries, monkeypatch) == [
+        "sensor.linus_dashboard_illuminance_global"
+    ]

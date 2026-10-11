@@ -1,8 +1,20 @@
 """Aggregate computation logic for Linus Dashboard sensors."""
 
+from collections import Counter
+from collections.abc import Iterable
 from typing import TYPE_CHECKING
 
+from homeassistant.exceptions import HomeAssistantError
+
 from .const import DOMAIN
+
+try:
+    # Internal HA symbol (device_class -> unit converter, the one sensor
+    # statistics use): guarded so a future HA that moves it degrades to
+    # "same unit, otherwise skip" instead of breaking the whole platform.
+    from homeassistant.components.sensor.const import UNIT_CONVERTERS
+except ImportError:  # pragma: no cover - depends on the installed HA
+    UNIT_CONVERTERS = {}
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -221,6 +233,58 @@ def compute_numeric_aggregate(values: list[float], mode: str) -> float | None:
     if mode == "min":
         return min(values)
     return sum(values) / len(values)
+
+
+def resolve_reference_unit(
+    device_class: str | None, units: Iterable[str | None]
+) -> str | None:
+    """
+    Unit every member of a numeric aggregate is converted to.
+
+    The most frequent valid unit among `units` (all the members of this
+    device_class across the whole house, so area/floor/global agree on one
+    unit); a tie goes to the alphabetically first one so the result never
+    depends on discovery order. When HA has a converter for the device_class
+    only units it can convert vote (a typo'd or foreign unit must not win);
+    without one, any non-empty unit votes. None when nobody votes.
+    """
+    converter = UNIT_CONVERTERS.get(device_class) if device_class else None
+    if converter is not None:
+        votes = Counter(u for u in units if u in converter.VALID_UNITS)
+    else:
+        votes = Counter(u for u in units if u)
+    if not votes:
+        return None
+    return sorted(votes, key=lambda unit: (-votes[unit], str(unit)))[0]
+
+
+def convert_member_value(
+    device_class: str | None,
+    value: float,
+    from_unit: str | None,
+    to_unit: str | None,
+) -> float | None:
+    """
+    Express a member's value in the aggregate's unit, or None if it can't be.
+
+    Same unit: unchanged. Otherwise both units must be known to HA's
+    converter for the device_class (missing, unknown or other-quantity unit,
+    or no converter at all: None) — the caller then leaves the member out
+    instead of averaging a number in the wrong unit.
+    """
+    if from_unit == to_unit:
+        return value
+    converter = UNIT_CONVERTERS.get(device_class) if device_class else None
+    if (
+        converter is None
+        or from_unit not in converter.VALID_UNITS
+        or to_unit not in converter.VALID_UNITS
+    ):
+        return None
+    try:
+        return converter.convert(value, from_unit, to_unit)
+    except (HomeAssistantError, ValueError):
+        return None
 
 
 def compute_color(

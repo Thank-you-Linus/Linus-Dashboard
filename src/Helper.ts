@@ -3,9 +3,17 @@ import merge from "lodash.merge";
 
 import { configurationDefaults } from "./configurationDefaults";
 import { generic } from "./types/strategy/generic";
-import { DEVICE_CLASSES, DOMAIN_ACTIVE_STATES, LINUS_BRAIN_DOMAIN, LINUS_DASHBOARD_DOMAIN, MAGIC_AREAS_DOMAIN, MAGIC_AREAS_NAME, SENSOR_STATE_CLASS_TOTAL, SENSOR_STATE_CLASS_TOTAL_INCREASING, UNDISCLOSED, colorMapping, ALL_HOME_ASSISTANT_DOMAINS, STANDARD_DOMAIN_ICONS } from "./variables";
+import { DEVICE_CLASSES, DOMAIN_ACTIVE_STATES, LINUS_BRAIN_DOMAIN, LINUS_DASHBOARD_DOMAIN, MAGIC_AREAS_DOMAIN, MAGIC_AREAS_NAME, UNDISCLOSED, colorMapping, ALL_HOME_ASSISTANT_DOMAINS, STANDARD_DOMAIN_ICONS } from "./variables";
 import { getEntityDomain, getGlobalEntitiesExceptUndisclosed, getMAEntity, isAggregatableEntity, getMagicAreaSlug, groupEntitiesByDomain, slugify } from "./utils";
 import { createDomainTag } from "./utils/domainTagHelper";
+import {
+  fallbackMode,
+  jinjaString,
+  numericAggregateEntityId,
+  numericAggregateValueTemplate,
+  numericFallbackTemplate,
+  referenceUnit,
+} from "./utils/numericAggregate";
 import { IconResources } from "./types/homeassistant/data/frontend";
 import { LinusDashboardConfig } from "./types/homeassistant/data/linus_dashboard";
 import { LabelRegistryEntry } from "./types/homeassistant/data/label_registry";
@@ -1233,10 +1241,24 @@ class Helper {
    * @static
    */
   static getSensorStateTemplate(device_class: string, area_slug: string | string[] = "global"): string {
-    const states: string[] = [];
+    const entityIds: string[] = [];
 
     if (!this.isInitialized()) {
       console.warn("Helper class should be initialized before calling this method!");
+    }
+
+    // 1. The backend aggregate of this scope (one area, or the whole house):
+    // already converted to a single unit, and what the chips and popups show.
+    if (!Array.isArray(area_slug)) {
+      const aggregateId = numericAggregateEntityId(
+        device_class,
+        area_slug === "global" ? "global" : "area",
+        { areaId: area_slug === "global" ? undefined : this.getAreaIdBySlug(area_slug) }
+      );
+      const aggregateState = aggregateId ? this.getEntityState(aggregateId) : undefined;
+      if (aggregateId && aggregateState && aggregateState.state !== "unavailable") {
+        return numericAggregateValueTemplate(aggregateId);
+      }
     }
 
     const areaSlugs = Array.isArray(area_slug) ? area_slug : [area_slug];
@@ -1267,17 +1289,11 @@ class Helper {
         }
       }
 
-      const newStates = entities?.map((entity_id: string) => `states['${entity_id}']`);
-      if (newStates) states.push(...newStates);
+      if (entities) entityIds.push(...entities);
     }
 
-    const isSum = SENSOR_STATE_CLASS_TOTAL.includes(device_class) || SENSOR_STATE_CLASS_TOTAL_INCREASING.includes(device_class);
-
-    return `
-      {% set entities = ${Helper.getSensorEntities(states, device_class)} %}
-      {% if entities | length > 0 %}
-        {{ (entities ${isSum ? '| sum' : '| sum / entities | length'}) | round(1) }} {% if ${states[0]}.attributes.unit_of_measurement is defined %} {{ ${states[0]}.attributes.unit_of_measurement }}{% endif %}
-      {% endif %}`;
+    // 2. No backend aggregate: members sharing one unit only.
+    return numericFallbackTemplate(entityIds, device_class, (entity_id) => this.getEntityState(entity_id));
   }
 
   /**
@@ -1993,9 +2009,20 @@ class Helper {
         // Handle threshold-based color mapping for sensors
         const thresholds = deviceClassColors.state as Record<number, string>;
         const thresholdKeys = Object.keys(thresholds).map(Number).sort((a, b) => b - a); // Sort descending for maximum value
-        const aggregation = SENSOR_STATE_CLASS_TOTAL.includes(effectiveDeviceClass) || SENSOR_STATE_CLASS_TOTAL_INCREASING.includes(effectiveDeviceClass) ? 'sum' : 'sum / valid_states | length';
+        // Same rule as the chip's value: members sharing the reference unit
+        // only, combined the way the backend aggregate is (sum / min / mean).
+        const getState = (entity_id: string) => Helper.getEntityState(entity_id);
+        const unit = referenceUnit(entity_ids, getState);
+        const unitFilter = unit === null
+          ? ''
+          : ` | selectattr('attributes.unit_of_measurement', 'eq', ${jinjaString(unit)})`;
+        const aggregation = {
+          sum: 'sum',
+          min: 'min',
+          average: 'sum / valid_states | length',
+        }[fallbackMode(entity_ids, effectiveDeviceClass, getState)];
         defaultColor = states.length
-          ? `{% set entities = [${states}] | reject('none') | list %}{% set valid_states = entities | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | map(attribute='state') | map('float') | list %}{% set aggregated_state = valid_states | ${aggregation} if valid_states | length > 0 else 0 %}`
+          ? `{% set entities = [${states}] | reject('none') | list %}{% set valid_states = entities${unitFilter} | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | map(attribute='state') | map('float') | list %}{% set aggregated_state = valid_states | ${aggregation} if valid_states | length > 0 else 0 %}`
           : `{% set aggregated_state = 0 %}`;
         for (const threshold of thresholdKeys) {
           defaultColor += `{% if aggregated_state >= ${threshold} %}${thresholds[threshold]}{% else %}`;
@@ -2045,6 +2072,13 @@ class Helper {
    * @returns {string} - The content string.
    */
   static getContent(domain: string, device_class?: string | null, entity_ids: string[] = [], as_icon = false): string {
+    // Numeric sensors: the value is aggregated over the members sharing one
+    // unit (never across V/mV, W/kW, °C/°F...); only the count badge below
+    // (as_icon) still goes through the per-domain templates.
+    if (domain === "sensor" && !as_icon) {
+      return numericFallbackTemplate(entity_ids, device_class, (entity_id) => Helper.getEntityState(entity_id));
+    }
+
     const stateStrings = Helper.getStateStrings(entity_ids);
 
     const deviceClassFilter = device_class
@@ -2063,25 +2097,19 @@ class Helper {
     const templates: Record<string, { filter: string, default: string, icon?: string, icon_max?: string }> = {
       "sensor:battery": {
         filter: `valid_states = entities | selectattr('attributes.device_class', 'eq', 'battery') | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | map(attribute='state') | map('float') | list`,
-        default: `{{ (valid_states | max if valid_states | length > 0 else 0) | round(0, 'floor') }}%`,
+        default: '', // unused: the value comes from numericFallbackTemplate (see top of getContent)
         icon: "mdi:battery",
         icon_max: "mdi:battery-90"
       },
       "sensor:temperature": {
         filter: `valid_states = entities | selectattr('attributes.device_class', 'eq', 'temperature') | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | map(attribute='state') | map('float') | list`,
-        default: `{{ (valid_states | max if valid_states | length > 0 else 0) | round(1) }}°`,
+        default: '', // unused: see sensor:battery
         icon: "mdi:thermometer",
         icon_max: "mdi:thermometer-high"
       },
       sensor: {
         filter: `valid_states = entities${device_class ? " | selectattr('attributes.device_class', 'eq', '" + device_class + "')" : ""} | selectattr('state', 'ne', 'unknown') | selectattr('state', 'ne', 'unavailable') | map(attribute='state') | map('float') | list`,
-        default: `{% set state_class = entities[0].attributes.state_class if entities[0].attributes.state_class is defined else 'measurement' %}
-                  {% if state_class in ['total', 'total_increasing'] %}
-                    {{ (valid_states | sum) | round(1, 'floor') }}
-                  {% else %}
-                    {{ (valid_states | sum / valid_states | length) | round(1, 'floor') }}
-                  {% endif %}
-                  {% if entities[0].attributes.unit_of_measurement is defined %} {{ entities[0].attributes.unit_of_measurement }}{% endif %}`,
+        default: '', // unused: see sensor:battery
         icon: "mdi:numeric-{count}",
         icon_max: "mdi:numeric-9-plus"
       },

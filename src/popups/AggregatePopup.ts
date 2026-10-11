@@ -1,6 +1,6 @@
 import { Helper } from "../Helper";
 import { PopupActionConfig } from "../types/homeassistant/data/lovelace";
-import { getDomainTranslationKey } from "../utils";
+import { getDomainTranslationKey, isAggregatableEntity } from "../utils";
 import { UNDISCLOSED } from "../variables";
 import { generic } from "../types/strategy/generic";
 
@@ -97,7 +97,8 @@ class AggregatePopup extends AbstractPopup {
     // Query entities dynamically based on scope
     const queryOptions: any = {
       domain,
-      device_class
+      device_class,
+      aggregate: true
     };
 
     if (scope === "floor" && floor_id) {
@@ -792,7 +793,8 @@ class AggregatePopup extends AbstractPopup {
         if (Helper.isAreaExcluded(area.area_id)) continue;
 
         // Get entities for this area ONLY (single query per area)
-        const entities = Helper.getAreaEntities(area, domain, device_class);
+        const entities = Helper.getAreaEntities(area, domain, device_class)
+          .filter(entity => isAggregatableEntity(entity));
         if (entities.length === 0) continue;
 
         // Extract entity IDs

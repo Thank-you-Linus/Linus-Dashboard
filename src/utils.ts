@@ -32,6 +32,34 @@ import StrategyArea = generic.StrategyArea;
 import StrategyFloor = generic.StrategyFloor;
 
 /**
+ * Domains whose diagnostic/config entities are never aggregated as readings.
+ * Mirror of CATEGORY_FILTERED_DOMAINS in custom_components/linus_dashboard/entity_group.py.
+ */
+const CATEGORY_FILTERED_DOMAINS = new Set(['sensor', 'binary_sensor']);
+
+/**
+ * Whether an entity may be counted in an aggregate (chip value, popup, room
+ * template). Exact mirror of `is_aggregatable_entry` (backend): a `sensor` or
+ * `binary_sensor` categorised `config` or `diagnostic` is not a measurement
+ * (e.g. Linus Brain's diagnostic illuminance threshold) and is left out,
+ * except device_class `battery`. Every other domain is unaffected.
+ *
+ * @param entity - Registry entity (entity_id and entity_category are read)
+ * @param deviceClass - Overrides the device_class, read from the state by default
+ */
+export function isAggregatableEntity(
+    entity: { entity_id: string; entity_category?: string | null },
+    deviceClass?: string | null
+): boolean {
+    const domain = getEntityDomain(entity.entity_id);
+    if (!domain || !CATEGORY_FILTERED_DOMAINS.has(domain)) return true;
+    if (entity.entity_category !== 'config' && entity.entity_category !== 'diagnostic') return true;
+
+    const effectiveClass = deviceClass ?? Helper.getEntityState(entity.entity_id)?.attributes?.device_class;
+    return effectiveClass === 'battery';
+}
+
+/**
  * Groups the elements of an array based on a provided function
  * @param {T[]} array - The array to group
  * @param {(item: T) => K} fn - The function to determine the group key for each element

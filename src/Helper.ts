@@ -4,7 +4,7 @@ import merge from "lodash.merge";
 import { configurationDefaults } from "./configurationDefaults";
 import { generic } from "./types/strategy/generic";
 import { DEVICE_CLASSES, DOMAIN_ACTIVE_STATES, LINUS_BRAIN_DOMAIN, LINUS_DASHBOARD_DOMAIN, MAGIC_AREAS_DOMAIN, MAGIC_AREAS_NAME, SENSOR_STATE_CLASS_TOTAL, SENSOR_STATE_CLASS_TOTAL_INCREASING, UNDISCLOSED, colorMapping, ALL_HOME_ASSISTANT_DOMAINS, STANDARD_DOMAIN_ICONS } from "./variables";
-import { getEntityDomain, getGlobalEntitiesExceptUndisclosed, getMAEntity, getMagicAreaSlug, groupEntitiesByDomain, slugify } from "./utils";
+import { getEntityDomain, getGlobalEntitiesExceptUndisclosed, getMAEntity, isAggregatableEntity, getMagicAreaSlug, groupEntitiesByDomain, slugify } from "./utils";
 import { createDomainTag } from "./utils/domainTagHelper";
 import { IconResources } from "./types/homeassistant/data/frontend";
 import { LinusDashboardConfig } from "./types/homeassistant/data/linus_dashboard";
@@ -1261,7 +1261,8 @@ class Helper {
             entities = [area.humidity_entity_id];
           } else {
             // Fallback vers toutes les entités du device_class dans l'area
-            entities = area.domains?.[`sensor:${device_class}`];
+            entities = area.domains?.[`sensor:${device_class}`]
+              ?.filter((entity_id) => this.#entities[entity_id] === undefined || isAggregatableEntity(this.#entities[entity_id]!));
           }
         }
       }
@@ -1504,11 +1505,12 @@ class Helper {
    * @param {string} [options.device_class] The device class of the entities.
    * @param {string | string[]} [options.area_slug] The area slug(s) to filter entities by.
    * @param {string} [options.floor_id] The floor ID to filter entities by (gets all areas on that floor).
+   * @param {boolean} [options.aggregate] Leave out diagnostic/config sensors and binary_sensors (battery excepted), as aggregates must.
    *
    * @return {string[]} An array of Jinja2 state template strings.
    * @static
    */
-  static getStates({ domain, device_class, area_slug, floor_id }: { domain: string, device_class?: string, area_slug?: string | string[], floor_id?: string }): string[] {
+  static getStates({ domain, device_class, area_slug, floor_id, aggregate }: { domain: string, device_class?: string, area_slug?: string | string[], floor_id?: string, aggregate?: boolean }): string[] {
     // Handle floor_id resolution
     if (floor_id) {
       const areaSlugs = this.#resolveFloorToAreas(floor_id, 'getStates');
@@ -1517,7 +1519,8 @@ class Helper {
       const stateStrings = this.getStates({
         domain,
         device_class,
-        area_slug: areaSlugs
+        area_slug: areaSlugs,
+        aggregate
       });
 
       if (this.debug) {
@@ -1531,6 +1534,7 @@ class Helper {
       domain,
       device_class,
       area_slug,
+      aggregate,
       transformer: (id) => `states['${id}']`  // Jinja wrapper
     });
   }
@@ -1543,6 +1547,7 @@ class Helper {
    * @param {string} [options.device_class] The device class of the entities.
    * @param {string | string[]} [options.area_slug] The area slug(s) to filter entities by.
    * @param {string} [options.floor_id] The floor ID to filter entities by (gets all areas on that floor).
+   * @param {boolean} [options.aggregate] Leave out diagnostic/config sensors and binary_sensors (battery excepted), as aggregates must.
    *
    * @return {string[]} An array of entity IDs.
    * @static
@@ -1551,12 +1556,14 @@ class Helper {
     domain,
     device_class,
     area_slug = "global",
-    floor_id
+    floor_id,
+    aggregate
   }: {
     domain: string;
     device_class?: string | null;
     area_slug?: string | string[];
     floor_id?: string;
+    aggregate?: boolean;
   }): string[] {
 
     // Handle floor_id resolution
@@ -1567,7 +1574,8 @@ class Helper {
       const entities = this.getEntityIds({
         domain,
         device_class,
-        area_slug: areaSlugs
+        area_slug: areaSlugs,
+        aggregate
       });
 
       return entities;
@@ -1578,6 +1586,7 @@ class Helper {
       domain,
       device_class,
       area_slug,
+      aggregate,
       transformer: (id) => id  // Identity function
     });
   }
@@ -1590,6 +1599,7 @@ class Helper {
    * @param {string} options.domain - Domain to filter by
    * @param {string} [options.device_class] - Device class to filter by
    * @param {string | string[]} [options.area_slug] - Area slug(s) to filter by
+   * @param {boolean} [options.aggregate] - Leave out entities that must not be aggregated (see isAggregatableEntity)
    * @param {function} options.transformer - Function to transform each entity_id
    * @returns {T[]} Array of transformed results
    * @private
@@ -1600,13 +1610,21 @@ class Helper {
     domain,
     device_class,
     area_slug = "global",
+    aggregate,
     transformer
   }: {
     domain: string;
     device_class?: string | null;
     area_slug?: string | string[];
+    aggregate?: boolean;
     transformer: (entityId: string) => T;
   }): T[] {
+    if (aggregate) {
+      return this.#getEntitiesCore<string>({ domain, device_class, area_slug, transformer: (id) => id })
+        .filter((id) => this.#entities[id] === undefined || isAggregatableEntity(this.#entities[id]!))
+        .map(transformer);
+    }
+
     const results: T[] = [];
 
     if (!this.isInitialized()) {

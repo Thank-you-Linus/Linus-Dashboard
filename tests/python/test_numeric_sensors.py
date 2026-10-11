@@ -52,6 +52,7 @@ class FakeEntityRegistry:
         platform: str = "mqtt",
         hidden_by: str | None = None,
         disabled_by: str | None = None,
+        entity_category: str | None = None,
     ) -> None:
         self.entities[entity_id] = SimpleNamespace(
             entity_id=entity_id,
@@ -61,6 +62,7 @@ class FakeEntityRegistry:
             area_id=area_id,
             hidden_by=hidden_by,
             disabled_by=disabled_by,
+            entity_category=entity_category,
             device_class=device_class,
             original_device_class=original_device_class,
             capabilities=capabilities,

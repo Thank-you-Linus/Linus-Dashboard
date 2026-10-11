@@ -26,6 +26,14 @@ Three families of sensors:
    of unavailable/unknown entities per zone/floor/global, across every
    domain (not just the ones covered by (1)/(2)).
 
+(2) is discovered from the entity registry (not from live states) and rebuilt
+once after EVENT_HOMEASSISTANT_STARTED (PlatformGroupManager, same pattern as
+light.py/cover.py): entities of late-loading integrations (MQTT, tuya_local,
+...) have no state when the platform is first set up, so a single startup
+scan would silently drop them. The rebuild is idempotent: an existing
+aggregate (same unique_id) gets its members/mode/unit refreshed in place,
+only missing ones are added.
+
 (2) and (3) follow the same nested hierarchy as the group entities in the
 other platform files: floor aggregates read the area-scope sensors' own
 computed values (not raw entities again), global reads floor-scope sensors.
@@ -68,6 +76,7 @@ from .const import (
     get_global_device_info,
 )
 from .entity_group import ExclusionConfig, resolve_floors_for_areas, scan_domain_members
+from .group_manager import PlatformGroupManager
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -95,6 +104,16 @@ AREA_REGISTRY_SENSOR_ATTR = {
     "humidity": "humidity_entity_id",
 }
 
+# Live numeric aggregates by unique_id. Module-level (like light.py's
+# _LIGHT_GROUPS) so `_rebuild` can tell entities that already exist (refresh
+# their members in place) from genuinely new ones (async_add_entities).
+# Cleared at the start of every async_setup_entry.
+_NUMERIC_SENSORS: dict[str, "LinusDashboardNumericAggregateSensor"] = {}
+
+# Sentinel: "leave this attribute untouched" in async_update_members (None is
+# a meaningful value for unit/official_entity_id).
+_UNSET: Any = object()
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -103,6 +122,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up Linus Dashboard sensors (generic counts, numeric aggregates, health)."""
     sensors: list[SensorEntity] = []
+    # A previous load of this config entry (reload after an options change)
+    # leaves stale entries — those entities were torn down by HA already.
+    _NUMERIC_SENSORS.clear()
+
     sensors.extend(await _build_aggregate_sensors(hass, config_entry))
     sensors.extend(await _build_numeric_sensors(hass, config_entry))
     sensors.extend(await _build_health_sensors(hass, config_entry))
@@ -110,6 +133,36 @@ async def async_setup_entry(
     if sensors:
         async_add_entities(sensors)
         _LOGGER.info("Created %d sensors", len(sensors))
+
+    async def _rebuild(*_args) -> None:
+        """Re-run numeric discovery: refresh existing aggregates, add/remove the rest."""
+        before_ids = set(_NUMERIC_SENSORS)
+
+        new_sensors = await _build_numeric_sensors(hass, config_entry)
+
+        after_ids = {sensor.unique_id for sensor in new_sensors}
+        to_add = [s for s in new_sensors if s.unique_id not in before_ids]
+
+        for uid in before_ids - after_ids:
+            stale = _NUMERIC_SENSORS.pop(uid)
+            hass.async_create_task(stale.async_remove(force_remove=True))
+
+        if to_add:
+            async_add_entities(to_add)
+            _LOGGER.info(
+                "Created %d numeric aggregate sensors after startup", len(to_add)
+            )
+            # See light.py's _rebuild for why this is needed here too.
+            from . import async_hide_group_entities_from_voice_assistants
+
+            await async_hide_group_entities_from_voice_assistants(hass, config_entry)
+
+    platform_manager = PlatformGroupManager(hass, monitored_domains=["sensor"])
+    platform_manager.register_callbacks(
+        startup_callback=_rebuild, update_callback=_rebuild
+    )
+    for unsub in platform_manager.setup_listeners():
+        config_entry.async_on_unload(unsub)
 
 
 async def _build_aggregate_sensors(
@@ -405,12 +458,33 @@ class LinusDashboardNumericAggregateSensor(SensorEntity):
     def is_empty(self) -> bool:
         return not self._member_entity_ids and not self._official_entity_id
 
-    async def async_update_members(self, member_entity_ids: list[str]) -> None:
+    async def async_update_members(
+        self,
+        member_entity_ids: list[str],
+        mode: str | None = None,
+        unit_of_measurement: str | None = _UNSET,
+        official_entity_id: str | None = _UNSET,
+    ) -> None:
+        """
+        Refresh members (and optionally mode/unit/official sensor) in place.
+
+        `mode` is left untouched when None; unit and official sensor when not
+        passed (None is a meaningful value for both). Safe on an entity that
+        was constructed but not added to HA yet: subscription and state write
+        are then left to async_added_to_hass.
+        """
         self._member_entity_ids = list(member_entity_ids)
+        if mode is not None:
+            self._mode = mode
+        if unit_of_measurement is not _UNSET:
+            self._attr_native_unit_of_measurement = unit_of_measurement
+        if official_entity_id is not _UNSET:
+            self._official_entity_id = official_entity_id
+        if not (self.hass and self.platform):
+            return
         await self._async_resubscribe()
         self._update_state()
-        if self.hass:
-            self.async_write_ha_state()
+        self.async_write_ha_state()
 
     async def _async_resubscribe(self) -> None:
         if self._unsub_state_changed:
@@ -491,18 +565,29 @@ class LinusDashboardNumericAggregateSensor(SensorEntity):
         }
 
 
+def _declares_enum_options(entity_entry: er.RegistryEntry) -> bool:
+    """Whether a registry entry is an enum-style sensor (has an `options` list)."""
+    capabilities = entity_entry.capabilities or {}
+    return bool(capabilities.get("options"))
+
+
 def _discover_numeric_device_classes(
     hass: HomeAssistant, exclusions: ExclusionConfig
 ) -> set[str]:
     """
-    Find sensor device_classes present with an actually-numeric state.
+    Find the sensor device_classes that deserve a numeric aggregate.
 
-    Every device_class gets an aggregate now (dynamically discovered, same
-    approach as binary_sensor.py's per-device_class groups) rather than a
-    fixed short list — a device_class with a non-numeric state (enum,
-    timestamp, date) is skipped since summing/averaging it is meaningless;
-    see NUMERIC_DEVICE_CLASS_EXCLUSIONS for the ones excluded outright
-    without even checking the live value.
+    Registry-based, not state-based: entities of late-loading integrations
+    (MQTT, tuya_local, ...) have no state when this runs at startup, so a
+    device_class is retained as soon as one non-hidden, non-disabled,
+    non-excluded sensor declares it in the entity registry
+    (`device_class or original_device_class`). Skipped:
+    - NUMERIC_DEVICE_CLASS_EXCLUSIONS (timestamp/date/enum) and
+      user-excluded device_classes;
+    - sensors with an `options` list in their registry capabilities (enum
+      sensors — a type declared only by such sensors is not numeric);
+    - sensors whose live state exists but is neither numeric nor
+      unavailable/unknown (nothing to sum or average).
     """
     entity_reg = er.async_get(hass)
     device_classes: set[str] = set()
@@ -516,49 +601,144 @@ def _discover_numeric_device_classes(
             continue
         if device_class in exclusions.excluded_device_classes:
             continue
+        if entity_entry.entity_id in exclusions.excluded_entity_ids:
+            continue
+        if (
+            entity_entry.device_id
+            and entity_entry.device_id in exclusions.excluded_device_ids
+        ):
+            continue
+        if (
+            entity_entry.platform
+            and entity_entry.platform in exclusions.excluded_integrations
+        ):
+            continue
+        if _declares_enum_options(entity_entry):
+            continue
         state_obj = hass.states.get(entity_entry.entity_id)
-        if not state_obj:
-            continue
-        try:
-            float(state_obj.state)
-        except (ValueError, TypeError):
-            continue
+        if state_obj and state_obj.state not in ("unavailable", "unknown"):
+            try:
+                float(state_obj.state)
+            except (ValueError, TypeError):
+                continue
         device_classes.add(device_class)
     return device_classes
+
+
+def _resolve_state_class_and_unit(
+    hass: HomeAssistant, member_ids: list[str]
+) -> tuple[str | None, str | None]:
+    """
+    State class and unit of a device_class, sampled from its members.
+
+    Per member: the real state if it exists and is not a `restored`
+    placeholder, else the entity registry (`capabilities["state_class"]`,
+    `unit_of_measurement`) — late integrations have no live state at startup.
+    Returns (None, None) when nothing is known (mode then falls back to mean).
+    """
+    entity_reg = er.async_get(hass)
+    for entity_id in member_ids:
+        state_obj = hass.states.get(entity_id)
+        if state_obj and not state_obj.attributes.get("restored"):
+            state_class = state_obj.attributes.get("state_class")
+            unit = state_obj.attributes.get("unit_of_measurement")
+            if state_class is not None or unit is not None:
+                return state_class, unit
+        entry = entity_reg.async_get(entity_id)
+        if entry is not None:
+            state_class = (entry.capabilities or {}).get("state_class")
+            unit = entry.unit_of_measurement
+            if state_class is not None or unit is not None:
+                return state_class, unit
+    return None, None
+
+
+def _make_numeric_sensor(
+    hass: HomeAssistant,
+    *,
+    unique_id: str,
+    device_info: dict,
+    device_class: str,
+    mode: str,
+    member_entity_ids: list[str],
+    official_entity_id: str | None = None,
+    unit_of_measurement: str | None = None,
+) -> LinusDashboardNumericAggregateSensor:
+    """
+    Idempotent factory: reuse the existing entity for this unique_id (and
+    schedule an in-place refresh of members/mode/unit) instead of building a
+    duplicate, so `_rebuild` can tell new aggregates (need async_add_entities)
+    from existing ones. The unique_id format is unchanged, so an aggregate
+    already in the entity registry is re-adopted under the same identity.
+    """
+    existing = _NUMERIC_SENSORS.get(unique_id)
+    if existing is not None:
+        hass.async_create_task(
+            existing.async_update_members(
+                member_entity_ids,
+                mode,
+                unit_of_measurement,
+                official_entity_id,
+            )
+        )
+        return existing
+
+    sensor = LinusDashboardNumericAggregateSensor(
+        hass,
+        unique_id=unique_id,
+        # No custom translation_key/placeholders — same reasoning as
+        # binary_sensor.py's per-device_class groups: with _attr_device_class
+        # set and no translation_key, HA falls back to its own core
+        # per-device_class sensor name (already localized for every standard
+        # device_class) combined with the device's own name for the
+        # area/floor distinction. A hand-written "numeric_{device_class}" key
+        # can't scale to a dynamically-discovered device_class list anyway.
+        translation_key=None,
+        translation_placeholders=None,
+        device_info=device_info,
+        device_class=device_class,
+        mode=mode,
+        member_entity_ids=member_entity_ids,
+        official_entity_id=official_entity_id,
+        unit_of_measurement=unit_of_measurement,
+    )
+    _NUMERIC_SENSORS[unique_id] = sensor
+    return sensor
 
 
 async def _build_numeric_sensors(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> list[LinusDashboardNumericAggregateSensor]:
-    """Build one numeric aggregate sensor per sensor device_class present, nested area/floor/global."""
+    """
+    Build one numeric aggregate sensor per sensor device_class present, nested area/floor/global.
+
+    Returns every aggregate (existing ones refreshed in place, new ones
+    constructed) — the caller decides which still need async_add_entities.
+    """
     exclusions = ExclusionConfig.from_config_entry(config_entry)
     entry_id = config_entry.entry_id
     area_reg = ar.async_get(hass)
     entities: list[LinusDashboardNumericAggregateSensor] = []
 
-    for device_class in _discover_numeric_device_classes(hass, exclusions):
+    for device_class in sorted(_discover_numeric_device_classes(hass, exclusions)):
         scoped = scan_domain_members(
-            hass, domain="sensor", device_class=device_class, exclusions=exclusions
+            hass,
+            domain="sensor",
+            device_class=device_class,
+            exclusions=exclusions,
+            require_state=False,
         )
         area_group_ids: dict[str, str] = {}
         area_official: dict[str, str | None] = {}
 
-        # Sample one member's real state_class rather than assuming
-        # "measurement" for every device_class — sum-type sensors (energy,
-        # water, gas, ...) need resolve_numeric_aggregation_mode to actually
-        # see "total"/"total_increasing" or they'd get averaged instead of
-        # summed. All members of a given device_class are expected to share
-        # the same state_class in practice, so the first one found is enough.
-        state_class = None
-        unit = None
-        for member_ids in scoped.area_entities.values():
-            if not member_ids:
-                continue
-            first_state = hass.states.get(member_ids[0])
-            if first_state:
-                state_class = first_state.attributes.get("state_class")
-                unit = first_state.attributes.get("unit_of_measurement")
-            break
+        # Sample members' real state_class rather than assuming "measurement"
+        # for every device_class — sum-type sensors (energy, water, gas, ...)
+        # need resolve_numeric_aggregation_mode to actually see
+        # "total"/"total_increasing" or they'd get averaged instead of summed.
+        # All members of a given device_class are expected to share the same
+        # state_class in practice, so the first one found is enough.
+        sample_ids = next((ids for ids in scoped.area_entities.values() if ids), [])
+        state_class, unit = _resolve_state_class_and_unit(hass, sample_ids)
         mode = resolve_numeric_aggregation_mode(device_class, state_class)
 
         for area_id, member_ids in scoped.area_entities.items():
@@ -573,22 +753,9 @@ async def _build_numeric_sensors(
                     getattr(area, registry_attr, None) if area else None
                 )
 
-            unique_id = f"{DOMAIN}_{device_class}_area_{area_id}"
-            sensor = LinusDashboardNumericAggregateSensor(
+            sensor = _make_numeric_sensor(
                 hass,
-                unique_id=unique_id,
-                # No custom translation_key/placeholders — same reasoning as
-                # binary_sensor.py's per-device_class groups: with
-                # _attr_device_class set and no translation_key, HA falls
-                # back to its own core per-device_class sensor name
-                # (already localized for every standard device_class)
-                # combined with the device's own name for the area/floor
-                # distinction. A hand-written "numeric_{device_class}" key
-                # can't scale to a dynamically-discovered device_class list
-                # anyway — there's no way to pre-write a translation for a
-                # device_class we don't know about yet.
-                translation_key=None,
-                translation_placeholders=None,
+                unique_id=f"{DOMAIN}_{device_class}_area_{area_id}",
                 device_info=get_area_device_info(
                     entry_id, area_id, scoped.area_names[area_id]
                 ),
@@ -612,12 +779,9 @@ async def _build_numeric_sensors(
             ]
             if not member_ids:
                 continue
-            unique_id = f"{DOMAIN}_{device_class}_floor_{floor_id}"
-            sensor = LinusDashboardNumericAggregateSensor(
+            sensor = _make_numeric_sensor(
                 hass,
-                unique_id=unique_id,
-                translation_key=None,
-                translation_placeholders=None,
+                unique_id=f"{DOMAIN}_{device_class}_floor_{floor_id}",
                 device_info=get_floor_device_info(
                     entry_id, floor_id, floor_names.get(floor_id, floor_id)
                 ),
@@ -630,12 +794,9 @@ async def _build_numeric_sensors(
             floor_group_ids.append(sensor.entity_id)
 
         if floor_group_ids:
-            unique_id = f"{DOMAIN}_{device_class}_global"
-            sensor = LinusDashboardNumericAggregateSensor(
+            sensor = _make_numeric_sensor(
                 hass,
-                unique_id=unique_id,
-                translation_key=None,
-                translation_placeholders=None,
+                unique_id=f"{DOMAIN}_{device_class}_global",
                 device_info=get_global_device_info(entry_id),
                 device_class=device_class,
                 mode=mode,

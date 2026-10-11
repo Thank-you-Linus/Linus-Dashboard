@@ -14,6 +14,7 @@ cold-restart race condition this pattern exists to avoid.
 Used by:
 - binary_sensor.py (presence + per-device_class groups)
 - light.py, switch.py, fan.py, cover.py, siren.py (domain groups)
+- sensor.py (numeric aggregates, rebuilt once after startup via PlatformGroupManager)
 """
 
 import logging

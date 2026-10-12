@@ -1,4 +1,12 @@
 import { Helper } from "../Helper";
+import {
+  fallbackMode,
+  numericAggregateEntityId,
+  numericAggregateValueTemplate,
+  numericFallbackTemplate,
+  resolveAggregateScope,
+  type NumericMode,
+} from "../utils/numericAggregate";
 import { PopupActionConfig } from "../types/homeassistant/data/lovelace";
 import { getDomainTranslationKey, isAggregatableEntity } from "../utils";
 import { UNDISCLOSED } from "../variables";
@@ -326,42 +334,50 @@ class AggregatePopup extends AbstractPopup {
   }
 
   /**
-   * Build statistics card for sensors (average or sum)
-   * - For temperature, humidity, battery, etc.: Shows average
-   * - For energy, power, etc.: Shows sum
+   * Build statistics card for numeric sensors.
+   *
+   * Shows the backend aggregate (`sensor.linus_dashboard_<device_class>_...`,
+   * the same entity the chip reads) with its own unit and the label of its
+   * `mode` attribute (average / total / minimum). Without that sensor the
+   * value is computed client-side over the members sharing one unit, never
+   * across units.
    */
   protected buildStatisticsCard(config: AggregatePopupConfigWithEntities) {
-    const { entity_ids, device_class } = config;
+    const { entity_ids, device_class, scope, area_slug, floor_id } = config;
+    const getState = (entityId: string) => Helper.getEntityState(entityId);
 
-    // Determine if we should use SUM or AVERAGE based on device_class
-    const sumDeviceClasses = ["energy", "power", "gas", "water", "voltage", "current", "data_size"];
-    const useSum = device_class && sumDeviceClasses.includes(device_class);
+    const resolved = resolveAggregateScope(
+      scope,
+      { areaSlug: area_slug, floorId: floor_id },
+      slug => Helper.getAreaIdBySlug(slug)
+    );
+    const aggregateId = device_class && resolved
+      ? numericAggregateEntityId(device_class, resolved.scope, { areaId: resolved.areaId, floorId: resolved.floorId })
+      : null;
+    const aggregateState = aggregateId ? getState(aggregateId) : undefined;
 
-    // Create Jinja2 template for statistics
-    const statesArray = entity_ids.map(id => `states["${id}"]`).join(', ');
+    const label = (mode: NumericMode | undefined): string => {
+      const key = { average: 'average', sum: 'total', min: 'minimum' }[mode ?? 'average'];
+      return Helper.localize(`component.linus_dashboard.entity.text.aggregate_popup.state.${key}`);
+    };
 
-    // Get unit from first entity state
-    const firstEntityState = Helper.getEntityState(entity_ids[0]);
-    const unit = firstEntityState?.attributes?.unit_of_measurement || '';
-
-    const statLabel = useSum
-      ? (Helper.localize('component.linus_dashboard.entity.text.aggregate_popup.state.total') || 'Total')
-      : (Helper.localize('component.linus_dashboard.entity.text.aggregate_popup.state.average') || 'Average');
-
-    const jinjaCalculation = useSum
-      ? `{% set entities = [${statesArray}] | reject('none') | list %}
-         {% set valid = entities | selectattr('state', 'is_number') | map(attribute='state') | map('float') | list %}
-         {% set result = valid | sum | round(1) if valid | length > 0 else '—' %}`
-      : `{% set entities = [${statesArray}] | reject('none') | list %}
-         {% set valid = entities | selectattr('state', 'is_number') | map(attribute='state') | map('float') | list %}
-         {% set result = (valid | sum / valid | length) | round(1) if valid | length > 0 else '—' %}`;
+    let content: string;
+    if (aggregateId && aggregateState) {
+      const modeAttribute = aggregateState.attributes?.mode;
+      // The area's official sensor (area registry) has no `mode`: value only.
+      const prefix = typeof modeAttribute === 'string'
+        ? `**${label(modeAttribute as NumericMode)}:** `
+        : '';
+      const unavailable = aggregateState.state === 'unavailable' || aggregateState.state === 'unknown';
+      content = `${prefix}${unavailable ? '—' : numericAggregateValueTemplate(aggregateId)}`;
+    } else {
+      const mode = fallbackMode(entity_ids, device_class, getState);
+      content = `**${label(mode)}:** ${numericFallbackTemplate(entity_ids, device_class, getState, '—')}`;
+    }
 
     return {
       type: "markdown",
-      content: `
-        ${jinjaCalculation}
-        **${statLabel}:** {{ result }} ${unit}
-      `.trim()
+      content: content.trim()
     };
   }
 

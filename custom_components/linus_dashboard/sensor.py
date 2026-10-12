@@ -67,7 +67,9 @@ from .aggregate import (
     compute_color,
     compute_icon,
     compute_numeric_aggregate,
+    convert_member_value,
     resolve_numeric_aggregation_mode,
+    resolve_reference_unit,
 )
 from .const import (
     DOMAIN,
@@ -536,43 +538,65 @@ class LinusDashboardNumericAggregateSensor(SensorEntity):
             self._debounce_unsub()
             self._debounce_unsub = None
 
+    def _member_value(self, entity_id: str) -> tuple[float | None, bool]:
+        """
+        A member's numeric value in this aggregate's unit.
+
+        Returns (value, excluded). `excluded` is True only when the member has
+        a numeric state that can't be expressed in the aggregate's unit
+        (unit missing, unknown or of another quantity): it is then left out
+        and reported, never combined as is. Unavailable/unknown/non-numeric
+        members are simply skipped (value None, not excluded), as before.
+        """
+        state_obj = self.hass.states.get(entity_id)
+        if not state_obj or state_obj.state in ("unavailable", "unknown"):
+            return None, False
+        try:
+            raw = float(state_obj.state)
+        except (ValueError, TypeError):
+            return None, False
+        converted = convert_member_value(
+            self._device_class,
+            raw,
+            state_obj.attributes.get("unit_of_measurement"),
+            self._attr_native_unit_of_measurement,
+        )
+        return converted, converted is None
+
     @callback
     def _update_state(self) -> None:
         if self._official_entity_id:
-            state_obj = self.hass.states.get(self._official_entity_id)
-            try:
-                value = (
-                    float(state_obj.state)
-                    if state_obj and state_obj.state not in ("unavailable", "unknown")
-                    else None
-                )
-            except (ValueError, TypeError):
-                value = None
+            value, excluded = self._member_value(self._official_entity_id)
             self._attr_native_value = round(value, 1) if value is not None else None
             self._attr_extra_state_attributes = {
                 ATTR_ENTITY_ID: [self._official_entity_id],
                 "total": 1,
                 "source": "area_registry_configured_sensor",
             }
+            if excluded:
+                self._attr_extra_state_attributes["excluded_entity_ids"] = [
+                    self._official_entity_id
+                ]
             return
 
         values: list[float] = []
+        excluded_ids: list[str] = []
         for entity_id in self._member_entity_ids:
-            state_obj = self.hass.states.get(entity_id)
-            if not state_obj or state_obj.state in ("unavailable", "unknown"):
-                continue
-            try:
-                values.append(float(state_obj.state))
-            except (ValueError, TypeError):
-                continue
+            value, excluded = self._member_value(entity_id)
+            if excluded:
+                excluded_ids.append(entity_id)
+            elif value is not None:
+                values.append(value)
 
-        value = compute_numeric_aggregate(values, self._mode)
-        self._attr_native_value = round(value, 1) if value is not None else None
+        aggregate = compute_numeric_aggregate(values, self._mode)
+        self._attr_native_value = round(aggregate, 1) if aggregate is not None else None
         self._attr_extra_state_attributes = {
             ATTR_ENTITY_ID: list(self._member_entity_ids),
             "total": len(self._member_entity_ids),
             "mode": self._mode,
         }
+        if excluded_ids:
+            self._attr_extra_state_attributes["excluded_entity_ids"] = excluded_ids
 
 
 def _declares_enum_options(entity_entry: er.RegistryEntry) -> bool:
@@ -635,32 +659,44 @@ def _discover_numeric_device_classes(
     return device_classes
 
 
-def _resolve_state_class_and_unit(
-    hass: HomeAssistant, member_ids: list[str]
-) -> tuple[str | None, str | None]:
+def _resolve_state_class(hass: HomeAssistant, member_ids: list[str]) -> str | None:
     """
-    State class and unit of a device_class, sampled from its members.
+    State class of a device_class, sampled from its members.
 
     Per member: the real state if it exists and is not a `restored`
-    placeholder, else the entity registry (`capabilities["state_class"]`,
-    `unit_of_measurement`) — late integrations have no live state at startup.
-    Returns (None, None) when nothing is known (mode then falls back to mean).
+    placeholder, else the entity registry (`capabilities["state_class"]`) —
+    late integrations have no live state at startup. None when nothing is
+    known (mode then falls back to mean).
     """
     entity_reg = er.async_get(hass)
     for entity_id in member_ids:
         state_obj = hass.states.get(entity_id)
         if state_obj and not state_obj.attributes.get("restored"):
             state_class = state_obj.attributes.get("state_class")
-            unit = state_obj.attributes.get("unit_of_measurement")
-            if state_class is not None or unit is not None:
-                return state_class, unit
+            if state_class is not None:
+                return state_class
         entry = entity_reg.async_get(entity_id)
         if entry is not None:
             state_class = (entry.capabilities or {}).get("state_class")
-            unit = entry.unit_of_measurement
-            if state_class is not None or unit is not None:
-                return state_class, unit
-    return None, None
+            if state_class is not None:
+                return state_class
+    return None
+
+
+def _member_unit(hass: HomeAssistant, entity_id: str) -> str | None:
+    """
+    Unit a member reports: the live state's, else the registry's.
+
+    Same source `_update_state` converts from (the live state attribute), with
+    the registry as the startup fallback for late-loading integrations.
+    """
+    state_obj = hass.states.get(entity_id)
+    if state_obj and not state_obj.attributes.get("restored"):
+        unit = state_obj.attributes.get("unit_of_measurement")
+        if unit is not None:
+            return unit
+    entry = er.async_get(hass).async_get(entity_id)
+    return entry.unit_of_measurement if entry is not None else None
 
 
 def _make_numeric_sensor(
@@ -748,8 +784,21 @@ async def _build_numeric_sensors(
         # All members of a given device_class are expected to share the same
         # state_class in practice, so the first one found is enough.
         sample_ids = next((ids for ids in scoped.area_entities.values() if ids), [])
-        state_class, unit = _resolve_state_class_and_unit(hass, sample_ids)
+        state_class = _resolve_state_class(hass, sample_ids)
         mode = resolve_numeric_aggregation_mode(device_class, state_class)
+
+        # One unit per device_class for the whole house (area, floor and
+        # global alike): members reporting another convertible unit (mV vs V,
+        # kW vs W, °F vs °C...) are converted to it at every update instead
+        # of being averaged raw under the first member's label.
+        unit = resolve_reference_unit(
+            device_class,
+            (
+                _member_unit(hass, entity_id)
+                for member_ids in scoped.area_entities.values()
+                for entity_id in member_ids
+            ),
+        )
 
         for area_id, member_ids in scoped.area_entities.items():
             if not member_ids:

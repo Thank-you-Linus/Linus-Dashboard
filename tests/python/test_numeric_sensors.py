@@ -13,175 +13,14 @@ conftest.py). The platform's `_rebuild` closure is exercised through
 from __future__ import annotations
 
 import asyncio
-from types import SimpleNamespace
-from unittest.mock import MagicMock
 
-import pytest
-from homeassistant.helpers import area_registry as ar
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers import floor_registry as fr
-
-import custom_components.linus_dashboard as integration
-from custom_components.linus_dashboard import group_manager, sensor
+from custom_components.linus_dashboard import sensor
 from custom_components.linus_dashboard.entity_group import (
     ExclusionConfig,
     scan_domain_members,
 )
 
-# ---------------------------------------------------------------------------
-# Simulated registries
-# ---------------------------------------------------------------------------
-
-
-class FakeEntityRegistry:
-    """Minimal entity registry: `.entities` plus `async_get`."""
-
-    def __init__(self) -> None:
-        self.entities: dict[str, SimpleNamespace] = {}
-
-    def add(
-        self,
-        entity_id: str,
-        *,
-        area_id: str | None = "salon",
-        device_class: str | None = None,
-        original_device_class: str | None = None,
-        capabilities: dict | None = None,
-        unit_of_measurement: str | None = None,
-        platform: str = "mqtt",
-        hidden_by: str | None = None,
-        disabled_by: str | None = None,
-        entity_category: str | None = None,
-    ) -> None:
-        self.entities[entity_id] = SimpleNamespace(
-            entity_id=entity_id,
-            domain=entity_id.split(".", 1)[0],
-            platform=platform,
-            device_id=None,
-            area_id=area_id,
-            hidden_by=hidden_by,
-            disabled_by=disabled_by,
-            entity_category=entity_category,
-            device_class=device_class,
-            original_device_class=original_device_class,
-            capabilities=capabilities,
-            unit_of_measurement=unit_of_measurement,
-        )
-
-    def async_get(self, entity_id: str):
-        return self.entities.get(entity_id)
-
-
-class FakeAreaRegistry:
-    """Areas keyed by id, each carrying a floor_id."""
-
-    def __init__(self, areas: dict[str, str | None]) -> None:
-        # area_id -> floor_id
-        self._areas = {
-            area_id: SimpleNamespace(
-                name=area_id.title(),
-                floor_id=floor_id,
-                temperature_entity_id=None,
-                humidity_entity_id=None,
-            )
-            for area_id, floor_id in areas.items()
-        }
-
-    def async_get_area(self, area_id: str):
-        return self._areas.get(area_id)
-
-
-class FakeFloorRegistry:
-    """Floors named after their id."""
-
-    def async_get_floor(self, floor_id: str):
-        return SimpleNamespace(name=floor_id.title())
-
-
-@pytest.fixture
-def entity_reg(monkeypatch) -> FakeEntityRegistry:
-    reg = FakeEntityRegistry()
-    monkeypatch.setattr(er, "async_get", lambda _hass: reg)
-    monkeypatch.setattr(
-        dr, "async_get", lambda _hass: SimpleNamespace(async_get=lambda _id: None)
-    )
-    monkeypatch.setattr(
-        ar,
-        "async_get",
-        lambda _hass: FakeAreaRegistry({"salon": "ground", "chambre": "ground"}),
-    )
-    monkeypatch.setattr(fr, "async_get", lambda _hass: FakeFloorRegistry())
-    return reg
-
-
-@pytest.fixture(autouse=True)
-def clean_registry():
-    sensor._NUMERIC_SENSORS.clear()
-    yield
-    sensor._NUMERIC_SENSORS.clear()
-
-
-@pytest.fixture
-def platform(monkeypatch, mock_hass):
-    """
-    Drive sensor.async_setup_entry against mock_hass.
-
-    Returns a namespace with the captured `added` batches, the pending tasks
-    scheduled through hass.async_create_task, the captured STARTED listeners
-    and call_later actions, plus helpers to flush tasks.
-    """
-    ctx = SimpleNamespace(
-        added=[],
-        tasks=[],
-        started_listeners=[],
-        later_actions=[],
-        hide_calls=0,
-    )
-
-    def create_task(coro):
-        ctx.tasks.append(coro)
-        return MagicMock()
-
-    mock_hass.async_create_task = create_task
-    mock_hass.bus = MagicMock()
-    mock_hass.is_running = False
-    mock_hass.bus.async_listen_once = lambda event, cb: (
-        ctx.started_listeners.append((event, cb)) or MagicMock()
-    )
-    mock_hass.bus.async_listen = lambda event, cb: MagicMock()
-    monkeypatch.setattr(
-        group_manager,
-        "async_call_later",
-        lambda _hass, _delay, action: ctx.later_actions.append(action) or MagicMock(),
-    )
-
-    async def fake_empty(*_args, **_kwargs):
-        return []
-
-    monkeypatch.setattr(sensor, "_build_aggregate_sensors", fake_empty)
-    monkeypatch.setattr(sensor, "_build_health_sensors", fake_empty)
-
-    async def fake_hide(*_args, **_kwargs):
-        ctx.hide_calls += 1
-
-    monkeypatch.setattr(
-        integration, "async_hide_group_entities_from_voice_assistants", fake_hide
-    )
-
-    async def flush():
-        while ctx.tasks:
-            await ctx.tasks.pop(0)
-
-    ctx.flush = flush
-    return ctx
-
-
-def _setup(mock_hass, mock_config_entry, platform):
-    def add(entities):
-        platform.added.append(list(entities))
-
-    asyncio.run(sensor.async_setup_entry(mock_hass, mock_config_entry, add))
+from .conftest import _setup
 
 
 def _members(entity: sensor.LinusDashboardNumericAggregateSensor) -> list[str]:
@@ -508,10 +347,10 @@ def test_mode_and_unit_fall_back_to_registry_when_no_real_state(
         "unavailable",
         {"restored": True, "state_class": "measurement", "unit_of_measurement": "m3"},
     )
-    state_class, unit = sensor._resolve_state_class_and_unit(
-        mock_hass, ["sensor.water_late"]
+    assert sensor._resolve_state_class(mock_hass, ["sensor.water_late"]) == (
+        "total_increasing"
     )
-    assert (state_class, unit) == ("total_increasing", "L")
+    assert sensor._member_unit(mock_hass, "sensor.water_late") == "L"
 
 
 def test_rebuild_refreshes_mode_and_unit_of_existing_aggregate(

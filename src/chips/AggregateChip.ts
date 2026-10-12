@@ -4,6 +4,11 @@ import { TemplateChipConfig } from "../types/lovelace-mushroom/utils/lovelace/ch
 import { navigateTo } from "../utils";
 import { PopupFactory } from "../services/PopupFactory";
 import { DEFAULT_ACTIVE_STATES, DOMAIN_ACTIVE_STATES } from "../variables";
+import {
+  numericAggregateEntityId,
+  numericAggregateValueTemplate,
+  resolveAggregateScope,
+} from "../utils/numericAggregate";
 
 import { AbstractChip } from "./AbstractChip";
 
@@ -123,8 +128,20 @@ class AggregateChip extends AbstractChip {
 
     // 3. Configure chip appearance
     const aggregateSource = this.getAggregateSensorId(config);
+    const numericAggregateId = this.getNumericAggregateId(config);
 
-    if (aggregateSource) {
+    if (numericAggregateId) {
+      // Numeric sensor aggregate (sensor.py's LinusDashboardNumericAggregateSensor):
+      // the backend converts members to one unit; the chip only shows its
+      // state and unit, so chip, popup and backend can never disagree.
+      (this.#defaultConfig as any).entity_id = [numericAggregateId];
+      this.#defaultConfig.icon = Helper.getIcon(config.domain, config.device_class, [numericAggregateId]);
+      this.#defaultConfig.icon_color = Helper.getIconColor(config.domain, config.device_class, [numericAggregateId]);
+
+      if (config.show_content) {
+        this.#defaultConfig.content = numericAggregateValueTemplate(numericAggregateId);
+      }
+    } else if (aggregateSource) {
       // Server-side aggregate: trivial single-entity template reads.
       // Dedicated group entities (light.py/switch.py/.../binary_sensor.py)
       // report the count via the active_entity_ids attribute (their own
@@ -471,6 +488,38 @@ class AggregateChip extends AbstractChip {
     "media_player",
   ];
 
+  /** Concrete scope (area_id / floor_id / global) of a chip configuration, or null if an area cannot be resolved. */
+  private resolveScope(config: AggregateChipOptions) {
+    return resolveAggregateScope(
+      config.scope,
+      { areaSlug: config.area_slug, floorId: config.floor_id ?? undefined },
+      slug => Helper.getAreaIdBySlug(slug)
+    );
+  }
+
+  /**
+   * Backend numeric aggregate (`sensor.linus_dashboard_<device_class>_...`)
+   * backing this chip, when the chip is a `sensor` device_class chip and the
+   * aggregate exists and is not unavailable. null otherwise: the chip then
+   * renders client-side (Helper.getContent), which only combines members that
+   * share one unit.
+   */
+  private getNumericAggregateId(config: AggregateChipOptions): string | null {
+    const deviceClass = config.device_class;
+    if (config.domain !== "sensor" || !deviceClass || deviceClass === "_") return null;
+
+    const resolved = this.resolveScope(config);
+    if (!resolved) return null;
+    const entityId = numericAggregateEntityId(deviceClass, resolved.scope, {
+      areaId: resolved.areaId,
+      floorId: resolved.floorId,
+    });
+    if (!entityId) return null;
+
+    const state = Helper.getEntityState(entityId);
+    return state && state.state !== "unavailable" ? entityId : null;
+  }
+
   /**
    * Get the server-side aggregate entity for this chip's configuration —
    * preferring a dedicated group entity when one exists for this
@@ -493,21 +542,17 @@ class AggregateChip extends AbstractChip {
   ): { entityId: string; isDedicatedGroup: boolean } | null {
     const hasDeviceClass = !!config.device_class && config.device_class !== "_";
 
-    let scopeSuffix: string;
-    if (config.scope === "area") {
-      if (Array.isArray(config.area_slug) || !config.area_slug) return null;
-      // The backend names its area-scope group entities from the real
-      // area_id, not from the name-derived slug areas are indexed by here
-      // (they diverge on a renamed or non-ASCII named area). No slug
-      // fallback: it could resolve another area's group entity.
-      const areaId = Helper.getAreaIdBySlug(config.area_slug);
-      if (!areaId) return null;
-      scopeSuffix = `_area_${areaId}`;
-    } else if (config.scope === "floor" && config.floor_id) {
-      scopeSuffix = `_floor_${config.floor_id}`;
-    } else {
-      scopeSuffix = "_global";
-    }
+    // The backend names its area-scope entities from the real area_id, not
+    // from the name-derived slug areas are indexed by here (they diverge on a
+    // renamed or non-ASCII named area); see resolveAggregateScope.
+    const resolved = this.resolveScope(config);
+    if (!resolved) return null;
+    const scopeSuffix =
+      resolved.scope === "area"
+        ? `_area_${resolved.areaId}`
+        : resolved.scope === "floor"
+          ? `_floor_${resolved.floorId}`
+          : "_global";
 
     const tryEntity = (entityId: string): boolean => {
       const state = Helper.getEntityState(entityId);

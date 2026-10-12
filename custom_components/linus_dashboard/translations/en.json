@@ -229,6 +229,7 @@
           "state_unlocked": "unlocked",
           "state_available": "available",
           "average": "Average",
+          "minimum": "Minimum",
           "total": "Total",
           "view_all": "See More",
           "title_light": "Lights",

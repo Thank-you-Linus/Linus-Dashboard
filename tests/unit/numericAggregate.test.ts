@@ -167,6 +167,11 @@ describe('numericAggregateValueTemplate', () => {
     const tpl = numericAggregateValueTemplate('sensor.linus_dashboard_voltage_area_garage');
     expect(tpl).toContain("states('sensor.linus_dashboard_voltage_area_garage')");
     expect(tpl).toContain("state_attr('sensor.linus_dashboard_voltage_area_garage', 'unit_of_measurement')");
-    expect(tpl).toContain('{% if v is number %}');
+    expect(tpl).toContain('{% if v | is_number %}');
+  });
+
+  it('never uses the `is number` test: states() returns a string, so it would always be false', () => {
+    const tpl = numericAggregateValueTemplate('sensor.linus_dashboard_voltage_area_garage');
+    expect(tpl).not.toMatch(/\bis number\b/);
   });
 });

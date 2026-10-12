@@ -137,7 +137,7 @@ describe('AggregateChip — numeric sensor aggregates', () => {
     const chip = build({ scope: 'global' });
 
     expect(chip.entity_id).toEqual([id]);
-    expect(chip.content).toContain('{% if v is number %}');
+    expect(chip.content).toContain('{% if v | is_number %}');
   });
 
   it('non-regression: a non-sensor chip does not look for a numeric aggregate', () => {

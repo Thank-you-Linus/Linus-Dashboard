@@ -157,5 +157,5 @@ export function numericFallbackTemplate(
 /** Jinja rendering a backend aggregate as "value unit" (nothing while it is not a number). */
 export function numericAggregateValueTemplate(aggregateId: string): string {
   const id = jinjaString(aggregateId);
-  return `{% set v = states(${id}) %}{% if v is number %}{{ v }} {{ state_attr(${id}, 'unit_of_measurement') or '' }}{% endif %}`;
+  return `{% set v = states(${id}) %}{% if v | is_number %}{{ v }} {{ state_attr(${id}, 'unit_of_measurement') or '' }}{% endif %}`;
 }

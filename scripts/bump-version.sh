@@ -18,6 +18,9 @@
 #   scripts/bump-version.sh release minor -> 1.3.0 -> 1.4.0
 #   scripts/bump-version.sh release major -> 1.3.0 -> 2.0.0
 #
+# --files-only (any position): update version files, then stop before git add/commit/tag.
+#   npm run bump:beta / bump:alpha / bump:release use it (they never commit or tag).
+#
 
 set -e
 
@@ -31,6 +34,19 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
+
+# --files-only (anywhere in the arguments): update the version files and stop before
+# git add / commit / tag. Without it, behaviour is unchanged.
+FILES_ONLY=0
+ARGS=()
+for arg in "$@"; do
+    if [ "$arg" = "--files-only" ]; then
+        FILES_ONLY=1
+    else
+        ARGS+=("$arg")
+    fi
+done
+set -- ${ARGS[@]+"${ARGS[@]}"}
 
 # Get the bump type from argument
 BUMP_TYPE="${1:-}"
@@ -223,6 +239,12 @@ fi
 
 echo ""
 echo -e "${GREEN}✅ Version consistency verified!${NC}\n"
+
+if [ "$FILES_ONLY" = "1" ]; then
+    echo -e "${GREEN}🎉 Version files updated to ${NEW_VERSION} (--files-only: no commit, no tag)${NC}"
+    echo "$NEW_VERSION"
+    exit 0
+fi
 
 # Git operations
 echo -e "${BLUE}📋 Git operations:${NC}"

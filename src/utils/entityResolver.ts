@@ -141,7 +141,12 @@ export class EntityResolver {
   /**
    * Resolves the presence detection binary sensor for a floor
    *
-   * @param floor_slug - The floor slug
+   * No areaKey() equivalent here, unlike the area variant above:
+   * Helper keys floors by HA's own floor_id (not a name-derived slug), which is
+   * exactly what entity_group.py names floor-scoped entities after. There is no
+   * transliteration seam to bridge.
+   *
+   * @param floor_slug - The floor slug (i.e. HA's floor_id)
    * @returns EntityResolution with the resolved entity
    */
   resolvePresenceSensorForFloor(floor_slug: string): EntityResolution {
@@ -224,7 +229,10 @@ export class EntityResolver {
    *
    * Linus Dashboard native only — Magic Areas has no floor concept.
    *
-   * @param floor_slug - The floor slug
+   * Deliberately no areaKey() equivalent — floors are already keyed by
+   * HA's floor_id, so there is no name-derived slug to translate.
+   *
+   * @param floor_slug - The floor slug (i.e. HA's floor_id)
    * @returns EntityResolution with the resolved entity
    */
   resolveAllLightsForFloor(floor_slug: string): EntityResolution {

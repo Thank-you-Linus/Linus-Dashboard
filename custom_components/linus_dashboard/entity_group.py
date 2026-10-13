@@ -125,12 +125,38 @@ def domain_is_excluded(domain: str, exclusions: ExclusionConfig) -> bool:
     return domain in exclusions.excluded_domains
 
 
+# Domains whose diagnostic/config entities are never aggregated as readings:
+# a threshold or signal-strength sensor is not a measurement of the room.
+CATEGORY_FILTERED_DOMAINS = ("sensor", "binary_sensor")
+
+
+def is_aggregatable_entry(entry: er.RegistryEntry) -> bool:
+    """
+    Whether a registry entry may be counted in any aggregate or group scan.
+
+    Hidden and disabled entries never count. For sensor/binary_sensor only,
+    entities categorised diagnostic or config are not measurements and are
+    left out (e.g. Linus Brain's diagnostic illuminance threshold must not
+    show up as a room's lux reading), except device_class battery, which
+    integrations routinely expose as diagnostic. Every other domain
+    (switch, light, ...) keeps its config entities.
+    """
+    if entry.hidden_by or entry.disabled_by:
+        return False
+    if entry.domain not in CATEGORY_FILTERED_DOMAINS:
+        return True
+    if entry.entity_category is None:
+        return True
+    return (entry.device_class or entry.original_device_class) == "battery"
+
+
 def scan_domain_members(
     hass: HomeAssistant,
     *,
     domain: str,
     device_class: str | None,
     exclusions: ExclusionConfig,
+    require_state: bool = True,
 ) -> ScopedMembers:
     """
     Scan entity/area/floor registries for entities of a domain (optionally
@@ -145,6 +171,15 @@ def scan_domain_members(
     members and skew averaged attributes like brightness), disabled
     entities, entities without a current state, and anything matched by the
     configured exclusions.
+
+    With `require_state=False` (registry-based discovery, used by the numeric
+    sensor aggregates so entities of late-loading integrations — MQTT,
+    tuya_local, ... — that have no state yet at startup are still counted):
+    an entity without a state is kept, its device_class is read from the
+    entity registry (`device_class or original_device_class`, falling back to
+    the state attribute when the registry has none), and the foreign-group
+    exclusion is only applied when a state exists to inspect. The default
+    (`True`) keeps the historical behaviour used by every other platform.
     """
     entity_reg = er.async_get(hass)
     device_reg = dr.async_get(hass)
@@ -164,7 +199,7 @@ def scan_domain_members(
         if entity_entry.platform == DOMAIN:
             continue
 
-        if entity_entry.hidden_by or entity_entry.disabled_by:
+        if not is_aggregatable_entry(entity_entry):
             continue
 
         entity_id = entity_entry.entity_id
@@ -182,14 +217,22 @@ def scan_domain_members(
             continue
 
         state_obj = hass.states.get(entity_id)
-        if not state_obj:
+        if not state_obj and require_state:
             continue
 
-        # Foreign group exclusion: see docstring above.
-        if ATTR_ENTITY_ID in state_obj.attributes:
+        # Foreign group exclusion: see docstring above. Only checkable when a
+        # state exists (a stateless entity has no `entity_id` attribute yet).
+        if state_obj and ATTR_ENTITY_ID in state_obj.attributes:
             continue
 
-        entity_device_class = state_obj.attributes.get("device_class")
+        if require_state:
+            entity_device_class = state_obj.attributes.get("device_class")
+        else:
+            entity_device_class = (
+                entity_entry.device_class
+                or entity_entry.original_device_class
+                or (state_obj.attributes.get("device_class") if state_obj else None)
+            )
         if device_class is not None and entity_device_class != device_class:
             continue
         if (
@@ -515,7 +558,7 @@ def discover_device_classes(
     for entity_entry in entity_reg.entities.values():
         if entity_entry.domain != domain or entity_entry.platform == DOMAIN:
             continue
-        if entity_entry.hidden_by or entity_entry.disabled_by:
+        if not is_aggregatable_entry(entity_entry):
             continue
         state_obj = hass.states.get(entity_entry.entity_id)
         if not state_obj:

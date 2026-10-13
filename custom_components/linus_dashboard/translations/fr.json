@@ -14,7 +14,8 @@
     "step": {
       "init": {
         "title": "Personnalisation du tableau de bord Linus",
-        "description": "Configurez votre tableau de bord Linus selon vos préférences. Vous pouvez sélectionner des entités météo et d'alarme, exclure certains domaines ou appareils, et personnaliser l'affichage. Pour plus d'informations, consultez la documentation : {docs_url}",
+        "description": "Configurez votre tableau de bord Linus selon vos préférences. Vous pouvez sélectionner des entités météo et d'alarme, exclure certains domaines ou appareils, et personnaliser l'affichage. Pour plus d'informations, consultez la documentation : {docs_url}{dashboards_notice}",
+        "no_dashboards_notice": "Aucun autre dashboard n'a été détecté : l'option des dashboards embarqués n'est donc pas disponible. Créez un autre dashboard Lovelace pour l'activer.",
         "data": {
           "alarm_entity_ids": "Alarmes à afficher",
           "weather_entity": "Entité météo",
@@ -228,6 +229,7 @@
           "state_unlocked": "déverrouillé(s)",
           "state_available": "disponible(s)",
           "average": "Moyenne",
+          "minimum": "Minimum",
           "total": "Total",
           "view_all": "Voir plus",
           "title_light": "Lumières",

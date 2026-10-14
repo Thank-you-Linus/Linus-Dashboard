@@ -48,8 +48,16 @@ run_notify() {
 
 curl_calls() { wc -l < "$CURL_LOG" | tr -d ' '; }
 
+# Every workflow file, whatever its extension (.yml or .yaml)
+shopt -s nullglob
+WF_FILES=("$WORKFLOWS"/*.yml "$WORKFLOWS"/*.yaml)
+shopt -u nullglob
+
+echo "0. workflow files are found"
+[ "${#WF_FILES[@]}" -gt 0 ] && ok "${#WF_FILES[@]} workflow file(s) scanned" || fail "no workflow file found in $WORKFLOWS"
+
 echo "1. every workflow call to notify-discord.sh is a prerelease"
-BAD=$(grep -n 'notify-discord\.sh' "$WORKFLOWS"/*.yml | grep -vE 'notify-discord\.sh[[:space:]]+prerelease([[:space:]]|$)')
+BAD=$(grep -n 'notify-discord\.sh' /dev/null "${WF_FILES[@]}" | grep -vE 'notify-discord\.sh[[:space:]]+prerelease([[:space:]]|$)')
 if [ -z "$BAD" ]; then
     ok "all notify-discord.sh calls use prerelease"
 else
@@ -57,12 +65,23 @@ else
     echo "$BAD" | sed 's/^/         /'
 fi
 
-echo "2. no workflow mentions DISCORD_WEBHOOK_STABLE_URL"
-BAD=$(grep -n 'DISCORD_WEBHOOK_STABLE_URL' "$WORKFLOWS"/*.yml)
+# #annonces is only reachable through its own secret: whatever a workflow posts (notify-discord.sh
+# or a direct curl, like the technical failure notifications), it can only reach DISCORD_WEBHOOK_URL.
+echo "2. workflows use no Discord secret other than DISCORD_WEBHOOK_URL"
+BAD=$(grep -noE 'DISCORD_WEBHOOK_[A-Z_]*' /dev/null "${WF_FILES[@]}" | grep -v ':DISCORD_WEBHOOK_URL$')
 if [ -z "$BAD" ]; then
-    ok "DISCORD_WEBHOOK_STABLE_URL absent from workflows"
+    ok "only DISCORD_WEBHOOK_URL referenced by workflows"
 else
-    fail "DISCORD_WEBHOOK_STABLE_URL still referenced:"
+    fail "another Discord webhook secret is referenced (DISCORD_WEBHOOK_STABLE_URL reaches #annonces):"
+    echo "$BAD" | sed 's/^/         /'
+fi
+
+echo "2b. no hardcoded Discord webhook URL in workflows or scripts"
+BAD=$(git -C "$ROOT" grep -nE 'discord(app)?\.com/api/webhooks' -- .github scripts)
+if [ -z "$BAD" ]; then
+    ok "no hardcoded Discord webhook URL"
+else
+    fail "hardcoded Discord webhook URL found:"
     echo "$BAD" | sed 's/^/         /'
 fi
 

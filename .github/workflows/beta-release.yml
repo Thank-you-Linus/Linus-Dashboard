@@ -116,6 +116,8 @@ jobs:
 
       - name: "Generate release notes"
         id: notes
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           # Must run on HEAD before the bump commit so the range is "last tag..HEAD"
           bash scripts/generate-release-notes.sh --ci
@@ -178,13 +180,20 @@ jobs:
           RELEASE_URL: ${{ steps.release.outputs.url }}
         run: |
           if [ -n "$DISCORD_WEBHOOK_URL" ]; then
-            bash scripts/notify-discord.sh prerelease "$TAG" "$RELEASE_URL" || {
+            if bash scripts/notify-discord.sh prerelease "$TAG" "$RELEASE_URL"; then
+              echo "sent=true" >> "$GITHUB_OUTPUT"
+            else
               echo "⚠️ Discord notification failed, but the release is published"
-              exit 0
-            }
+            fi
           else
             echo "⚠️ Discord webhook not configured, skipping notification"
           fi
+
+      # Proof step: runs (and succeeds) only if the Discord message was really sent.
+      # LOS checks this exact step name to close the release ticket on its own.
+      - name: "Discord notified"
+        if: ${{ steps.discord.outputs.sent == 'true' }}
+        run: echo "Discord notification sent for ${{ steps.version.outputs.tag }}"
 
       - name: "Dry run summary"
         id: dry_summary

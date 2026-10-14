@@ -15,6 +15,12 @@
 #       No hash, no "type(scope):" prefix, no "All Commits" section: the document can be
 #       pasted as-is in the stable announcement Julien writes by hand (#annonces).
 #       Also prints "kept=<n> excluded=<n> untranslated=<n> base=<tag>" on stdout for the workflow summary.
+#       Highlights: when .github/release-highlights/<version>.md exists (<version> = $TAG, else the
+#       package.json version without its pre-release suffix), it opens the note as is — the
+#       user-facing story of the release, written in the repository before the stable button, so
+#       the published body needs no edit. Its images are repository files written "](images/…)":
+#       each must exist (a missing screenshot fails the run, a placeholder is never published) and
+#       is rewritten to its raw.githubusercontent.com URL at HEAD.
 #
 
 set -e
@@ -149,6 +155,24 @@ if [ "$SINCE_STABLE" = "1" ]; then
     KEPT_COUNT=$(printf '%s\n' "$ENTRIES" | grep -c . || true)
     EXCLUDED_COUNT=$((TOTAL_COUNT - KEPT_COUNT))
 
+    # Highlights of this version (see the header): checked and resolved before anything is written.
+    TARGET_VERSION="${TAG:-$(sed -n 's/^[[:space:]]*"version":[[:space:]]*"\([^"-]*\).*/\1/p' package.json | head -1)}"
+    HIGHLIGHTS_FILE="$PROJECT_ROOT/.github/release-highlights/${TARGET_VERSION}.md"
+    HIGHLIGHTS=""
+    if [ -n "$TARGET_VERSION" ] && [ -f "$HIGHLIGHTS_FILE" ]; then
+        MISSING=""
+        for img in $(grep -oE '\]\(images/[^) ]+\)' "$HIGHLIGHTS_FILE" | sed -E 's/^\]\(//; s/\)$//' | sort -u); do
+            [ -f "$PROJECT_ROOT/$img" ] || MISSING="${MISSING} ${img}"
+        done
+        if [ -n "$MISSING" ]; then
+            echo "Missing screenshot(s) for .github/release-highlights/${TARGET_VERSION}.md:${MISSING}" >&2
+            echo "Add the file(s) to the repository, or remove their line from the highlights." >&2
+            exit 1
+        fi
+        RAW_BASE="https://raw.githubusercontent.com/${REPO_SLUG}/$(git rev-parse HEAD)"
+        HIGHLIGHTS=$(sed -E "s#\]\((images/[^) ]+)\)#](${RAW_BASE}/\1)#g" "$HIGHLIGHTS_FILE")
+    fi
+
     # Print one titled list. usage: ci_section "<heading>" "<type: feat|fix|other>" "<column: 2 = EN, 3 = FR>"
     ci_section() {
         local items
@@ -169,6 +193,9 @@ if [ "$SINCE_STABLE" = "1" ]; then
     }
 
     {
+        if [ -n "$HIGHLIGHTS" ]; then
+            printf '%s\n\n---\n\n' "$HIGHLIGHTS"
+        fi
         thanks_block
         echo "## 🇬🇧 English"
         echo ""

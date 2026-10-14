@@ -178,11 +178,13 @@ if [ "$SINCE_STABLE" = "1" ]; then
         while IFS= read -r img; do
             [ -z "$img" ] && continue
             case "$img" in *..*) MISSING="${MISSING} ${img}"; continue ;; esac
-            # In HEAD, not only on disk: the published URL points at HEAD.
-            git cat-file -e "HEAD:$img" 2>/dev/null || MISSING="${MISSING} ${img}"
+            # An image file (png, jpg, gif, webp) committed in HEAD, not only on disk, and not a
+            # directory: the published URL points at that blob.
+            case "$img" in *.png|*.jpg|*.jpeg|*.gif|*.webp) ;; *) MISSING="${MISSING} ${img}"; continue ;; esac
+            [ "$(git cat-file -t "HEAD:$img" 2>/dev/null)" = blob ] || MISSING="${MISSING} ${img}"
         done < <(grep -oE '\]\(images/[^) ]+\)' "$HIGHLIGHTS_FILE" | sed -E 's/^\]\(//; s/\)$//' | sort -u)
         if [ -n "$MISSING" ]; then
-            echo "Missing screenshot(s) for .github/release-highlights/${TARGET_VERSION}.md (not committed in HEAD):${MISSING}" >&2
+            echo "Missing screenshot(s) for .github/release-highlights/${TARGET_VERSION}.md (not an image file committed in HEAD):${MISSING}" >&2
             echo "Commit the file(s), or remove their line from the highlights." >&2
             exit 1
         fi

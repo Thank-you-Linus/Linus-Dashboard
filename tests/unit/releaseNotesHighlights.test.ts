@@ -115,7 +115,18 @@ describe('stable release note — highlights of the version', () => {
     const { run, repo } = makeRepo({ '.github/release-highlights/1.1.0.md': STORY });
     mkdirSync(join(repo, 'images/release/1.1.0'), { recursive: true });
     writeFileSync(join(repo, 'images/release/1.1.0/area.png'), 'png');
-    expect(() => run('1.1.0')).toThrow(/not committed in HEAD/);
+    expect(() => run('1.1.0')).toThrow(/not an image file committed in HEAD/);
+  });
+
+  it('a directory or a non-image file is not a screenshot: the run fails', () => {
+    for (const target of ['images/release/1.1.0', 'images/release/1.1.0/notes.txt']) {
+      const { run } = makeRepo({
+        '.github/release-highlights/1.1.0.md': `## Story\n\n![t](${target})\n`,
+        'images/release/1.1.0/area.png': 'png',
+        'images/release/1.1.0/notes.txt': 'txt',
+      });
+      expect(() => run('1.1.0'), target).toThrow(/not an image file committed in HEAD/);
+    }
   });
 
   it('highlights without image, then the full changelog under its own heading', () => {

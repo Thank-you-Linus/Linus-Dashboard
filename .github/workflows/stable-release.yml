@@ -110,6 +110,7 @@ jobs:
       - name: "Generate release notes"
         id: notes
         env:
+          GH_TOKEN: ${{ github.token }}
           TAG: ${{ steps.version.outputs.tag }}
         run: |
           # Must run on HEAD before the bump commit. --since-stable: base = last stable tag,

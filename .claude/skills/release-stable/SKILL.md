@@ -195,10 +195,10 @@ User options:
 - Runs smoke tests
 - Creates ZIP
 - Creates stable release
-- Sends Discord notification (public announcement)
 - Cleans up RELEASE_NOTES.md
 
-**Manual step:**
+**Manual step (by Julien, no automatic announcement for a stable):**
+- Post the announcement in Discord #annonces
 - Open forum threads: `npm run forums:open`
 - Post release announcement (templates provided)
 

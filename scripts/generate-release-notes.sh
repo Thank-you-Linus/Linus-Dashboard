@@ -13,7 +13,7 @@
 #       new features / fixes / other. Only product changes are kept (src and
 #       custom_components, minus the generated www bundle and the manifest version bump).
 #       No hash, no "type(scope):" prefix, no "All Commits" section: the document can be
-#       inserted as-is in the changelog fields of .github/templates/discord-release.md.
+#       pasted as-is in the stable announcement Julien writes by hand (#annonces).
 #       Also prints "kept=<n> excluded=<n> untranslated=<n> base=<tag>" on stdout for the workflow summary.
 #
 

@@ -165,7 +165,9 @@ if [ "$SINCE_STABLE" = "1" ]; then
         BAD=$( { grep -oE '!\[[^]]*\]\([^)]*\)' "$HIGHLIGHTS_FILE" | sed -E 's/^!\[[^]]*\]\((.*)\)$/\1/'
                  grep -oiE '<img[^>]*>' "$HIGHLIGHTS_FILE"; } |
             grep -vE '^images/[A-Za-z0-9_./-]+$' || true)
-        BAD=$(printf '%s\n' "$BAD" "$(grep -oE '\]\(images/[^)]*\.\.[^)]*\)' "$HIGHLIGHTS_FILE" || true)" | grep . || true)
+        # Reference-style images ("![t][id]", "![t][]", "![t]" + "[id]: url") are never rewritten: refused.
+        REFS=$(grep -oE '!\[[^]]*\]([^(]|$)' "$HIGHLIGHTS_FILE" || true)
+        BAD=$(printf '%s\n' "$BAD" "$(grep -oE '\]\(images/[^)]*\.\.[^)]*\)' "$HIGHLIGHTS_FILE" || true)" "$REFS" | grep . || true)
         if [ -n "$BAD" ]; then
             echo "Unsupported image reference(s) in .github/release-highlights/${TARGET_VERSION}.md:" >&2
             printf '%s\n' "$BAD" >&2

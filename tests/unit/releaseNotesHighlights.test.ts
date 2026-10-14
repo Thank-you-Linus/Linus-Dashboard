@@ -99,6 +99,9 @@ describe('stable release note — highlights of the version', () => {
       '![t](images/release/1.1.0/*.png)',
       '<img src="images/release/1.1.0/area.png">',
       '![t](docs/area.png)',
+      '![t][shot]\n\n[shot]: images/release/1.1.0/area.png',
+      '![t][]\n\n[t]: images/release/1.1.0/area.png',
+      '![t]\n\n[t]: images/release/1.1.0/area.png',
     ]) {
       const { run } = makeRepo({
         '.github/release-highlights/1.1.0.md': `## Story\n\n${bad}\n`,

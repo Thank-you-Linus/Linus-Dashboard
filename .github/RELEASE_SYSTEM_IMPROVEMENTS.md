@@ -23,7 +23,7 @@
 - ✅ Validate it's not a pre-release
 - ✅ Linting and type checking before build
 - ✅ Build output verification
-- ✅ Discord notification for stable releases
+- ✅ No automatic Discord announcement for stable releases (Julien announces them by hand)
 - ✅ Better error handling
 
 ### 3. New Scripts

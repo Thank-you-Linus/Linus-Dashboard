@@ -282,8 +282,8 @@ says how many (`untranslated`): add them to the file before the real run. Previe
 latest tag, the current version is already stable (a hotfix goes through a beta first), the stable tag
 already exists on `origin`.
 
-**No automatic announcement.** Nothing is sent to Discord. After publication, announce by hand on
-Discord and with `npm run forums:open`. The release body can be edited on GitHub after publication
+**No automatic announcement.** Nothing is sent to Discord. After publication, Julien announces it by hand
+on Discord (#annonces) and with `npm run forums:open`. The release body can be edited on GitHub after publication
 (Releases -> Edit) if the note needs rewording.
 
 **Rollback.** If the run fails after the push (the summary says "the tag already exists on origin"),
@@ -395,7 +395,8 @@ GitHub Actions will automatically:
 3. ✅ Run smoke tests
 4. ✅ Create ZIP archive
 5. ✅ Upload to release
-6. ✅ Send Discord notification to public channel
+
+No Discord announcement is sent for a stable release: Julien announces it by hand (#annonces, then Step 9).
 
 **View the workflow**: `.github/workflows/release.yml`
 
@@ -459,10 +460,11 @@ Verify in HACS:
 3. Build project
 4. Create ZIP archive
 5. Upload to release
-6. Notify Discord (public channel)
+
+No automatic announcement: Julien announces a stable release by hand (#annonces + `npm run forums:open`).
 
 **Secrets required**:
-- `DISCORD_WEBHOOK_URL` (optional for notifications)
+- `DISCORD_WEBHOOK_URL` (optional, only for the failure notification)
 
 ---
 

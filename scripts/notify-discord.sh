@@ -40,12 +40,13 @@ echo -e "${BLUE}   URL: ${RELEASE_URL}${NC}\n"
 # Truncate $MESSAGE to the Discord limit and POST it to $WEBHOOK_URL (exits 1 on failure).
 # Body left unindented: the truncation notice is a multi-line string, indenting it would change it.
 send_to_discord() {
-# Truncate if too long (Discord limit is 2000 chars)
-if [ ${#MESSAGE} -gt 1900 ]; then
-    MESSAGE="${MESSAGE:0:1900}
+# Truncate if too long (Discord limit is 2000 chars): the notice and the URL fit in the budget too.
+TRUNC_NOTICE="
 
 _Message truncated. See full release notes at:_
 $RELEASE_URL"
+if [ ${#MESSAGE} -gt 1900 ]; then
+    MESSAGE="${MESSAGE:0:$((1900 - ${#TRUNC_NOTICE}))}${TRUNC_NOTICE}"
 fi
 
 # Create JSON payload

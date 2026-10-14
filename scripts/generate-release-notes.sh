@@ -15,6 +15,12 @@
 #       No hash, no "type(scope):" prefix, no "All Commits" section: the document can be
 #       pasted as-is in the stable announcement Julien writes by hand (#annonces).
 #       Also prints "kept=<n> excluded=<n> untranslated=<n> base=<tag>" on stdout for the workflow summary.
+#       Highlights: when .github/release-highlights/<version>.md exists (<version> = $TAG, else the
+#       package.json version without its pre-release suffix), it opens the note as is — the
+#       user-facing story of the release, written in the repository before the stable button, so
+#       the published body needs no edit. Its images are repository files written "](images/…)":
+#       each must exist (a missing screenshot fails the run, a placeholder is never published) and
+#       is rewritten to its raw.githubusercontent.com URL at HEAD.
 #
 
 set -e
@@ -149,6 +155,43 @@ if [ "$SINCE_STABLE" = "1" ]; then
     KEPT_COUNT=$(printf '%s\n' "$ENTRIES" | grep -c . || true)
     EXCLUDED_COUNT=$((TOTAL_COUNT - KEPT_COUNT))
 
+    # Highlights of this version (see the header): checked and resolved before anything is written.
+    TARGET_VERSION="${TAG:-$(sed -n 's/^[[:space:]]*"version":[[:space:]]*"\([^"-]*\).*/\1/p' package.json | head -1)}"
+    HIGHLIGHTS_FILE="$PROJECT_ROOT/.github/release-highlights/${TARGET_VERSION}.md"
+    HIGHLIGHTS=""
+    if [ -n "$TARGET_VERSION" ] && [ -f "$HIGHLIGHTS_FILE" ]; then
+        # Only "](images/<path>)" is supported (no title, no space, no ".."): every other image
+        # form would be published as a broken relative link, so it fails the run too.
+        BAD=$( { grep -oE '!\[[^]]*\]\([^)]*\)' "$HIGHLIGHTS_FILE" | sed -E 's/^!\[[^]]*\]\((.*)\)$/\1/'
+                 grep -oiE '<img[^>]*>' "$HIGHLIGHTS_FILE"; } |
+            grep -vE '^images/[A-Za-z0-9_./-]+$' || true)
+        # Reference-style images ("![t][id]", "![t][]", "![t]" + "[id]: url") are never rewritten: refused.
+        REFS=$(grep -oE '!\[[^]]*\]([^(]|$)' "$HIGHLIGHTS_FILE" || true)
+        BAD=$(printf '%s\n' "$BAD" "$(grep -oE '\]\(images/[^)]*\.\.[^)]*\)' "$HIGHLIGHTS_FILE" || true)" "$REFS" | grep . || true)
+        if [ -n "$BAD" ]; then
+            echo "Unsupported image reference(s) in .github/release-highlights/${TARGET_VERSION}.md:" >&2
+            printf '%s\n' "$BAD" >&2
+            echo "Write images as ](images/<path>), without title, spaces or '..'." >&2
+            exit 1
+        fi
+        MISSING=""
+        while IFS= read -r img; do
+            [ -z "$img" ] && continue
+            case "$img" in *..*) MISSING="${MISSING} ${img}"; continue ;; esac
+            # An image file (png, jpg, gif, webp) committed in HEAD, not only on disk, and not a
+            # directory: the published URL points at that blob.
+            case "$img" in *.png|*.jpg|*.jpeg|*.gif|*.webp) ;; *) MISSING="${MISSING} ${img}"; continue ;; esac
+            [ "$(git cat-file -t "HEAD:$img" 2>/dev/null)" = blob ] || MISSING="${MISSING} ${img}"
+        done < <(grep -oE '\]\(images/[^) ]+\)' "$HIGHLIGHTS_FILE" | sed -E 's/^\]\(//; s/\)$//' | sort -u)
+        if [ -n "$MISSING" ]; then
+            echo "Missing screenshot(s) for .github/release-highlights/${TARGET_VERSION}.md (not an image file committed in HEAD):${MISSING}" >&2
+            echo "Commit the file(s), or remove their line from the highlights." >&2
+            exit 1
+        fi
+        RAW_BASE="https://raw.githubusercontent.com/${REPO_SLUG}/$(git rev-parse HEAD)"
+        HIGHLIGHTS=$(sed -E "s#\]\((images/[^) ]+)\)#](${RAW_BASE}/\1)#g" "$HIGHLIGHTS_FILE")
+    fi
+
     # Print one titled list. usage: ci_section "<heading>" "<type: feat|fix|other>" "<column: 2 = EN, 3 = FR>"
     ci_section() {
         local items
@@ -169,6 +212,9 @@ if [ "$SINCE_STABLE" = "1" ]; then
     }
 
     {
+        if [ -n "$HIGHLIGHTS" ]; then
+            printf '%s\n\n---\n\n# 📋 All changes since %s · Tous les changements depuis %s\n\n' "$HIGHLIGHTS" "$BASE_TAG" "$BASE_TAG"
+        fi
         thanks_block
         echo "## 🇬🇧 English"
         echo ""

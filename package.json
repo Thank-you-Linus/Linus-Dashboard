@@ -81,7 +81,7 @@
     "bump:beta": "bash scripts/bump-version.sh beta auto --files-only",
     "bump:alpha": "bash scripts/bump-version.sh alpha auto --files-only",
     "bump:release": "bash scripts/bump-version.sh release auto --files-only",
-    "test:release": "bash tests/release/generate-changelog.test.sh",
+    "test:release": "bash tests/release/generate-changelog.test.sh && bash tests/release/stable-announcement.test.sh",
     "release:check": "bash scripts/check-release-ready.sh",
     "release:validate": "bash scripts/validate-release-notes.sh",
     "release:changelog": "bash scripts/generate-changelog.sh",

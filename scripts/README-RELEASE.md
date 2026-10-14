@@ -46,7 +46,7 @@ bash scripts/create-release.sh
 - Tests de validation
 - Création du ZIP
 - Publication de la release
-- Notification Discord
+- Notification Discord (bêta uniquement : une stable est annoncée à la main par Julien)
 - Nettoyage automatique
 
 ## Release from GitHub

@@ -110,29 +110,11 @@ jobs:
           prerelease: false
           make_latest: true
 
-      # 11. Send Discord notification for stable release
-      - name: "Send Discord Notification"
-        if: success()
-        continue-on-error: true
-        env:
-          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          DISCORD_WEBHOOK_STABLE_URL: ${{ secrets.DISCORD_WEBHOOK_STABLE_URL }}
-        run: |
-          if [ -n "$DISCORD_WEBHOOK_STABLE_URL" ] || [ -n "$DISCORD_WEBHOOK_URL" ]; then
-            TAG_NAME="${{ steps.get_tag.outputs.tag_name }}"
-            RELEASE_URL="${{ steps.get_tag.outputs.release_url }}"
-            bash scripts/notify-discord.sh release "$TAG_NAME" "$RELEASE_URL" || {
-              echo "⚠️ Discord notification failed, but release succeeded"
-              exit 0
-            }
-          else
-            echo "⚠️ Discord webhook not configured, skipping notification"
-          fi
-
       # 12. Reminder to post on forums
       - name: "Forum Posting Reminder"
         if: success()
         run: |
+          echo "No automatic announcement for a stable release: Julien announces it by hand (#annonces + \`npm run forums:open\`)" >> "$GITHUB_STEP_SUMMARY"
           echo "📢 Release published successfully!"
           echo "📝 Don't forget to announce on forums:"
           echo "   - Run: npm run forums:open"

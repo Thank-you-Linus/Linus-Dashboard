@@ -1,14 +1,15 @@
 # Discord Webhooks Configuration Guide
 
-**Problem**: Beta releases are being posted to the stable release channel (#annonces) instead of the beta testers channel.
-
-**Root Cause**: The GitHub Actions secrets are not configured correctly to distinguish between beta and stable release channels.
+**Scope**: automatic Discord announcements of beta releases. Stable releases are announced by hand by
+Julien in #annonces (no automatic announcement).
 
 ---
 
 ## Required Configuration
 
-You need **TWO separate Discord webhook URLs** configured in your GitHub repository secrets:
+Only **one** Discord webhook URL is used by the release workflows: `DISCORD_WEBHOOK_URL` (betas).
+Stable releases are never announced automatically: Julien announces them by hand in #annonces
+(+ `npm run forums:open`).
 
 ### 1. `DISCORD_WEBHOOK_URL` (Beta/Pre-releases)
 
@@ -28,23 +29,10 @@ You need **TWO separate Discord webhook URLs** configured in your GitHub reposit
    - Name: `DISCORD_WEBHOOK_URL`
    - Value: Paste the webhook URL
 
-### 2. `DISCORD_WEBHOOK_STABLE_URL` (Stable Releases)
+### 2. `DISCORD_WEBHOOK_STABLE_URL` — secret no longer used
 
-**Purpose**: Receives notifications for **stable releases only**
-
-**Target Channel**: `#annonces` or similar public announcement channel
-
-**How to create:**
-1. Go to your Discord server
-2. Navigate to the announcements channel (e.g., `#annonces`)
-3. Right-click the channel → Edit Channel → Integrations → Webhooks
-4. Create a new webhook (name it "Linus Dashboard Stable Releases")
-5. Copy the webhook URL
-6. Add it to GitHub:
-   - Go to: `https://github.com/Thank-you-Linus/Linus-Dashboard/settings/secrets/actions`
-   - Click "New repository secret"
-   - Name: `DISCORD_WEBHOOK_STABLE_URL`
-   - Value: Paste the webhook URL
+No workflow and no script reads it anymore: stable releases are announced by hand by Julien in
+#annonces. The secret can be deleted from the repository settings.
 
 ---
 
@@ -65,33 +53,29 @@ bash scripts/notify-discord.sh prerelease "1.4.1-beta.3" "<release_url>"
 - Uses template: `.github/templates/discord-prerelease.md`
 - Message format: "🚨 **Beta Release 1.4.1-beta.3** 🚨"
 
-### Stable Release (Tag: `1.4.1`)
+### Stable Release (Tag) — secret no longer used
 
-**Workflow**: `.github/workflows/release.yml`
-
-**Script call**:
-```bash
-bash scripts/notify-discord.sh release "1.4.1" "<release_url>"
-```
+**Workflows**: `.github/workflows/release.yml`, `.github/workflows/stable-release.yml`
 
 **Behavior**:
-- Uses `DISCORD_WEBHOOK_STABLE_URL` secret
-- Posts to announcements channel
-- Uses template: `.github/templates/discord-release.md`
-- Message format: "🎉 **New Stable Release | Nouvelle Version Stable** 🎉"
+- No Discord announcement is sent, whatever the gesture (Stable Release (manual) button, tag pushed by
+  hand, release published or edited in the GitHub UI)
+- `bash scripts/notify-discord.sh release ...` refuses with exit code 2
+  ("Stable releases are announced by hand by Julien — refusing")
+- Julien announces the stable release by hand in #annonces, then `npm run forums:open`
+- `release.yml` only posts a technical failure notification (on `DISCORD_WEBHOOK_URL`) if the release fails
 
 ---
 
 ## Verification
 
-After configuring both secrets, you can verify the setup:
+After configuring the secret, you can verify the setup:
 
 ### Check GitHub Secrets
 
 1. Go to: `https://github.com/Thank-you-Linus/Linus-Dashboard/settings/secrets/actions`
-2. Verify both secrets exist:
+2. Verify the secret exists:
    - ✅ `DISCORD_WEBHOOK_URL`
-   - ✅ `DISCORD_WEBHOOK_STABLE_URL`
 
 ### Test Beta Release
 
@@ -105,29 +89,9 @@ After configuring both secrets, you can verify the setup:
    ```
 5. Verify the message appears in your beta testers channel
 
-### Test Stable Release (when ready)
+### Stable Release
 
-1. Create a stable tag: `git tag 1.4.1`
-2. Push the tag: `git push --tags`
-3. Check the GitHub Actions workflow logs
-4. Look for this line in the "Send Discord Notification" step:
-   ```
-   ✓ Using stable release webhook → #annonces channel
-   📄 Using template: discord-release.md
-   ```
-5. Verify the message appears in your announcements channel
-
----
-
-## Current Issue
-
-**Your current setup** likely has:
-- ✅ `DISCORD_WEBHOOK_URL` configured
-- ❌ `DISCORD_WEBHOOK_STABLE_URL` **NOT configured** or pointing to the **same channel**
-
-**Result**: Both beta and stable releases go to the same channel (likely #annonces)
-
-**Solution**: Create the `DISCORD_WEBHOOK_STABLE_URL` secret pointing to the correct stable channel, and update `DISCORD_WEBHOOK_URL` to point to the beta testers channel.
+Nothing to test: no announcement is sent for a stable release. Julien posts it by hand in #annonces.
 
 ---
 
@@ -146,21 +110,14 @@ The script now includes better logging:
 📄 Using template: discord-prerelease.md
 ```
 
-**For Stable Releases**:
+**For Stable Releases** (refused, no Discord call):
 ```
 📢 Preparing Discord notification...
    Type: release
    Version: 1.4.1
    URL: https://github.com/.../releases/tag/1.4.1
 
-✓ Using stable release webhook → #annonces channel
-📄 Using template: discord-release.md
-```
-
-**Warning if fallback is used**:
-```
-⚠️  DISCORD_WEBHOOK_STABLE_URL not set, using DISCORD_WEBHOOK_URL as fallback
-⚠️  This may post to the wrong channel!
+❌ Stable releases are announced by hand by Julien — refusing
 ```
 
 ---
@@ -169,8 +126,6 @@ The script now includes better logging:
 
 - [ ] Create beta testers webhook in Discord
 - [ ] Add/update `DISCORD_WEBHOOK_URL` secret in GitHub (point to beta channel)
-- [ ] Create announcements webhook in Discord
-- [ ] Add `DISCORD_WEBHOOK_STABLE_URL` secret in GitHub (point to #annonces)
 - [ ] Test with next beta release
 - [ ] Verify logs show correct webhook selection
 - [ ] Confirm messages appear in correct channels
@@ -183,7 +138,7 @@ If you continue to have issues:
 1. Check the GitHub Actions workflow logs for the "Send Discord Notification" step
 2. Look for the webhook selection messages
 3. Verify the template being used matches the release type
-4. Ensure both webhook URLs are valid and point to different channels
+4. Ensure `DISCORD_WEBHOOK_URL` is valid and points to the beta testers channel
 
 ---
 

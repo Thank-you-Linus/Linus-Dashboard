@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 #
-# Send release notification to Discord
-# Usage: 
-#   ./notify-discord.sh [prerelease|release] <version> <release_url>
-#   Or called automatically by GitHub Actions
+# Send pre-release (beta) notification to Discord
+# Usage:
+#   ./notify-discord.sh prerelease <version> <release_url>
+#   Or called automatically by the beta GitHub Actions workflows.
+# Stable releases are never announced by this script: Julien announces them by hand
+# (#annonces + `npm run forums:open`). Any type other than prerelease exits with code 2.
 #
 
 set -e
@@ -29,41 +31,24 @@ echo -e "${BLUE}   Type: ${RELEASE_TYPE}${NC}"
 echo -e "${BLUE}   Version: ${VERSION}${NC}"
 echo -e "${BLUE}   URL: ${RELEASE_URL}${NC}\n"
 
-# Select webhook URL based on release type
-if [[ "$RELEASE_TYPE" == "release" ]]; then
-    # STABLE RELEASE: Use stable webhook or fail
-    if [ -n "$DISCORD_WEBHOOK_STABLE_URL" ]; then
-        WEBHOOK_URL="$DISCORD_WEBHOOK_STABLE_URL"
-        echo -e "${GREEN}✓ Using stable release webhook → #annonces channel${NC}"
-    elif [ -n "$DISCORD_WEBHOOK_URL" ]; then
-        # Fallback to default webhook with warning
-        WEBHOOK_URL="$DISCORD_WEBHOOK_URL"
-        echo -e "${YELLOW}⚠️  DISCORD_WEBHOOK_STABLE_URL not set, using DISCORD_WEBHOOK_URL as fallback${NC}"
-        echo -e "${YELLOW}⚠️  This may post to the wrong channel!${NC}"
-    else
-        echo -e "${RED}❌ Error: No Discord webhook URL configured for stable release${NC}"
-        exit 1
-    fi
-else
-    # PRE-RELEASE (BETA): Use default webhook for beta testers
-    if [ -n "$DISCORD_WEBHOOK_URL" ]; then
-        WEBHOOK_URL="$DISCORD_WEBHOOK_URL"
-        echo -e "${GREEN}✓ Using pre-release webhook → beta testers channel${NC}"
-    else
-        echo -e "${RED}❌ Error: DISCORD_WEBHOOK_URL not configured for pre-release${NC}"
-        echo -e "${YELLOW}💡 Set DISCORD_WEBHOOK_URL to point to your beta testers channel${NC}"
-        exit 1
-    fi
+# Only pre-releases are announced automatically; refuse anything else before reading webhooks
+if [[ "$RELEASE_TYPE" != "prerelease" ]]; then
+    echo -e "${RED}❌ Stable releases are announced by hand by Julien — refusing${NC}"
+    exit 2
 fi
 
-# Select template based on release type
-if [[ "$RELEASE_TYPE" == "prerelease" ]]; then
-    TEMPLATE_FILE=".github/templates/discord-prerelease.md"
-    echo -e "${BLUE}📄 Using template: discord-prerelease.md${NC}\n"
+# PRE-RELEASE (BETA): Use default webhook for beta testers
+if [ -n "$DISCORD_WEBHOOK_URL" ]; then
+    WEBHOOK_URL="$DISCORD_WEBHOOK_URL"
+    echo -e "${GREEN}✓ Using pre-release webhook → beta testers channel${NC}"
 else
-    TEMPLATE_FILE=".github/templates/discord-release.md"
-    echo -e "${BLUE}📄 Using template: discord-release.md${NC}\n"
+    echo -e "${RED}❌ Error: DISCORD_WEBHOOK_URL not configured for pre-release${NC}"
+    echo -e "${YELLOW}💡 Set DISCORD_WEBHOOK_URL to point to your beta testers channel${NC}"
+    exit 1
 fi
+
+TEMPLATE_FILE=".github/templates/discord-prerelease.md"
+echo -e "${BLUE}📄 Using template: discord-prerelease.md${NC}\n"
 
 if [ ! -f "$TEMPLATE_FILE" ]; then
     echo -e "${RED}❌ Error: Template file not found: $TEMPLATE_FILE${NC}"

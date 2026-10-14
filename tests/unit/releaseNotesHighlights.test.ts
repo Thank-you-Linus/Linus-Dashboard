@@ -91,6 +91,36 @@ describe('stable release note — highlights of the version', () => {
     expect(() => run('1.1.0')).toThrow(/Missing screenshot\(s\).*images\/release\/1\.1\.0\/area\.png/s);
   });
 
+  it('an image in any other form fails the run: it would be published as a broken link', () => {
+    for (const bad of [
+      '![t](images/release/1.1.0/area.png "Title")',
+      '![t](./images/release/1.1.0/area.png)',
+      '![t](images/release/../../package.json)',
+      '![t](images/release/1.1.0/*.png)',
+      '<img src="images/release/1.1.0/area.png">',
+      '![t](docs/area.png)',
+    ]) {
+      const { run } = makeRepo({
+        '.github/release-highlights/1.1.0.md': `## Story\n\n${bad}\n`,
+        'images/release/1.1.0/area.png': 'png',
+      });
+      expect(() => run('1.1.0'), bad).toThrow(/Unsupported image reference/);
+    }
+  });
+
+  it('a screenshot on disk but not committed fails the run: the URL points at HEAD', () => {
+    const { run, repo } = makeRepo({ '.github/release-highlights/1.1.0.md': STORY });
+    mkdirSync(join(repo, 'images/release/1.1.0'), { recursive: true });
+    writeFileSync(join(repo, 'images/release/1.1.0/area.png'), 'png');
+    expect(() => run('1.1.0')).toThrow(/not committed in HEAD/);
+  });
+
+  it('highlights without image, then the full changelog under its own heading', () => {
+    const { notes } = makeRepo({ '.github/release-highlights/1.1.0.md': '## 🎉 Big news\n' });
+    const n = notes('1.1.0');
+    expect(n.startsWith('## 🎉 Big news\n\n---\n\n# 📋 All changes since 1.0.0 · Tous les changements depuis 1.0.0\n\n## 🇬🇧 English\n')).toBe(true);
+  });
+
   it('highlights of another version, or none: the note is unchanged', () => {
     const { notes } = makeRepo({ '.github/release-highlights/9.9.9.md': STORY });
     const n = notes('1.1.0');

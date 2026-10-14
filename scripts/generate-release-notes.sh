@@ -160,13 +160,28 @@ if [ "$SINCE_STABLE" = "1" ]; then
     HIGHLIGHTS_FILE="$PROJECT_ROOT/.github/release-highlights/${TARGET_VERSION}.md"
     HIGHLIGHTS=""
     if [ -n "$TARGET_VERSION" ] && [ -f "$HIGHLIGHTS_FILE" ]; then
+        # Only "](images/<path>)" is supported (no title, no space, no ".."): every other image
+        # form would be published as a broken relative link, so it fails the run too.
+        BAD=$( { grep -oE '!\[[^]]*\]\([^)]*\)' "$HIGHLIGHTS_FILE" | sed -E 's/^!\[[^]]*\]\((.*)\)$/\1/'
+                 grep -oiE '<img[^>]*>' "$HIGHLIGHTS_FILE"; } |
+            grep -vE '^images/[A-Za-z0-9_./-]+$' || true)
+        BAD=$(printf '%s\n' "$BAD" "$(grep -oE '\]\(images/[^)]*\.\.[^)]*\)' "$HIGHLIGHTS_FILE" || true)" | grep . || true)
+        if [ -n "$BAD" ]; then
+            echo "Unsupported image reference(s) in .github/release-highlights/${TARGET_VERSION}.md:" >&2
+            printf '%s\n' "$BAD" >&2
+            echo "Write images as ](images/<path>), without title, spaces or '..'." >&2
+            exit 1
+        fi
         MISSING=""
-        for img in $(grep -oE '\]\(images/[^) ]+\)' "$HIGHLIGHTS_FILE" | sed -E 's/^\]\(//; s/\)$//' | sort -u); do
-            [ -f "$PROJECT_ROOT/$img" ] || MISSING="${MISSING} ${img}"
-        done
+        while IFS= read -r img; do
+            [ -z "$img" ] && continue
+            case "$img" in *..*) MISSING="${MISSING} ${img}"; continue ;; esac
+            # In HEAD, not only on disk: the published URL points at HEAD.
+            git cat-file -e "HEAD:$img" 2>/dev/null || MISSING="${MISSING} ${img}"
+        done < <(grep -oE '\]\(images/[^) ]+\)' "$HIGHLIGHTS_FILE" | sed -E 's/^\]\(//; s/\)$//' | sort -u)
         if [ -n "$MISSING" ]; then
-            echo "Missing screenshot(s) for .github/release-highlights/${TARGET_VERSION}.md:${MISSING}" >&2
-            echo "Add the file(s) to the repository, or remove their line from the highlights." >&2
+            echo "Missing screenshot(s) for .github/release-highlights/${TARGET_VERSION}.md (not committed in HEAD):${MISSING}" >&2
+            echo "Commit the file(s), or remove their line from the highlights." >&2
             exit 1
         fi
         RAW_BASE="https://raw.githubusercontent.com/${REPO_SLUG}/$(git rev-parse HEAD)"
@@ -194,7 +209,7 @@ if [ "$SINCE_STABLE" = "1" ]; then
 
     {
         if [ -n "$HIGHLIGHTS" ]; then
-            printf '%s\n\n---\n\n' "$HIGHLIGHTS"
+            printf '%s\n\n---\n\n# 📋 All changes since %s · Tous les changements depuis %s\n\n' "$HIGHLIGHTS" "$BASE_TAG" "$BASE_TAG"
         fi
         thanks_block
         echo "## 🇬🇧 English"

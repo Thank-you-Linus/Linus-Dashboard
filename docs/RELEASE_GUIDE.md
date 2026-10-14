@@ -278,13 +278,23 @@ existed in a beta). A commit missing from that file keeps its raw subject in bot
 says how many (`untranslated`): add them to the file before the real run. Preview it locally with
 `bash scripts/generate-release-notes.sh --ci --since-stable` (writes `RELEASE_NOTES.md`; do not commit it).
 
+**Highlights.** The note published by the stable button needs no edit: when
+`.github/release-highlights/<version>.md` exists (for example `2.0.0.md`), it opens the note as is — the
+user-facing story of the release (headline feature, screenshots, what to know when updating), EN and FR —
+followed by "All changes since <last stable>" and the generated lists. Screenshots are repository files
+(`images/release/<version>/…`), written `![alt](images/<path>)` with no title, space or `..`; the script
+rewrites them to `raw.githubusercontent.com` URLs at the commit being released. A screenshot that is not
+committed, or an image written any other way, **fails the "Generate release notes" step** (the error is in
+the step log), so a placeholder is never published. Only the stable uses it; betas are unchanged. Preview
+with `TAG=<version> bash scripts/generate-release-notes.sh --ci --since-stable`.
+
 **Guards** (the workflow stops before any push): not on `main` (real run), `package.json` is not the
 latest tag, the current version is already stable (a hotfix goes through a beta first), the stable tag
 already exists on `origin`.
 
 **No automatic announcement.** Nothing is sent to Discord. After publication, Julien announces it by hand
-on Discord (#annonces) and with `npm run forums:open`. The release body can be edited on GitHub after publication
-(Releases -> Edit) if the note needs rewording.
+on Discord (#annonces) and with `npm run forums:open`. The release body can still be edited on GitHub after publication
+(Releases -> Edit), but the highlights file is the place for the wording: it ships with the button.
 
 **Rollback.** If the run fails after the push (the summary says "the tag already exists on origin"),
 delete the tag AND the partial release, and revert the bump commit on `main` (see

@@ -17,8 +17,10 @@ bash scripts/create-prerelease.sh alpha
 ### Pour créer une release stable
 
 Voie recommandée : le bouton GitHub **Stable Release (manual)** (voir « Stable Release (GitHub
-button) » dans `docs/RELEASE_GUIDE.md`, avec un `dry_run` pour prévisualiser la note). Le script
-ci-dessous reste la voie de secours :
+button) » dans `docs/RELEASE_GUIDE.md`, avec un `dry_run` pour prévisualiser la note). La note publiée
+s'ouvre sur `.github/release-highlights/<version>.md` s'il existe (récit de la version, captures
+`![…](images/<chemin>)` commitées, sinon l'étape « Generate release notes » échoue) : aucune
+retouche du corps après publication. Le script ci-dessous reste la voie de secours :
 
 ```bash
 bash scripts/create-release.sh

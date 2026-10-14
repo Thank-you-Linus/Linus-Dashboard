@@ -1,11 +1,17 @@
 #!/usr/bin/env bash
 #
-# Send pre-release (beta) notification to Discord
+# Send a release notification to Discord
 # Usage:
-#   ./notify-discord.sh prerelease <version> <release_url>
-#   Or called automatically by the beta GitHub Actions workflows.
-# Stable releases are never announced by this script: Julien announces them by hand
-# (#annonces + `npm run forums:open`). Any type other than prerelease exits with code 2.
+#   ./notify-discord.sh prerelease <version> <release_url>   # beta → beta testers channel
+#   ./notify-discord.sh release <X.Y.Z> <release_url>        # stable → #annonces
+#   Or called automatically by the GitHub Actions workflows:
+#   - prerelease: beta-release.yml, prerelease.yml (DISCORD_WEBHOOK_URL)
+#   - release: stable-release.yml right after the stable is published, and the manual catch-up
+#     announce-stable.yml (DISCORD_WEBHOOK_STABLE_URL only, never the beta channel)
+# A stable message is .github/release-highlights/<version>.discord.md when it exists (curated text),
+# else the generic template .github/templates/discord-release.md; {{VERSION}} and {{RELEASE_URL}}
+# are replaced. Forums (HA, HACF) stay manual: `npm run forums:open`.
+# Any other type, or a stable version that is not X.Y.Z, exits with code 2 without calling Discord.
 #
 
 set -e
@@ -31,10 +37,84 @@ echo -e "${BLUE}   Type: ${RELEASE_TYPE}${NC}"
 echo -e "${BLUE}   Version: ${VERSION}${NC}"
 echo -e "${BLUE}   URL: ${RELEASE_URL}${NC}\n"
 
-# Only pre-releases are announced automatically; refuse anything else before reading webhooks
-if [[ "$RELEASE_TYPE" != "prerelease" ]]; then
-    echo -e "${RED}❌ Stable releases are announced by hand by Julien — refusing${NC}"
+# Truncate $MESSAGE to the Discord limit and POST it to $WEBHOOK_URL (exits 1 on failure).
+# Body left unindented: the truncation notice is a multi-line string, indenting it would change it.
+send_to_discord() {
+# Truncate if too long (Discord limit is 2000 chars)
+if [ ${#MESSAGE} -gt 1900 ]; then
+    MESSAGE="${MESSAGE:0:1900}
+
+_Message truncated. See full release notes at:_
+$RELEASE_URL"
+fi
+
+# Create JSON payload
+JSON_PAYLOAD=$(jq -n \
+    --arg content "$MESSAGE" \
+    '{content: $content}')
+
+echo -e "${BLUE}📤 Sending to Discord...${NC}\n"
+
+# Send to Discord
+RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "$WEBHOOK_URL" \
+    -H "Content-Type: application/json" \
+    -d "$JSON_PAYLOAD")
+
+HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+RESPONSE_BODY=$(echo "$RESPONSE" | head -n-1)
+
+if [ "$HTTP_CODE" -eq 204 ] || [ "$HTTP_CODE" -eq 200 ]; then
+    echo -e "${GREEN}✅ Discord notification sent successfully!${NC}"
+    echo -e "${BLUE}   Status code: $HTTP_CODE${NC}\n"
+else
+    echo -e "${RED}❌ Failed to send Discord notification${NC}"
+    echo -e "${RED}   Status code: $HTTP_CODE${NC}"
+    echo -e "${RED}   Response: $RESPONSE_BODY${NC}\n"
+    exit 1
+fi
+
+echo -e "${GREEN}🎉 Done!${NC}"
+}
+
+# Only prerelease (beta) and release (stable) exist; refuse anything else before reading webhooks
+if [[ "$RELEASE_TYPE" != "prerelease" && "$RELEASE_TYPE" != "release" ]]; then
+    echo -e "${RED}❌ Unknown release type: ${RELEASE_TYPE} (expected prerelease or release) — refusing${NC}"
     exit 2
+fi
+
+# STABLE RELEASE: #annonces only, through its own webhook (never the beta testers channel)
+if [[ "$RELEASE_TYPE" == "release" ]]; then
+    if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+        echo -e "${RED}❌ A stable release is X.Y.Z (got ${VERSION}) — refusing${NC}"
+        exit 2
+    fi
+    if [ -n "$DISCORD_WEBHOOK_STABLE_URL" ]; then
+        WEBHOOK_URL="$DISCORD_WEBHOOK_STABLE_URL"
+        echo -e "${GREEN}✓ Using stable release webhook → #annonces channel${NC}"
+    else
+        echo -e "${RED}❌ Error: DISCORD_WEBHOOK_STABLE_URL not configured for stable release${NC}"
+        echo -e "${YELLOW}💡 Set DISCORD_WEBHOOK_STABLE_URL to point to your #annonces channel${NC}"
+        exit 1
+    fi
+
+    # Curated announcement of this version if it exists, else the generic template
+    TEMPLATE_FILE=".github/release-highlights/${VERSION}.discord.md"
+    if [ ! -f "$TEMPLATE_FILE" ]; then
+        TEMPLATE_FILE=".github/templates/discord-release.md"
+    fi
+    echo -e "${BLUE}📄 Using message: ${TEMPLATE_FILE}${NC}\n"
+
+    if [ ! -f "$TEMPLATE_FILE" ]; then
+        echo -e "${RED}❌ Error: Template file not found: $TEMPLATE_FILE${NC}"
+        exit 1
+    fi
+
+    MESSAGE=$(cat "$TEMPLATE_FILE")
+    MESSAGE="${MESSAGE//\{\{VERSION\}\}/$VERSION}"
+    MESSAGE="${MESSAGE//\{\{RELEASE_URL\}\}/$RELEASE_URL}"
+
+    send_to_discord
+    exit 0
 fi
 
 # PRE-RELEASE (BETA): Use default webhook for beta testers
@@ -157,37 +237,4 @@ MESSAGE="${MESSAGE//\{\{RELEASE_URL\}\}/$RELEASE_URL}"
 MESSAGE="${MESSAGE//\{\{CHANGELOG_EN\}\}/$CHANGELOG_EN}"
 MESSAGE="${MESSAGE//\{\{CHANGELOG_FR\}\}/$CHANGELOG_FR}"
 
-# Truncate if too long (Discord limit is 2000 chars)
-if [ ${#MESSAGE} -gt 1900 ]; then
-    MESSAGE="${MESSAGE:0:1900}
-
-_Message truncated. See full release notes at:_
-$RELEASE_URL"
-fi
-
-# Create JSON payload
-JSON_PAYLOAD=$(jq -n \
-    --arg content "$MESSAGE" \
-    '{content: $content}')
-
-echo -e "${BLUE}📤 Sending to Discord...${NC}\n"
-
-# Send to Discord
-RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "$WEBHOOK_URL" \
-    -H "Content-Type: application/json" \
-    -d "$JSON_PAYLOAD")
-
-HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
-RESPONSE_BODY=$(echo "$RESPONSE" | head -n-1)
-
-if [ "$HTTP_CODE" -eq 204 ] || [ "$HTTP_CODE" -eq 200 ]; then
-    echo -e "${GREEN}✅ Discord notification sent successfully!${NC}"
-    echo -e "${BLUE}   Status code: $HTTP_CODE${NC}\n"
-else
-    echo -e "${RED}❌ Failed to send Discord notification${NC}"
-    echo -e "${RED}   Status code: $HTTP_CODE${NC}"
-    echo -e "${RED}   Response: $RESPONSE_BODY${NC}\n"
-    exit 1
-fi
-
-echo -e "${GREEN}🎉 Done!${NC}"
+send_to_discord

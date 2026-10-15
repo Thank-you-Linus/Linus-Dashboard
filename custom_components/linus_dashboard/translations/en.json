@@ -38,6 +38,16 @@
           "excluded_device_classes": "Device classes that will be excluded from the dashboard.",
           "excluded_integrations": "Integrations to exclude from the dashboard."
         }
+      },
+      "scene_colors": {
+        "title": "Scene chip colors",
+        "description": "Optional: choose a color for the chip of a scene in the light popup. It wins over the color detected from the scene. Scenes created in Home Assistant are colored automatically; use this for the others (e.g. Philips Hue scenes). To go back to the detected color (or the neutral look), select the scene in the list at the bottom.",
+        "data": {
+          "reset_scene_colors": "Remove the chosen color of these scenes"
+        },
+        "data_description": {
+          "reset_scene_colors": "Selected scenes go back to their detected color, or to the neutral look if none is detected, whatever their color above."
+        }
       }
     }
   },

@@ -266,6 +266,14 @@ Avec Home Assistant 2025.1+, vous pouvez glisser-déposer les pièces directemen
 **Non** - Linus Dashboard fonctionne de manière autonome. Linus Brain est une mise à niveau optionnelle pour la détection d'activité par IA et l'automatisation avancée.
 [Comparer les fonctionnalités →](https://thankyou-linus.com/)
 
+**Q: Les chips de scène de la popup lumière peuvent-elles afficher les couleurs de la scène ?**
+**Oui, pour les scènes créées dans Home Assistant.** Dans la popup lumière d'une pièce, chaque chip de scène prend la couleur dominante des lampes que la scène allume.
+- **Colorées automatiquement :** les scènes créées dans Home Assistant (éditeur de scènes, `scenes.yaml`, `scene.create`) dont les lampes sont réglées en couleur, ou en température de blanc (affichée en teinte chaude ou froide) — pour les comptes administrateurs.
+- **Non colorées automatiquement :** les scènes Philips Hue et les autres scènes fournies par une intégration (Home Assistant ne connaît pas leurs couleurs), les scènes sans lampe colorée, et toutes les scènes pour les comptes non administrateurs.
+- **Repli :** la chip garde son aspect neutre habituel, ou affiche la couleur que vous choisissez pour cette scène dans les options de l'intégration (Paramètres → Appareils et services → Linus Dashboard → Configurer, étape « Couleurs des chips de scène »). Une couleur choisie passe toujours avant la couleur détectée.
+
+Après avoir modifié une scène, rechargez le tableau de bord pour voir sa nouvelle couleur.
+
 ### Dépannage
 
 **Q: Je vois une erreur timeout ou un message rouge**

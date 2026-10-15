@@ -307,6 +307,14 @@ With Home Assistant 2025.1+, you can drag & drop rooms directly in HA settings (
 **Q: Does Linus Dashboard create its own room/floor entities, or do I need another integration for that?**
 **It creates them natively.** For every area and floor (and the whole house), Linus Dashboard adds its own group entities — presence detection, and a controllable "all lights"/"all switches"/"all fans"/"all covers"/"all sirens" for each — with no other integration required. Each one exposes rich attributes (member list, active count, icon, color) and forwards full feature control where it makes sense (brightness for lights, speed for fans, position for covers), not just on/off. You can turn any of them off per-domain from the integration's options if you'd rather not have them.
 
+**Q: Can the scene chips of the light popup show the scene's colors?**
+**Yes, for scenes created in Home Assistant.** In a room's light popup, each scene chip takes the dominant color of the lights the scene turns on.
+- **Colored automatically:** scenes created in Home Assistant (scene editor, `scenes.yaml`, `scene.create`) whose lights are set to a color, or to a white temperature (shown as a warm or cool tint) — for administrator accounts.
+- **Not colored automatically:** Philips Hue scenes and other scenes provided by an integration (their colors are not known to Home Assistant), scenes without any colored light, and every scene for non-administrator accounts.
+- **Fallback:** the chip keeps its usual neutral look, or shows the color you choose for that scene in the integration options (Settings → Devices & services → Linus Dashboard → Configure, "Scene chip colors" step). A chosen color always wins over the detected one.
+
+After editing a scene, reload the dashboard to see its new color.
+
 ### Troubleshooting
 
 **Q: I see a timeout or red error message**

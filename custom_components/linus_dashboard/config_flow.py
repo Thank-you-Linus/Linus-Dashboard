@@ -15,6 +15,9 @@ from homeassistant.helpers import (
     device_registry as dr,
 )
 from homeassistant.helpers import (
+    entity_registry as er,
+)
+from homeassistant.helpers import (
     label_registry as lr,
 )
 from homeassistant.helpers.selector import (
@@ -47,11 +50,22 @@ from .const import (
 )
 from .utils import is_valid_rgb
 
+# Options-step field listing the scenes whose manual color is to be removed.
+# An <input type="color"> can't be cleared, hence this explicit reset.
+CONF_RESET_SCENE_COLORS = "reset_scene_colors"
+
+# Integrations whose own scenes the light popup never shows (same exclusion
+# as the frontend Helper's isOwnAggregateEntity, by entity registry platform).
+_OWN_SCENE_PLATFORMS = frozenset({"magic_areas", "linus_brain", DOMAIN})
+
 _LOGGER = logging.getLogger(__name__)
 
 
 def merge_scene_color_overrides(
-    previous: Any, submitted: dict[str, Any], present_ids: list[str]
+    previous: Any,
+    submitted: dict[str, Any],
+    present_ids: list[str],
+    reset: Any = (),
 ) -> dict[str, list[int]]:
     """
     Merge the scene colors form into the saved manual colors.
@@ -59,7 +73,8 @@ def merge_scene_color_overrides(
     - a scene shown in the form with a color: added or modified;
     - a scene shown in the form whose field was cleared (key absent): removed;
     - a scene absent from Home Assistant when the form was opened: kept as is;
-    - an invalid value (not three integers 0-255): ignored.
+    - an invalid value (not three integers 0-255): ignored;
+    - a scene listed in `reset`: removed, whatever its color field says.
     """
     merged: dict[str, list[int]] = {}
     if isinstance(previous, dict):
@@ -76,6 +91,9 @@ def merge_scene_color_overrides(
             _LOGGER.debug("Ignoring invalid color for %s: %s", entity_id, value)
             if isinstance(previous, dict) and is_valid_rgb(previous.get(entity_id)):
                 merged[entity_id] = list(previous[entity_id])
+    if isinstance(reset, (list, tuple, set)):
+        for entity_id in reset:
+            merged.pop(entity_id, None)
     return merged
 
 
@@ -814,6 +832,23 @@ class LinusDashboardEditFlow(config_entries.OptionsFlow):
         saved = self._config_entry.options.get(CONF_SCENE_COLOR_OVERRIDES)
         return saved if isinstance(saved, dict) else {}
 
+    def _colorable_scene_ids(self) -> list[str]:
+        """Scenes of the light popup: all `scene.*` but Linus/Magic Areas' own."""
+        registry = er.async_get(self.hass)
+        scene_ids = []
+        for entity_id in self.hass.states.async_entity_ids("scene"):
+            entry = registry.async_get(entity_id)
+            if entry is not None and entry.platform in _OWN_SCENE_PLATFORMS:
+                continue
+            scene_ids.append(entity_id)
+        return sorted(scene_ids)
+
+    def _scene_label(self, entity_id: str) -> str:
+        """Friendly name of a scene, else its entity_id."""
+        state = self.hass.states.get(entity_id)
+        name = state.attributes.get("friendly_name") if state is not None else None
+        return f"{name} ({entity_id})" if name else entity_id
+
     async def async_step_scene_colors(
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
@@ -821,12 +856,17 @@ class LinusDashboardEditFlow(config_entries.OptionsFlow):
         saved = self._saved_scene_colors()
 
         if user_input is not None:
-            merged = merge_scene_color_overrides(saved, user_input, self._scene_ids)
+            merged = merge_scene_color_overrides(
+                saved,
+                user_input,
+                self._scene_ids,
+                reset=user_input.get(CONF_RESET_SCENE_COLORS, []),
+            )
             return self.async_create_entry(
                 title="", data={**self._pending, CONF_SCENE_COLOR_OVERRIDES: merged}
             )
 
-        self._scene_ids = sorted(self.hass.states.async_entity_ids("scene"))
+        self._scene_ids = self._colorable_scene_ids()
         if not self._scene_ids:
             # No scene to color: save `init`, keep the existing colors untouched
             kept = merge_scene_color_overrides(saved, {}, [])
@@ -840,6 +880,23 @@ class LinusDashboardEditFlow(config_entries.OptionsFlow):
             description = {"suggested_value": color} if is_valid_rgb(color) else None
             schema[vol.Optional(entity_id, description=description)] = (
                 ColorRGBSelector()
+            )
+
+        colored = sorted(
+            entity_id
+            for entity_id, color in saved.items()
+            if isinstance(entity_id, str) and is_valid_rgb(color)
+        )
+        if colored:
+            schema[vol.Optional(CONF_RESET_SCENE_COLORS, default=[])] = SelectSelector(
+                SelectSelectorConfig(
+                    options=[
+                        {"value": entity_id, "label": self._scene_label(entity_id)}
+                        for entity_id in colored
+                    ],
+                    multiple=True,
+                    mode=SelectSelectorMode.LIST,
+                )
             )
 
         return self.async_show_form(

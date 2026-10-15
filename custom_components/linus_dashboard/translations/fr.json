@@ -41,7 +41,13 @@
       },
       "scene_colors": {
         "title": "Couleurs des chips de scène",
-        "description": "Facultatif : choisis une couleur pour la chip d'une scène dans la popup lumière. Elle passe avant la couleur détectée dans la scène. Les scènes créées dans Home Assistant sont colorées automatiquement ; utilise ce choix pour les autres (ex. scènes Philips Hue). Vide un champ pour revenir à la couleur détectée ou à l'aspect neutre."
+        "description": "Facultatif : choisissez une couleur pour la chip d'une scène dans la popup lumière. Elle passe avant la couleur détectée dans la scène. Les scènes créées dans Home Assistant sont colorées automatiquement ; utilisez ce choix pour les autres (ex. scènes Philips Hue). Pour revenir à la couleur détectée (ou à l'aspect neutre), sélectionnez la scène dans la liste en bas.",
+        "data": {
+          "reset_scene_colors": "Retirer la couleur choisie de ces scènes"
+        },
+        "data_description": {
+          "reset_scene_colors": "Les scènes sélectionnées reviennent à leur couleur détectée, ou à l'aspect neutre si aucune n'est détectée, quelle que soit leur couleur ci-dessus."
+        }
       }
     }
   },

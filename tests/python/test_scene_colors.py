@@ -286,7 +286,7 @@ def test_merge_scene_color_overrides():
 
 
 @pytest.fixture
-def flow(mock_hass, mock_config_entry, fake_states, monkeypatch):
+def flow(mock_hass, mock_config_entry, fake_states, entity_reg, monkeypatch):
     fake_states.async_entity_ids = lambda domain: [
         entity_id
         for entity_id in fake_states._states
@@ -330,7 +330,7 @@ def test_flow_init_then_scene_colors_keeps_options_and_colors(flow, fake_states)
     assert form["type"] == "form"
     assert form["step_id"] == "scene_colors"
     fields = {str(key): key for key in form["data_schema"].schema}
-    assert list(fields) == ["scene.cuisine", "scene.salon"]
+    assert list(fields) == ["scene.cuisine", "scene.salon", "reset_scene_colors"]
     assert fields["scene.salon"].description == {"suggested_value": [255, 0, 0]}
     assert done["type"] == "create_entry"
     assert done["data"] == {
@@ -343,6 +343,84 @@ def test_flow_init_then_scene_colors_keeps_options_and_colors(flow, fake_states)
             "scene.removed_from_ha": [0, 255, 0],
         },
     }
+
+
+def _ui_submit(flow, fake_states, reset=None):
+    """
+    Drive init -> scene_colors as HA's UI submits it.
+
+    A color input can't be emptied: a pre-filled field always comes back with
+    its saved value; a field never touched is not sent.
+    """
+    fake_states.set("scene.salon", "scening", {"friendly_name": "Salon soirée"})
+    fake_states.set("scene.cuisine", "scening")
+
+    async def run():
+        form = await flow.async_step_init({"hide_greeting": True})
+        submitted = {
+            "scene.salon": [255, 0, 0],  # pre-filled, sent back unchanged
+        }
+        if reset is not None:
+            submitted["reset_scene_colors"] = reset
+        return form, await flow.async_step_scene_colors(submitted)
+
+    return asyncio.run(run())
+
+
+def test_flow_reset_removes_a_color_as_the_ui_submits_it(flow, fake_states):
+    form, done = _ui_submit(flow, fake_states, reset=["scene.salon"])
+
+    reset_field = next(
+        key for key in form["data_schema"].schema if str(key) == "reset_scene_colors"
+    )
+    selector = form["data_schema"].schema[reset_field]
+    assert selector.config["multiple"] is True
+    assert selector.config["options"] == [
+        {"value": "scene.removed_from_ha", "label": "scene.removed_from_ha"},
+        {"value": "scene.salon", "label": "Salon soirée (scene.salon)"},
+    ]
+    overrides = done["data"][CONF_SCENE_COLOR_OVERRIDES]
+    assert "scene.salon" not in overrides
+    assert overrides["scene.removed_from_ha"] == [0, 255, 0]
+    assert "reset_scene_colors" not in done["data"]
+
+
+def test_flow_without_reset_keeps_saved_colors_unchanged(flow, fake_states):
+    _form, done = _ui_submit(flow, fake_states)
+
+    assert done["data"][CONF_SCENE_COLOR_OVERRIDES] == {
+        "scene.salon": [255, 0, 0],
+        "scene.removed_from_ha": [0, 255, 0],
+    }
+
+
+def test_flow_hides_scenes_of_linus_and_magic_areas(flow, fake_states, entity_reg):
+    fake_states.set("scene.salon", "scening")
+    for entity_id, platform in [
+        ("scene.magic", "magic_areas"),
+        ("scene.brain", "linus_brain"),
+        ("scene.dashboard", "linus_dashboard"),
+        ("scene.hue", "hue"),
+    ]:
+        fake_states.set(entity_id, "scening")
+        entity_reg.add(entity_id, platform=platform)
+
+    async def run():
+        return await flow.async_step_init({"hide_greeting": True})
+
+    form = asyncio.run(run())
+
+    scenes = [str(key) for key in form["data_schema"].schema]
+    assert scenes == ["scene.hue", "scene.salon", "reset_scene_colors"]
+
+
+def test_merge_applies_reset_whatever_the_color_field():
+    assert merge_scene_color_overrides(
+        {"scene.a": [1, 2, 3], "scene.b": [4, 5, 6], "scene.gone": [7, 8, 9]},
+        {"scene.a": [1, 2, 3], "scene.b": [4, 5, 6]},
+        ["scene.a", "scene.b"],
+        reset=["scene.a", "scene.gone"],
+    ) == {"scene.b": [4, 5, 6]}
 
 
 def test_flow_without_scene_skips_the_step_and_keeps_colors(flow):
@@ -366,3 +444,5 @@ def test_translations_carry_the_scene_colors_step(lang):
     ]
     assert step["title"]
     assert step["description"]
+    assert step["data"]["reset_scene_colors"]
+    assert step["data_description"]["reset_scene_colors"]

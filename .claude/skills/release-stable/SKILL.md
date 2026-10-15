@@ -197,8 +197,11 @@ User options:
 - Creates stable release
 - Cleans up RELEASE_NOTES.md
 
-**Manual step (by Julien, no automatic announcement for a stable):**
-- Post the announcement in Discord #annonces
+**Discord #annonces:** a tag pushed by this command is not announced (`release.yml` never announces; only
+the Stable Release (manual) button does). Run **Actions -> Announce stable release on Discord (manual)**
+with the tag: it posts `.github/release-highlights/<version>.discord.md` if it exists, else a generic text.
+
+**Manual step (forums):**
 - Open forum threads: `npm run forums:open`
 - Post release announcement (templates provided)
 

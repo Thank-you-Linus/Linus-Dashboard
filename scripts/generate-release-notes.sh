@@ -13,7 +13,8 @@
 #       new features / fixes / other. Only product changes are kept (src and
 #       custom_components, minus the generated www bundle and the manifest version bump).
 #       No hash, no "type(scope):" prefix, no "All Commits" section: the document can be
-#       pasted as-is in the stable announcement Julien writes by hand (#annonces).
+#       pasted as-is anywhere (forum posts written by hand). The Discord #annonces message is not built
+#       from it: it is .github/release-highlights/<version>.discord.md (see notify-discord.sh).
 #       Also prints "kept=<n> excluded=<n> untranslated=<n> base=<tag>" on stdout for the workflow summary.
 #       Highlights: when .github/release-highlights/<version>.md exists (<version> = $TAG, else the
 #       package.json version without its pre-release suffix), it opens the note as is — the

@@ -285,7 +285,7 @@ chore: update dependencies to latest versions
 4. Run `/release-beta` or `/release-stable`
 5. Tag created automatically
 6. HACS validation runs
-7. Discord notification sent for a beta only (a stable is announced by hand by Julien)
+7. Discord notification sent automatically: a beta in the beta testers channel, a stable once in #annonces (by the Stable Release (manual) button, text `.github/release-highlights/<version>.discord.md`; missed → `announce-stable.yml`)
 
 ### Build Outputs
 - **Development:** `dist/` directory (not committed)

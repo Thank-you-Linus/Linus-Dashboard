@@ -23,7 +23,7 @@
 - ✅ Validate it's not a pre-release
 - ✅ Linting and type checking before build
 - ✅ Build output verification
-- ✅ No automatic Discord announcement for stable releases (Julien announces them by hand)
+- ✅ No Discord announcement here (the Stable Release (manual) button posts it once in #annonces; `announce-stable.yml` catches up a missed one)
 - ✅ Better error handling
 
 ### 3. New Scripts

@@ -20,7 +20,13 @@ Voie recommandée : le bouton GitHub **Stable Release (manual)** (voir « Stable
 button) » dans `docs/RELEASE_GUIDE.md`, avec un `dry_run` pour prévisualiser la note). La note publiée
 s'ouvre sur `.github/release-highlights/<version>.md` s'il existe (récit de la version, captures
 `![…](images/<chemin>)` commitées, sinon l'étape « Generate release notes » échoue) : aucune
-retouche du corps après publication. Le script ci-dessous reste la voie de secours :
+retouche du corps après publication. Juste après la publication, le bouton poste **une** annonce sur
+Discord #annonces (secret `DISCORD_WEBHOOK_STABLE_URL`, jamais en `dry_run`) : le texte curé
+`.github/release-highlights/<version>.discord.md` s'il existe (`{{VERSION}}`, `{{RELEASE_URL}}`
+remplacés, moins de 1900 caractères), sinon le gabarit générique `.github/templates/discord-release.md`.
+Annonce ratée, ou stable publiée autrement : **Actions** -> **Announce stable release on Discord
+(manual)** avec le tag (`announce-stable.yml`, une annonce par lancement). Les forums HA et HACF
+restent à la main (`npm run forums:open`). Le script ci-dessous reste la voie de secours :
 
 ```bash
 bash scripts/create-release.sh
@@ -48,7 +54,9 @@ bash scripts/create-release.sh
 - Tests de validation
 - Création du ZIP
 - Publication de la release
-- Notification Discord (bêta uniquement : une stable est annoncée à la main par Julien)
+- Notification Discord pour une bêta seulement : une stable poussée par ce script n'est pas annoncée
+  (`release.yml` n'annonce jamais, sinon le bouton annoncerait deux fois) ; lancer ensuite
+  **Announce stable release on Discord (manual)** avec le tag
 - Nettoyage automatique
 
 ## Release from GitHub

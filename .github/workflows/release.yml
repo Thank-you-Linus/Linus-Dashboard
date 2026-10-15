@@ -113,8 +113,11 @@ jobs:
       # 12. Reminder to post on forums
       - name: "Forum Posting Reminder"
         if: success()
+        env:
+          TAG_NAME: ${{ steps.get_tag.outputs.tag_name }}
         run: |
-          echo "No automatic announcement for a stable release: Julien announces it by hand (#annonces + \`npm run forums:open\`)" >> "$GITHUB_STEP_SUMMARY"
+          # No Discord call here (it would announce twice): "Stable Release (manual)" announces in #annonces.
+          echo "No Discord announcement from this workflow: \"Stable Release (manual)\" posts it in #annonces. If this stable was published another way (tag pushed by hand, release published in the GitHub UI), run \"Announce stable release on Discord (manual)\" with tag \`$TAG_NAME\`. Forums by hand: \`npm run forums:open\`" >> "$GITHUB_STEP_SUMMARY"
           echo "📢 Release published successfully!"
           echo "📝 Don't forget to announce on forums:"
           echo "   - Run: npm run forums:open"

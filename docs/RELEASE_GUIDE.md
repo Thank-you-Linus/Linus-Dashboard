@@ -264,7 +264,7 @@ beta since the previous stable.
 What it does (`.github/workflows/stable-release.yml`): lint, type-check, build, version check, release
 note, bump to the stable version (`2.0.0-beta.3` -> `2.0.0`), smoke tests, ZIP (`linus_dashboard.zip`),
 atomic push of the commit and the tag (no `v` prefix), then publication as the final GitHub release
-(not a pre-release, marked latest) so HACS offers it.
+(not a pre-release, marked latest) so HACS offers it, then one announcement in Discord #annonces (see below).
 
 **Release note.** The base is the last stable tag (for example `1.5.1`), not the last beta: the note
 covers every change since then, so all the betas in between. Each change appears once, under
@@ -292,8 +292,18 @@ with `TAG=<version> bash scripts/generate-release-notes.sh --ci --since-stable`.
 latest tag, the current version is already stable (a hotfix goes through a beta first), the stable tag
 already exists on `origin`.
 
-**No automatic announcement.** Nothing is sent to Discord. After publication, Julien announces it by hand
-on Discord (#annonces) and with `npm run forums:open`. The release body can still be edited on GitHub after publication
+**Discord announcement (automatic).** Right after publishing the release, the button posts **one**
+announcement in Discord #annonces (secret `DISCORD_WEBHOOK_STABLE_URL`, never the beta channel), never in a
+dry run. The text is `.github/release-highlights/<version>.discord.md` when it exists (for example
+`2.0.0.discord.md`: a short curated message, EN and FR, with `{{VERSION}}` and `{{RELEASE_URL}}` replaced;
+keep it under 1900 characters, the test suite checks it), else the generic
+`.github/templates/discord-release.md` (version and link). Write it before clicking the button, like the
+highlights; it is never read as the release note. A Discord error never fails the published release: the run
+summary then says "Not announced in Discord #annonces" and a warning is shown. To post it afterwards (missed
+announcement, or a stable published another way), run **Actions -> Announce stable release on Discord
+(manual)** with the tag (`announce-stable.yml`: the release must exist; it reads the `.discord.md` from
+`main`, so a text added after the tag counts; each run posts once). Forums stay manual:
+`npm run forums:open`. The release body can still be edited on GitHub after publication
 (Releases -> Edit), but the highlights file is the place for the wording: it ships with the button.
 
 **Rollback.** If the run fails after the push (the summary says "the tag already exists on origin"),
@@ -406,7 +416,9 @@ GitHub Actions will automatically:
 4. ✅ Create ZIP archive
 5. ✅ Upload to release
 
-No Discord announcement is sent for a stable release: Julien announces it by hand (#annonces, then Step 9).
+This workflow sends no Discord announcement (it would be a second one): the stable button
+(`stable-release.yml`) posts it in #annonces. For a stable published this way (tag pushed by hand), run
+**Announce stable release on Discord (manual)** with the tag, then Step 9.
 
 **View the workflow**: `.github/workflows/release.yml`
 
@@ -471,7 +483,8 @@ Verify in HACS:
 4. Create ZIP archive
 5. Upload to release
 
-No automatic announcement: Julien announces a stable release by hand (#annonces + `npm run forums:open`).
+No Discord announcement here (it would be a second one): `stable-release.yml` posts it in #annonces, and
+`announce-stable.yml` (manual, input `tag`) catches up a missed one. Forums by hand: `npm run forums:open`.
 
 **Secrets required**:
 - `DISCORD_WEBHOOK_URL` (optional, only for the failure notification)
@@ -523,9 +536,11 @@ git push --tags
 **Problem**: Discord notification not sent
 
 **Solution**:
-1. Check `DISCORD_WEBHOOK_URL` is set in GitHub Secrets
-2. Manually run: `bash scripts/notify-discord.sh prerelease 1.3.1-beta.1 <release_url>`
-3. Notification is optional, release will still succeed
+1. Check the secret is set in GitHub Secrets: `DISCORD_WEBHOOK_URL` for a beta (beta testers channel),
+   `DISCORD_WEBHOOK_STABLE_URL` for a stable (#annonces)
+2. Beta: manually run `bash scripts/notify-discord.sh prerelease 1.3.1-beta.1 <release_url>`
+3. Stable: run **Actions -> Announce stable release on Discord (manual)** with the tag (posts once per run)
+4. Notification is optional, release will still succeed
 
 ### Tag Already Exists
 

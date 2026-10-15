@@ -275,8 +275,9 @@ if [[ "$BUMP_TYPE" =~ (beta|alpha) ]]; then
 else
     echo -e "     - Build the project"
     echo -e "     - Create a stable release on GitHub"
-    echo -e "     - (no Discord announcement: never automatic for a stable)"
-    echo -e "  4. Announce by hand (Julien): Discord #annonces, then forums: ${BLUE}npm run forums:open${NC}"
+    echo -e "     - (no Discord announcement for a tag pushed by hand: only the Stable Release (manual) button announces)"
+    echo -e "  4. Announce in Discord #annonces: Actions -> Announce stable release on Discord (manual), tag ${NEW_VERSION}"
+    echo -e "  5. Forums by hand: ${BLUE}npm run forums:open${NC}"
 fi
 echo ""
 echo -e "${BLUE}💡 Smart Version Management Info:${NC}"

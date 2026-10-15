@@ -38,6 +38,10 @@
           "excluded_device_classes": "Classes de dispositifs qui seront exclues du tableau de bord.",
           "excluded_integrations": "Intégrations à exclure du tableau de bord."
         }
+      },
+      "scene_colors": {
+        "title": "Couleurs des chips de scène",
+        "description": "Facultatif : choisis une couleur pour la chip d'une scène dans la popup lumière. Elle passe avant la couleur détectée dans la scène. Les scènes créées dans Home Assistant sont colorées automatiquement ; utilise ce choix pour les autres (ex. scènes Philips Hue). Vide un champ pour revenir à la couleur détectée ou à l'aspect neutre."
       }
     }
   },

@@ -325,16 +325,20 @@ def compute_group_attributes(
     use exactly that attribute key, not a custom plural name, and it keeps
     listing this group's DIRECT members so the nesting contract stays intact.
 
-    `active_entity_ids`/`active_count`/`total`, on the other hand, are ALWAYS
-    leaf-level, at every scope. A member is recognized as a nested sub-group
-    when its own state exposes an `active_entity_ids` attribute (only this
-    integration's group entities do — a foreign group never gets scanned in as
-    a member in the first place, see scan_domain_members); its list is spliced
-    in instead of the member being counted as one unit, and its `total`
-    replaces the 1 it would otherwise contribute. Without this, a floor chip
-    read "rooms with at least one active entity" and a global chip "floors
-    with at least one active entity" — never the number of active entities,
-    and never the number the popup lists for the same perimeter.
+    `active_entity_ids`/`active_count`/`unavailable_entity_ids`/
+    `unavailable_count`/`total`, on the other hand, are ALWAYS leaf-level, at
+    every scope. A member is recognized as a nested sub-group when its own
+    state exposes an `active_entity_ids` attribute (only this integration's
+    group entities do — a foreign group never gets scanned in as a member in
+    the first place, see scan_domain_members); its lists are spliced in
+    instead of the member being counted as one unit, and its `total` replaces
+    the 1 it would otherwise contribute. Without this, a floor chip read
+    "rooms with at least one active entity" and a global chip "floors with at
+    least one active entity" — never the number of active entities, and never
+    the number the popup lists for the same perimeter. Unavailable/unknown
+    nested members are propagated even when the nested group itself is
+    unavailable, so an unavailable intermediate group does not hide its leaf
+    members.
 
     Reactivity needs nothing extra: async_track_state_change_event also fires
     on an attribute-only change, so a sub-group publishing a new
@@ -357,6 +361,7 @@ def compute_group_attributes(
 
     entity_states: dict[str, str] = {}
     active_ids: list[str] = []
+    unavailable_ids: list[str] = []
     total = 0
 
     for entity_id in member_entity_ids:
@@ -371,21 +376,27 @@ def compute_group_attributes(
 
         nested_active = state_obj.attributes.get("active_entity_ids")
         if isinstance(nested_active, list | tuple):
+            nested_unavailable = state_obj.attributes.get("unavailable_entity_ids")
             nested_total = state_obj.attributes.get("total")
             total += (
                 nested_total if isinstance(nested_total, int) else len(nested_active)
             )
+            if isinstance(nested_unavailable, list | tuple):
+                unavailable_ids.extend(nested_unavailable)
             if available:
                 active_ids.extend(nested_active)
             continue
 
         total += 1
+        if not available:
+            unavailable_ids.append(entity_id)
         if available and state_obj.state in resolved_active_states:
             active_ids.append(entity_id)
 
     # A leaf reachable through two sub-groups must not be counted twice;
     # dict.fromkeys dedups while preserving member order.
     active_ids = list(dict.fromkeys(active_ids))
+    unavailable_ids = list(dict.fromkeys(unavailable_ids))
 
     icon = compute_icon(hass, domain, entity_states, device_class)
     color = compute_color(domain, device_class, entity_states)
@@ -395,6 +406,8 @@ def compute_group_attributes(
         "total": total,
         "active_entity_ids": active_ids,
         "active_count": len(active_ids),
+        "unavailable_entity_ids": unavailable_ids,
+        "unavailable_count": len(unavailable_ids),
         "icon": icon,
         "color": color,
     }
@@ -804,10 +817,11 @@ class NestedGroupMixin:
           is mixed into.
         - compute_group_attributes() then *replaces*
           extra_state_attributes wholesale with our own entity_id/total/
-          active_entity_ids/active_count/icon/color, same as every non-HA-inherited
-          platform (climate.py, media_player.py, siren.py) — it already
-          covers everything HA's own init sets there (just entity_id), so
-          there's nothing worth preserving from it.
+          active_entity_ids/active_count/unavailable_entity_ids/unavailable_count/
+          icon/color, same as every non-HA-inherited platform (climate.py,
+          media_player.py, siren.py) — it already covers everything HA's own
+          init sets there (just entity_id), so there's nothing worth preserving
+          from it.
         """
         self._entity_ids = self._member_entity_ids
         for entity_id in self._member_entity_ids:

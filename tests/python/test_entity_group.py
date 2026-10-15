@@ -83,17 +83,20 @@ def test_compute_group_attributes_excludes_unavailable_members_from_active_state
     mock_hass, fake_states
 ):
     fake_states.set("light.a", "unavailable")
-    fake_states.set("light.b", "on")
+    fake_states.set("light.b", "unknown")
+    fake_states.set("light.c", "on")
     attrs = compute_group_attributes(
         mock_hass,
         domain="light",
         device_class=None,
-        member_entity_ids=["light.a", "light.b"],
+        member_entity_ids=["light.a", "light.b", "light.c"],
     )
     # total counts every member (including the unavailable one)...
-    assert attrs["total"] == 2
-    # ...but active_entity_ids must not treat "unavailable" as active.
-    assert attrs["active_entity_ids"] == ["light.b"]
+    assert attrs["total"] == 3
+    # ...but active_entity_ids must not treat unavailable/unknown as active.
+    assert attrs["active_entity_ids"] == ["light.c"]
+    assert attrs["unavailable_entity_ids"] == ["light.a", "light.b"]
+    assert attrs["unavailable_count"] == 2
 
 
 def test_compute_group_attributes_missing_member_state_is_skipped_not_errored(
@@ -134,6 +137,7 @@ def set_sub_group(
     *,
     active_entity_ids: list[str],
     total: int,
+    unavailable_entity_ids: list[str] | None = None,
     members: list[str] | None = None,
 ) -> None:
     """Register a state shaped exactly like a Linus Dashboard group entity's."""
@@ -145,6 +149,8 @@ def set_sub_group(
             "total": total,
             "active_entity_ids": list(active_entity_ids),
             "active_count": len(active_entity_ids),
+            "unavailable_entity_ids": list(unavailable_entity_ids or []),
+            "unavailable_count": len(unavailable_entity_ids or []),
         },
     )
 
@@ -313,6 +319,7 @@ def test_unavailable_sub_group_contributes_no_active_leaves(mock_hass, fake_stat
         "unavailable",
         active_entity_ids=["light.stale"],
         total=1,
+        unavailable_entity_ids=["light.stale"],
     )
     set_sub_group(
         fake_states,
@@ -333,6 +340,8 @@ def test_unavailable_sub_group_contributes_no_active_leaves(mock_hass, fake_stat
     assert attrs["active_count"] == 1
     # total still describes the perimeter, unavailable sub-group included.
     assert attrs["total"] == 3
+    assert attrs["unavailable_entity_ids"] == ["light.stale"]
+    assert attrs["unavailable_count"] == 1
 
 
 def test_area_scope_behaviour_is_unchanged_by_recursion(mock_hass, fake_states):

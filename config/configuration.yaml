@@ -16,6 +16,9 @@ http:
 conversation:
 history:
 logbook:
+# The simulated house writes ~250k states a day: the 10-day default grows the database to ~2 GB.
+recorder:
+  purge_keep_days: 2
 sun:
 system_health:
 mobile_app:

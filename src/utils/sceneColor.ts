@@ -40,5 +40,5 @@ export function toChipColor(color?: SceneColor): string | undefined {
  * @param detected - Colors detected by the backend, dominant first
  */
 export function resolveSceneChipColor(manual?: string, detected?: SceneColor[]): string | undefined {
-  return manual ?? toChipColor(detected?.[0]) ?? undefined;
+  return manual ?? toChipColor(detected?.[0]);
 }

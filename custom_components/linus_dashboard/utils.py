@@ -162,15 +162,13 @@ def _iter_scene_target_states(hass: HomeAssistant) -> Iterator[tuple[str, Mappin
     elif isinstance(entities, (list, tuple, set)):
         scenes = [(getattr(scene, "entity_id", None), scene) for scene in entities]
     else:
-        _LOGGER.debug("Scene colors: forme de scène inconnue (entities) — ignorée")
+        _LOGGER.debug("Scene colors: unknown scene shape (entities), skipped")
         return
 
     for entity_id, scene in scenes:
         states = getattr(getattr(scene, "scene_config", None), "states", None)
         if not isinstance(entity_id, str) or not isinstance(states, Mapping):
-            _LOGGER.debug(
-                "Scene colors: forme de scène inconnue (%s) — ignorée", entity_id
-            )
+            _LOGGER.debug("Scene colors: unknown scene shape (%s), skipped", entity_id)
             continue
         for target_id, target in states.items():
             if not isinstance(target_id, str) or not target_id.startswith("light."):

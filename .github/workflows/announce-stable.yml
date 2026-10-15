@@ -1,0 +1,75 @@
+name: "Announce stable release on Discord (manual)"
+
+# Catch-up for a missed stable announcement (Actions -> Announce stable release on Discord (manual)
+# -> Run workflow, tag X.Y.Z). "Stable Release (manual)" already announces every stable in Discord
+# #annonces right after publishing it: run this one only when that announcement did not go out
+# (2.0.0, published while stable announcements were off; a webhook error; a stable published
+# another way, e.g. a tag pushed by hand). Each run posts once more: run it once per missed announcement.
+#
+# The release must already be published (not a draft, not a pre-release). The message is
+# .github/release-highlights/<tag>.discord.md read from main (so a text added after the tag counts),
+# else the generic template .github/templates/discord-release.md. Webhook: DISCORD_WEBHOOK_STABLE_URL
+# (#annonces) only. Forums (HA, HACF) stay manual: `npm run forums:open`.
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Published stable tag to announce in #annonces (X.Y.Z, e.g. 2.0.0). Posts once per run."
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: announce-stable
+  cancel-in-progress: false
+
+jobs:
+  announce:
+    name: "Announce on Discord #annonces"
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: "Check the tag and its release"
+        id: check
+        env:
+          TAG: ${{ inputs.tag }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if ! [[ "$TAG" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Tag must be a stable version X.Y.Z (got '$TAG')."
+            exit 1
+          fi
+          if ! STATE=$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json isDraft,isPrerelease --jq '"\(.isDraft) \(.isPrerelease)"'); then
+            echo "::error::No GitHub release found for tag $TAG: publish the stable release first."
+            exit 1
+          fi
+          if [ "$STATE" != "false false" ]; then
+            echo "::error::Release $TAG is a draft or a pre-release (isDraft isPrerelease = $STATE): only a published stable is announced in #annonces."
+            exit 1
+          fi
+          echo "Release $TAG is a published stable release."
+
+      - name: "Checkout main"
+        id: checkout
+        uses: "actions/checkout@v7"
+        with:
+          ref: main
+
+      - name: "Send Discord Notification"
+        id: discord
+        env:
+          DISCORD_WEBHOOK_STABLE_URL: ${{ secrets.DISCORD_WEBHOOK_STABLE_URL }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          bash scripts/notify-discord.sh release "$TAG" "https://github.com/$GITHUB_REPOSITORY/releases/tag/$TAG"
+
+      # Proof step: runs (and succeeds) only if the Discord message was really sent.
+      - name: "Discord notified"
+        env:
+          TAG: ${{ inputs.tag }}
+        run: |
+          echo "Discord notification sent for $TAG"
+          echo "Announced $TAG in Discord #annonces. Forums by hand: \`npm run forums:open\`." >> "$GITHUB_STEP_SUMMARY"

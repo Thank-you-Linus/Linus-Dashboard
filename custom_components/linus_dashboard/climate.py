@@ -67,6 +67,22 @@ class ClimateGroup(NestedGroupMixin, ClimateEntity):
         self._attr_hvac_mode = HVACMode.OFF
         self._attr_hvac_modes = [HVACMode.OFF]
         self._attr_supported_features = ClimateEntityFeature(0)
+        # ClimateEntity.capability_attributes/state_attributes read these
+        # unconditionally (gated only on the matching supported_features bit,
+        # which members with more capable hardware than generic_thermostat
+        # — a real fan/preset/swing-capable thermostat — do set), so they
+        # must exist from construction, not only once a member exposing that
+        # feature happens to show up: an attribute that was never set
+        # (rather than None) raises AttributeError out of async_write_ha_state
+        # the first time such a feature bit appears, which kills the entire
+        # add_to_platform_finish() call and leaves the entity stuck
+        # "unavailable"/restored forever (HA does not retry a failed add).
+        self._attr_fan_mode = None
+        self._attr_fan_modes = None
+        self._attr_preset_mode = None
+        self._attr_preset_modes = None
+        self._attr_swing_mode = None
+        self._attr_swing_modes = None
         self._init_group(
             hass,
             unique_id=unique_id,
@@ -107,11 +123,47 @@ class ClimateGroup(NestedGroupMixin, ClimateEntity):
         common_features = features[0] if features else 0
         for f in features[1:]:
             common_features &= f
-        self._attr_supported_features = (
+        supported_features = (
             ClimateEntityFeature(common_features)
             | ClimateEntityFeature.TURN_ON
             | ClimateEntityFeature.TURN_OFF
         )
+        self._attr_supported_features = supported_features
+
+        # fan/preset/swing modes: same intersection approach as hvac_modes
+        # above, but — unlike hvac_modes/OFF — there's no mode guaranteed
+        # offered by every member, so an empty intersection correctly means
+        # "not a real group-wide option" (None), not an empty list. Only
+        # populated when the matching feature bit survived the intersection
+        # above; __init__'s None defaults otherwise stand, and are required
+        # unconditionally regardless (see __init__'s comment).
+        self._attr_fan_modes = self._intersect_mode_attribute(
+            states, "fan_modes", ClimateEntityFeature.FAN_MODE, supported_features
+        )
+        self._attr_preset_modes = self._intersect_mode_attribute(
+            states, "preset_modes", ClimateEntityFeature.PRESET_MODE, supported_features
+        )
+        self._attr_swing_modes = self._intersect_mode_attribute(
+            states, "swing_modes", ClimateEntityFeature.SWING_MODE, supported_features
+        )
+
+    @staticmethod
+    def _intersect_mode_attribute(
+        states: list,
+        attribute: str,
+        feature: ClimateEntityFeature,
+        supported_features: ClimateEntityFeature,
+    ) -> list[str] | None:
+        """Intersection of an optional per-member mode list (fan/preset/swing), or None if the group doesn't offer it."""
+        if feature not in supported_features:
+            return None
+        mode_sets = [
+            set(modes) for modes in find_state_attributes(states, attribute) if modes
+        ]
+        if not mode_sets:
+            return None
+        common_modes = set.intersection(*mode_sets)
+        return sorted(common_modes, key=str) if common_modes else None
 
     def _recompute(self) -> None:
         self._detect_modes_and_features()

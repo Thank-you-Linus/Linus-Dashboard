@@ -11,7 +11,9 @@ const createLinusDashboardConfig = () => {
       "linus-strategy": path.resolve(paths.src_dir, "linus-strategy.ts"),
     },
     outputPath: paths.app_output_www,
-    publicPath: "/static/linus_dashboard/",
+    // Must match the URL __init__.py registers via async_register_static_paths
+    // (f"/{DOMAIN}_files/www/...") — otherwise dynamically-loaded chunks 404.
+    publicPath: "/linus_dashboard_files/www/",
     defineOverlay: {
       __LINUS_DASHBOARD__: true,
       __VERSION__: JSON.stringify(env.version()),

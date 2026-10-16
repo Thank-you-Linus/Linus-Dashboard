@@ -36,6 +36,7 @@ from custom_components.linus_dashboard.const import (
     CONF_EXCLUDED_TARGETS,
     CONF_HIDE_GREETING,
     CONF_HIDE_GROUPS_FROM_VOICE_ASSISTANTS,
+    CONF_SHOW_LIGHTS_ON_AREA_CARDS,
     CONF_WEATHER_ENTITY,
     CONF_WEATHER_ENTITY_ID,
     DOMAIN,
@@ -539,6 +540,9 @@ async def websocket_get_entities(
         CONF_EXCLUDED_TARGETS: config_entries[0].options.get(CONF_EXCLUDED_TARGETS),
         CONF_EMBEDDED_DASHBOARDS: config_entries[0].options.get(
             CONF_EMBEDDED_DASHBOARDS, []
+        ),
+        CONF_SHOW_LIGHTS_ON_AREA_CARDS: config_entries[0].options.get(
+            CONF_SHOW_LIGHTS_ON_AREA_CARDS, True
         ),
         "debug": debug_enabled,
         "version": VERSION,  # Include version for frontend version check

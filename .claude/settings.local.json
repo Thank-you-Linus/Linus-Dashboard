@@ -1,0 +1,41 @@
+{
+  "attribution": {
+    "commit": ""
+  },
+  "permissions": {
+    "allow": [
+      "Bash(cat:*)",
+      "Bash(wc:*)",
+      "Bash(grep:*)",
+      "Bash(npm run build:*)",
+      "Bash(ls:*)",
+      "Bash(xargs:*)",
+      "Bash(npm run lint)",
+      "Bash(npm run lint:check:*)",
+      "Bash(npm run type-check:*)",
+      "Bash(npm install:*)",
+      "Bash(gh issue view:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(python3:*)",
+      "Bash(./ha-env/bin/ruff check:*)",
+      "Bash(ruff:*)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:api.github.com)"
+    ]
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/sapiens-notifications.sh",
+            "timeout": 5,
+            "statusMessage": "SAPIENS notification"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -583,9 +583,7 @@ class LinusDashboardEditFlow(config_entries.OptionsFlow):
             vol.Optional(
                 CONF_SHOW_LIGHTS_ON_AREA_CARDS,
                 default=current_options.get(CONF_SHOW_LIGHTS_ON_AREA_CARDS, True),
-                description={
-                    "name": "Afficher les lumières sur les cartes de pièce"
-                },
+                description={"name": "Afficher les lumières sur les cartes de pièce"},
             ): BooleanSelector(),
         }
 

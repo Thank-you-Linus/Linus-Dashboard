@@ -6,7 +6,61 @@ from homeassistant.components.frontend import add_extra_js_url
 from homeassistant.components.lovelace.resources import ResourceStorageCollection
 from homeassistant.core import HomeAssistant
 
+from custom_components.linus_dashboard.const import DOMAIN
+
 _LOGGER = logging.getLogger(__name__)
+
+
+async def should_skip_vendored_resource(
+    hass: HomeAssistant, filename: str, own_base_url: str
+) -> str | None:
+    """
+    Check whether a lovelace resource serving the same filename is already registered.
+
+    We vendor a few popular HACS cards (mushroom, card-mod, swipe-card,
+    stack-in-card, browser_mod) for convenience. Users who already installed
+    one of those via HACS would otherwise end up loading both copies, which
+    doubles download size and makes both copies race to register the same
+    custom elements. HACS (and browser_mod's own integration) always serves
+    the upstream project's unmodified build, so matching on filename alone
+    (ignoring the directory/query string) is a reliable way to detect that.
+
+    If a conflicting external resource is found, any of our own previously
+    registered resources for this file (e.g. from before the user installed
+    the HACS version) are removed too, so we don't leave a stale duplicate.
+
+    Returns the conflicting resource's URL if one was found, else None.
+    """
+    resources: ResourceStorageCollection = hass.data["lovelace"].resources
+    await resources.async_get_info()
+
+    own_prefix = f"/{DOMAIN}_files/"
+    conflicting_url: str | None = None
+    own_items = []
+    for item in resources.async_items():
+        item_url = item.get("url", "")
+        if not item_url:
+            continue
+        item_base_url = item_url.split("?", maxsplit=1)[0]
+        if item_base_url == own_base_url:
+            own_items.append(item)
+            continue
+        if item_url.startswith(own_prefix):
+            continue
+        if item_base_url.rsplit("/", maxsplit=1)[-1] == filename:
+            conflicting_url = item_url
+
+    if conflicting_url is not None and isinstance(resources, ResourceStorageCollection):
+        for item in own_items:
+            _LOGGER.debug(
+                "Removing our own stale resource for %s now that %s provides it: %s",
+                filename,
+                conflicting_url,
+                item["url"],
+            )
+            await resources.async_delete_item(item["id"])
+
+    return conflicting_url
 
 
 async def init_resource(hass: HomeAssistant, url: str, ver: str) -> bool:

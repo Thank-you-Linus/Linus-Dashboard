@@ -10,7 +10,7 @@ const createLinusDashboardDevConfig = () => {
       "linus-strategy": path.resolve(paths.src_dir, "linus-strategy.ts"),
     },
     outputPath: paths.app_output_www,
-    publicPath: "/static/linus_dashboard/",
+    publicPath: "/linus_dashboard_files/www/",
     defineOverlay: {
       __LINUS_DASHBOARD__: true,
       __VERSION__: JSON.stringify(env.version()),

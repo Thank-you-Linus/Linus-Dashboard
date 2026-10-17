@@ -40,6 +40,7 @@ from .const import (
     CONF_EXCLUDED_TARGETS,
     CONF_HIDE_GREETING,
     CONF_HIDE_GROUPS_FROM_VOICE_ASSISTANTS,
+    CONF_SHOW_ALL_DEVICES,
     CONF_WEATHER_ENTITY,
     DOMAIN,
 )
@@ -577,6 +578,13 @@ class LinusDashboardEditFlow(config_entries.OptionsFlow):
                 ),
                 description={
                     "name": "Masquer les groupes de zone/étage des assistants vocaux"
+                },
+            ): BooleanSelector(),
+            vol.Optional(
+                CONF_SHOW_ALL_DEVICES,
+                default=current_options.get(CONF_SHOW_ALL_DEVICES, False),
+                description={
+                    "name": "Toujours afficher tous les appareils (sans défilement horizontal)"
                 },
             ): BooleanSelector(),
         }

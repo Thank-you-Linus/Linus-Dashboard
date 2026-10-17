@@ -43,6 +43,7 @@ CONF_EXCLUDED_DEVICE_CLASSES = "excluded_device_classes"
 CONF_EXCLUDED_TARGETS = "excluded_targets"
 CONF_HIDE_GREETING = "hide_greeting"
 CONF_EXCLUDED_INTEGRATIONS = "excluded_integrations"
+CONF_SHOW_ALL_DEVICES = "show_all_devices"
 
 # Embedded dashboards configuration
 CONF_EMBEDDED_DASHBOARDS = "embedded_dashboards"

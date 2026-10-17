@@ -1,5 +1,7 @@
+import { Helper } from "../Helper";
 import { EntityCardConfig } from "../types/lovelace-mushroom/cards/entity-card-config";
 import { SwipeCardConfig } from "../types/lovelace-mushroom/cards/swipe-card-config";
+import { StackCardConfig } from "../types/homeassistant/lovelace/cards/types";
 
 import { AbstractCard } from "./AbstractCard";
 import { SwipeCard } from "./SwipeCard";
@@ -42,7 +44,7 @@ class GroupedCard {
    *
    * @return {AbstractCard} A card object.
    */
-  getCard(): EntityCardConfig | SwipeCardConfig {
+  getCard(): EntityCardConfig | SwipeCardConfig | StackCardConfig {
 
     // Group entity cards into pairs and create vertical stacks
     const groupedEntityCards = [];
@@ -56,6 +58,15 @@ class GroupedCard {
       groupedEntityCards.push(stack);
       i++; // Skip the next card as it's already included in the stack
 
+    }
+
+    // When the user opted to always see every device, skip the horizontally
+    // scrolling swipe card and stack every group vertically instead.
+    if (Helper.linus_dashboard_config?.show_all_devices) {
+      return {
+        type: "vertical-stack",
+        cards: groupedEntityCards,
+      };
     }
 
     // If there are more than 2 groups, use a GroupedCard, otherwise use a horizontal stack

@@ -1136,7 +1136,7 @@ export async function processEntitiesForAreaOrFloorView({
 
             const titleCard = {
                 type: "heading",
-                heading: Helper.localize("ui.panel.lovelace.editor.card.generic.other_cards"),
+                heading: Helper.localize("ui.panel.lovelace.strategy.home.summary_list.other_devices"),
                 heading_style: "title",
                 icon: "mdi:dots-horizontal",
                 badges: [],

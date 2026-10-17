@@ -686,7 +686,7 @@ export const getStateTranslationKey = memoize(function getStateTranslationKey(st
  * @returns {string} - The floor name.
  */
 export const getFloorName = memoize(function getFloorName(floor: StrategyFloor): string {
-    return floor.floor_id === UNDISCLOSED ? Helper.localize("ui.panel.lovelace.strategy.areas.other_areas") : floor.name
+    return floor.floor_id === UNDISCLOSED ? (Helper.localize("component.linus_dashboard.entity.text.common_labels.state.other_areas") || "Other areas") : floor.name
 }, { name: 'getFloorName', maxSize: 50 });
 
 /**
@@ -1136,7 +1136,7 @@ export async function processEntitiesForAreaOrFloorView({
 
             const titleCard = {
                 type: "heading",
-                heading: Helper.localize("ui.panel.lovelace.editor.card.generic.other_cards"),
+                heading: Helper.localize("component.linus_dashboard.entity.text.common_labels.state.other_devices") || "Other devices",
                 heading_style: "title",
                 icon: "mdi:dots-horizontal",
                 badges: [],

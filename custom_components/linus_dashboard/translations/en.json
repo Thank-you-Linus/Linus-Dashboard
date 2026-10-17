@@ -113,6 +113,13 @@
           "version_info": "Version"
         }
       },
+      "common_labels": {
+        "name": "Common Labels",
+        "state": {
+          "other_areas": "Other areas",
+          "other_devices": "Other devices"
+        }
+      },
       "version_check": {
         "name": "⚠️ Linus Dashboard Update Required",
         "state": {

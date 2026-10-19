@@ -82,6 +82,9 @@ CASES = {
 
 async def _settle(hass: HomeAssistant) -> None:
     """Let each tier's debounce fire in turn (area, then floor, then global)."""
+    # Deliver the pending state_changed events first, so the area's debounce
+    # is actually scheduled before the first time jump.
+    await hass.async_block_till_done()
     now = dt_util.utcnow()
     for tier in range(1, 4):
         async_fire_time_changed(

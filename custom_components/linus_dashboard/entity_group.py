@@ -383,10 +383,11 @@ def compute_group_attributes(
     the first place, see scan_domain_members); its lists are spliced in
     instead of the member being counted as one unit, and `total` counts the
     distinct leaves reached through its `entity_id` (see _collect_leaves), so
-    a leaf shared by two sub-groups is counted once, as in the lists. Without this, a floor chip read
-    "rooms with at least one active entity" and a global chip "floors with at
-    least one active entity" — never the number of active entities, and never
-    the number the popup lists for the same perimeter. Unavailable/unknown
+    a leaf shared by two sub-groups is counted once, as in the lists.
+    Without this, a floor chip read "rooms with at least one active entity"
+    and a global chip "floors with at least one active entity" — never the
+    number of active entities, and never the number the popup lists for the
+    same perimeter. Unavailable/unknown
     nested members are propagated even when the nested group itself is
     unavailable, so an unavailable intermediate group does not hide its leaf
     members.

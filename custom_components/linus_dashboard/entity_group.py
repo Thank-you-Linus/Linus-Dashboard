@@ -29,7 +29,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
     area_registry as ar,
@@ -58,6 +58,12 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+# entity_ids of every live Linus Dashboard group entity (filled in
+# NestedGroupMixin._init_group, discarded in async_will_remove_from_hass).
+# compute_group_attributes reads it to tell a sub-group whose first state is
+# not written yet (pending) from a plain leaf — see its docstring.
+_GROUP_ENTITY_IDS: set[str] = set()
 
 
 @dataclass
@@ -340,6 +346,18 @@ def compute_group_attributes(
     unavailable, so an unavailable intermediate group does not hide its leaf
     members.
 
+    How that contract is held when a sub-group is fully offline: HA core
+    writes no attributes at all for an entity whose `available` is False, so
+    NestedGroupMixin keeps `available` True and writes the `unavailable` state
+    itself (see NestedGroupMixin.available/_stringify_state) — the attributes
+    above are therefore always published, even by a fully-offline group.
+    The one window where they are still missing is startup: a member known as
+    a Linus Dashboard group (_GROUP_ENTITY_IDS) but without
+    `active_entity_ids` yet — no state, or HA's restored `unavailable` state
+    (`restored: true`) before the entity is added — is *pending*: counted in
+    no list and not in `total`. The parent recomputes when that sub-group
+    writes its first real state (attribute changes wake it too, see below).
+
     Reactivity needs nothing extra: async_track_state_change_event also fires
     on an attribute-only change, so a sub-group publishing a new
     active_entity_ids already wakes its parent.
@@ -366,6 +384,14 @@ def compute_group_attributes(
 
     for entity_id in member_entity_ids:
         state_obj = hass.states.get(entity_id)
+        if entity_id in _GROUP_ENTITY_IDS and (
+            state_obj is None
+            or not isinstance(
+                state_obj.attributes.get("active_entity_ids"), list | tuple
+            )
+        ):
+            # Pending sub-group (startup order): not a leaf, see docstring.
+            continue
         if state_obj is None:
             total += 1
             continue
@@ -706,6 +732,25 @@ class NestedGroupMixin:
     #152's "flatline" performance issue). async_added_to_hass below
     deliberately does not call super() to avoid ever reaching that
     ancestor's version through the MRO.
+
+    Fully-offline groups (TK-188): those same HA core classes set
+    `_attr_available = False` when every member is unavailable, and HA core
+    then writes NO attributes for the entity (helpers/entity.py
+    `__async_calculate_state`, attributes merged only `if available` —
+    L1105-L1111 in 2026.4.0). The parent group then lost this group's
+    `active_entity_ids`, took it for a leaf and listed the group id instead of
+    its offline members. `available` below therefore always answers True, and
+    `_stringify_state` writes `unavailable` itself when HA core's verdict
+    (`_attr_available`, read as is) says so: the own state is unchanged, the
+    attributes are always there. For platforms without an HA core group class
+    (climate, media_player, siren, presence) `_attr_available` stays at
+    Entity's True default, so nothing changes for them.
+
+    Risks: `_stringify_state` is a single-underscore HA method — same
+    signature `(self, available: bool) -> str` and role from 2025.5.0
+    (hacs.json minimum) through 2026.9.3, guarded by
+    tests/python/test_offline_nested_groups.py. A service call on an offline
+    group is accepted and relayed to its unavailable members: net effect nil.
     """
 
     _attr_has_entity_name = True
@@ -731,9 +776,27 @@ class NestedGroupMixin:
             self._attr_translation_placeholders = translation_placeholders
         self._attr_device_info = device_info
         self.entity_id = f"{entity_id_prefix}.{unique_id}"
+        _GROUP_ENTITY_IDS.add(self.entity_id)
         self._member_entity_ids: list[str] = list(member_entity_ids)
         self._unsub_state_changed: Callable[[], None] | None = None
         self._debounce_unsub: Callable[[], None] | None = None
+
+    @property
+    def available(self) -> bool:
+        """
+        Always True so HA core always writes this group's attributes.
+
+        The real availability verdict lives in `_attr_available` and is
+        turned into the written state by `_stringify_state` — see class
+        docstring.
+        """
+        return True
+
+    def _stringify_state(self, available: bool) -> str:
+        """Write `unavailable` when HA core judged the group offline."""
+        if self._attr_available is False:
+            return STATE_UNAVAILABLE
+        return super()._stringify_state(available)
 
     def is_empty(self) -> bool:
         """Whether this group has no members (used to trigger auto-removal)."""
@@ -782,6 +845,7 @@ class NestedGroupMixin:
 
     async def async_will_remove_from_hass(self) -> None:
         await super().async_will_remove_from_hass()
+        _GROUP_ENTITY_IDS.discard(self.entity_id)
         if self._unsub_state_changed:
             self._unsub_state_changed()
             self._unsub_state_changed = None

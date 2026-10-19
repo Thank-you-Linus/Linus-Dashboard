@@ -5,4 +5,4 @@
 # plugin on its own — its aiohasupervisor pin conflicts with requirements.txt)
 # runs the same pytest.
 pytest==9.0.0
-pytest-asyncio==1.3.0
+pytest-asyncio==1.4.0

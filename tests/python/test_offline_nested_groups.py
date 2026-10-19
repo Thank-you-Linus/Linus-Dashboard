@@ -159,9 +159,10 @@ def test_leaf_back_online_restores_lists_and_counters(mock_hass, fake_states):
         assert state.attributes["total"] == 2
 
 
-def test_offline_sub_groups_sum_without_double_counting(mock_hass, fake_states):
-    # The tree is disjoint: total stays a plain sum over sub-groups, and the
-    # unavailable list stays deduplicated by id.
+def test_offline_sub_groups_total_is_sum_over_disjoint_tree(mock_hass, fake_states):
+    # Disjoint tree (no leaf shared between sub-groups): the parent's total is
+    # the plain sum of its fully-offline sub-groups' totals, and its
+    # unavailable list is their concatenation in member order.
     mock_hass.data[DOMAIN] = {"icons": ICONS}
     salon = ["binary_sensor.salon_motion_1", "binary_sensor.salon_motion_2"]
     chambre = ["binary_sensor.chambre_motion"]
@@ -185,6 +186,34 @@ def test_offline_sub_groups_sum_without_double_counting(mock_hass, fake_states):
     assert floor_state.attributes["total"] == 3
     assert floor_state.attributes["unavailable_entity_ids"] == [*salon, *chambre]
     assert floor_state.attributes["unavailable_count"] == 3
+
+
+def test_leaf_shared_by_two_offline_sub_groups_is_listed_once(mock_hass, fake_states):
+    # One offline leaf reachable through two fully-offline sub-groups must
+    # appear once in the parent's unavailable list (dedup by id), and
+    # unavailable_count must follow the deduplicated list.
+    mock_hass.data[DOMAIN] = {"icons": ICONS}
+    shared = "binary_sensor.shared_motion"
+    only_a = "binary_sensor.salon_motion_1"
+    for sensor_id in (shared, only_a):
+        fake_states.set(sensor_id, "unavailable")
+    group_a = motion_group(
+        mock_hass, "linus_dashboard_motion_area_salon", [shared, only_a]
+    )
+    group_b = motion_group(mock_hass, "linus_dashboard_motion_area_chambre", [shared])
+    floor = motion_group(
+        mock_hass,
+        "linus_dashboard_motion_floor_ground",
+        [group_a.entity_id, group_b.entity_id],
+    )
+    publish(fake_states, group_a)
+    publish(fake_states, group_b)
+
+    floor_state = publish(fake_states, floor)
+
+    assert floor_state.state == "unavailable"
+    assert floor_state.attributes["unavailable_entity_ids"] == [shared, only_a]
+    assert floor_state.attributes["unavailable_count"] == 2
 
 
 def test_restored_sub_group_is_pending_not_a_leaf(mock_hass, fake_states):

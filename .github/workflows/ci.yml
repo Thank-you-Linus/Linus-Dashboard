@@ -34,6 +34,76 @@ jobs:
       - name: "Check Ruff formatting"
         run: python3 -m ruff format . --check
 
+  # Python tests are split in three blocking jobs (TK-188):
+  # - python-tests: the unit suite against requirements.txt (HA 2026.4.0);
+  #   tests/python/integration is skipped there (no plugin installed).
+  # - python-tests-integration: tests/python/integration against a real
+  #   HomeAssistant from pytest-homeassistant-custom-component. It cannot share
+  #   the unit job's environment (its aiohasupervisor pin conflicts with
+  #   requirements.txt) nor its process (its autouse fixtures call
+  #   asyncio.get_event_loop(), which the unit tests' asyncio.run() leaves
+  #   unset), so it installs the plugin alone — the plugin pins HA itself.
+  # - python-tests-ha-min: the offline-group serialisation tests and the
+  #   Entity._stringify_state version guard on hacs.json's minimum HA.
+  python-tests:
+    name: "Python Tests"
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: "Checkout repository"
+        uses: "actions/checkout@v7"
+
+      - name: "Set up Python"
+        uses: "actions/setup-python@v7.0.0"
+        with:
+          python-version: "3.14"
+          cache: "pip"
+
+      - name: "Install Python dependencies"
+        run: python3 -m pip install --break-system-packages -r requirements.txt -r requirements_test.txt
+
+      - name: "Run unit tests"
+        run: python3 -m pytest tests/python
+
+  python-tests-integration:
+    name: "Python Integration Tests (real HA)"
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: "Checkout repository"
+        uses: "actions/checkout@v7"
+
+      - name: "Set up Python"
+        uses: "actions/setup-python@v7.0.0"
+        with:
+          python-version: "3.14"
+          cache: "pip"
+
+      # 0.13.321 is the release pinning homeassistant==2026.4.0, the version
+      # requirements.txt targets; bump both together.
+      - name: "Install pytest-homeassistant-custom-component"
+        run: python3 -m pip install --break-system-packages pytest-homeassistant-custom-component==0.13.321
+
+      - name: "Run integration tests"
+        run: python3 -m pytest tests/python/integration
+
+  python-tests-ha-min:
+    name: "Python Tests (HA 2025.5.0 minimum)"
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: "Checkout repository"
+        uses: "actions/checkout@v7"
+
+      - name: "Set up Python"
+        uses: "actions/setup-python@v7.0.0"
+        with:
+          python-version: "3.13"
+          cache: "pip"
+
+      - name: "Install Python dependencies"
+        run: python3 -m pip install --break-system-packages homeassistant==2025.5.0 -r requirements_test.txt
+
+      - name: "Run serialisation tests and version guard"
+        run: python3 -m pytest tests/python/test_offline_nested_groups.py
+
   # TODO: fake-house-smoke-test job removed 2026-07-16 — kept failing in CI
   # even after fixing the root cause we found (recovery mode triggered by a
   # missing home-assistant-frontend requirement, see

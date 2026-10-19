@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- fix(groups): a fully-offline area/floor group keeps publishing its attributes (`entity_id`, `unavailable_entity_ids`...) while its own state stays `unavailable`, so floor and global groups cite and count the offline devices themselves instead of the group id (TK-188, #216)
 - fix(sensor): numeric aggregates no longer mix units (V/mV, W/kW, °C/°F...): members are converted to one unit per device_class, members that cannot be converted are left out (`excluded_entity_ids`); the sensor chips and popups now show that aggregate instead of re-aggregating members (battery chip: minimum, temperature chip: average) (TK-157, #198)
 - fix(sensor): rebuild numeric aggregates after startup so entities from late-loading integrations (MQTT, tuya_local...) are no longer dropped (TK-156, #197)
 - fix(group_manager): no more "Unable to remove unknown job listener" ERROR on reload after a restart (one-time STARTED listener unsubscribed after it fired)

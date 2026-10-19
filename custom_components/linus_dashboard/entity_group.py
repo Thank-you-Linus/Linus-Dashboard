@@ -315,6 +315,50 @@ def resolve_floors_for_areas(
     return floor_areas, floor_names
 
 
+def _collect_leaves(
+    hass: HomeAssistant,
+    member_entity_ids: list[str] | tuple[str, ...],
+    leaf_ids: set[str],
+    seen: set[str],
+) -> int:
+    """
+    Add the distinct leaves under `member_entity_ids` to `leaf_ids`, walking
+    nested sub-groups through their published `entity_id` (direct members).
+
+    Returns the leaves that could not be identified: a nested sub-group
+    exposing `active_entity_ids` but an absent or empty member list (a
+    group with no member publishes `total` 0) contributes its `total`
+    as-is. Pending sub-groups contribute nothing (see
+    compute_group_attributes); `seen` guards against a sub-group reached
+    twice or a membership cycle.
+    """
+    unidentified = 0
+    for entity_id in member_entity_ids:
+        if entity_id in seen:
+            continue
+        seen.add(entity_id)
+        state_obj = hass.states.get(entity_id)
+        nested_active = (
+            state_obj.attributes.get("active_entity_ids") if state_obj else None
+        )
+        if isinstance(nested_active, list | tuple):
+            nested_members = state_obj.attributes.get(ATTR_ENTITY_ID)
+            if isinstance(nested_members, list | tuple) and nested_members:
+                unidentified += _collect_leaves(hass, nested_members, leaf_ids, seen)
+            else:
+                nested_total = state_obj.attributes.get("total")
+                unidentified += (
+                    nested_total
+                    if isinstance(nested_total, int)
+                    else len(nested_active)
+                )
+            continue
+        if entity_id in _GROUP_ENTITY_IDS:
+            continue
+        leaf_ids.add(entity_id)
+    return unidentified
+
+
 def compute_group_attributes(
     hass: HomeAssistant,
     *,
@@ -337,8 +381,9 @@ def compute_group_attributes(
     state exposes an `active_entity_ids` attribute (only this integration's
     group entities do — a foreign group never gets scanned in as a member in
     the first place, see scan_domain_members); its lists are spliced in
-    instead of the member being counted as one unit, and its `total` replaces
-    the 1 it would otherwise contribute. Without this, a floor chip read
+    instead of the member being counted as one unit, and `total` counts the
+    distinct leaves reached through its `entity_id` (see _collect_leaves), so
+    a leaf shared by two sub-groups is counted once, as in the lists. Without this, a floor chip read
     "rooms with at least one active entity" and a global chip "floors with at
     least one active entity" — never the number of active entities, and never
     the number the popup lists for the same perimeter. Unavailable/unknown
@@ -380,7 +425,6 @@ def compute_group_attributes(
     entity_states: dict[str, str] = {}
     active_ids: list[str] = []
     unavailable_ids: list[str] = []
-    total = 0
 
     for entity_id in member_entity_ids:
         state_obj = hass.states.get(entity_id)
@@ -393,7 +437,6 @@ def compute_group_attributes(
             # Pending sub-group (startup order): not a leaf, see docstring.
             continue
         if state_obj is None:
-            total += 1
             continue
 
         available = state_obj.state not in ("unavailable", "unknown")
@@ -403,17 +446,12 @@ def compute_group_attributes(
         nested_active = state_obj.attributes.get("active_entity_ids")
         if isinstance(nested_active, list | tuple):
             nested_unavailable = state_obj.attributes.get("unavailable_entity_ids")
-            nested_total = state_obj.attributes.get("total")
-            total += (
-                nested_total if isinstance(nested_total, int) else len(nested_active)
-            )
             if isinstance(nested_unavailable, list | tuple):
                 unavailable_ids.extend(nested_unavailable)
             if available:
                 active_ids.extend(nested_active)
             continue
 
-        total += 1
         if not available:
             unavailable_ids.append(entity_id)
         if available and state_obj.state in resolved_active_states:
@@ -423,6 +461,8 @@ def compute_group_attributes(
     # dict.fromkeys dedups while preserving member order.
     active_ids = list(dict.fromkeys(active_ids))
     unavailable_ids = list(dict.fromkeys(unavailable_ids))
+    leaf_ids: set[str] = set()
+    total = _collect_leaves(hass, member_entity_ids, leaf_ids, set()) + len(leaf_ids)
 
     icon = compute_icon(hass, domain, entity_states, device_class)
     color = compute_color(domain, device_class, entity_states)

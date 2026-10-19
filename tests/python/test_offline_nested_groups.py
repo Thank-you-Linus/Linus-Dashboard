@@ -191,7 +191,7 @@ def test_offline_sub_groups_total_is_sum_over_disjoint_tree(mock_hass, fake_stat
 def test_leaf_shared_by_two_offline_sub_groups_is_listed_once(mock_hass, fake_states):
     # One offline leaf reachable through two fully-offline sub-groups must
     # appear once in the parent's unavailable list (dedup by id), and
-    # unavailable_count must follow the deduplicated list.
+    # unavailable_count and total must both count it once.
     mock_hass.data[DOMAIN] = {"icons": ICONS}
     shared = "binary_sensor.shared_motion"
     only_a = "binary_sensor.salon_motion_1"
@@ -214,6 +214,7 @@ def test_leaf_shared_by_two_offline_sub_groups_is_listed_once(mock_hass, fake_st
     assert floor_state.state == "unavailable"
     assert floor_state.attributes["unavailable_entity_ids"] == [shared, only_a]
     assert floor_state.attributes["unavailable_count"] == 2
+    assert floor_state.attributes["total"] == 2
 
 
 def test_restored_sub_group_is_pending_not_a_leaf(mock_hass, fake_states):

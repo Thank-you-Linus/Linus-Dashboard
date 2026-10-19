@@ -1,0 +1,8 @@
+# Test dependencies for the Python unit suite (CI jobs `python-tests` and
+# `python-tests-ha-min`), installed on top of requirements.txt or of a pinned
+# homeassistant. Same versions as pytest-homeassistant-custom-component 0.13.321
+# pins, so the integration job (tests/python/integration, which installs that
+# plugin on its own — its aiohasupervisor pin conflicts with requirements.txt)
+# runs the same pytest.
+pytest==9.0.0
+pytest-asyncio==1.3.0

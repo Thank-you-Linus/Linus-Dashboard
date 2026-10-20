@@ -53,6 +53,47 @@ def test_area_scope_counts_only_unavailable_and_unknown_members(mock_hass, fake_
     assert sensor._attr_extra_state_attributes["total"] == 2
 
 
+def test_area_scope_stateless_entity_unknown_is_not_counted(mock_hass, fake_states):
+    # Reported on 2.0.1-beta.1: a room counted 3 "unavailable" entities that
+    # were all online — two SLZB-06 restart buttons and a gateway restart
+    # button. A button's state is the time it was last pressed, so a button
+    # never pressed stays "unknown" for good: that is its resting state, not
+    # a fault. Same for the other stateless domains below.
+    stateless = [
+        "button.slzb_core_restart",
+        "input_button.doorbell",
+        "scene.movie",
+        "event.doorbell_ring",
+        "notify.phone",
+    ]
+    for eid in stateless:
+        fake_states.set(eid, "unknown")
+    sensor = make_sensor(mock_hass, stateless, nested=False)
+
+    sensor._update_state()
+
+    assert sensor._attr_native_value == 0
+    assert sensor._attr_extra_state_attributes["entity_id"] == []
+
+
+def test_area_scope_stateless_entity_unavailable_is_still_counted(
+    mock_hass, fake_states
+):
+    # A button whose device is offline does go "unavailable": that one is down.
+    fake_states.set("button.slzb_core_restart", "unavailable")
+    fake_states.set("button.gwg3_restart", "unknown")
+    sensor = make_sensor(
+        mock_hass, ["button.slzb_core_restart", "button.gwg3_restart"], nested=False
+    )
+
+    sensor._update_state()
+
+    assert sensor._attr_native_value == 1
+    assert sensor._attr_extra_state_attributes["entity_id"] == [
+        "button.slzb_core_restart"
+    ]
+
+
 def test_area_scope_all_available_reports_zero(mock_hass, fake_states):
     fake_states.set("light.a", "on")
     fake_states.set("light.b", "off")

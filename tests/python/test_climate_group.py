@@ -5,7 +5,8 @@ ClimateGroup used to announce every feature bit its members share. Home
 Assistant reads the matching mode list as soon as a bit is announced
 (capability_attributes / state_attributes), and ClimateGroup sets none of
 _attr_preset_modes, _attr_fan_modes, _attr_swing_modes,
-_attr_swing_horizontal_modes: an area whose thermostats all had presets
+_attr_swing_horizontal_modes, nor _attr_target_temperature_high/low for the
+range: an area whose thermostats all had presets
 (Versatile Thermostat, supported_features 401) raised AttributeError on every
 state write, so the group stayed frozen and the floor/global groups built on
 it aggregated a stale state.
@@ -168,7 +169,8 @@ def test_versatile_thermostat_with_presets(mock_hass, fake_states):
 
 
 def test_temperature_range_is_not_announced(mock_hass, fake_states):
-    # The group computes no target_temperature_high/low.
+    # The group sets no target_temperature_high/low: announced, the range
+    # raised AttributeError on every write like the mode lists.
     set_thermostat(
         fake_states,
         "climate.member",
@@ -183,6 +185,8 @@ def test_temperature_range_is_not_announced(mock_hass, fake_states):
     group._recompute()
 
     assert ClimateEntityFeature.TARGET_TEMPERATURE_RANGE not in group.supported_features
+    attrs = written_attributes(group)
+    assert "target_temp_high" not in attrs
 
 
 def test_plain_thermostats_keep_their_features(mock_hass, fake_states):

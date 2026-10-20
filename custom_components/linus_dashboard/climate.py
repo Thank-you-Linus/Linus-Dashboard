@@ -92,8 +92,9 @@ class ClimateGroup(NestedGroupMixin, ClimateEntity):
         feature). Presets, fan, swing and temperature range are never
         announced, even when every member shares them: the group forwards
         none of them, and HA reads their mode lists (_attr_preset_modes...)
-        as soon as the bit is set — unset, every state write raised
-        AttributeError and froze the group (#233).
+        and the range's _attr_target_temperature_high/low as soon as the bit
+        is set — unset, every state write raised AttributeError and froze
+        the group (#233).
         """
         states = [
             state

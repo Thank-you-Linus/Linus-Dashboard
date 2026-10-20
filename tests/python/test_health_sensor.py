@@ -59,12 +59,18 @@ def test_area_scope_stateless_entity_unknown_is_not_counted(mock_hass, fake_stat
     # button. A button's state is the time it was last pressed, so a button
     # never pressed stays "unknown" for good: that is its resting state, not
     # a fault. Same for the other stateless domains below.
+    # Spelled out rather than imported, so a typo in the domain list fails.
     stateless = [
+        "ai_task.assistant",
         "button.slzb_core_restart",
-        "input_button.doorbell",
-        "scene.movie",
+        "conversation.assist",
         "event.doorbell_ring",
+        "input_button.doorbell",
         "notify.phone",
+        "scene.movie",
+        "stt.whisper",
+        "tts.piper",
+        "wake_word.openwakeword",
     ]
     for eid in stateless:
         fake_states.set(eid, "unknown")

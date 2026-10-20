@@ -369,7 +369,8 @@ async def async_setup_entry(
     exclusions = ExclusionConfig.from_config_entry(config_entry)
     if domain_is_excluded("binary_sensor", exclusions):
         _LOGGER.debug("binary_sensor domain excluded, skipping group creation")
-        async_report_built(hass, config_entry, "binary_sensor", [])
+        # Excluded builds nothing whatever the states: settled from the start.
+        async_report_built(hass, config_entry, "binary_sensor", [], settled=True)
         return
 
     # Module-level registries can hold stale entries from a previous load of

@@ -12,7 +12,6 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 import pytest
-from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 
@@ -92,16 +91,58 @@ def _start(hass, entry, platforms=PLATFORMS):
     registry_cleanup.async_init(hass, entry, platforms)
 
 
-def test_nothing_is_removed_before_ready(hass, mock_config_entry, regs):
+def test_builds_before_start_remove_nothing(mock_hass, mock_config_entry, regs):
+    """A setup report at boot, with no post-start rebuild (one that failed)."""
+    mock_hass.is_running = False
     regs.add_entity("light.ghost", "linus_dashboard_all_lights_area_cave")
     regs.add_device("cave", AREA_CAVE)
-    _start(hass, mock_config_entry)
+    _start(mock_hass, mock_config_entry)
 
-    registry_cleanup.async_report_built(hass, mock_config_entry, "light", [])
-    registry_cleanup.async_report_built(hass, mock_config_entry, "sensor", [])
+    registry_cleanup.async_report_built(mock_hass, mock_config_entry, "light", [])
+    registry_cleanup.async_report_built(mock_hass, mock_config_entry, "sensor", [])
 
     assert regs.removed_entities == []
     assert regs.removed_devices == []
+
+    # The post-start rebuilds settle both builds.
+    mock_hass.is_running = True
+    registry_cleanup.async_report_built(mock_hass, mock_config_entry, "light", [])
+    assert regs.removed_entities == ["light.ghost"]
+    assert regs.removed_devices == []
+    registry_cleanup.async_report_built(mock_hass, mock_config_entry, "sensor", [])
+    assert regs.removed_devices == ["cave"]
+
+
+def test_unsettled_build_after_a_settled_one_removes_nothing(
+    mock_hass, mock_config_entry, regs
+):
+    mock_hass.is_running = True
+    regs.add_entity("light.salon", "lights_salon")
+    _start(mock_hass, mock_config_entry)
+    registry_cleanup.async_report_built(
+        mock_hass, mock_config_entry, "light", [_group("lights_salon")]
+    )
+
+    # Home Assistant stopping: a rebuild then settles nothing.
+    mock_hass.is_running = False
+    registry_cleanup.async_report_built(mock_hass, mock_config_entry, "light", [])
+
+    assert regs.removed_entities == []
+
+
+def test_explicitly_settled_build_counts_before_start(
+    mock_hass, mock_config_entry, regs
+):
+    """A domain excluded in the options builds nothing, whatever the states."""
+    mock_hass.is_running = False
+    regs.add_entity("binary_sensor.ghost", "presence_cave")
+    _start(mock_hass, mock_config_entry)
+
+    registry_cleanup.async_report_built(
+        mock_hass, mock_config_entry, "binary_sensor", [], settled=True
+    )
+
+    assert regs.removed_entities == ["binary_sensor.ghost"]
 
 
 def test_ready_removes_entities_no_build_produces(hass, mock_config_entry, regs):
@@ -116,8 +157,6 @@ def test_ready_removes_entities_no_build_produces(hass, mock_config_entry, regs)
         [_group("linus_dashboard_all_lights_area_salon")],
     )
 
-    registry_cleanup.async_schedule_ready(hass, mock_config_entry)
-
     # sensor has not reported: its entities are left alone.
     assert regs.removed_entities == ["light.ghost"]
 
@@ -131,7 +170,6 @@ def test_unused_device_removed_once_every_platform_reported(
     registry_cleanup.async_report_built(
         hass, mock_config_entry, "light", [_group("lights_salon", AREA_SALON)]
     )
-    registry_cleanup.async_schedule_ready(hass, mock_config_entry)
 
     # The sensor platform may still use the cave device.
     assert regs.removed_devices == []
@@ -150,12 +188,10 @@ def test_device_used_by_another_platform_is_kept(hass, mock_config_entry, regs):
         hass, mock_config_entry, "sensor", [_group("health_cave", AREA_CAVE)]
     )
 
-    registry_cleanup.async_schedule_ready(hass, mock_config_entry)
-
     assert regs.removed_devices == []
 
 
-def test_rebuild_after_ready_removes_the_dropped_group(hass, mock_config_entry, regs):
+def test_rebuild_removes_the_dropped_group(hass, mock_config_entry, regs):
     regs.add_entity("light.salon", "lights_salon")
     regs.add_device("salon", AREA_SALON)
     _start(hass, mock_config_entry)
@@ -163,7 +199,6 @@ def test_rebuild_after_ready_removes_the_dropped_group(hass, mock_config_entry, 
         hass, mock_config_entry, "light", [_group("lights_salon")]
     )
     registry_cleanup.async_report_built(hass, mock_config_entry, "sensor", [])
-    registry_cleanup.async_schedule_ready(hass, mock_config_entry)
     assert regs.removed_entities == []
 
     # The salon's last light moved out: the light rebuild builds nothing.
@@ -173,41 +208,9 @@ def test_rebuild_after_ready_removes_the_dropped_group(hass, mock_config_entry, 
     assert regs.removed_devices == ["salon"]
 
 
-def test_boot_waits_for_started_plus_delay(
-    mock_hass, mock_config_entry, regs, monkeypatch
-):
-    mock_hass.is_running = False
-    started: list = []
-    later: list = []
-    mock_hass.bus = MagicMock()
-    mock_hass.bus.async_listen_once = lambda event, cb: (
-        started.append((event, cb)) or MagicMock()
-    )
-    monkeypatch.setattr(
-        registry_cleanup,
-        "async_call_later",
-        lambda _hass, delay, action: later.append((delay, action)) or MagicMock(),
-    )
-    regs.add_entity("light.ghost", "lights_cave")
-    _start(mock_hass, mock_config_entry)
-    registry_cleanup.async_report_built(mock_hass, mock_config_entry, "light", [])
-
-    registry_cleanup.async_schedule_ready(mock_hass, mock_config_entry)
-    assert [event for event, _ in started] == [EVENT_HOMEASSISTANT_STARTED]
-    assert regs.removed_entities == []
-
-    started[0][1](None)
-    assert [delay for delay, _ in later] == [registry_cleanup.READY_DELAY]
-    assert regs.removed_entities == []
-
-    later[0][1](None)
-    assert regs.removed_entities == ["light.ghost"]
-
-
 def test_report_after_unload_is_ignored(hass, mock_config_entry, regs):
     regs.add_entity("light.salon", "lights_salon")
     _start(hass, mock_config_entry)
-    registry_cleanup.async_schedule_ready(hass, mock_config_entry)
     registry_cleanup.async_unload(hass, mock_config_entry)
 
     registry_cleanup.async_report_built(hass, mock_config_entry, "light", [])

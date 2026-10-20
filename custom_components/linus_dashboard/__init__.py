@@ -397,11 +397,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     # Forward platforms (aggregate sensors + area/floor/global group entities).
-    # Each platform reports what it builds; once Home Assistant has started,
-    # whatever is no longer built is removed from the registries (#217).
+    # Each platform reports what it builds; whatever a build made with Home
+    # Assistant running no longer produces is removed from the registries (#217).
     registry_cleanup.async_init(hass, entry, [platform.value for platform in PLATFORMS])
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    registry_cleanup.async_schedule_ready(hass, entry)
 
     await async_hide_group_entities_from_voice_assistants(hass, entry)
 

@@ -2,8 +2,8 @@
 Registry reconciliation for Linus Dashboard (#217).
 
 Every platform reports the entities its build produces, at setup and at each
-`_rebuild`. Once the cleanup is ready, anything of this config entry the build
-no longer produces is removed from the registries:
+`_rebuild`. Anything of this config entry a settled build no longer produces is
+removed from the registries:
 
 1. entities whose unique_id no platform builds any more (a group that lost its
    last member, while Home Assistant was stopped or at runtime);
@@ -12,13 +12,14 @@ no longer produces is removed from the registries:
 Removing a registry entry also removes the live entity, so a group dropped by
 `_rebuild` disappears for good instead of staying "unavailable / restored".
 
-Ready means every member of a group has a state to be scanned: at
-EVENT_HOMEASSISTANT_START, Home Assistant writes an `unavailable` state for
-every enabled registry entry that has none yet, so the post-start rebuilds
-(PlatformGroupManager, STARTED + 2 s) see members of late-loading integrations
-too. The cleanup therefore waits for STARTED + READY_DELAY, after those
-rebuilds, or runs right after setup when Home Assistant is already running
-(reload). Before that, nothing is removed.
+A build is settled when it ran with Home Assistant running (`hass.is_running`,
+the same test as PlatformGroupManager): at EVENT_HOMEASSISTANT_START, Home
+Assistant writes an `unavailable` state for every enabled registry entry that
+has none yet, so a build from then on sees the members of late-loading
+integrations too. At boot, that is each platform's post-start rebuild
+(PlatformGroupManager, STARTED + 2 s); at reload, the setup itself. A build
+made before, or a rebuild that failed, settles nothing: its domain is left
+alone, and the devices too, until every platform has a settled build.
 """
 
 from __future__ import annotations
@@ -28,22 +29,16 @@ from collections.abc import Iterable
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.event import async_call_later
 
 from .const import DOMAIN
-from .group_manager import _async_listen_started_once
 
 if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
-
-# Seconds after EVENT_HOMEASSISTANT_STARTED before the first cleanup: past the
-# platforms' own post-start rebuild (PlatformGroupManager's 2 s startup delay).
-READY_DELAY = 10.0
 
 _DATA_KEY = "registry_cleanup"
 
@@ -55,7 +50,8 @@ class _CleanupState:
     platforms: tuple[str, ...]
     # platform domain -> {unique_id: device identifiers of that entity}
     built: dict[str, dict[str, set[tuple[str, str]]]] = field(default_factory=dict)
-    ready: bool = False
+    # domains whose last build is settled (see the module docstring)
+    settled: set[str] = field(default_factory=set)
 
 
 def _state(hass: HomeAssistant, entry: ConfigEntry) -> _CleanupState | None:
@@ -78,45 +74,31 @@ def async_init(
 
 @callback
 def async_report_built(
-    hass: HomeAssistant, entry: ConfigEntry, domain: str, entities: Iterable[Any]
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    domain: str,
+    entities: Iterable[Any],
+    *,
+    settled: bool | None = None,
 ) -> None:
-    """Record everything `domain`'s build produces now; clean up if ready."""
+    """
+    Record everything `domain`'s build produces now, then clean up.
+
+    `settled` defaults to `hass.is_running`; pass True for a build that reads
+    no state (a domain excluded in the options builds nothing, at any time).
+    """
     state = _state(hass, entry)
     if state is None:
         return
     state.built[domain] = {
         entity.unique_id: _device_identifiers(entity) for entity in entities
     }
-    if state.ready:
-        _async_reconcile(hass, entry, state)
-
-
-def async_schedule_ready(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """
-    Make the cleanup ready: now if Home Assistant is running (every platform
-    has reported by the end of setup), else READY_DELAY after STARTED.
-    """
-    if hass.is_running:
-        _async_set_ready(hass, entry)
-        return
-
-    @callback
-    def _ready(_now: Any) -> None:
-        _async_set_ready(hass, entry)
-
-    @callback
-    def _on_started(_event: Event) -> None:
-        entry.async_on_unload(async_call_later(hass, READY_DELAY, _ready))
-
-    entry.async_on_unload(_async_listen_started_once(hass, _on_started))
-
-
-@callback
-def _async_set_ready(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    state = _state(hass, entry)
-    if state is None:
-        return
-    state.ready = True
+    if settled is None:
+        settled = hass.is_running
+    if settled:
+        state.settled.add(domain)
+    else:
+        state.settled.discard(domain)
     _async_reconcile(hass, entry, state)
 
 
@@ -126,15 +108,16 @@ def _async_reconcile(
 ) -> None:
     entity_reg = er.async_get(hass)
     for entity_entry in er.async_entries_for_config_entry(entity_reg, entry.entry_id):
-        built = state.built.get(entity_entry.domain)
-        if built is None or entity_entry.unique_id in built:
+        if entity_entry.domain not in state.settled:
+            continue
+        if entity_entry.unique_id in state.built[entity_entry.domain]:
             continue
         entity_reg.async_remove(entity_entry.entity_id)
         _LOGGER.info("Removed group no longer built: %s", entity_entry.entity_id)
 
     # A device is shared by every platform (an area's light, presence and
-    # health entities): it is unused only once all of them have reported.
-    if any(domain not in state.built for domain in state.platforms):
+    # health entities): it is unused only once all of them have settled.
+    if any(domain not in state.settled for domain in state.platforms):
         return
     used = _used_identifiers(state)
     device_reg = dr.async_get(hass)

@@ -72,7 +72,6 @@ async def test_ghosts_removed_and_dropped_group_disappears(hass: HomeAssistant):
 
     registry_cleanup.async_init(hass, entry, ["light"])
     registry_cleanup.async_report_built(hass, entry, "light", [salon])
-    registry_cleanup.async_schedule_ready(hass, entry)
     await hass.async_block_till_done()
 
     assert entity_reg.async_get(ghost.entity_id) is None

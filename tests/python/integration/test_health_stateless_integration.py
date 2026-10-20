@@ -29,7 +29,8 @@ from pytest_homeassistant_custom_component.common import (
 
 from custom_components.linus_dashboard.const import DOMAIN
 from custom_components.linus_dashboard.sensor import _build_health_sensors
-from tests.python.integration.helpers import settle
+
+from .helpers import settle
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant

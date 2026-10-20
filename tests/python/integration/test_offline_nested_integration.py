@@ -30,7 +30,8 @@ from custom_components.linus_dashboard.binary_sensor import (
 )
 from custom_components.linus_dashboard.const import DOMAIN
 from custom_components.linus_dashboard.light import LightGroup
-from tests.python.integration.helpers import settle
+
+from .helpers import settle
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant

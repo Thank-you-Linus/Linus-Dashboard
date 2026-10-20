@@ -11,7 +11,6 @@ member states are set by hand. Run by the CI `python-tests-integration` job
 
 from __future__ import annotations
 
-from datetime import timedelta
 from typing import TYPE_CHECKING
 
 import pytest
@@ -23,16 +22,14 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers import floor_registry as fr
 from homeassistant.helpers.entity import EntityCategory
-from homeassistant.util import dt as dt_util
 from pytest_homeassistant_custom_component.common import (
     MockConfigEntry,
     MockEntityPlatform,
-    async_fire_time_changed,
 )
 
 from custom_components.linus_dashboard.const import DOMAIN
-from custom_components.linus_dashboard.entity_group import DEBOUNCE_SECONDS
 from custom_components.linus_dashboard.sensor import _build_health_sensors
+from tests.python.integration.helpers import settle
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -54,21 +51,29 @@ async def _setup(hass: HomeAssistant) -> None:
     area = ar.async_get(hass).async_create("Dachboden Kino", floor_id=floor.floor_id)
     smlight = MockConfigEntry(domain="smlight")
     smlight.add_to_hass(hass)
-    device = dr.async_get(hass).async_get_or_create(
-        config_entry_id=smlight.entry_id,
-        identifiers={("smlight", "0c:dc:7e:37:0d:28")},
-        name="SLZB-06Mg24",
-    )
-    dr.async_get(hass).async_update_device(device.id, area_id=area.id)
+    gateway = MockConfigEntry(domain="gateway")
+    gateway.add_to_hass(hass)
+    device_reg = dr.async_get(hass)
+    devices = {}
+    for key, entry, identifier, name in (
+        ("slzb", smlight, ("smlight", "0c:dc:7e:37:0d:28"), "SLZB-06Mg24"),
+        ("gwg3", gateway, ("gateway", "gwg3"), "Dachboden Kino GWG3"),
+    ):
+        device = device_reg.async_get_or_create(
+            config_entry_id=entry.entry_id, identifiers={identifier}, name=name
+        )
+        device_reg.async_update_device(device.id, area_id=area.id)
+        devices[key] = (entry, device.id)
     entity_reg = er.async_get(hass)
     for unique_id, entity_id in BUTTONS.items():
+        entry, device_id = devices["gwg3" if unique_id == "gwg3_restart" else "slzb"]
         entity_reg.async_get_or_create(
             "button",
-            "smlight",
+            entry.domain,
             unique_id,
             suggested_object_id=entity_id.split(".", 1)[1],
-            config_entry=smlight,
-            device_id=device.id,
+            config_entry=entry,
+            device_id=device_id,
             entity_category=EntityCategory.CONFIG,
         )
         # Never pressed: a button's state is its last press time, none yet.
@@ -79,7 +84,7 @@ async def _setup(hass: HomeAssistant) -> None:
         "led",
         suggested_object_id="slzb_06mg24_led",
         config_entry=smlight,
-        device_id=device.id,
+        device_id=devices["slzb"][1],
     )
     hass.states.async_set("light.slzb_06mg24_led", "on")
 
@@ -89,18 +94,7 @@ async def _setup(hass: HomeAssistant) -> None:
     platform = MockEntityPlatform(hass, domain="sensor", platform_name=DOMAIN)
     platform.config_entry = entry
     await platform.async_add_entities(sensors)
-    await _settle(hass)
-
-
-async def _settle(hass: HomeAssistant) -> None:
-    """Let each tier's debounce fire in turn (area, then floor, then global)."""
-    await hass.async_block_till_done()
-    now = dt_util.utcnow()
-    for tier in range(1, 4):
-        async_fire_time_changed(
-            hass, now + timedelta(seconds=tier * (DEBOUNCE_SECONDS + 1))
-        )
-        await hass.async_block_till_done()
+    await settle(hass)
 
 
 async def test_never_pressed_buttons_are_not_unavailable(hass: HomeAssistant):
@@ -120,7 +114,7 @@ async def test_offline_button_and_stuck_light_still_counted(hass: HomeAssistant)
     # The light stuck at "unknown" is not stateless, so it still counts.
     hass.states.async_set(BUTTONS["core_restart"], "unavailable")
     hass.states.async_set("light.slzb_06mg24_led", "unknown")
-    await _settle(hass)
+    await settle(hass)
 
     expected = [BUTTONS["core_restart"], "light.slzb_06mg24_led"]
     for sensor_id in TIERS:
@@ -131,7 +125,7 @@ async def test_offline_button_and_stuck_light_still_counted(hass: HomeAssistant)
     # Pressed once and back online: a button's state becomes its press time.
     hass.states.async_set(BUTTONS["core_restart"], "2026-10-20T17:44:43+00:00")
     hass.states.async_set("light.slzb_06mg24_led", "on")
-    await _settle(hass)
+    await settle(hass)
 
     for sensor_id in TIERS:
         assert hass.states.get(sensor_id).state == "0", sensor_id

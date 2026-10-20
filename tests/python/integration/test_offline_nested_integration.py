@@ -17,25 +17,20 @@ absent and run on its own by the CI `python-tests-integration` job:
 
 from __future__ import annotations
 
-from datetime import timedelta
 from typing import TYPE_CHECKING
 
 import pytest
 
 pytest.importorskip("pytest_homeassistant_custom_component")
 
-from homeassistant.util import dt as dt_util
-from pytest_homeassistant_custom_component.common import (
-    MockEntityPlatform,
-    async_fire_time_changed,
-)
+from pytest_homeassistant_custom_component.common import MockEntityPlatform
 
 from custom_components.linus_dashboard.binary_sensor import (
     BinarySensorDeviceClassGroup,
 )
 from custom_components.linus_dashboard.const import DOMAIN
-from custom_components.linus_dashboard.entity_group import DEBOUNCE_SECONDS
 from custom_components.linus_dashboard.light import LightGroup
+from tests.python.integration.helpers import settle
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -80,19 +75,6 @@ CASES = {
 }
 
 
-async def _settle(hass: HomeAssistant) -> None:
-    """Let each tier's debounce fire in turn (area, then floor, then global)."""
-    # Deliver the pending state_changed events first, so the area's debounce
-    # is actually scheduled before the first time jump.
-    await hass.async_block_till_done()
-    now = dt_util.utcnow()
-    for tier in range(1, 4):
-        async_fire_time_changed(
-            hass, now + timedelta(seconds=tier * (DEBOUNCE_SECONDS + 1))
-        )
-        await hass.async_block_till_done()
-
-
 async def _build_chain(hass: HomeAssistant, domain: str):
     factory, prefix, leaves, idle = CASES[domain]
     hass.data[DOMAIN] = {"icons": ICONS}
@@ -103,7 +85,7 @@ async def _build_chain(hass: HomeAssistant, domain: str):
     glob = factory(hass, f"{prefix}_global", [floor.entity_id])
     platform = MockEntityPlatform(hass, domain=domain, platform_name=DOMAIN)
     await platform.async_add_entities([area, floor, glob])
-    await _settle(hass)
+    await settle(hass)
     return leaves, [area.entity_id, floor.entity_id, glob.entity_id]
 
 
@@ -122,7 +104,7 @@ async def test_offline_leaves_propagate_and_recover(hass: HomeAssistant, domain)
     # Every leaf of the area goes offline.
     for leaf in leaves:
         hass.states.async_set(leaf, "unavailable")
-    await _settle(hass)
+    await settle(hass)
 
     area = hass.states.get(area_id)
     assert area.attributes["entity_id"] == leaves
@@ -137,7 +119,7 @@ async def test_offline_leaves_propagate_and_recover(hass: HomeAssistant, domain)
 
     # One leaf comes back: no reload, the subscriptions do the rest (crit. 6).
     hass.states.async_set(leaves[0], CASES[domain][3])
-    await _settle(hass)
+    await settle(hass)
 
     for group_id in group_ids:
         state = hass.states.get(group_id)

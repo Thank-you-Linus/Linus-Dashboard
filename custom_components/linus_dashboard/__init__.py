@@ -25,7 +25,7 @@ from homeassistant.helpers import floor_registry as fr
 from homeassistant.helpers.icon import async_get_icons
 from homeassistant.helpers.translation import async_get_translations
 
-from custom_components.linus_dashboard import utils
+from custom_components.linus_dashboard import registry_cleanup, utils
 from custom_components.linus_dashboard.aggregate import DOMAIN_ACTIVE_STATES
 from custom_components.linus_dashboard.const import (
     CONF_ALARM_ENTITY_IDS,
@@ -396,7 +396,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass, hass.config.language, "entity_component", list(DOMAIN_ACTIVE_STATES)
     )
 
-    # Forward platforms (aggregate sensors + area/floor/global group entities)
+    # Forward platforms (aggregate sensors + area/floor/global group entities).
+    # Each platform reports what it builds; whatever a build made with Home
+    # Assistant running no longer produces is removed from the registries (#217).
+    registry_cleanup.async_init(hass, entry, [platform.value for platform in PLATFORMS])
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     await async_hide_group_entities_from_voice_assistants(hass, entry)
@@ -496,12 +499,26 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not unload_ok:
         return False
 
+    registry_cleanup.async_unload(hass, entry)
+
     # Retrieve and remove the panel name
     panel_url = hass.data[DOMAIN].pop(entry.entry_id, None)
     if panel_url:
         frontend.async_remove_panel(hass, panel_url)
 
     return True
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, entry: ConfigEntry, device_entry: dr.DeviceEntry
+) -> bool:
+    """
+    Let the user delete an area/floor/global group device from the UI.
+
+    Without this hook Home Assistant only offers enable/disable on these
+    devices. Refused while a group still built in this run uses the device.
+    """
+    return registry_cleanup.async_device_is_removable(hass, entry, device_entry)
 
 
 @websocket_command({

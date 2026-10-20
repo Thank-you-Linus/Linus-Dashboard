@@ -2,12 +2,9 @@
 Each platform reports its full build to the registry cleanup (#217).
 
 A report that leaves out something the platform still builds deletes it from
-Home Assistant, so the platforms' reports are checked end to end on each
-path: setup at boot, then the post-start rebuild; setup at reload (Home
-Assistant running), where no rebuild follows and the setup report itself
-cleans up; and a domain excluded in the options, whose setup report cleans up
-at boot already, since it builds nothing whatever the states. Each time, the
-config entry's registry also holds a ghost of an earlier run.
+Home Assistant. Each test drives a platform's real setup, and its rebuild where
+one follows, on the path the test's name gives, against a config entry whose
+registry also holds a ghost of an earlier run.
 """
 
 from __future__ import annotations

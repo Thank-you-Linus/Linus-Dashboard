@@ -16,7 +16,10 @@
       <img src="https://discordapp.com/api/guilds/1104794215440978042/widget.png?style=shield" alt="Communauté Discord"/>
     </a>
     <a href="https://github.com/Thank-you-Linus/Linus-Dashboard/stargazers">
-      <img src="https://img.shields.io/github/stars/Thank-you-Linus/Linus-Dashboard?style=social" alt="Étoiles GitHub"/>
+      <img src="https://img.shields.io/github/stars/Thank-you-Linus/Linus-Dashboard?style=social&logo=github&label=%C3%89toiles" alt="Étoiles GitHub"/>
+    </a>
+    <a href="https://github.com/Thank-you-Linus/Linus-Dashboard/releases">
+      <img src="https://img.shields.io/github/downloads/Thank-you-Linus/Linus-Dashboard/total?style=social&logo=github&label=T%C3%A9l%C3%A9chargements" alt="Téléchargements au total"/>
     </a>
   </p>
 

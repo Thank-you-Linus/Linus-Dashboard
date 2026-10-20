@@ -141,4 +141,21 @@ describe('stable release note — highlights of the version', () => {
     expect(n).not.toContain('Control every room');
     expect(n.startsWith('## 🇬🇧 English\n')).toBe(true);
   });
+
+  it('the Discord announcement of the version (<version>.discord.md) is never taken as its highlights', () => {
+    const { notes } = makeRepo({ '.github/release-highlights/1.1.0.discord.md': '🎉 **Linus Dashboard {{VERSION}} is out!**\n' });
+    const n = notes('1.1.0');
+    expect(n).not.toContain('is out!');
+    expect(n.startsWith('## 🇬🇧 English\n')).toBe(true);
+  });
+
+  it('with both files, only <version>.md opens the note', () => {
+    const { notes } = makeRepo({
+      '.github/release-highlights/1.1.0.md': '## 🎉 Big news\n',
+      '.github/release-highlights/1.1.0.discord.md': '🎉 **Linus Dashboard {{VERSION}} is out!**\n',
+    });
+    const n = notes('1.1.0');
+    expect(n.startsWith('## 🎉 Big news\n')).toBe(true);
+    expect(n).not.toContain('is out!');
+  });
 });

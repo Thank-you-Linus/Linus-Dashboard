@@ -207,6 +207,35 @@ def test_group_platform_rebuild_reports_every_group(
     assert removed == [f"{domain}.cave", f"{domain}.chambre"]
 
 
+@pytest.mark.parametrize(
+    ("module", "registry", "build_name"),
+    GROUP_PLATFORMS,
+    ids=[module.__name__.rsplit(".", 1)[-1] for module, _r, _b in GROUP_PLATFORMS],
+)
+def test_group_platform_setup_at_reload_reports_every_group(
+    mock_hass,
+    mock_config_entry,
+    platform,
+    owned,
+    monkeypatch,
+    module,
+    registry,
+    build_name,
+):
+    """At reload no rebuild follows: the setup report itself cleans up."""
+    add, removed = owned
+    domain = module.__name__.rsplit(".", 1)[-1]
+    monkeypatch.setattr(module, build_name, _builder(registry, [["groups_salon"]]))
+    add(f"{domain}.salon", "groups_salon")
+    add(f"{domain}.cave", "groups_cave")
+    mock_hass.is_running = True
+    registry_cleanup.async_init(mock_hass, mock_config_entry, [domain])
+
+    asyncio.run(module.async_setup_entry(mock_hass, mock_config_entry, lambda _e: None))
+
+    assert removed == [f"{domain}.cave"]
+
+
 def test_binary_sensor_rebuild_reports_presence_and_device_class_groups(
     mock_hass, mock_config_entry, platform, owned, monkeypatch
 ):
@@ -247,3 +276,24 @@ def test_excluded_binary_sensor_domain_removes_its_groups_at_boot(
     )
 
     assert removed == ["binary_sensor.presence_salon"]
+
+
+def test_binary_sensor_setup_at_reload_reports_presence_and_device_class_groups(
+    mock_hass, mock_config_entry, platform, owned, monkeypatch
+):
+    add, removed = owned
+    presence = _builder(binary_sensor._PRESENCE_GROUPS, [["presence_salon"]])
+    device_class = _builder(binary_sensor._DEVICE_CLASS_GROUPS, [["door_salon"]])
+    monkeypatch.setattr(binary_sensor, "_build_presence_groups", presence)
+    monkeypatch.setattr(binary_sensor, "_build_device_class_groups", device_class)
+    add("binary_sensor.presence_salon", "presence_salon")
+    add("binary_sensor.door_salon", "door_salon")
+    add("binary_sensor.presence_cave", "presence_cave")
+    mock_hass.is_running = True
+    registry_cleanup.async_init(mock_hass, mock_config_entry, ["binary_sensor"])
+
+    asyncio.run(
+        binary_sensor.async_setup_entry(mock_hass, mock_config_entry, lambda _e: None)
+    )
+
+    assert removed == ["binary_sensor.presence_cave"]

@@ -18,9 +18,15 @@ from homeassistant.helpers import entity_registry as er
 
 from custom_components.linus_dashboard import (
     binary_sensor,
+    climate,
+    cover,
+    fan,
     light,
+    media_player,
     registry_cleanup,
     sensor,
+    siren,
+    switch,
 )
 
 from .conftest import _setup
@@ -68,10 +74,23 @@ def _start_up(mock_hass, platform):
     asyncio.run(run())
 
 
+# Group platforms: (module, its group registry, the build its _rebuild calls).
+GROUP_PLATFORMS = [
+    (light, light._LIGHT_GROUPS, "build_nested_domain_groups"),
+    (switch, switch._SWITCH_GROUPS, "build_nested_domain_groups"),
+    (fan, fan._FAN_GROUPS, "build_nested_domain_groups"),
+    (siren, siren._SIREN_GROUPS, "build_nested_domain_groups"),
+    (climate, climate._CLIMATE_GROUPS, "build_nested_domain_groups"),
+    (cover, cover._COVER_GROUPS, "_build_all_cover_groups"),
+    (media_player, media_player._MEDIA_PLAYER_GROUPS, "_build_all_media_player_groups"),
+]
+
+
 @pytest.fixture(autouse=True)
 def clean_group_registries():
     yield
-    light._LIGHT_GROUPS.clear()
+    for _module, registry, _build in GROUP_PLATFORMS:
+        registry.clear()
     binary_sensor._PRESENCE_GROUPS.clear()
     binary_sensor._DEVICE_CLASS_GROUPS.clear()
 
@@ -90,8 +109,13 @@ def _builder(registry: dict, builds):
 
 
 @pytest.fixture
-def sensor_build(entity_reg, fake_states, owned, monkeypatch, mock_hass):
-    """A static aggregate, a health and a numeric sensor, plus a ghost."""
+def sensor_build(entity_reg, fake_states, owned, monkeypatch, platform):
+    """
+    A static aggregate, a health and a numeric sensor, plus a ghost.
+
+    Takes `platform` so its fake static builds replace the empty ones
+    `platform` installs, never the other way round.
+    """
     add, _removed = owned
 
     async def aggregates(*_args):
@@ -137,37 +161,50 @@ def test_sensor_setup_at_reload_reports_static_and_numeric_sensors(
     assert removed == ["sensor.temperature_cave"]
 
 
-def test_light_rebuild_reports_every_group(
-    mock_hass, mock_config_entry, platform, owned, monkeypatch
+@pytest.mark.parametrize(
+    ("module", "registry", "build_name"),
+    GROUP_PLATFORMS,
+    ids=[module.__name__.rsplit(".", 1)[-1] for module, _r, _b in GROUP_PLATFORMS],
+)
+def test_group_platform_rebuild_reports_every_group(
+    mock_hass,
+    mock_config_entry,
+    platform,
+    owned,
+    monkeypatch,
+    module,
+    registry,
+    build_name,
 ):
     add, removed = owned
+    domain = module.__name__.rsplit(".", 1)[-1]
     build = _builder(
-        light._LIGHT_GROUPS,
+        registry,
         [
-            ["lights_salon"],
-            ["lights_salon", "lights_chambre"],
-            ["lights_salon"],
+            ["groups_salon"],
+            ["groups_salon", "groups_chambre"],
+            ["groups_salon"],
         ],
     )
-    monkeypatch.setattr(light, "build_nested_domain_groups", build)
-    add("light.salon", "lights_salon")
-    add("light.chambre", "lights_chambre")
-    add("light.cave", "lights_cave")
-    registry_cleanup.async_init(mock_hass, mock_config_entry, ["light"])
+    monkeypatch.setattr(module, build_name, build)
+    add(f"{domain}.salon", "groups_salon")
+    add(f"{domain}.chambre", "groups_chambre")
+    add(f"{domain}.cave", "groups_cave")
+    registry_cleanup.async_init(mock_hass, mock_config_entry, [domain])
 
-    asyncio.run(light.async_setup_entry(mock_hass, mock_config_entry, lambda _e: None))
+    asyncio.run(module.async_setup_entry(mock_hass, mock_config_entry, lambda _e: None))
     assert removed == []
 
     _start_up(mock_hass, platform)
-    assert removed == ["light.cave"]
+    assert removed == [f"{domain}.cave"]
 
-    # The chambre's last light moves out; the salon group, unchanged, stays.
+    # The chambre's last member moves out; the salon group, unchanged, stays.
     async def rebuild_again():
         await platform.later_actions[0](None)
         await platform.flush()
 
     asyncio.run(rebuild_again())
-    assert removed == ["light.cave", "light.chambre"]
+    assert removed == [f"{domain}.cave", f"{domain}.chambre"]
 
 
 def test_binary_sensor_rebuild_reports_presence_and_device_class_groups(

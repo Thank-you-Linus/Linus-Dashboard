@@ -29,7 +29,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
     area_registry as ar,
@@ -58,6 +58,12 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+# entity_ids of every live Linus Dashboard group entity (filled in
+# NestedGroupMixin._init_group, discarded in async_will_remove_from_hass).
+# compute_group_attributes reads it to tell a sub-group whose first state is
+# not written yet (pending) from a plain leaf — see its docstring.
+_GROUP_ENTITY_IDS: set[str] = set()
 
 
 @dataclass
@@ -309,6 +315,50 @@ def resolve_floors_for_areas(
     return floor_areas, floor_names
 
 
+def _collect_leaves(
+    hass: HomeAssistant,
+    member_entity_ids: list[str] | tuple[str, ...],
+    leaf_ids: set[str],
+    seen: set[str],
+) -> int:
+    """
+    Add the distinct leaves under `member_entity_ids` to `leaf_ids`, walking
+    nested sub-groups through their published `entity_id` (direct members).
+
+    Returns the leaves that could not be identified: a nested sub-group
+    exposing `active_entity_ids` but an absent or empty member list (a
+    group with no member publishes `total` 0) contributes its `total`
+    as-is. Pending sub-groups contribute nothing (see
+    compute_group_attributes); `seen` guards against a sub-group reached
+    twice or a membership cycle.
+    """
+    unidentified = 0
+    for entity_id in member_entity_ids:
+        if entity_id in seen:
+            continue
+        seen.add(entity_id)
+        state_obj = hass.states.get(entity_id)
+        nested_active = (
+            state_obj.attributes.get("active_entity_ids") if state_obj else None
+        )
+        if isinstance(nested_active, list | tuple):
+            nested_members = state_obj.attributes.get(ATTR_ENTITY_ID)
+            if isinstance(nested_members, list | tuple) and nested_members:
+                unidentified += _collect_leaves(hass, nested_members, leaf_ids, seen)
+            else:
+                nested_total = state_obj.attributes.get("total")
+                unidentified += (
+                    nested_total
+                    if isinstance(nested_total, int)
+                    else len(nested_active)
+                )
+            continue
+        if entity_id in _GROUP_ENTITY_IDS:
+            continue
+        leaf_ids.add(entity_id)
+    return unidentified
+
+
 def compute_group_attributes(
     hass: HomeAssistant,
     *,
@@ -331,14 +381,28 @@ def compute_group_attributes(
     state exposes an `active_entity_ids` attribute (only this integration's
     group entities do — a foreign group never gets scanned in as a member in
     the first place, see scan_domain_members); its lists are spliced in
-    instead of the member being counted as one unit, and its `total` replaces
-    the 1 it would otherwise contribute. Without this, a floor chip read
-    "rooms with at least one active entity" and a global chip "floors with at
-    least one active entity" — never the number of active entities, and never
-    the number the popup lists for the same perimeter. Unavailable/unknown
+    instead of the member being counted as one unit, and `total` counts the
+    distinct leaves reached through its `entity_id` (see _collect_leaves), so
+    a leaf shared by two sub-groups is counted once, as in the lists.
+    Without this, a floor chip read "rooms with at least one active entity"
+    and a global chip "floors with at least one active entity" — never the
+    number of active entities, and never the number the popup lists for the
+    same perimeter. Unavailable/unknown
     nested members are propagated even when the nested group itself is
     unavailable, so an unavailable intermediate group does not hide its leaf
     members.
+
+    How that contract is held when a sub-group is fully offline: HA core
+    writes no attributes at all for an entity whose `available` is False, so
+    NestedGroupMixin keeps `available` True and writes the `unavailable` state
+    itself (see NestedGroupMixin.available/_stringify_state) — the attributes
+    above are therefore always published, even by a fully-offline group.
+    The one window where they are still missing is startup: a member known as
+    a Linus Dashboard group (_GROUP_ENTITY_IDS) but without
+    `active_entity_ids` yet — no state, or HA's restored `unavailable` state
+    (`restored: true`) before the entity is added — is *pending*: counted in
+    no list and not in `total`. The parent recomputes when that sub-group
+    writes its first real state (attribute changes wake it too, see below).
 
     Reactivity needs nothing extra: async_track_state_change_event also fires
     on an attribute-only change, so a sub-group publishing a new
@@ -362,12 +426,18 @@ def compute_group_attributes(
     entity_states: dict[str, str] = {}
     active_ids: list[str] = []
     unavailable_ids: list[str] = []
-    total = 0
 
     for entity_id in member_entity_ids:
         state_obj = hass.states.get(entity_id)
+        if entity_id in _GROUP_ENTITY_IDS and (
+            state_obj is None
+            or not isinstance(
+                state_obj.attributes.get("active_entity_ids"), list | tuple
+            )
+        ):
+            # Pending sub-group (startup order): not a leaf, see docstring.
+            continue
         if state_obj is None:
-            total += 1
             continue
 
         available = state_obj.state not in ("unavailable", "unknown")
@@ -377,17 +447,12 @@ def compute_group_attributes(
         nested_active = state_obj.attributes.get("active_entity_ids")
         if isinstance(nested_active, list | tuple):
             nested_unavailable = state_obj.attributes.get("unavailable_entity_ids")
-            nested_total = state_obj.attributes.get("total")
-            total += (
-                nested_total if isinstance(nested_total, int) else len(nested_active)
-            )
             if isinstance(nested_unavailable, list | tuple):
                 unavailable_ids.extend(nested_unavailable)
             if available:
                 active_ids.extend(nested_active)
             continue
 
-        total += 1
         if not available:
             unavailable_ids.append(entity_id)
         if available and state_obj.state in resolved_active_states:
@@ -397,6 +462,8 @@ def compute_group_attributes(
     # dict.fromkeys dedups while preserving member order.
     active_ids = list(dict.fromkeys(active_ids))
     unavailable_ids = list(dict.fromkeys(unavailable_ids))
+    leaf_ids: set[str] = set()
+    total = _collect_leaves(hass, member_entity_ids, leaf_ids, set()) + len(leaf_ids)
 
     icon = compute_icon(hass, domain, entity_states, device_class)
     color = compute_color(domain, device_class, entity_states)
@@ -706,6 +773,25 @@ class NestedGroupMixin:
     #152's "flatline" performance issue). async_added_to_hass below
     deliberately does not call super() to avoid ever reaching that
     ancestor's version through the MRO.
+
+    Fully-offline groups (TK-188): those same HA core classes set
+    `_attr_available = False` when every member is unavailable, and HA core
+    then writes NO attributes for the entity (helpers/entity.py
+    `__async_calculate_state`, attributes merged only `if available` —
+    L1105-L1111 in 2026.4.0). The parent group then lost this group's
+    `active_entity_ids`, took it for a leaf and listed the group id instead of
+    its offline members. `available` below therefore always answers True, and
+    `_stringify_state` writes `unavailable` itself when HA core's verdict
+    (`_attr_available`, read as is) says so: the own state is unchanged, the
+    attributes are always there. For platforms without an HA core group class
+    (climate, media_player, siren, presence) `_attr_available` stays at
+    Entity's True default, so nothing changes for them.
+
+    Risks: `_stringify_state` is a single-underscore HA method — same
+    signature `(self, available: bool) -> str` and role from 2025.5.0
+    (hacs.json minimum) through 2026.9.3, guarded by
+    tests/python/test_offline_nested_groups.py. A service call on an offline
+    group is accepted and relayed to its unavailable members: net effect nil.
     """
 
     _attr_has_entity_name = True
@@ -731,9 +817,27 @@ class NestedGroupMixin:
             self._attr_translation_placeholders = translation_placeholders
         self._attr_device_info = device_info
         self.entity_id = f"{entity_id_prefix}.{unique_id}"
+        _GROUP_ENTITY_IDS.add(self.entity_id)
         self._member_entity_ids: list[str] = list(member_entity_ids)
         self._unsub_state_changed: Callable[[], None] | None = None
         self._debounce_unsub: Callable[[], None] | None = None
+
+    @property
+    def available(self) -> bool:
+        """
+        Always True so HA core always writes this group's attributes.
+
+        The real availability verdict lives in `_attr_available` and is
+        turned into the written state by `_stringify_state` — see class
+        docstring.
+        """
+        return True
+
+    def _stringify_state(self, available: bool) -> str:
+        """Write `unavailable` when HA core judged the group offline."""
+        if self._attr_available is False:
+            return STATE_UNAVAILABLE
+        return super()._stringify_state(available)
 
     def is_empty(self) -> bool:
         """Whether this group has no members (used to trigger auto-removal)."""
@@ -782,6 +886,7 @@ class NestedGroupMixin:
 
     async def async_will_remove_from_hass(self) -> None:
         await super().async_will_remove_from_hass()
+        _GROUP_ENTITY_IDS.discard(self.entity_id)
         if self._unsub_state_changed:
             self._unsub_state_changed()
             self._unsub_state_changed = None

@@ -18,6 +18,9 @@
     <a href="https://github.com/Thank-you-Linus/Linus-Dashboard/stargazers">
       <img src="https://img.shields.io/github/stars/Thank-you-Linus/Linus-Dashboard?style=social" alt="GitHub Stars"/>
     </a>
+    <a href="https://github.com/Thank-you-Linus/Linus-Dashboard/releases">
+      <img src="https://img.shields.io/github/downloads/Thank-you-Linus/Linus-Dashboard/total?style=social&logo=github&label=Downloads" alt="Total downloads"/>
+    </a>
   </p>
 
 ![Validate HACS](https://github.com/Thank-you-Linus/Linus-Dashboard/actions/workflows/validate.yml/badge.svg) ![Check Status](https://github.com/Thank-you-Linus/Linus-Dashboard/actions/workflows/main-check.yml/badge.svg) [![Latest release](https://img.shields.io/github/v/release/Thank-you-Linus/Linus-Dashboard.svg)](https://github.com/Thank-you-Linus/Linus-Dashboard/releases) [![GitHub latest commit](https://badgen.net/github/last-commit/Thank-you-Linus/Linus-Dashboard)](https://github.com/Thank-you-Linus/Linus-Dashboard/commit/) [![GitHub contributors](https://badgen.net/github/contributors/Thank-you-Linus/Linus-Dashboard)](https://GitHub.com/Thank-you-Linus/Linus-Dashboard/graphs/contributors/)

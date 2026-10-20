@@ -36,6 +36,7 @@ from .entity_group import (
     build_nested_domain_groups,
 )
 from .group_manager import PlatformGroupManager
+from .registry_cleanup import async_report_built
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -201,6 +202,8 @@ async def async_setup_entry(
         async_add_entities(entities)
         _LOGGER.info("Created %d cover group entities", len(entities))
 
+    async_report_built(hass, config_entry, "cover", entities)
+
     async def _rebuild(*_args) -> None:
         before_ids = set(_COVER_GROUPS.keys())
         new_groups = await _build_all_cover_groups(hass, config_entry, exclusions)
@@ -208,8 +211,10 @@ async def async_setup_entry(
         to_add = [group for group in new_groups if group.unique_id not in before_ids]
 
         for uid in before_ids - after_ids:
-            stale = _COVER_GROUPS.pop(uid)
-            hass.async_create_task(stale.async_remove(force_remove=True))
+            _COVER_GROUPS.pop(uid)
+
+        # Record the new build: the registry cleanup removes the dropped groups.
+        async_report_built(hass, config_entry, "cover", new_groups)
 
         if to_add:
             async_add_entities(to_add)

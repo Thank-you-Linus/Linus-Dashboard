@@ -145,7 +145,9 @@ def test_explicitly_settled_build_counts_before_start(
     assert regs.removed_entities == ["binary_sensor.ghost"]
 
 
-def test_ready_removes_entities_no_build_produces(hass, mock_config_entry, regs):
+def test_settled_build_removes_entities_no_build_produces(
+    hass, mock_config_entry, regs
+):
     regs.add_entity("light.salon", "linus_dashboard_all_lights_area_salon")
     regs.add_entity("light.ghost", "linus_dashboard_all_lights_area_cave")
     regs.add_entity("sensor.health", "linus_dashboard_unavailable_area_salon")

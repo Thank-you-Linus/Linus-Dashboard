@@ -68,10 +68,31 @@ def _start_up(mock_hass, platform):
     asyncio.run(run())
 
 
-def test_sensor_rebuild_reports_static_and_numeric_sensors(
-    entity_reg, mock_hass, mock_config_entry, fake_states, platform, owned, monkeypatch
-):
-    add, removed = owned
+@pytest.fixture(autouse=True)
+def clean_group_registries():
+    yield
+    light._LIGHT_GROUPS.clear()
+    binary_sensor._PRESENCE_GROUPS.clear()
+    binary_sensor._DEVICE_CLASS_GROUPS.clear()
+
+
+def _builder(registry: dict, builds):
+    """A fake build that, like the real factories, records what it builds."""
+    builds = iter(builds)
+
+    async def build(*_args, **_kwargs):
+        groups = [_built(unique_id) for unique_id in next(builds)]
+        for group in groups:
+            registry[group.unique_id] = group
+        return groups
+
+    return build
+
+
+@pytest.fixture
+def sensor_build(entity_reg, fake_states, owned, monkeypatch, mock_hass):
+    """A static aggregate, a health and a numeric sensor, plus a ghost."""
+    add, _removed = owned
 
     async def aggregates(*_args):
         return [_built("linus_dashboard_lights_area_salon")]
@@ -87,6 +108,12 @@ def test_sensor_rebuild_reports_static_and_numeric_sensors(
     add("sensor.unavailable_salon", "linus_dashboard_unavailable_area_salon")
     add("sensor.temperature_salon", "linus_dashboard_temperature_area_salon")
     add("sensor.temperature_cave", "linus_dashboard_temperature_area_cave")
+
+
+def test_sensor_rebuild_reports_static_and_numeric_sensors(
+    mock_hass, mock_config_entry, platform, owned, sensor_build
+):
+    _add, removed = owned
     registry_cleanup.async_init(mock_hass, mock_config_entry, ["sensor"])
 
     _setup(mock_hass, mock_config_entry, platform)
@@ -97,19 +124,31 @@ def test_sensor_rebuild_reports_static_and_numeric_sensors(
     assert removed == ["sensor.temperature_cave"]
 
 
+def test_sensor_setup_at_reload_reports_static_and_numeric_sensors(
+    mock_hass, mock_config_entry, platform, owned, sensor_build
+):
+    """At reload no rebuild follows: the setup report itself cleans up."""
+    _add, removed = owned
+    mock_hass.is_running = True
+    registry_cleanup.async_init(mock_hass, mock_config_entry, ["sensor"])
+
+    _setup(mock_hass, mock_config_entry, platform)
+
+    assert removed == ["sensor.temperature_cave"]
+
+
 def test_light_rebuild_reports_every_group(
     mock_hass, mock_config_entry, platform, owned, monkeypatch
 ):
     add, removed = owned
-    builds = iter([
-        [_built("lights_salon")],
-        [_built("lights_salon"), _built("lights_chambre")],
-        [_built("lights_salon")],
-    ])
-
-    async def build(*_args, **_kwargs):
-        return next(builds)
-
+    build = _builder(
+        light._LIGHT_GROUPS,
+        [
+            ["lights_salon"],
+            ["lights_salon", "lights_chambre"],
+            ["lights_salon"],
+        ],
+    )
     monkeypatch.setattr(light, "build_nested_domain_groups", build)
     add("light.salon", "lights_salon")
     add("light.chambre", "lights_chambre")
@@ -122,13 +161,40 @@ def test_light_rebuild_reports_every_group(
     _start_up(mock_hass, platform)
     assert removed == ["light.cave"]
 
-    # The chambre's last light moves out.
+    # The chambre's last light moves out; the salon group, unchanged, stays.
     async def rebuild_again():
         await platform.later_actions[0](None)
         await platform.flush()
 
     asyncio.run(rebuild_again())
     assert removed == ["light.cave", "light.chambre"]
+
+
+def test_binary_sensor_rebuild_reports_presence_and_device_class_groups(
+    mock_hass, mock_config_entry, platform, owned, monkeypatch
+):
+    add, removed = owned
+    presence = _builder(
+        binary_sensor._PRESENCE_GROUPS, [["presence_salon"], ["presence_salon"]]
+    )
+    device_class = _builder(
+        binary_sensor._DEVICE_CLASS_GROUPS, [["door_salon"], ["door_salon"]]
+    )
+    monkeypatch.setattr(binary_sensor, "_build_presence_groups", presence)
+    monkeypatch.setattr(binary_sensor, "_build_device_class_groups", device_class)
+    add("binary_sensor.presence_salon", "presence_salon")
+    add("binary_sensor.door_salon", "door_salon")
+    add("binary_sensor.presence_cave", "presence_cave")
+    registry_cleanup.async_init(mock_hass, mock_config_entry, ["binary_sensor"])
+
+    asyncio.run(
+        binary_sensor.async_setup_entry(mock_hass, mock_config_entry, lambda _e: None)
+    )
+    assert removed == []
+
+    _start_up(mock_hass, platform)
+
+    assert removed == ["binary_sensor.presence_cave"]
 
 
 def test_excluded_binary_sensor_domain_removes_its_groups_at_boot(

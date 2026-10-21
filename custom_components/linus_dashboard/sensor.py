@@ -889,10 +889,35 @@ async def _build_numeric_sensors(
 # concatenates every floor's already-concatenated area list).
 MAX_UNAVAILABLE_ENTITY_IDS = 200
 
+# Stateless entities: their state is the time of their last press, activation,
+# event or message, so they stay "unknown" until the first one — their normal
+# resting state, not a fault (a never-pressed restart button). Only
+# "unavailable" means one of them is down.
+STATELESS_DOMAINS = frozenset({
+    "ai_task",
+    "button",
+    "conversation",
+    "event",
+    "input_button",
+    "notify",
+    "scene",
+    "stt",
+    "tts",
+    "wake_word",
+})
+
+
+def _is_down(entity_id: str, state: str) -> bool:
+    """Whether a raw entity state counts as unavailable for the health sensor."""
+    if state == "unavailable":
+        return True
+    return state == "unknown" and entity_id.split(".", 1)[0] not in STATELESS_DOMAINS
+
 
 class LinusDashboardHealthSensor(SensorEntity):
     """
-    Count and list of unavailable/unknown entities in a zone/floor/global.
+    Count and list of unavailable/unknown entities in a zone/floor/global
+    ("unknown" not counted for STATELESS_DOMAINS, see above).
 
     Subscribes to its tracked entities and recomputes on change (debounced),
     same pattern as LinusDashboardAggregateSensor above — it used to just
@@ -955,7 +980,7 @@ class LinusDashboardHealthSensor(SensorEntity):
                 eid
                 for eid in self._tracked_entity_ids
                 if (state := self.hass.states.get(eid)) is not None
-                and state.state in ("unavailable", "unknown")
+                and _is_down(eid, state.state)
             ]
 
         self._attr_native_value = len(unavailable)

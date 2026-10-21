@@ -99,7 +99,7 @@ def test_compute_group_attributes_excludes_unavailable_members_from_active_state
     assert attrs["unavailable_count"] == 2
 
 
-def test_compute_group_attributes_missing_member_state_is_skipped_not_errored(
+def test_compute_group_attributes_missing_member_state_is_listed_unavailable(
     mock_hass, fake_states
 ):
     # No state registered for light.ghost at all (hass.states.get returns None).
@@ -108,6 +108,36 @@ def test_compute_group_attributes_missing_member_state_is_skipped_not_errored(
     )
     assert attrs["active_entity_ids"] == []
     assert attrs["total"] == 1
+    assert attrs["unavailable_entity_ids"] == ["light.ghost"]
+    assert attrs["unavailable_count"] == 1
+
+
+def test_compute_group_attributes_missing_member_mixed_with_present_ones(
+    mock_hass, fake_states
+):
+    # A ghost member among real ones is listed in member order, and leaves
+    # icon/color to the members that actually report a state.
+    mock_hass.data[DOMAIN] = {"icons": LIGHT_ICONS}
+    fake_states.set("light.a", "unavailable")
+    fake_states.set("light.c", "off")
+    attrs = compute_group_attributes(
+        mock_hass,
+        domain="light",
+        device_class=None,
+        member_entity_ids=["light.a", "light.ghost", "light.c"],
+    )
+    reference = compute_group_attributes(
+        mock_hass,
+        domain="light",
+        device_class=None,
+        member_entity_ids=["light.a", "light.c"],
+    )
+    assert attrs["total"] == 3
+    assert attrs["active_entity_ids"] == []
+    assert attrs["unavailable_entity_ids"] == ["light.a", "light.ghost"]
+    assert attrs["unavailable_count"] == 2
+    assert attrs["icon"] == reference["icon"] == "mdi:lightbulb-off"
+    assert attrs["color"] == reference["color"]
 
 
 # ---------------------------------------------------------------------------
@@ -378,3 +408,49 @@ def test_active_states_override_replaces_the_domain_table(mock_hass, fake_states
     )
     assert attrs["active_entity_ids"] == ["media_player.tv"]
     assert attrs["active_count"] == 1
+
+
+def test_missing_leaf_in_area_group_propagates_to_floor_and_global(
+    mock_hass, fake_states
+):
+    # A lamp declared in the area but absent from HA must be counted
+    # unavailable at the area, the floor and the global scope.
+    mock_hass.data[DOMAIN] = {"icons": LIGHT_ICONS}
+    fake_states.set("light.salon_1", "on")
+    area_id = "light.linus_dashboard_all_lights_area_salon"
+    floor_id = "light.linus_dashboard_all_lights_floor_ground"
+    area_members = ["light.salon_1", "light.salon_ghost"]
+
+    area = compute_group_attributes(
+        mock_hass, domain="light", device_class=None, member_entity_ids=area_members
+    )
+    set_sub_group(
+        fake_states,
+        area_id,
+        "on",
+        active_entity_ids=area["active_entity_ids"],
+        total=area["total"],
+        unavailable_entity_ids=area["unavailable_entity_ids"],
+        members=area_members,
+    )
+    floor = compute_group_attributes(
+        mock_hass, domain="light", device_class=None, member_entity_ids=[area_id]
+    )
+    set_sub_group(
+        fake_states,
+        floor_id,
+        "on",
+        active_entity_ids=floor["active_entity_ids"],
+        total=floor["total"],
+        unavailable_entity_ids=floor["unavailable_entity_ids"],
+        members=[area_id],
+    )
+    glob = compute_group_attributes(
+        mock_hass, domain="light", device_class=None, member_entity_ids=[floor_id]
+    )
+
+    for attrs in (area, floor, glob):
+        assert attrs["unavailable_entity_ids"] == ["light.salon_ghost"]
+        assert attrs["unavailable_count"] == 1
+        assert attrs["active_entity_ids"] == ["light.salon_1"]
+        assert attrs["total"] == 2

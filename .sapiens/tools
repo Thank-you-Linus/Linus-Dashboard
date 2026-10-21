@@ -1,3 +1,7 @@
 {
-  "ticket_backend": "filesystem"
+  "ticket_backend": "notion",
+  "schema_version": 4,
+  "backend_config": {
+    "project_name": "Linus Dashboard"
+  }
 }

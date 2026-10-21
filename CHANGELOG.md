@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- fix(health): the "Unavailable Entities" sensors no longer count stateless entities resting at `unknown` (a never-pressed button, a never-activated scene, an event, notify, TTS/STT entity...); only `unavailable` counts for them, and `unknown` still counts for every other domain (#232)
+- fix(climate): climate groups announce only what they implement (target temperature, on/off): an area whose thermostats all had presets, fan or swing modes (Versatile Thermostat...) or a heat/cool temperature range raised an `AttributeError` on every state write and stayed frozen, and so did its floor and home groups (TK-257, #233; first fix proposed by @flatline-84 in #223)
 - fix(groups): groups and aggregates that are no longer built (area emptied, device moved or excluded, upgrade) are removed from Home Assistant once it has started, instead of staying `unavailable` forever; their unused area/floor devices are removed too, can be deleted by hand from the device page, and moving a device to another area rebuilds the groups right away (TK-189, #217)
 - fix(groups): a fully-offline area/floor group keeps publishing its attributes (`entity_id`, `unavailable_entity_ids`...) while its own state stays `unavailable`, so floor and global groups cite and count the offline devices themselves instead of the group id (TK-188, #216)
 - fix(sensor): numeric aggregates no longer mix units (V/mV, W/kW, °C/°F...): members are converted to one unit per device_class, members that cannot be converted are left out (`excluded_entity_ids`); the sensor chips and popups now show that aggregate instead of re-aggregating members (battery chip: minimum, temperature chip: average) (TK-157, #198)

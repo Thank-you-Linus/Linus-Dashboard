@@ -318,6 +318,14 @@ Every group entity (and the on/off `binary_sensor` aggregate sensors) also count
    - state_attr('cover.linus_dashboard_shutter_floor_pieces_a_vivre', 'unavailable_count') }}
 ```
 
+**Q: Can the scene chips of the light popup show the scene's colors?**
+**Yes, for scenes created in Home Assistant.** In a room's light popup, each scene chip takes the dominant color of the lights the scene turns on.
+- **Colored automatically:** scenes created in Home Assistant (scene editor, `scenes.yaml`, `scene.create`) whose lights are set to a color, or to a white temperature (shown as a warm or cool tint) — for administrator accounts.
+- **Not colored automatically:** Philips Hue scenes and other scenes provided by an integration (their colors are not known to Home Assistant), scenes without any colored light, and every scene for non-administrator accounts.
+- **Fallback:** the chip keeps its usual neutral look, or shows the color you choose for that scene in the integration options (Settings → Devices & services → Linus Dashboard → Configure, "Scene chip colors" step). A chosen color always wins over the detected one.
+
+After editing a scene, reload the dashboard to see its new color.
+
 ### Troubleshooting
 
 **Q: I see a timeout or red error message**

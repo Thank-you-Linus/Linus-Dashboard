@@ -1,5 +1,6 @@
 import { Helper } from "../Helper";
 import { TemplateChipConfig } from "../types/lovelace-mushroom/utils/lovelace/chip/types";
+import { resolveSceneChipColor } from "../utils/sceneColor";
 
 import { AggregatePopup, AggregatePopupConfigWithEntities } from "./AggregatePopup";
 
@@ -16,6 +17,8 @@ export interface SceneChipSource {
   entity_id: string;
   /** Label shown on the chip (friendly name) */
   name: string;
+  /** Icon color (manual or detected); undefined keeps the neutral look */
+  color?: string;
 }
 
 /**
@@ -32,10 +35,12 @@ export interface SceneChipSource {
  * @returns One template chip per scene (empty array for an empty input)
  */
 export function buildSceneChips(scenes: SceneChipSource[]): TemplateChipConfig[] {
-  return scenes.map(({ entity_id, name }) => ({
+  return scenes.map(({ entity_id, name, color }) => ({
     type: "template",
     entity: entity_id,
     icon: `{{ state_attr('${entity_id}', 'icon') or '${SCENE_FALLBACK_ICON}' }}`,
+    // Only a known color: never an empty or grey placeholder (neutral look)
+    ...(color ? { icon_color: color } : {}),
     // Always a text label, never an icon alone (accessibility)
     content: name,
     tap_action: {
@@ -90,11 +95,16 @@ class LightPopup extends AggregatePopup {
     // Resolved at generation time, same as the popup's other entities.
     // Magic Areas / Linus Brain / Linus Dashboard generated scenes are
     // already excluded upstream by Helper's own aggregate filtering.
+    const linusConfig = Helper.linus_dashboard_config;
     const scenes: SceneChipSource[] = Helper
       .getEntityIds({ domain: "scene", area_slug: config.area_slug })
       .map((entity_id) => ({
         entity_id,
-        name: Helper.getEntityState(entity_id)?.attributes?.friendly_name ?? entity_id
+        name: Helper.getEntityState(entity_id)?.attributes?.friendly_name ?? entity_id,
+        color: resolveSceneChipColor(
+          linusConfig?.scene_color_overrides?.[entity_id],
+          linusConfig?.scene_colors?.[entity_id]
+        )
       }));
 
     const chips = buildSceneChips(scenes);

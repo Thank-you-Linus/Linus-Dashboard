@@ -314,6 +314,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "stack-in-card/stack-in-card.js",
         "linus-strategy.js",
     ]
+    # These are vendored copies of popular HACS cards, bundled only so Linus
+    # Dashboard works out of the box. If the user already has one installed
+    # via HACS (very common for mushroom/card-mod), skip loading our copy to
+    # avoid downloading it twice and double-registering its custom elements.
+    # custom-elements-guard.js and linus-strategy.js are ours alone, never checked.
+    vendored_files = {
+        "browser_mod.js",
+        "lovelace-mushroom/mushroom.js",
+        "lovelace-card-mod/card-mod.js",
+        "swipe-card/swipe-card.js",
+        "stack-in-card/stack-in-card.js",
+    }
     static_only: set[str] = set()
 
     base_path = Path(__file__).parent / "www"
@@ -340,6 +352,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     for js_file in registered:
         if js_file is None or js_file in static_only:
             continue
+
+        if js_file in vendored_files:
+            filename = js_file.rsplit("/", maxsplit=1)[-1]
+            own_base_url = f"/{DOMAIN}_files/www/{js_file}"
+            conflicting_url = await utils.should_skip_vendored_resource(
+                hass, filename, own_base_url
+            )
+            if conflicting_url is not None:
+                _LOGGER.info(
+                    "Skipping bundled %s: already provided by an existing "
+                    "lovelace resource (%s)",
+                    js_file,
+                    conflicting_url,
+                )
+                continue
+
         js_url = f"/{DOMAIN}_files/www/{js_file}"
         versioned_url = f"{js_url}?v={manifest_version}"
         await utils.init_resource(hass, versioned_url, str(manifest_version))

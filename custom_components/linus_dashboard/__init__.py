@@ -299,7 +299,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _LOGGER.info("Setting up Linus Dashboard entry")
 
     # Register all static paths and resources for bundled JS files.
-    # Phase 1: Check file existence and register static paths in parallel (I/O-bound).
+    # Phase 1: Check file existence for the known entry files in parallel (I/O-bound).
     # Phase 2: Register lovelace resources sequentially (shared storage, not parallelizable).
     #
     # mushroom-loader.js MUST be first: it patches customElements.define to be idempotent,
@@ -319,22 +319,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     base_path = Path(__file__).parent / "www"
     manifest_version = VERSION
 
-    # Phase 1: Check existence in parallel and register static paths
-    async def register_static_path(js_file: str) -> str | None:
-        """Register static path if file exists. Returns js_file if successful, None otherwise."""
+    # Serve the whole www/ directory under one prefix rather than one static
+    # path per known file. linus-strategy.js is code-split (dynamic import()
+    # for views/cards/chips), so the build emits extra content-hashed chunk
+    # files that aren't in js_files and still need to be reachable.
+    await hass.http.async_register_static_paths([
+        StaticPathConfig(f"/{DOMAIN}_files/www", str(base_path), cache_headers=False),
+    ])
+
+    # Phase 1: Check which known entry files actually exist (for resource registration)
+    async def check_entry_file(js_file: str) -> str | None:
+        """Return js_file if it exists on disk, else None."""
         js_path = base_path / js_file
         if not await hass.async_add_executor_job(js_path.exists):
             _LOGGER.warning(
                 "JavaScript file not found: %s - skipping registration", js_path
             )
             return None
-        js_url = f"/{DOMAIN}_files/www/{js_file}"
-        await hass.http.async_register_static_paths([
-            StaticPathConfig(js_url, str(js_path), cache_headers=False),
-        ])
         return js_file
 
-    registered = await asyncio.gather(*(register_static_path(f) for f in js_files))
+    registered = await asyncio.gather(*(check_entry_file(f) for f in js_files))
 
     # Phase 2: Register lovelace resources sequentially (shared ResourceStorageCollection)
     for js_file in registered:

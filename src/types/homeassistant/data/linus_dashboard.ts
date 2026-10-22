@@ -11,6 +11,7 @@ export interface LinusDashboardConfig {
     alarm_entity_ids?: string[]; // multi-alarmes
     weather_entity_id?: string | null;
     hide_greeting?: boolean;
+    show_all_devices?: boolean;
     excluded_targets?: {
         entity_id?: string[];
         device_id?: string[];

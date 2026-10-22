@@ -36,6 +36,7 @@ from custom_components.linus_dashboard.const import (
     CONF_EXCLUDED_TARGETS,
     CONF_HIDE_GREETING,
     CONF_HIDE_GROUPS_FROM_VOICE_ASSISTANTS,
+    CONF_SHOW_ALL_DEVICES,
     CONF_WEATHER_ENTITY,
     CONF_WEATHER_ENTITY_ID,
     DOMAIN,
@@ -546,6 +547,9 @@ async def websocket_get_entities(
         CONF_ALARM_ENTITY_IDS: config_entries[0].options.get(CONF_ALARM_ENTITY_IDS, []),
         CONF_WEATHER_ENTITY_ID: config_entries[0].options.get(CONF_WEATHER_ENTITY),
         CONF_HIDE_GREETING: config_entries[0].options.get(CONF_HIDE_GREETING),
+        CONF_SHOW_ALL_DEVICES: config_entries[0].options.get(
+            CONF_SHOW_ALL_DEVICES, False
+        ),
         CONF_EXCLUDED_DOMAINS: config_entries[0].options.get(CONF_EXCLUDED_DOMAINS),
         CONF_EXCLUDED_DEVICE_CLASSES: config_entries[0].options.get(
             CONF_EXCLUDED_DEVICE_CLASSES

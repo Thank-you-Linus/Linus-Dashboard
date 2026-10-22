@@ -409,10 +409,14 @@ class LinusDashboardAggregateSensor(SensorEntity):
     def _update_state(self) -> None:
         """Recompute all aggregate values from current HA state."""
         entity_states: dict[str, str] = {}
+        unavailable_ids: list[str] = []
         for entity_id in self._tracked_entities:
             state_obj = self.hass.states.get(entity_id)
             if state_obj and state_obj.state not in ("unavailable", "unknown"):
                 entity_states[entity_id] = state_obj.state
+            else:
+                # Absent from HA, or present but unavailable/unknown.
+                unavailable_ids.append(entity_id)
 
         active_count = compute_active_count(entity_states, self._domain)
         active_ids = compute_active_entity_ids(entity_states, self._domain)
@@ -432,6 +436,8 @@ class LinusDashboardAggregateSensor(SensorEntity):
             # of aggregate it is reading. This sensor only ever tracks raw
             # entities, so no leaf-level recursion applies here.
             "active_count": active_count,
+            "unavailable_entity_ids": sorted(unavailable_ids),
+            "unavailable_count": len(unavailable_ids),
         }
 
 

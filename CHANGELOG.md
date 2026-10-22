@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- feat(aggregates): a group member missing from Home Assistant is now listed in `unavailable_entity_ids`/`unavailable_count`, and the binary_sensor aggregate sensors publish both attributes too; the README documents the aggregate attributes with an exact "closed shutters" count (TK-158, #199)
+
 ### Fixed
 
 - fix(health): the "Unavailable Entities" sensors no longer count stateless entities resting at `unknown` (a never-pressed button, a never-activated scene, an event, notify, TTS/STT entity...); only `unavailable` counts for them, and `unknown` still counts for every other domain (#232)

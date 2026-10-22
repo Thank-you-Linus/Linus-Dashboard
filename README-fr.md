@@ -269,6 +269,17 @@ Avec Home Assistant 2025.1+, vous pouvez glisser-déposer les pièces directemen
 **Non** - Linus Dashboard fonctionne de manière autonome. Linus Brain est une mise à niveau optionnelle pour la détection d'activité par IA et l'automatisation avancée.
 [Comparer les fonctionnalités →](https://thankyou-linus.com/)
 
+**Q: Linus Dashboard crée-t-il ses propres entités de pièce/étage, ou faut-il une autre intégration ?**
+**Il les crée nativement.** Pour chaque pièce et chaque étage (et la maison entière), Linus Dashboard ajoute ses propres entités de groupe — détection de présence, et un « toutes les lumières »/« tous les interrupteurs »/« tous les ventilateurs »/« tous les volets »/« toutes les sirènes » pilotable pour chacun — sans autre intégration. Vous pouvez désactiver chacun par domaine dans les options de l'intégration.
+
+Chaque entité de groupe (et les capteurs d'agrégat `binary_sensor` tout-ou-rien) compte aussi ses membres au niveau des feuilles : `total` (membres), `active_count` / `active_entity_ids` (membres allumés/ouverts/détectés) et `unavailable_count` / `unavailable_entity_ids` (membres `unavailable`, `unknown`, ou déclarés mais absents de Home Assistant). Une feuille partagée par deux sous-groupes n'est comptée qu'une fois dans chacun de ces attributs. Par exemple, le nombre de volets fermés dans les pièces à vivre d'un étage, chaque matin :
+
+```jinja
+{{ state_attr('cover.linus_dashboard_shutter_floor_pieces_a_vivre', 'total')
+   - state_attr('cover.linus_dashboard_shutter_floor_pieces_a_vivre', 'active_count')
+   - state_attr('cover.linus_dashboard_shutter_floor_pieces_a_vivre', 'unavailable_count') }}
+```
+
 **Q: Les chips de scène de la popup lumière peuvent-elles afficher les couleurs de la scène ?**
 **Oui, pour les scènes créées dans Home Assistant.** Dans la popup lumière d'une pièce, chaque chip de scène prend la couleur dominante des lampes que la scène allume.
 - **Colorées automatiquement :** les scènes créées dans Home Assistant (éditeur de scènes, `scenes.yaml`, `scene.create`) dont les lampes sont réglées en couleur, ou en température de blanc (affichée en teinte chaude ou froide) — pour les comptes administrateurs.

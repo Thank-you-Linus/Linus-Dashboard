@@ -390,7 +390,9 @@ def compute_group_attributes(
     same perimeter. Unavailable/unknown
     nested members are propagated even when the nested group itself is
     unavailable, so an unavailable intermediate group does not hide its leaf
-    members.
+    members. A non-group member with no state at all in HA is listed as
+    unavailable too (it counts in `total` and cannot report), but stays out of
+    icon/color.
 
     How that contract is held when a sub-group is fully offline: HA core
     writes no attributes at all for an entity whose `available` is False, so
@@ -438,6 +440,9 @@ def compute_group_attributes(
             # Pending sub-group (startup order): not a leaf, see docstring.
             continue
         if state_obj is None:
+            # Declared member absent from HA (entity removed, integration not
+            # loaded): a leaf that cannot report, so it is listed unavailable.
+            unavailable_ids.append(entity_id)
             continue
 
         available = state_obj.state not in ("unavailable", "unknown")

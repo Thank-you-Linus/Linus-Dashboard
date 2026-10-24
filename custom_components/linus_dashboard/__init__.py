@@ -357,10 +357,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Static paths are registered once per Home Assistant start (async_setup):
     # an aiohttp route cannot be removed while HA runs, so registering them
     # again on every entry load failed every other reload (TK-259). The helper
-    # is idempotent; calling it here only covers a setup_entry without setup.
-    registered = hass.data[DOMAIN].get(STATIC_FILES_KEY)
-    if registered is None:
-        registered = await _async_register_static_files(hass)
+    # is idempotent: it returns the files already served, and only registers
+    # them here when setup_entry runs without async_setup.
+    registered = await _async_register_static_files(hass)
 
     # Lovelace resources are declared on each load, sequentially (shared
     # ResourceStorageCollection; utils.init_resource is idempotent).

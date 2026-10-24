@@ -4,7 +4,10 @@ Reloading the config entry on a real HomeAssistant (TK-259).
 Every other reload used to end in setup_error: `RuntimeError: Added route will
 never be executed, method GET is already registered`, because each
 async_setup_entry registered the bundled JS files as static paths again on a
-router that cannot drop a route while Home Assistant runs. The unit tests
+router that cannot drop a route while Home Assistant runs. Depending on the
+registration order, main fails either with that RuntimeError on reload or
+silently, with the same GET route registered twice; the one-route-per-URL
+assertion below catches both. The unit tests
 (tests/python/test_reload_static_paths.py) use an HTTP double; this goes
 through the real `http` component and its aiohttp router, the real config
 entries manager, the real platforms and the real options update listener.

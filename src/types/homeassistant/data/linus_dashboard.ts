@@ -22,5 +22,6 @@ export interface LinusDashboardConfig {
     excluded_device_classes?: string[];
     excluded_integrations?: string[];
     embedded_dashboards?: EmbeddedDashboardConfig[];
+    show_lights_on_area_cards?: boolean;
     debug?: boolean;
 }

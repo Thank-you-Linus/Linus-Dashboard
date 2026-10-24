@@ -102,7 +102,7 @@ jobs:
         run: python3 -m pip install --break-system-packages homeassistant==2025.5.0 -r requirements_test.txt
 
       - name: "Run serialisation tests and version guard"
-        run: python3 -m pytest tests/python/test_offline_nested_groups.py
+        run: python3 -m pytest tests/python/test_offline_nested_groups.py tests/python/test_reload_static_paths.py
 
   # TODO: fake-house-smoke-test job removed 2026-07-16 — kept failing in CI
   # even after fixing the root cause we found (recovery mode triggered by a

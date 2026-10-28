@@ -80,12 +80,12 @@ npm run test:ci main-check
 
 ---
 
-### 2. Pre-Release Workflow
+### 2. Beta Release button checks
 
-Simulates what happens when you create a beta/alpha tag:
+Simulates the checks of the **Beta Release (manual)** button before you click it:
 
 ```bash
-npm run test:ci prerelease
+npm run test:ci beta-release
 ```
 
 **Runs:**
@@ -95,16 +95,17 @@ npm run test:ci prerelease
 - Build output verification
 - Smoke tests
 
-**Corresponds to:** `.github/workflows/prerelease.yml`
+**Corresponds to:** the checks of `.github/workflows/beta-release.yml` (lint, type check, build,
+smoke tests)
 
 ---
 
-### 3. Release Workflow
+### 3. Stable Release button checks
 
-Simulates what happens when you publish a stable release:
+Simulates the checks of the **Stable Release (manual)** button before you click it:
 
 ```bash
-npm run test:ci release
+npm run test:ci stable-release
 ```
 
 **Runs:**
@@ -114,7 +115,8 @@ npm run test:ci release
 - Build output verification
 - Smoke tests
 
-**Corresponds to:** `.github/workflows/release.yml`
+**Corresponds to:** the checks of `.github/workflows/stable-release.yml` (lint, type check, build,
+smoke tests)
 
 ---
 
@@ -204,11 +206,10 @@ git push
 **Solution:**
 
 ```bash
-# 1. Run the pre-release workflow checks
-npm run test:ci prerelease
+# 1. Run the Beta Release button checks
+npm run test:ci beta-release
 
-# 2. If everything passes, create the release
-npm run create:prerelease
+# 2. If everything passes, click Actions -> Beta Release (manual) (see RELEASE_GUIDE.md)
 ```
 
 This ensures the release won't fail in CI/CD.
@@ -425,7 +426,7 @@ npm run build:dev
    - Repeat until all pass
 
 3. **Use specific workflow tests**
-   - For quick checks: `npm run test:ci prerelease`
+   - For quick checks: `npm run test:ci beta-release`
    - For comprehensive: `npm run test:ci all`
 
 4. **Auto-fix when possible**

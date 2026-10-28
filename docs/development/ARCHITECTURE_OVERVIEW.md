@@ -125,8 +125,7 @@ linus-dashboard/
     ├── MANUAL_ORDERING.md              # HA 2025.1+ room ordering
     └── development/                    # Developer docs
         ├── ARCHITECTURE_OVERVIEW.md    # This file
-        ├── CHIP_SYSTEM_ARCHITECTURE.md # Detailed chip system docs
-        └── RELEASE_WORKFLOW.md         # Release process
+        └── CHIP_SYSTEM_ARCHITECTURE.md # Detailed chip system docs
 ```
 
 **Deep dive:** [Memory Bank - File Structure](../.aidriven/memorybank.md#file-structure)

@@ -31,10 +31,8 @@
 
 ### I want to release a new version (5-30 min)
 
-1. **[Release Workflow](development/RELEASE_WORKFLOW.md)** ⭐ START HERE - Complete release overview
-2. [Automated Beta Release](AUTOMATED_BETA_RELEASE_PROCESS.md) - ONE-COMMAND beta releases (5 min)
-3. [Release Guide](RELEASE_GUIDE.md) - Manual stable release process (30 min)
-4. [Local CI Testing](LOCAL_CI_TESTING.md) - Test before pushing (10 min)
+1. **[Release Guide](RELEASE_GUIDE.md)** ⭐ START HERE - Beta and Stable Release buttons, CHANGELOG, rollback, stable announcement
+2. [Local CI Testing](LOCAL_CI_TESTING.md) - Run the buttons' checks locally (10 min)
 
 ---
 
@@ -80,13 +78,11 @@
 
 | Document                                                    | Description                     | Lines  | Priority      |
 | ----------------------------------------------------------- | ------------------------------- | ------ | ------------- |
-| **[Release Workflow](development/RELEASE_WORKFLOW.md)**     | Complete release overview (NEW) | 200    | 🔥 START HERE |
-| [Automated Beta Process](AUTOMATED_BETA_RELEASE_PROCESS.md) | ONE-COMMAND beta releases       | 12,384 | ⭐ Most Used  |
-| [Release Guide](RELEASE_GUIDE.md)                           | Manual stable release workflow  | 686    | 📖 Reference  |
+| **[Release Guide](RELEASE_GUIDE.md)**                       | The single release reference    | 230    | 🔥 START HERE |
 | [Local CI Testing](LOCAL_CI_TESTING.md)                     | Test CI locally before push     | 584    | 📖 Reference  |
 | [Release Notes Format](.aidriven/rules/release_notes.md)    | Release notes standards         | 7,024  | MANDATORY     |
 
-**Typical workflow:** Push to `main` → Auto beta release → Test → Manual stable release
+**Typical workflow:** Merge to `main` → Beta Release button → Test → Stable Release button
 
 ### 🌟 Features Documentation
 
@@ -97,7 +93,6 @@
 | [Embedded Dashboards](EMBEDDED_DASHBOARDS.md)                         | Integrate custom Lovelace dashboards         | Users      | ⭐ Popular     |
 | [Manual Ordering](MANUAL_ORDERING.md)                                 | HA 2025.1+ room ordering                     | Users      | 📖 HA 2025.1+  |
 | [Area Specific Entities](AREA_SPECIFIC_ENTITIES.md)                   | Temperature/humidity per area                | Users/Devs | 📖 Advanced    |
-| [Notification Improvements](development/NOTIFICATION_IMPROVEMENTS.md) | Notification system enhancements             | Devs       | 📖 Reference   |
 
 ### 🤖 AI & Automation
 
@@ -107,7 +102,6 @@
 | [Project Glossary](.aidriven/GLOSSARY.md)         | Standardized vocabulary      | 657   | ⭐ Essential  |
 | [Memory Bank](.aidriven/memorybank.md)            | AI memory system for project | 1500+ | ⭐ AI Context |
 | [OpenCode Commands](.opencode/README.md)          | Custom CLI commands          | 266   | 📖 Automation |
-| [Release Commands](.opencode/RELEASE_COMMANDS.md) | CLI release shortcuts        | 100+  | 📖 Automation |
 
 ### 📝 User Documentation
 
@@ -129,8 +123,8 @@
 | **Add new feature**         | [AI-Driven Workflow](.aidriven/README.md)                     | Variable       |
 | **Fix a bug**               | [Debug Workflow](.aidriven/prompts/debug.md)                  | Variable       |
 | **Run tests locally**       | [Testing Guide](.aidriven/TESTING_GUIDE.md)                   | 10 min         |
-| **Release beta**            | [Automated Beta](AUTOMATED_BETA_RELEASE_PROCESS.md)           | 5 min          |
-| **Release stable**          | [Release Guide](RELEASE_GUIDE.md)                             | 30 min         |
+| **Release beta**            | [Release Guide](RELEASE_GUIDE.md)                             | 5 min          |
+| **Release stable**          | [Release Guide](RELEASE_GUIDE.md)                             | 10 min         |
 | **Review code**             | [Code Review](.aidriven/prompts/review.md)                    | 10 min         |
 | **Write release notes**     | [Release Notes Format](.aidriven/rules/release_notes.md)      | 20 min         |
 | **Lint before commit**      | [Linting Rules](.aidriven/rules/linting_before_commit.md)     | 2 min          |
@@ -156,12 +150,9 @@ linus-dashboard/
 │   │
 │   ├── development/                    # Developer documentation
 │   │   ├── ARCHITECTURE_OVERVIEW.md    # High-level architecture (NEW)
-│   │   ├── CHIP_SYSTEM_ARCHITECTURE.md # Chip system details
-│   │   ├── NOTIFICATION_IMPROVEMENTS.md # Notification system
-│   │   └── RELEASE_WORKFLOW.md         # Release overview (NEW)
+│   │   └── CHIP_SYSTEM_ARCHITECTURE.md # Chip system details
 │   │
-│   ├── RELEASE_GUIDE.md                # Manual stable release
-│   ├── AUTOMATED_BETA_RELEASE_PROCESS.md # Auto beta releases
+│   ├── RELEASE_GUIDE.md                # Release reference (buttons)
 │   ├── LOCAL_CI_TESTING.md             # Local CI testing
 │   ├── UPDATE_HOME_ASSISTANT.md        # HA update guide
 │   └── (other feature docs...)
@@ -195,7 +186,6 @@ linus-dashboard/
 │
 └── .opencode/                          # CLI automation
     ├── README.md                       # Custom commands overview
-    ├── RELEASE_COMMANDS.md             # Release CLI commands
     └── command/*.md                    # Individual command docs
 ```
 
@@ -225,7 +215,7 @@ grep -ri "typescript" .
 | -------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
 | **Chips**      | [Chip System Architecture](development/CHIP_SYSTEM_ARCHITECTURE.md) | [Memory Bank](.aidriven/memorybank.md), [Dashboard Enhancements](DASHBOARD_ENHANCEMENTS.md) |
 | **Views**      | [Architecture Overview](development/ARCHITECTURE_OVERVIEW.md)       | [Memory Bank](.aidriven/memorybank.md)                                                      |
-| **Release**    | [Release Workflow](development/RELEASE_WORKFLOW.md)                 | [Automated Beta](AUTOMATED_BETA_RELEASE_PROCESS.md), [Release Guide](RELEASE_GUIDE.md)      |
+| **Release**    | [Release Guide](RELEASE_GUIDE.md)                                   | [Local CI Testing](LOCAL_CI_TESTING.md), [Discord Webhooks](DISCORD_WEBHOOKS_SETUP.md)      |
 | **Testing**    | [Testing Guide](.aidriven/TESTING_GUIDE.md)                         | [Testing Documentation](.aidriven/rules/testing_documentation.md)                           |
 | **TypeScript** | [Clean Code](.aidriven/rules/clean_code.md)                         | [Architecture Overview](development/ARCHITECTURE_OVERVIEW.md)                               |
 | **Python**     | [Clean Code](.aidriven/rules/clean_code.md)                         | [HA Integration](.aidriven/rules/homeassistant_integration.md)                              |

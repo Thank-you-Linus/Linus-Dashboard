@@ -41,9 +41,10 @@ Read by `stable-release.yml` and `announce-stable.yml` only.
 
 ## How It Works
 
-### Beta Release (Tag: `1.4.1-beta.3`)
+### Beta Release (`1.4.1-beta.3`)
 
-**Workflow**: `.github/workflows/prerelease.yml`
+**Workflow**: `.github/workflows/beta-release.yml` (Beta Release (manual) button, step "Send Discord
+Notification", right after "Create GitHub Pre-Release", never in a dry run)
 
 **Script call**:
 ```bash
@@ -75,9 +76,8 @@ bash scripts/notify-discord.sh release "2.0.0" "<release_url>"
 - A Discord error never fails the published release: the run summary says "Not announced in Discord
   #annonces". Post it then with **Actions -> Announce stable release on Discord (manual)** (input `tag`;
   the release must exist; the `.discord.md` is read from `main`; each run posts once)
-- `release.yml` (tag pushed by hand, release published in the GitHub UI) sends no announcement, so the
-  button never announces twice; it only posts a technical failure notification (on `DISCORD_WEBHOOK_URL`)
-  if the release fails. A stable published that way is announced with the catch-up workflow
+- No other workflow announces a stable (and none is triggered by a tag): a stable is announced once.
+  `npm run test:release` checks it
 - Forums stay manual: `npm run forums:open`
 
 ---
@@ -95,9 +95,12 @@ After configuring the secret, you can verify the setup:
 
 ### Test Beta Release
 
-1. Create a beta tag: `git tag 1.4.1-beta.4`
-2. Push the tag: `git push --tags`
-3. Check the GitHub Actions workflow logs
+A dry run of the **Beta Release (manual)** button posts nothing: the webhook is only exercised by a
+real beta.
+
+1. Publish a beta with **Actions -> Beta Release (manual)** (see [RELEASE_GUIDE.md](RELEASE_GUIDE.md))
+2. Open the run logs
+3. Check that the step "Discord notified" ran
 4. Look for this line in the "Send Discord Notification" step:
    ```
    ✓ Using pre-release webhook → beta testers channel

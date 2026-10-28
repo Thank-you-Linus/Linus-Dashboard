@@ -1,760 +1,217 @@
-# 🚀 Release Management Guide | Guide de Gestion des Releases
+# 🚀 Release Guide
 
-> This guide explains the complete release process for Linus Dashboard, from development to publication.
->
-> Ce guide explique le processus complet de release pour Linus Dashboard, du développement à la publication.
-
----
-
-## ⚡ Quick Start | Démarrage Rapide
-
-**NEW: One-Command Release System! | NOUVEAU : Système de release en une commande !**
-
-Create releases easily with a single command:
-
-```bash
-# For pre-releases (interactive: choose alpha or beta)
-npm run create:prerelease
-
-# For stable releases
-npm run create:release
-```
-
-These scripts handle **everything automatically**:
-- ✅ Generate release notes from commits
-- ✅ Guide you through editing them
-- ✅ Run smoke tests
-- ✅ Bump version
-- ✅ Create git tags
-- ✅ Push to GitHub
-- ✅ Trigger automated CI/CD
-
-**Read below for detailed documentation.**
+> The single reference for publishing Linus Dashboard. A release goes out **only** through two
+> GitHub Actions buttons: **Beta Release (manual)** and **Stable Release (manual)**. No workflow
+> listens on tags: a tag pushed by hand publishes nothing.
 
 ---
 
-## 📋 Table of Contents | Table des matières
+## 📋 Contents
 
-- [Overview | Vue d'ensemble](#overview--vue-densemble)
-- [Release Types | Types de releases](#release-types--types-de-releases)
-- [Pre-Release Process (Alpha/Beta)](#pre-release-process-alphabeta)
-- [Stable Release (GitHub button)](#stable-release-github-button)
-- [Stable Release Process](#stable-release-process)
-- [Automated Workflows](#automated-workflows)
-- [Troubleshooting | Dépannage](#troubleshooting--dépannage)
-
----
-
-## Overview | Vue d'ensemble
-
-Linus Dashboard uses semantic versioning with pre-release tags for alpha and beta versions.
-
-Linus Dashboard utilise le versionnage sémantique avec des tags de pré-release pour les versions alpha et beta.
-
-### Version Format | Format de version
-
-- **Stable**: `X.Y.Z` (e.g., `1.3.0`)
-- **Beta**: `X.Y.Z-beta.N` (e.g., `1.3.1-beta.1`)
-- **Alpha**: `X.Y.Z-alpha.N` (e.g., `1.3.1-alpha.1`)
-
-Where | Où:
-- `X` = Major version (breaking changes)
-- `Y` = Minor version (new features)
-- `Z` = Patch version (bug fixes)
-- `N` = Pre-release counter
+- [Overview](#overview)
+- [a. Beta Release button](#a-beta-release-button)
+- [b. Stable Release button](#b-stable-release-button)
+- [c. CHANGELOG (after each button)](#c-changelog-after-each-button)
+- [d. Rollback (manual)](#d-rollback-manual)
+- [e. Stable announcement (Discord and forums)](#e-stable-announcement-discord-and-forums)
+- [Local helpers](#local-helpers)
+- [Troubleshooting](#troubleshooting)
 
 ---
 
-## Release Types | Types de releases
+## Overview
 
-### 🔬 Alpha Releases
+### Version format
 
-**Purpose | Objectif**: Early testing of new features with core team
-- Very early stage
-- May contain bugs
-- Not recommended for production
-- Limited distribution
+- **Stable**: `X.Y.Z` (e.g. `2.0.0`)
+- **Beta**: `X.Y.Z-beta.N` (e.g. `2.0.1-beta.1`)
+- **Alpha**: `X.Y.Z-alpha.N` (e.g. `2.0.1-alpha.1`)
 
-**When to use | Quand l'utiliser**:
-- New experimental features
-- Major refactoring
-- Testing before wider beta release
+Tags never take a `v` prefix. `package.json` is the single source of the version; `manifest.json` and
+`const.py` follow it (`scripts/bump-version.sh`, called by the buttons).
 
-### 🧪 Beta Releases
+### What does what
 
-**Purpose | Objectif**: Public testing before stable release
-- Feature-complete
-- Needs community testing
-- May still have minor bugs
-- Distributed to beta testers
+| Gesture | Who / what | Where |
+|---------|-----------|-------|
+| Publish a beta or an alpha | **Beta Release (manual)** button | `.github/workflows/beta-release.yml` |
+| Publish a stable | **Stable Release (manual)** button | `.github/workflows/stable-release.yml` |
+| Announce a beta on Discord | the Beta Release button, automatically | `scripts/notify-discord.sh prerelease` |
+| Announce a stable on Discord #annonces | the Stable Release button, automatically | `scripts/notify-discord.sh release` |
+| Catch up a missed stable announcement | **Announce stable release on Discord (manual)** button | `.github/workflows/announce-stable.yml` |
+| Post on the forums (HA, HACF) | by hand | `npm run forums:open` |
+| CHANGELOG section of the release | by hand, in a PR after the button | `npm run release:changelog` |
+| Undo a failed or bad release | by hand | [§ d](#d-rollback-manual) |
 
-**When to use | Quand l'utiliser**:
-- Feature is ready for testing
-- Before stable release
-- To gather user feedback
+Both buttons share the same guards and steps: lint, type check and build, **guard** (`package.json`
+must equal the latest tag of the repository, the new tag must not exist on `origin`), release notes
+(`scripts/generate-release-notes.sh --ci`, published as the release body), local bump commit
+`chore: Bump version to <tag>` and tag, smoke tests (`npm run test:smoke`), ZIP of the integration,
+then an atomic push of `main` and the tag (`git push --atomic origin HEAD:main "refs/tags/<tag>"`)
+and the GitHub release. The push uses `GITHUB_TOKEN`, so it triggers no other workflow.
 
-### ✅ Stable Releases
+**Never replace `GITHUB_TOKEN` by a personal token** in these workflows: a tag pushed with a PAT
+would trigger any future workflow listening on tags.
 
-**Purpose | Objectif**: Production-ready version
-- Fully tested
-- No known critical bugs
-- Ready for all users
-- Published on HACS and forums
-
-**When to use | Quand l'utiliser**:
-- After successful beta testing
-- Bug fixes for stable version
-- Ready for production use
+Before clicking, `npm run release:check` gives a local readiness report (git state, lint, types,
+build, version consistency, manifest/HACS files).
 
 ---
 
-## Pre-Release Process (Alpha/Beta)
+## a. Beta Release button
 
-### 🚀 One-Command Release (Recommended)
+1. GitHub → **Actions** → **Beta Release (manual)** → **Run workflow**.
+2. **Use workflow from**: `main` for a real release. Any branch is allowed with `dry_run`.
+3. **channel**: `beta` (default) or `alpha`.
+   - From a stable `2.0.0`, the next version is `2.0.1-<channel>.1`.
+   - From `2.0.1-beta.3` on the same channel: `2.0.1-beta.4`.
+   - Switching channel on the same base starts at `.1`; an alpha after a beta of the same base is
+     refused (it would sort lower for semver and HACS).
+4. **dry_run**: tick it first. The run does every check, the notes and the local bump, then stops
+   right before the push. Expected summary: `Dry run OK: would have released <tag>. Nothing was pushed.`
+5. Run again with **dry_run** unticked, from `main`.
 
-**The easiest way to create a pre-release:**
-
-```bash
-# For pre-releases (interactive prompt: alpha or beta)
-npm run create:prerelease
-```
-
-This single command will:
-1. ✅ Ask you to choose: Alpha or Beta
-2. ✅ Check git status is clean
-3. ✅ Generate `RELEASE_NOTES.md` from commits
-4. ✅ Prompt you to edit release notes
-5. ✅ Format release notes for GitHub
-6. ✅ Run smoke tests
-7. ✅ Bump version automatically
-8. ✅ Push to GitHub and trigger CI/CD
-
-**That's it!** GitHub Actions handles the rest automatically.
+A real run publishes a GitHub **pre-release** named `🧪 <tag> (Pre-Release)` with the ZIP, then
+announces it in the beta testers channel (secret `DISCORD_WEBHOOK_URL`). A Discord error never fails
+the release; the step `Discord notified` only runs when the message was really sent. On failure, the
+run summary names the failed step (and a failure message goes to the beta channel).
 
 ---
 
-### 📝 Manual Step-by-Step Process (Advanced)
+## b. Stable Release button
 
-If you prefer more control over each step:
+A stable **finalises the current pre-release** (`2.0.1-beta.3` → `2.0.1`). From a version that is
+already stable the button refuses: a hotfix goes through a beta first.
 
-#### Step 1: Generate Release Notes
+1. GitHub → **Actions** → **Stable Release (manual)** → **Run workflow**, from `main`.
+2. Tick **dry_run** first: the run summary shows the target version, the range, how many changes are
+   kept and the full release note, without tagging, publishing or announcing anything.
+3. Read the note, then run again with **dry_run** unticked.
 
-Generate release notes from your commits:
+**Release note.** The base is the last **stable** tag (`--since-stable`), not the last beta: the note
+covers every change since then, so all the betas in between, each change once, under New features,
+Bug fixes or Improvements (breaking changes first). Only product changes are kept (`src/` and
+`custom_components/`, without the built `www/` bundle and the version bump). Each line links its
+pull request and credits external contributors. The EN/FR wording of each line comes from
+`.github/release-notes-i18n.tsv` (lowercased commit message, English, French, optional type
+`feat`/`fix`/`other`; `-` as English drops the change). A commit missing from that file keeps its raw
+subject, and the summary counts them (`untranslated`): add them before the real run. Preview locally
+with `bash scripts/generate-release-notes.sh --ci --since-stable` (writes `RELEASE_NOTES.md`, do not
+commit it).
 
-```bash
-npm run release:notes
-```
+**Highlights.** When `.github/release-highlights/<version>.md` exists, it opens the note as is (the
+user-facing story of the release, EN and FR), followed by "All changes since <last stable>".
+Screenshots are repository files (`images/release/<version>/…`), written `![alt](images/<path>)`;
+they are rewritten to `raw.githubusercontent.com` URLs at the released commit. A screenshot that is
+not committed, or an image written another way, fails the "Generate release notes" step. Preview with
+`TAG=<version> bash scripts/generate-release-notes.sh --ci --since-stable`.
 
-This creates `RELEASE_NOTES.md` with:
-- English and French sections
-- Categorized changes (features, fixes, improvements)
-- Beta testing instructions
-- List of contributors
-
-**⚠️ Important**: Edit `RELEASE_NOTES.md` to:
-1. Add detailed explanations for each change
-2. Translate to French
-3. Fill in "For Beta Testers" sections
-4. Remove any commits that shouldn't be public
-5. **Mark main features with bold** (`**text**`) - these will be highlighted in Discord notifications
-
-#### Step 2: Format Release Notes for GitHub
-
-After editing `RELEASE_NOTES.md`, format it for GitHub with collapsible sections:
-
-```bash
-npm run release:format
-```
-
-This transforms `RELEASE_NOTES.md` in-place with:
-- Concise summary with main features visible
-- Detailed descriptions in collapsible sections
-- Compact bilingual format
-- Better visual organization for GitHub
-- Installation instructions automatically added
-
-**This formatted version will be used automatically for GitHub releases.**
-
-#### Step 3: Run Smoke Tests (Optional)
-
-Validate the build before releasing:
-
-```bash
-npm run test:smoke
-```
-
-This validates:
-- Build output exists and is valid
-- Version consistency across files
-- Manifest.json and hacs.json syntax
-- Python file syntax
-- No sensitive data in build
-
-#### Step 4: Bump Version
-
-Choose the appropriate bump command:
-
-**For Beta releases:**
-```bash
-npm run bump:beta
-```
-
-**For Alpha releases:**
-```bash
-npm run bump:alpha
-```
-
-This will:
-1. Update version in all files:
-   - `package.json`
-   - `package-lock.json`
-   - `custom_components/linus_dashboard/manifest.json`
-   - `custom_components/linus_dashboard/const.py`
-   - `src/linus-strategy.ts`
-2. Create a git commit
-3. Create a git tag
-4. Show you the next steps
-
-#### Step 5: Push to GitHub
-
-Push your changes and tag:
-
-```bash
-git push && git push --tags
-```
-
-#### Step 6: Automated CI/CD
-
-GitHub Actions will automatically:
-1. ✅ Validate tag format
-2. ✅ Checkout code
-3. ✅ Install dependencies
-4. ✅ Run linting and type checking
-5. ✅ Build the project
-6. ✅ Verify build output
-7. ✅ Run smoke tests
-8. ✅ Create ZIP archive
-9. ✅ **Format release notes** with collapsible sections
-10. ✅ Create GitHub pre-release with formatted notes
-11. ✅ Send Discord notification to beta testers (concise format)
-12. ✅ Clean up RELEASE_NOTES.md
-
-**View the workflow**: `.github/workflows/prerelease.yml`
-
-#### Step 7: Monitor Release
-
-1. Check GitHub Actions workflow status
-2. Verify the release was created on GitHub
-3. Check Discord for notification
-4. Respond to beta tester feedback
+A real run publishes the final GitHub release (`v<tag>`, not a pre-release, marked latest) so HACS
+offers it, then announces it in Discord #annonces ([§ e](#e-stable-announcement-discord-and-forums)).
+The release body can still be edited on GitHub afterwards, but the highlights file is the place for
+the wording.
 
 ---
 
-## Stable Release (GitHub button)
+## c. CHANGELOG (after each button)
 
-The recommended way to publish a stable version: no terminal, one release note that groups every
-beta since the previous stable.
+No button commits `CHANGELOG.md`. The generator (`scripts/generate-changelog.sh`) takes its source
+version from `package.json`, which the button bumps and tags in the same run, so the section of a
+release cannot be generated before its tag.
 
-1. Go to **Actions** -> **Stable Release (manual)** -> **Run workflow**.
-2. Pick the `main` branch (required for a real release).
-3. Tick **dry_run** first: the run shows the target version and the full release note in its summary
-   (Actions -> the run -> Summary) without tagging or publishing anything. Allowed from any branch.
-4. Read the note, then run again with **dry_run** unticked.
+After **each** button run (beta or stable), open a PR on `main`:
 
-What it does (`.github/workflows/stable-release.yml`): lint, type-check, build, version check, release
-note, bump to the stable version (`2.0.0-beta.3` -> `2.0.0`), smoke tests, ZIP (`linus_dashboard.zip`),
-atomic push of the commit and the tag (no `v` prefix), then publication as the final GitHub release
-(not a pre-release, marked latest) so HACS offers it, then one announcement in Discord #annonces (see below).
+```bash
+git switch -c "changelog-$TAG" origin/main
+npm run release:changelog       # writes the section ## [<version>], dated from its tag
+```
 
-**Release note.** The base is the last stable tag (for example `1.5.1`), not the last beta: the note
-covers every change since then, so all the betas in between. Each change appears once, under
-New features, Bug fixes or Improvements (breaking changes first, if any). Only product changes are kept
-(`src/` and `custom_components/`, without the built `www/` bundle and the version bump); CI, tooling,
-dependency and internal docs commits are left out, as are lint and dev-environment commits. Each line links its
-pull request (`#123`) and credits external contributors (`@name`). The wording of each line, in English and
-French, comes from `.github/release-notes-i18n.tsv` (columns: lowercased commit message, English, French,
-optional type `feat`/`fix`/`other`; `-` as English drops the change, for example a fix to something that only
-existed in a beta). A commit missing from that file keeps its raw subject in both languages, and the run summary
-says how many (`untranslated`): add them to the file before the real run. Preview it locally with
-`bash scripts/generate-release-notes.sh --ci --since-stable` (writes `RELEASE_NOTES.md`; do not commit it).
+The generator inserts the new section above the first `## [` header, that is **above**
+`## [Unreleased]`. In the same PR, move `## [Unreleased]` back to the top of the file (just under
+the introduction), keeping under it only what is not released yet, then commit and open the PR.
 
-**Highlights.** The note published by the stable button needs no edit: when
-`.github/release-highlights/<version>.md` exists (for example `2.0.0.md`), it opens the note as is — the
-user-facing story of the release (headline feature, screenshots, what to know when updating), EN and FR —
-followed by "All changes since <last stable>" and the generated lists. Screenshots are repository files
-(`images/release/<version>/…`), written `![alt](images/<path>)` with no title, space or `..`; the script
-rewrites them to `raw.githubusercontent.com` URLs at the commit being released. A screenshot that is not
-committed, or an image written any other way, **fails the "Generate release notes" step** (the error is in
-the step log), so a placeholder is never published. Only the stable uses it; betas are unchanged. Preview
-with `TAG=<version> bash scripts/generate-release-notes.sh --ci --since-stable`.
-
-**Guards** (the workflow stops before any push): not on `main` (real run), `package.json` is not the
-latest tag, the current version is already stable (a hotfix goes through a beta first), the stable tag
-already exists on `origin`.
-
-**Discord announcement (automatic).** Right after publishing the release, the button posts **one**
-announcement in Discord #annonces (secret `DISCORD_WEBHOOK_STABLE_URL`, never the beta channel), never in a
-dry run. The text is `.github/release-highlights/<version>.discord.md` when it exists (for example
-`2.0.0.discord.md`: a short curated message, EN and FR, with `{{VERSION}}` and `{{RELEASE_URL}}` replaced;
-keep it under 1900 characters, the test suite checks it), else the generic
-`.github/templates/discord-release.md` (version and link). Write it before clicking the button, like the
-highlights; it is never read as the release note. A Discord error never fails the published release: the run
-summary then says "Not announced in Discord #annonces" and a warning is shown. To post it afterwards (missed
-announcement, or a stable published another way), run **Actions -> Announce stable release on Discord
-(manual)** with the tag (`announce-stable.yml`: the release must exist; it reads the `.discord.md` from
-`main`, so a text added after the tag counts; each run posts once). Forums stay manual:
-`npm run forums:open`. The release body can still be edited on GitHub after publication
-(Releases -> Edit), but the highlights file is the place for the wording: it ships with the button.
-
-**Rollback.** If the run fails after the push (the summary says "the tag already exists on origin"),
-delete the tag AND the partial release, and revert the bump commit on `main` (see
-`/release-rollback`), then re-run. If it fails before the push, nothing was pushed: fix and re-run.
-
-**Never replace `GITHUB_TOKEN` by a personal token** in this workflow: the tag push would also trigger
-`release.yml` and the release would be published twice.
-
-The terminal path below (`bash scripts/create-release.sh`; the `npm run create:release` alias used elsewhere in this guide does not exist in `package.json`) remains available as a fallback.
+Between releases, PRs keep adding their user-facing entries under `## [Unreleased]`.
 
 ---
 
-## Stable Release Process
+## d. Rollback (manual)
 
-### 🚀 One-Command Release (Fallback)
+There is no rollback script: undoing a release is a manual gesture by the maintainer.
 
-**Terminal path, used when the GitHub button is not available** (see [Stable Release (GitHub button)](#stable-release-github-button) for the recommended path):
+- **The run failed before the "Push commit and tag" step**: nothing was pushed. Fix and re-run.
+- **Otherwise** (the push went through: the tag and the bump commit are on `origin`, with or without
+  a GitHub release):
 
 ```bash
-npm run create:release
+TAG=2.0.1-beta.1
+gh release delete "$TAG" --repo Thank-you-Linus/Linus-Dashboard --cleanup-tag --yes   # release + remote tag
+git push origin --delete "$TAG"        # only if no release exists (failure at the "Create" step)
+git fetch origin --prune --prune-tags
+SHA=$(git log origin/main -1 --format=%H --grep="^chore: Bump version to $TAG\$")
+git switch -c "revert-$TAG" origin/main && git revert --no-edit "$SHA" && git push -u origin HEAD
+gh pr create --fill
 ```
 
-This single command will:
-1. ✅ Check git status is clean
-2. ✅ Verify you're up to date with remote
-3. ✅ Prompt to confirm beta testing is complete
-4. ✅ Generate/verify `RELEASE_NOTES.md`
-5. ✅ Prompt you to review release notes
-6. ✅ Format release notes for GitHub
-7. ✅ Run smoke tests
-8. ✅ Bump to stable version
-9. ✅ Push to GitHub
-10. ✅ Show instructions for creating GitHub release
+Merge that PR before running a button again.
 
-**Then manually:**
-- Create the GitHub release (instructions shown by script)
-- GitHub Actions will build and publish automatically
-- Announce on forums: `npm run forums:open`
+**Both gestures are needed.** Each button refuses to start while `package.json` differs from the
+latest tag of the repository (guard in `beta-release.yml` and `stable-release.yml`). Deleting the
+tag alone leaves `package.json` one version ahead; reverting the bump alone leaves a tag ahead of
+`package.json`. Either way the next run stops at the guard.
+
+**A release already installed via HACS cannot be taken back** from users' installations. Once a
+release has been out for a while, prefer superseding it with a corrective beta (Beta Release button)
+rather than deleting it.
 
 ---
 
-### 📝 Manual Step-by-Step Process (Advanced)
+## e. Stable announcement (Discord and forums)
 
-If you prefer more control over each step:
+- **Discord #annonces, automatic.** Right after publishing the release, the Stable Release button
+  posts **one** announcement in Discord #annonces (secret `DISCORD_WEBHOOK_STABLE_URL`, never the
+  beta channel), never in a dry run. The text is `.github/release-highlights/<version>.discord.md`
+  when it exists (short curated message, EN and FR, `{{VERSION}}` and `{{RELEASE_URL}}` replaced,
+  under 1900 characters: `npm run test:release` checks it), else the generic
+  `.github/templates/discord-release.md`. Write it before clicking the button.
+- **Missed announcement, catch-up button.** A Discord error never fails the published release: the
+  run summary then says "Not announced in Discord #annonces" and shows a warning. Run **Actions →
+  Announce stable release on Discord (manual)** (`announce-stable.yml`) with the tag: the release must
+  be a published stable; the `.discord.md` is read from `main`, so a text added after the tag
+  counts. Each run posts once: run it once per missed announcement.
+- **Forums (Home Assistant, HACF), by hand:** `npm run forums:open` opens the forum pages with the
+  release notes pre-filled.
 
-#### Step 1: Ensure Beta Testing is Complete
-
-Before releasing stable:
-- ✅ Beta version has been tested
-- ✅ No critical bugs reported
-- ✅ All feedback addressed
-- ✅ Documentation updated
-
-#### Step 2: Generate Final Release Notes
-
-If you haven't already:
-
-```bash
-npm run release:notes
-```
-
-Edit `RELEASE_NOTES.md` for the final stable version.
-
-Remove or update the "For Beta Testers" sections.
-
-#### Step 3: Format Release Notes
-
-```bash
-npm run release:format
-```
-
-#### Step 4: Run Smoke Tests
-
-```bash
-npm run test:smoke
-```
-
-#### Step 5: Bump to Stable Version
-
-```bash
-npm run bump:release
-```
-
-This removes the pre-release suffix (e.g., `1.3.1-beta.1` → `1.3.1`).
-
-#### Step 6: Push to GitHub
-
-```bash
-git push && git push --tags
-```
-
-#### Step 7: Create GitHub Release
-
-1. Go to: https://github.com/Thank-you-Linus/Linus-Dashboard/releases/new
-2. Click "Draft a new release"
-3. Select your tag (e.g., `1.4.0`)
-4. Title: `1.4.0` (no 'v' prefix)
-5. Copy content from `RELEASE_NOTES.md` (formatted)
-6. Mark as "Latest release" ✅
-7. Leave "Pre-release" unchecked ⬜
-8. Click "Publish release"
-
-#### Step 8: Automated CI/CD
-
-GitHub Actions will automatically:
-1. ✅ Validate it's not a pre-release
-2. ✅ Build the project
-3. ✅ Run smoke tests
-4. ✅ Create ZIP archive
-5. ✅ Upload to release
-
-This workflow sends no Discord announcement (it would be a second one): the stable button
-(`stable-release.yml`) posts it in #annonces. For a stable published this way (tag pushed by hand), run
-**Announce stable release on Discord (manual)** with the tag, then Step 9.
-
-**View the workflow**: `.github/workflows/release.yml`
-
-#### Step 9: Publish to Forums
-
-Open forum announcement pages:
-
-```bash
-npm run forums:open
-```
-
-This opens:
-- Home Assistant Community Forum
-- HACF (French Home Assistant Community)
-
-Post your release announcement with:
-- Release notes
-- Installation instructions
-- Link to GitHub release
-
-#### Step 10: Verify HACS Update
-
-HACS should automatically detect the new version.
-
-Verify in HACS:
-1. Open HACS
-2. Search "Linus Dashboard"
-3. Check version is updated (may take a few minutes)
+Betas are announced in the beta testers channel by the Beta Release button; there is nothing to do
+by hand. Webhook setup: [DISCORD_WEBHOOKS_SETUP.md](DISCORD_WEBHOOKS_SETUP.md).
 
 ---
 
-## Automated Workflows
+## Local helpers
 
-### Pre-Release Workflow
+| Command | Use |
+|---------|-----|
+| `npm run release:check` | Readiness report before clicking a button |
+| `npm run release:notes` | Local preview of the release notes (`RELEASE_NOTES.md`, not committed) |
+| `npm run release:changelog` | CHANGELOG section of the current version ([§ c](#c-changelog-after-each-button)) |
+| `npm run test:smoke` | Smoke tests run by both buttons |
+| `npm run test:release` | Tests of the changelog generator and of the stable announcement |
+| `npm run test:ci` | Local simulation of the CI and of the buttons' checks ([LOCAL_CI_TESTING.md](LOCAL_CI_TESTING.md)) |
+| `npm run forums:open` | Forum posts of a stable |
 
-**Trigger**: Push tag matching `*-beta.*` or `*-alpha.*`
-
-**File**: `.github/workflows/prerelease.yml`
-
-**Steps**:
-1. Validate tag format
-2. Lint and type check
-3. Build project
-4. Create ZIP archive
-5. Create GitHub pre-release
-6. Notify Discord (beta channel)
-7. Clean up RELEASE_NOTES.md
-
-**Secrets required**:
-- `DISCORD_WEBHOOK_URL` (optional for notifications)
-
-### Stable Release Workflow
-
-**Trigger**: GitHub release published
-
-**File**: `.github/workflows/release.yml`
-
-**Steps**:
-1. Validate it's a stable release
-2. Lint and type check
-3. Build project
-4. Create ZIP archive
-5. Upload to release
-
-No Discord announcement here (it would be a second one): `stable-release.yml` posts it in #annonces, and
-`announce-stable.yml` (manual, input `tag`) catches up a missed one. Forums by hand: `npm run forums:open`.
-
-**Secrets required**:
-- `DISCORD_WEBHOOK_URL` (optional, only for the failure notification)
+`scripts/bump-version.sh` is called by the buttons. Run by hand it commits and tags locally (or, with
+`--files-only`, only updates the version files): never push that tag, it publishes nothing and the
+buttons would then refuse to run.
 
 ---
 
-## Troubleshooting | Dépannage
-
-### Build Fails
-
-**Problem**: Build fails during CI/CD
-
-**Solution**:
-1. Run build locally: `npm run build`
-2. Fix any TypeScript errors
-3. Run type check: `npm run type-check`
-4. Fix linting issues: `npm run lint`
-5. Commit fixes and push
-
-### Wrong Version Number
-
-**Problem**: Version was bumped incorrectly
-
-**Solution**:
-```bash
-# Delete the tag locally
-git tag -d 1.3.1-beta.1
-
-# Delete the tag remotely (if already pushed)
-git push --delete origin 1.3.1-beta.1
-
-# Manually update version in files
-# Then create new tag
-git tag -a 1.3.1-beta.1 -m "Release 1.3.1-beta.1"
-git push --tags
-```
-
-### Release Notes Missing
-
-**Problem**: RELEASE_NOTES.md not found
-
-**Solution**:
-- CI/CD will fall back to git commits
-- Recommended: Create RELEASE_NOTES.md manually
-- Run: `npm run release:notes`
-
-### Discord Notification Failed
-
-**Problem**: Discord notification not sent
-
-**Solution**:
-1. Check the secret is set in GitHub Secrets: `DISCORD_WEBHOOK_URL` for a beta (beta testers channel),
-   `DISCORD_WEBHOOK_STABLE_URL` for a stable (#annonces)
-2. Beta: manually run `bash scripts/notify-discord.sh prerelease 1.3.1-beta.1 <release_url>`
-3. Stable: run **Actions -> Announce stable release on Discord (manual)** with the tag (posts once per run)
-4. Notification is optional, release will still succeed
-
-### Tag Already Exists
-
-**Problem**: Tag already exists on GitHub
-
-**Solution**:
-```bash
-# Delete local tag
-git tag -d 1.3.1-beta.1
-
-# Delete remote tag
-git push --delete origin 1.3.1-beta.1
-
-# Delete the GitHub release if it was created
-
-# Fix issues and create new tag with incremented version
-npm run bump:beta
-git push && git push --tags
-```
-
----
-
-## Quick Reference | Référence Rapide
-
-### 🚀 One-Command Release (Easiest)
-
-```bash
-# Create a pre-release (interactive: alpha or beta)
-npm run create:prerelease
-
-# Create a stable release
-npm run create:release
-```
-
-**That's it!** The script handles everything and guides you through each step.
-
----
-
-### 📝 Full Release Cycle (Manual Control)
-
-```bash
-# 1. Generate release notes
-npm run release:notes
-
-# 2. Edit RELEASE_NOTES.md (add explanations, translations, mark main features with **)
-vim RELEASE_NOTES.md
-
-# 3. Format release notes for GitHub (optional, done automatically by CI)
-npm run release:format
-
-# 4. Verify everything is ready (optional)
-npm run release:check
-
-# 5. Bump version (choose one)
-npm run bump:alpha    # For alpha testing
-npm run bump:beta     # For beta testing
-npm run bump:release  # For stable release
-
-# 6. Push to GitHub
-git push && git push --tags
-
-# 7. Wait for GitHub Actions to complete
-
-# 8. For stable releases: Create GitHub release manually
-#    Go to: https://github.com/Thank-you-Linus/Linus-Dashboard/releases/new
-
-# 9. For stable releases only: Publish to forums
-npm run forums:open
-```
-
-### Available NPM Scripts | Scripts NPM disponibles
-
-```bash
-# 🚀 One-Command Release (Easiest)
-npm run create:prerelease  # Create pre-release (interactive: alpha or beta)
-npm run create:release     # Create complete stable release (one command)
-
-# 📝 Release Preparation (Manual Control)
-npm run release:notes      # Generate RELEASE_NOTES.md
-npm run release:format     # Format release notes for GitHub (with collapsible sections)
-npm run release:validate   # Validate RELEASE_NOTES.md
-npm run release:check      # Validate release is ready (17 checks)
-npm run release:changelog  # Generate CHANGELOG.md for HACS
-
-# 📦 Version Management (Manual Control)
-npm run bump:alpha         # Bump to alpha version
-npm run bump:beta          # Bump to beta version
-npm run bump:release       # Bump to stable version
-npm run release:rollback   # Rollback a failed release
-
-# 🧪 Testing
-npm run test:smoke         # Run smoke tests on build
-
-# 📢 Publishing
-npm run forums:open        # Open forum announcement pages
-```
-
----
-
-## 🆕 New Features | Nouvelles Fonctionnalités
-
-### Release Rollback | Retour en arrière de release
-
-If a release fails, you can safely rollback:
-
-Si une release échoue, vous pouvez revenir en arrière en toute sécurité :
-
-```bash
-npm run release:rollback 2.0.0-beta.3
-```
-
-This will | Cela va :
-- Delete local and remote tags | Supprimer les tags locaux et distants
-- Delete GitHub release | Supprimer la release GitHub
-- Revert version changes | Annuler les changements de version
-- Clean up release notes | Nettoyer les notes de version
-
-### Smoke Tests | Tests de validation
-
-Automated tests run before every release:
-
-Des tests automatisés s'exécutent avant chaque release :
-
-```bash
-npm run test:smoke
-```
-
-Validates | Valide :
-- Build output exists and is valid
-- Version consistency across files
-- Manifest.json and hacs.json syntax
-- Python file syntax
-- No sensitive data in build
-
-### CHANGELOG for HACS | CHANGELOG pour HACS
-
-Automatically generates HACS-compatible changelog:
-
-Génère automatiquement un changelog compatible HACS :
-
-```bash
-npm run release:changelog
-```
-
-Creates `CHANGELOG.md` with:
-- All releases by date
-- Categorized changes (Added, Fixed, Changed)
-- Links to GitHub releases
-
-### Enhanced Validation | Validation améliorée
-
-The `release:check` command now performs 17 checks:
-
-La commande `release:check` effectue maintenant 17 vérifications :
-
-1. Git status is clean
-2. On correct branch
-3. Up to date with remote
-4. RELEASE_NOTES.md exists
-5. Dependencies installed
-6. Linting passes
-7. Type checking passes
-8. Build succeeds
-9. Version consistency
-10. No FIXME/TODO comments
-11. CHANGELOG.md exists (NEW)
-12. Manifest.json valid (NEW)
-13. HACS.json valid (NEW)
-14. No sensitive data (NEW)
-15. Python syntax valid (NEW)
-16. README files exist (NEW)
-17. LICENSE exists (NEW)
-
----
-
-## Best Practices | Bonnes Pratiques
-
-### ✅ DO | À FAIRE
-
-- **Use the one-command scripts** (`npm run create:beta`) for easier releases
-- Always generate and review release notes
-- **Mark main features with bold (`**text**`)** in RELEASE_NOTES.md for Discord notifications
-- Format release notes for GitHub to keep them concise
-- Test beta versions before stable release
-- Use semantic versioning correctly
-- Write clear commit messages (they become release notes!)
-- Update documentation
-- Respond to beta tester feedback
-- Run smoke tests before releasing
-
-### ❌ DON'T | À NE PAS FAIRE
-
-- Skip beta testing for major changes
-- Push directly to stable without testing
-- Forget to update version in all files (scripts handle this)
-- Ignore build/lint errors
-- Release without release notes
-- Delete tags without good reason
-- Skip the release notes editing step
-
----
-
-## Support | Aide
-
-### Issues | Problèmes
-
-Report issues: https://github.com/Thank-you-Linus/Linus-Dashboard/issues
-
-### Community | Communauté
-
-- Discord: (ask for beta tester role)
-- HACF Forum: https://forum.hacf.fr/
-- Home Assistant Community: https://community.home-assistant.io/
-
----
-
-**Happy Releasing! | Bonne release !** 🎉
+## Troubleshooting
+
+- **"package.json version (X) is not the latest tag (Y)"**: a previous run pushed a tag (or a bump
+  commit) that was not cleaned up. Apply [§ d](#d-rollback-manual).
+- **"Tag X already exists on origin"**: same cause; delete the leftover release/tag (§ d).
+- **"A real release can only run from main"**: select `main` in "Use workflow from", or tick `dry_run`.
+- **"Current version X is already stable"** (Stable Release): release a beta first.
+- **"Cannot release an alpha after a beta of the same base"**: use the beta channel.
+- **Lint, type check or build fails**: reproduce locally with `npm run test:ci beta-release`.
+- **Discord message missing**: beta, check the `DISCORD_WEBHOOK_URL` secret; stable, run the catch-up
+  button (§ e).

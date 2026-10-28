@@ -4,52 +4,44 @@ This directory contains all automation scripts for the Linus Dashboard project.
 
 ## 📁 Organization
 
-### 🚀 Release Management (Main Entry Points)
+### 🚀 Releases
 
-These are the primary scripts you should use:
-
-- **`create-prerelease.sh`** - 🎯 ONE-COMMAND beta/alpha release creator
-  - Usage: `npm run create:beta` or `npm run create:alpha`
-  - Does everything: generate notes, test, bump, tag, push
-  
-- **`create-release.sh`** - 🎯 ONE-COMMAND stable release creator
-  - Usage: `npm run create:release`
-  - Does everything: validate, test, bump, tag, push
+A release goes out **only** through the GitHub Actions buttons **Beta Release (manual)**
+(`.github/workflows/beta-release.yml`) and **Stable Release (manual)**
+(`.github/workflows/stable-release.yml`). No workflow listens on tags: a tag pushed by hand publishes
+nothing. Full procedure, CHANGELOG, rollback and stable announcement: `docs/RELEASE_GUIDE.md`.
 
 ### 📦 Release Support Scripts
 
-These scripts are used by the main release scripts or manually:
+Called by the buttons, or run locally to check or preview:
 
-- **`bump-version.sh`** - Bump version numbers across all files
-  - Usage: `npm run bump:beta`, `npm run bump:alpha`, `npm run bump:release`
-  - Called automatically by create-* scripts
+- **`bump-version.sh`** - Bump the version in `package.json`, `manifest.json` and `const.py`, commit
+  `chore: Bump version to X` and tag
+  - Called by both buttons (`beta|alpha` and `release`)
+  - `--files-only`: update the version files only (no commit, no tag)
 
 - **`generate-release-notes.sh`** - Generate RELEASE_NOTES.md from git commits
-  - Usage: `npm run release:notes`
-  - Called automatically by create-* scripts
+  - Called by both buttons with `--ci` (stable: `--ci --since-stable`), published as the release body
+  - Local preview: `npm run release:notes` (do not commit the file)
 
-- **`format-release-notes.sh`** - Format release notes for GitHub (collapsible sections)
-  - Usage: `npm run release:format`
-  - Called automatically by create-* scripts and CI/CD
+- **`release-contributors.sh`** - Credits external contributors in the release notes
+  - Used by `generate-release-notes.sh`
 
-- **`generate-changelog.sh`** - Generate CHANGELOG.md for HACS
-  - Usage: `npm run release:changelog`
-  - Called automatically by prerelease workflow
+- **`generate-changelog.sh`** - Generate the CHANGELOG.md section of the current version
+  - Usage: `npm run release:changelog`, in a PR after each button (see `docs/RELEASE_GUIDE.md`)
 
-- **`validate-release-notes.sh`** - Validate RELEASE_NOTES.md format
-  - Usage: `npm run release:validate`
-
-- **`check-release-ready.sh`** - Run 17 checks before releasing (smoke tests++)
+- **`check-release-ready.sh`** - Readiness report before clicking a button
   - Usage: `npm run release:check`
 
-- **`rollback-release.sh`** - Rollback a failed release (delete tag, revert version)
-  - Usage: `npm run release:rollback <version>`
+- **`ci-local.sh`** - Local simulation of the CI and of the buttons' checks
+  - Usage: `npm run test:ci [main-check|beta-release|stable-release|all]`
 
 ### 🔔 Notification Scripts
 
 - **`notify-discord.sh`** - Send release notifications to Discord
-  - Called automatically by GitHub Actions workflows
-  - Handles both pre-release and stable release notifications
+  - `prerelease`: called by the Beta Release button (beta testers channel)
+  - `release`: called by the Stable Release button and by the catch-up button
+    "Announce stable release on Discord (manual)" (#annonces)
 
 - **`open-forums.sh`** - Open forum pages in browser for manual posting
   - Usage: `npm run forums:open`
@@ -58,7 +50,7 @@ These scripts are used by the main release scripts or manually:
 
 - **`smoke-tests.sh`** - Run pre-release validation tests (17 checks)
   - Usage: `npm run test:smoke`
-  - Called automatically by create-* scripts and CI/CD
+  - Called by both release buttons
   - Validates: build output, versions, manifests, Python syntax, etc.
 
 ### 🛠 Development Scripts
@@ -87,23 +79,12 @@ These scripts are used by the main release scripts or manually:
 - **`sync-dependencies.js`** - Sync package.json and package-lock.json versions
   - Usage: `npm run sync:deps`
 
-### 📖 Documentation
-
-- **`README-RELEASE.md`** - Quick reference for the release system
-  - Explains the new one-command release process
-  - Documents fixes and improvements
-
 ## 🎯 Quick Reference
 
 ### Creating Releases
 
-```bash
-# Pre-release (beta testing)
-npm run create:beta
-
-# Stable release
-npm run create:release
-```
+GitHub → Actions → **Beta Release (manual)** or **Stable Release (manual)** → Run workflow (tick
+`dry_run` first). See `docs/RELEASE_GUIDE.md`.
 
 ### Development
 
@@ -133,16 +114,14 @@ npm run release:check
 ```bash
 # Update Home Assistant version
 npm run update:ha
-
-# Rollback failed release
-npm run release:rollback 1.4.0-beta.2
 ```
+
+A failed or bad release is rolled back by hand: `docs/RELEASE_GUIDE.md` § Rollback.
 
 ## 📚 Documentation
 
 For complete release documentation, see:
-- `docs/RELEASE_GUIDE.md` - Complete release process guide
-- `scripts/README-RELEASE.md` - Quick reference for new release system
+- `docs/RELEASE_GUIDE.md` - The single release reference
 
 ## 🗑️ Removed Scripts (Dec 2025)
 
@@ -151,6 +130,10 @@ The following scripts were removed as they were redundant or obsolete:
 - ~~`notify-discord-embeds.sh`~~ - Obsolete version with embeds
 - ~~`notify-discord-v2.sh`~~ - Obsolete version
 - ~~`notify-forums.sh`~~ - Redundant with `open-forums.sh`
+
+The local release scripts of the former tag-push path (one-command beta/stable creators, release
+notes formatting and validation, commit analysis, scripted rollback) were removed in TK-170: the
+buttons replace them.
 
 ## 🔧 Maintenance
 

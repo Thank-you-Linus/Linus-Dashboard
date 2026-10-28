@@ -83,4 +83,4 @@ npm run build:prod    # Build production
 
 ## Rollback
 
-Si problème : `git revert <commit>` ou `npm run release:rollback`
+Si problème : `git revert <commit>` ; release déjà publiée → `docs/RELEASE_GUIDE.md` § Rollback

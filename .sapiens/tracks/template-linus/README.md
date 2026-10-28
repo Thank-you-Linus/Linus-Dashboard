@@ -78,8 +78,8 @@ src/
 - [ ] Smoke tests OK (15/15)
 
 ### Release
-- [ ] `/release-check` passe (17 checks)
-- [ ] `/release-beta` effectué
+- [ ] `npm run release:check` passe (17 checks)
+- [ ] bouton Beta Release lancé (Actions → Beta Release (manual))
 
 ---
 

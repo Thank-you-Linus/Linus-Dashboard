@@ -91,9 +91,8 @@ bugs trouvés, patterns détectés, countermeasures appliquées, learnings.
 
 ## Rollback
 
-```bash
-npm run release:rollback
-```
+Release ratée ou à retirer : geste manuel décrit dans `docs/RELEASE_GUIDE.md` § Rollback
+(suppression de la release et du tag, revert du commit de bump par une PR).
 
 ---
 

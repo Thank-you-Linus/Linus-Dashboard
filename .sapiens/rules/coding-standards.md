@@ -236,7 +236,7 @@ describe('ComponentName', () => {
 
 ### Smoke Tests
 
-**Location:** Defined in release-check skill
+**Location:** `scripts/smoke-tests.sh` (`npm run test:smoke`, run by both release buttons)
 **Count:** 15 predefined tests
 **Purpose:** Validate core functionality before release
 
@@ -269,7 +269,7 @@ chore: update dependencies to latest versions
 - Link related issues
 - Include screenshots for UI changes
 - Ensure CI passes before requesting review
-- Use `/release-check` before merging
+- Use `npm run release:check` before merging
 
 ## Build & Release Standards
 
@@ -280,10 +280,10 @@ chore: update dependencies to latest versions
 
 ### Release Process
 1. Create changes on feature branch
-2. Run `/release-check` - Validate quality
+2. Run `npm run release:check` - Validate quality
 3. Merge to main
-4. Run `/release-beta` or `/release-stable`
-5. Tag created automatically
+4. Click **Beta Release (manual)** or **Stable Release (manual)** in GitHub Actions (dry_run first; see `docs/RELEASE_GUIDE.md`)
+5. Tag and GitHub release created by the button
 6. HACS validation runs
 7. Discord notification sent automatically: a beta in the beta testers channel, a stable once in #annonces (by the Stable Release (manual) button, text `.github/release-highlights/<version>.discord.md`; missed → `announce-stable.yml`)
 

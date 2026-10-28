@@ -37,6 +37,10 @@ class TagsChip extends AbstractChip {
   /**
    * Get labels in use with their entity IDs.
    *
+   * When an area slug is set, only entities belonging to that area are kept:
+   * attached to it directly, or via their device. The match is made on the
+   * area slug, which may differ from the Home Assistant area_id.
+   *
    * @returns Map of label ID to entity IDs array
    * @private
    */
@@ -44,7 +48,7 @@ class TagsChip extends AbstractChip {
     const labelEntities = new Map<string, string[]>();
     for (const [entityId, entity] of Object.entries(Helper.entities)) {
       // Filter by area if specified
-      if (this.areaSlug && entity.area_id !== this.areaSlug) {
+      if (this.areaSlug && Helper.getEntityArea(entityId)?.slug !== this.areaSlug) {
         continue;
       }
       if (entity.labels) {

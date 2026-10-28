@@ -258,6 +258,25 @@ def test_not_yet_written_sub_group_is_pending(mock_hass, fake_states):
     assert floor_state.attributes["total"] == 0
 
 
+def test_pending_sub_group_and_ghost_leaf_lists_only_the_leaf(mock_hass, fake_states):
+    # A pending Linus sub-group (no state yet) stays out of every list, while
+    # a plain member absent from HA is a leaf and is listed unavailable.
+    mock_hass.data[DOMAIN] = {"icons": ICONS}
+    area_salon = motion_group(mock_hass, "linus_dashboard_motion_area_salon", SENSORS)
+    ghost = "binary_sensor.couloir_motion_ghost"
+    floor = motion_group(
+        mock_hass,
+        "linus_dashboard_motion_floor_ground",
+        [area_salon.entity_id, ghost],
+    )
+
+    floor_state = publish(fake_states, floor)
+
+    assert floor_state.attributes["unavailable_entity_ids"] == [ghost]
+    assert floor_state.attributes["unavailable_count"] == 1
+    assert floor_state.attributes["total"] == 1
+
+
 # ---------------------------------------------------------------------------
 # Non-regression: groups whose own availability never comes from HA core, and
 # groups with at least one available member, behave exactly as before.

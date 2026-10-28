@@ -124,24 +124,55 @@ echo "3. no workflow is triggered by a pushed tag or a published release (the bu
 on_block() {
     awk '/^on:/ { inside = 1; print; next } inside && /^[^[:space:]#]/ { exit } inside { print }' "$1"
 }
-for wf in "${WF_FILES[@]}"; do
-    ON=$(on_block "$wf")
-    WHY=""
+# push_block: from an "on:" block on stdin, the lines of its "push:" event alone (the lines indented
+# deeper than the "push:" key, up to the next key at the same or a shallower indent), key excluded
+push_block() {
+    awk '
+        !inside && /^[[:space:]]+push:/ { inside = 1; match($0, /^[[:space:]]*/); indent = RLENGTH; next }
+        inside && /^[[:space:]]*(#|$)/ { next }
+        inside { match($0, /^[[:space:]]*/); if (RLENGTH <= indent) exit; print }'
+}
+# tag_trigger_why <file>: why the workflow runs on a pushed tag or a published release, empty if it does not
+tag_trigger_why() {
+    local on push why=""
+    on=$(on_block "$1")
+    push=$(echo "$on" | push_block)
     # Inline forms: "on: push", "on: [push, ...]", "on: release" (push without filters includes tags)
-    echo "$ON" | head -n 1 | grep -qE '^on:.*\b(push|release|create)\b' && WHY="inline push/release/create trigger"
+    echo "$on" | head -n 1 | grep -qE '^on:.*\b(push|release|create)\b' && why="inline push/release/create trigger"
     # Block form: release/create events, or a push filtered on tags
-    echo "$ON" | grep -qE '^[[:space:]]{2}(release|create):' && WHY="release or create event"
-    echo "$ON" | grep -qE '^[[:space:]]+tags(-ignore)?:' && WHY="push filtered on tags"
-    # A push with no branches filter also runs on every pushed tag
-    if echo "$ON" | grep -qE '^[[:space:]]{2}push:' && ! echo "$ON" | grep -qE '^[[:space:]]+branches(-ignore)?:'; then
-        WHY="push without a branches filter (runs on tags too)"
+    echo "$on" | grep -qE '^[[:space:]]{2}(release|create):' && why="release or create event"
+    echo "$push" | grep -qE '^[[:space:]]+tags(-ignore)?:' && why="push filtered on tags"
+    # A push with no branches filter (in the push block itself) also runs on every pushed tag
+    if echo "$on" | grep -qE '^[[:space:]]+push:' && ! echo "$push" | grep -qE '^[[:space:]]+branches(-ignore)?:'; then
+        why="push without a branches filter (runs on tags too)"
     fi
+    echo "$why"
+}
+for wf in "${WF_FILES[@]}"; do
+    WHY=$(tag_trigger_why "$wf")
     if [ -z "$WHY" ]; then
         ok "$(basename "$wf"): not triggered by a tag"
     else
         fail "$(basename "$wf"): triggered by a tag ($WHY)"
     fi
 done
+
+echo "3b. the tag-trigger check catches tag-triggered shapes (fixtures)"
+FIXTURES="$WORK/workflows"
+mkdir -p "$FIXTURES"
+# fixture <name> <on: block>: a minimal workflow with that trigger
+fixture() { printf '%s\njobs:\n  build:\n    runs-on: ubuntu-latest\n' "$2" > "$FIXTURES/$1.yml"; }
+fixture old-prerelease $'on:\n  push:\n    tags:\n      - \'*-beta.*\'\n      - \'*-alpha.*\''
+fixture old-release $'on:\n  release:\n    types:\n      - "published"\n  push:\n    tags:\n      - "[0-9]+.[0-9]+.[0-9]+"'
+fixture inline-push 'on: push'
+fixture bare-push-plus-pr $'on:\n  push:\n  pull_request:\n    branches: [main]'
+fixture push-branches-plus-pr-tags $'on:\n  push:\n    branches: [main]\n  pull_request:\n    branches: [main]\n    tags-ignore: ["*"]'
+for name in old-prerelease old-release inline-push bare-push-plus-pr; do
+    WHY=$(tag_trigger_why "$FIXTURES/$name.yml")
+    [ -n "$WHY" ] && ok "fixture $name: triggered by a tag ($WHY)" || fail "fixture $name: must be reported as triggered by a tag"
+done
+WHY=$(tag_trigger_why "$FIXTURES/push-branches-plus-pr-tags.yml")
+[ -z "$WHY" ] && ok "fixture push-branches-plus-pr-tags: push filtered on branches is not a tag trigger" || fail "fixture push-branches-plus-pr-tags: wrongly reported ($WHY)"
 
 echo "4. DISCORD_WEBHOOK_STABLE_URL is read by stable-release.yml and announce-stable.yml only"
 BAD=$(grep -n 'DISCORD_WEBHOOK_STABLE_URL' /dev/null "${WF_FILES[@]}" | grep -vF -e "$STABLE_WF:" -e "$CATCHUP_WF:")

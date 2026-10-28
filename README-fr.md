@@ -280,6 +280,14 @@ Chaque entité de groupe (et les capteurs d'agrégat `binary_sensor` tout-ou-rie
    - state_attr('cover.linus_dashboard_shutter_floor_pieces_a_vivre', 'unavailable_count') }}
 ```
 
+**Q: Les chips de scène de la popup lumière peuvent-elles afficher les couleurs de la scène ?**
+**Oui, pour les scènes créées dans Home Assistant.** Dans la popup lumière d'une pièce, chaque chip de scène prend la couleur dominante des lampes que la scène allume.
+- **Colorées automatiquement :** les scènes créées dans Home Assistant (éditeur de scènes, `scenes.yaml`, `scene.create`) dont les lampes sont réglées en couleur, ou en température de blanc (affichée en teinte chaude ou froide) — pour les comptes administrateurs.
+- **Non colorées automatiquement :** les scènes Philips Hue et les autres scènes fournies par une intégration (Home Assistant ne connaît pas leurs couleurs), les scènes sans lampe colorée, et toutes les scènes pour les comptes non administrateurs.
+- **Repli :** la chip garde son aspect neutre habituel, ou affiche la couleur que vous choisissez pour cette scène dans les options de l'intégration (Paramètres → Appareils et services → Linus Dashboard → Configurer, étape « Couleurs des chips de scène »). Une couleur choisie passe toujours avant la couleur détectée.
+
+Après avoir modifié une scène, rechargez le tableau de bord pour voir sa nouvelle couleur.
+
 ### Dépannage
 
 **Q: Je vois une erreur timeout ou un message rouge**

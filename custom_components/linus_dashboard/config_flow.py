@@ -15,10 +15,14 @@ from homeassistant.helpers import (
     device_registry as dr,
 )
 from homeassistant.helpers import (
+    entity_registry as er,
+)
+from homeassistant.helpers import (
     label_registry as lr,
 )
 from homeassistant.helpers.selector import (
     BooleanSelector,
+    ColorRGBSelector,
     EntitySelector,
     EntitySelectorConfig,
     SelectSelector,
@@ -40,11 +44,57 @@ from .const import (
     CONF_EXCLUDED_TARGETS,
     CONF_HIDE_GREETING,
     CONF_HIDE_GROUPS_FROM_VOICE_ASSISTANTS,
+    CONF_SCENE_COLOR_OVERRIDES,
     CONF_WEATHER_ENTITY,
     DOMAIN,
 )
+from .utils import is_valid_rgb
+
+# Options-step field listing the scenes whose manual color is to be removed.
+# An <input type="color"> can't be cleared, hence this explicit reset.
+CONF_RESET_SCENE_COLORS = "reset_scene_colors"
+
+# Integrations whose own scenes the light popup never shows (same exclusion
+# as the frontend Helper's isOwnAggregateEntity, by entity registry platform).
+_OWN_SCENE_PLATFORMS = frozenset({"magic_areas", "linus_brain", DOMAIN})
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def merge_scene_color_overrides(
+    previous: Any,
+    submitted: dict[str, Any],
+    present_ids: list[str],
+    reset: Any = (),
+) -> dict[str, list[int]]:
+    """
+    Merge the scene colors form into the saved manual colors.
+
+    - a scene shown in the form with a color: added or modified;
+    - a scene shown in the form whose field was cleared (key absent): removed;
+    - a scene absent from Home Assistant when the form was opened: kept as is;
+    - an invalid value (not three integers 0-255): ignored;
+    - a scene listed in `reset`: removed, whatever its color field says.
+    """
+    merged: dict[str, list[int]] = {}
+    if isinstance(previous, dict):
+        merged = {
+            entity_id: list(rgb)
+            for entity_id, rgb in previous.items()
+            if entity_id not in present_ids and is_valid_rgb(rgb)
+        }
+    for entity_id in present_ids:
+        value = submitted.get(entity_id)
+        if is_valid_rgb(value):
+            merged[entity_id] = list(value)
+        elif value is not None:
+            _LOGGER.debug("Ignoring invalid color for %s: %s", entity_id, value)
+            if isinstance(previous, dict) and is_valid_rgb(previous.get(entity_id)):
+                merged[entity_id] = list(previous[entity_id])
+    if isinstance(reset, (list, tuple, set)):
+        for entity_id in reset:
+            merged.pop(entity_id, None)
+    return merged
 
 
 class NullableEntitySelector(EntitySelector):
@@ -91,6 +141,10 @@ class LinusDashboardEditFlow(config_entries.OptionsFlow):
         self._config_entry = config_entry
         self._dashboard_config = {}  # Store temporary config during multi-step flow
         self._no_dashboards_detected = False
+        # Options of the `init` step, saved together with the scene colors
+        self._pending: dict[str, Any] = {}
+        # Scenes shown in the `scene_colors` form when it was opened
+        self._scene_ids: list[str] = []
 
     async def _get_current_language(self) -> str:
         """Get the current user's frontend language dynamically."""
@@ -757,7 +811,10 @@ class LinusDashboardEditFlow(config_entries.OptionsFlow):
 
             # Process form data to extract original values from display strings
             processed_data = await self._process_form_data(user_input)
-            return self.async_create_entry(title="", data=processed_data)
+            # Saved with the scene colors of the next step: async_create_entry
+            # replaces all options, so they must travel together.
+            self._pending = processed_data
+            return await self.async_step_scene_colors()
 
         schema = await self._build_form_schema()
 
@@ -768,4 +825,80 @@ class LinusDashboardEditFlow(config_entries.OptionsFlow):
                 "docs_url": "https://github.com/Thank-you-Linus/Linus-Dashboard",
                 "dashboards_notice": await self._get_dashboards_notice(),
             },
+        )
+
+    def _saved_scene_colors(self) -> dict[str, Any]:
+        """Return the manual scene colors currently saved in the options."""
+        saved = self._config_entry.options.get(CONF_SCENE_COLOR_OVERRIDES)
+        return saved if isinstance(saved, dict) else {}
+
+    def _colorable_scene_ids(self) -> list[str]:
+        """Scenes of the light popup: all `scene.*` but Linus/Magic Areas' own."""
+        registry = er.async_get(self.hass)
+        scene_ids = []
+        for entity_id in self.hass.states.async_entity_ids("scene"):
+            entry = registry.async_get(entity_id)
+            if entry is not None and entry.platform in _OWN_SCENE_PLATFORMS:
+                continue
+            scene_ids.append(entity_id)
+        return sorted(scene_ids)
+
+    def _scene_label(self, entity_id: str) -> str:
+        """Friendly name of a scene, else its entity_id."""
+        state = self.hass.states.get(entity_id)
+        name = state.attributes.get("friendly_name") if state is not None else None
+        return f"{name} ({entity_id})" if name else entity_id
+
+    async def async_step_scene_colors(
+        self, user_input: dict[str, Any] | None = None
+    ) -> config_entries.ConfigFlowResult:
+        """Choose a color for each scene chip of the light popup (optional)."""
+        saved = self._saved_scene_colors()
+
+        if user_input is not None:
+            merged = merge_scene_color_overrides(
+                saved,
+                user_input,
+                self._scene_ids,
+                reset=user_input.get(CONF_RESET_SCENE_COLORS, []),
+            )
+            return self.async_create_entry(
+                title="", data={**self._pending, CONF_SCENE_COLOR_OVERRIDES: merged}
+            )
+
+        self._scene_ids = self._colorable_scene_ids()
+        if not self._scene_ids:
+            # No scene to color: save `init`, keep the existing colors untouched
+            kept = merge_scene_color_overrides(saved, {}, [])
+            return self.async_create_entry(
+                title="", data={**self._pending, CONF_SCENE_COLOR_OVERRIDES: kept}
+            )
+
+        schema: dict[Any, Any] = {}
+        for entity_id in self._scene_ids:
+            color = saved.get(entity_id)
+            description = {"suggested_value": color} if is_valid_rgb(color) else None
+            schema[vol.Optional(entity_id, description=description)] = (
+                ColorRGBSelector()
+            )
+
+        colored = sorted(
+            entity_id
+            for entity_id, color in saved.items()
+            if isinstance(entity_id, str) and is_valid_rgb(color)
+        )
+        if colored:
+            schema[vol.Optional(CONF_RESET_SCENE_COLORS, default=[])] = SelectSelector(
+                SelectSelectorConfig(
+                    options=[
+                        {"value": entity_id, "label": self._scene_label(entity_id)}
+                        for entity_id in colored
+                    ],
+                    multiple=True,
+                    mode=SelectSelectorMode.LIST,
+                )
+            )
+
+        return self.async_show_form(
+            step_id="scene_colors", data_schema=vol.Schema(schema)
         )

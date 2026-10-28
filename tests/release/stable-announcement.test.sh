@@ -2,8 +2,9 @@
 #
 # Tests: a stable release is announced ONCE in Discord #annonces, automatically.
 # - Only stable-release.yml (right after publishing) and the manual catch-up announce-stable.yml call
-#   `notify-discord.sh release`; release.yml (tag push / release published) never calls the script,
-#   otherwise a stable would be announced twice.
+#   `notify-discord.sh release`, otherwise a stable would be announced twice.
+# - No workflow is triggered by a pushed tag or a published release: the Beta Release and Stable
+#   Release buttons are the only release path (a tag pushed by hand publishes nothing).
 # - DISCORD_WEBHOOK_STABLE_URL (#annonces) is read by those two workflows only.
 # - notify-discord.sh release posts once to the stable webhook: the curated
 #   .github/release-highlights/<version>.discord.md, else the generic template; betas are unchanged.
@@ -118,12 +119,29 @@ for wf in "$STABLE_WF" "$CATCHUP_WF"; do
     [ "${N:-0}" -eq 1 ] && ok "$(basename "$wf"): exactly one stable announcement" || fail "$(basename "$wf"): exactly one stable announcement (got ${N:-0})"
 done
 
-echo "3. release.yml (tag push / release published) never calls notify-discord.sh"
-if grep -q 'notify-discord' "$WORKFLOWS/release.yml"; then
-    fail "release.yml calls notify-discord.sh (a stable would be announced twice)"
-else
-    ok "release.yml does not call notify-discord.sh"
-fi
+echo "3. no workflow is triggered by a pushed tag or a published release (the buttons are the only release path)"
+# on_block <file>: the lines of the workflow's top-level "on:" block, the "on:" line included
+on_block() {
+    awk '/^on:/ { inside = 1; print; next } inside && /^[^[:space:]#]/ { exit } inside { print }' "$1"
+}
+for wf in "${WF_FILES[@]}"; do
+    ON=$(on_block "$wf")
+    WHY=""
+    # Inline forms: "on: push", "on: [push, ...]", "on: release" (push without filters includes tags)
+    echo "$ON" | head -n 1 | grep -qE '^on:.*\b(push|release|create)\b' && WHY="inline push/release/create trigger"
+    # Block form: release/create events, or a push filtered on tags
+    echo "$ON" | grep -qE '^[[:space:]]{2}(release|create):' && WHY="release or create event"
+    echo "$ON" | grep -qE '^[[:space:]]+tags(-ignore)?:' && WHY="push filtered on tags"
+    # A push with no branches filter also runs on every pushed tag
+    if echo "$ON" | grep -qE '^[[:space:]]{2}push:' && ! echo "$ON" | grep -qE '^[[:space:]]+branches(-ignore)?:'; then
+        WHY="push without a branches filter (runs on tags too)"
+    fi
+    if [ -z "$WHY" ]; then
+        ok "$(basename "$wf"): not triggered by a tag"
+    else
+        fail "$(basename "$wf"): triggered by a tag ($WHY)"
+    fi
+done
 
 echo "4. DISCORD_WEBHOOK_STABLE_URL is read by stable-release.yml and announce-stable.yml only"
 BAD=$(grep -n 'DISCORD_WEBHOOK_STABLE_URL' /dev/null "${WF_FILES[@]}" | grep -vF -e "$STABLE_WF:" -e "$CATCHUP_WF:")

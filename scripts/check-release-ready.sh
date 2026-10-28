@@ -173,7 +173,7 @@ if [[ "$PACKAGE_VERSION" == "$MANIFEST_VERSION" ]] && [[ "$PACKAGE_VERSION" == "
     print_success "All versions match: $PACKAGE_VERSION"
 else
     print_error "Version mismatch detected"
-    echo "  Run: npm run bump:beta or npm run bump:release"
+    echo "  package.json is the source of truth: make manifest.json and const.py match it (see docs/RELEASE_GUIDE.md)"
 fi
 echo ""
 
@@ -316,19 +316,19 @@ echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━�
 
 if [ $ERRORS -eq 0 ] && [ $WARNINGS -eq 0 ]; then
     echo -e "${GREEN}✅ All checks passed! Project is ready for release.${NC}\n"
-    echo -e "${BLUE}Next steps:${NC}"
-    echo -e "  1. ${YELLOW}npm run bump:beta${NC}    # For beta release"
-    echo -e "  2. ${YELLOW}npm run bump:release${NC} # For stable release"
-    echo -e "  3. ${YELLOW}git push && git push --tags${NC}"
+    echo -e "${BLUE}Next steps (GitHub -> Actions, from main):${NC}"
+    echo -e "  1. ${YELLOW}Beta Release (manual)${NC}   # For a beta (tick dry_run to rehearse)"
+    echo -e "  2. ${YELLOW}Stable Release (manual)${NC} # To finalise the current beta as a stable"
+    echo -e "  See docs/RELEASE_GUIDE.md"
     echo ""
     exit 0
 elif [ $ERRORS -eq 0 ]; then
     echo -e "${YELLOW}⚠️  $WARNINGS warning(s) found.${NC}"
     echo -e "${YELLOW}You can proceed with release, but consider addressing warnings.${NC}\n"
-    echo -e "${BLUE}Next steps:${NC}"
-    echo -e "  1. ${YELLOW}npm run bump:beta${NC}    # For beta release"
-    echo -e "  2. ${YELLOW}npm run bump:release${NC} # For stable release"
-    echo -e "  3. ${YELLOW}git push && git push --tags${NC}"
+    echo -e "${BLUE}Next steps (GitHub -> Actions, from main):${NC}"
+    echo -e "  1. ${YELLOW}Beta Release (manual)${NC}   # For a beta (tick dry_run to rehearse)"
+    echo -e "  2. ${YELLOW}Stable Release (manual)${NC} # To finalise the current beta as a stable"
+    echo -e "  See docs/RELEASE_GUIDE.md"
     echo ""
     exit 0
 else

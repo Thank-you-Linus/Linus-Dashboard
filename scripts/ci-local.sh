@@ -52,13 +52,13 @@ case "$WORKFLOW" in
         echo -e "${YELLOW}🔄 Simulating: Main Branch Check workflow${NC}"
         echo -e "${YELLOW}   (Runs on push to main branch)${NC}"
         ;;
-    "prerelease"|"pre")
-        echo -e "${YELLOW}🔄 Simulating: Pre-Release workflow${NC}"
-        echo -e "${YELLOW}   (Runs when pushing beta/alpha tags)${NC}"
+    "beta-release"|"beta")
+        echo -e "${YELLOW}🔄 Simulating: Beta Release (manual) button checks${NC}"
+        echo -e "${YELLOW}   (Lint, type check, build and smoke tests run by beta-release.yml)${NC}"
         ;;
-    "release")
-        echo -e "${YELLOW}🔄 Simulating: Release workflow${NC}"
-        echo -e "${YELLOW}   (Runs when publishing a GitHub release)${NC}"
+    "stable-release"|"stable")
+        echo -e "${YELLOW}🔄 Simulating: Stable Release (manual) button checks${NC}"
+        echo -e "${YELLOW}   (Lint, type check, build and smoke tests run by stable-release.yml)${NC}"
         ;;
     "all")
         echo -e "${YELLOW}🔄 Simulating: All CI checks${NC}"
@@ -71,14 +71,14 @@ case "$WORKFLOW" in
         echo ""
         echo "Available workflows:"
         echo "  main-check    - Main branch push checks (default)"
-        echo "  prerelease    - Pre-release workflow checks"
-        echo "  release       - Release workflow checks"
+        echo "  beta-release  - Beta Release (manual) button checks"
+        echo "  stable-release - Stable Release (manual) button checks"
         echo "  all           - All checks (comprehensive)"
         echo ""
         echo "Examples:"
         echo "  $0                # Run all checks"
         echo "  $0 main-check     # Simulate main branch check"
-        echo "  $0 prerelease     # Simulate pre-release workflow"
+        echo "  $0 beta-release   # Simulate the Beta Release button checks"
         exit 1
         ;;
 esac
@@ -112,7 +112,7 @@ fi
 # JOB 2: TypeScript & ESLint
 # ============================================================================
 
-if [[ "$WORKFLOW" == "main-check" ]] || [[ "$WORKFLOW" == "main" ]] || [[ "$WORKFLOW" == "ci" ]] || [[ "$WORKFLOW" == "prerelease" ]] || [[ "$WORKFLOW" == "pre" ]] || [[ "$WORKFLOW" == "release" ]] || [[ "$WORKFLOW" == "all" ]]; then
+if [[ "$WORKFLOW" == "main-check" ]] || [[ "$WORKFLOW" == "main" ]] || [[ "$WORKFLOW" == "ci" ]] || [[ "$WORKFLOW" == "beta-release" ]] || [[ "$WORKFLOW" == "beta" ]] || [[ "$WORKFLOW" == "stable-release" ]] || [[ "$WORKFLOW" == "stable" ]] || [[ "$WORKFLOW" == "all" ]]; then
     echo ""
     echo -e "${BLUE}╔════════════════════════════════════════════════════════════════╗${NC}"
     echo -e "${BLUE}║                  JOB 2: TypeScript & ESLint                    ║${NC}"
@@ -132,7 +132,7 @@ fi
 # JOB 3: Build and Smoke Tests
 # ============================================================================
 
-if [[ "$WORKFLOW" == "main-check" ]] || [[ "$WORKFLOW" == "main" ]] || [[ "$WORKFLOW" == "ci" ]] || [[ "$WORKFLOW" == "prerelease" ]] || [[ "$WORKFLOW" == "pre" ]] || [[ "$WORKFLOW" == "release" ]] || [[ "$WORKFLOW" == "all" ]]; then
+if [[ "$WORKFLOW" == "main-check" ]] || [[ "$WORKFLOW" == "main" ]] || [[ "$WORKFLOW" == "ci" ]] || [[ "$WORKFLOW" == "beta-release" ]] || [[ "$WORKFLOW" == "beta" ]] || [[ "$WORKFLOW" == "stable-release" ]] || [[ "$WORKFLOW" == "stable" ]] || [[ "$WORKFLOW" == "all" ]]; then
     echo ""
     echo -e "${BLUE}╔════════════════════════════════════════════════════════════════╗${NC}"
     echo -e "${BLUE}║                 JOB 3: Build & Smoke Tests                     ║${NC}"

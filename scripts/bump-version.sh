@@ -5,12 +5,13 @@
 # Uses package.json as the single source of truth for versioning.
 # Other files (const.py, linus-strategy.ts) read version dynamically.
 #
-# Usage: 
-#   npm run bump:beta    -> 1.3.0 -> 1.3.1-beta.1
-#   npm run bump:alpha   -> 1.3.0 -> 1.3.1-alpha.1
-#   npm run bump:release -> 1.3.0-beta.1 -> 1.3.0
+# Called by the release buttons (GitHub Actions), which commit, tag and push in the same run:
+#   beta-release.yml   -> scripts/bump-version.sh beta|alpha   (1.3.0 -> 1.3.1-beta.1)
+#   stable-release.yml -> scripts/bump-version.sh release      (1.3.0-beta.1 -> 1.3.0)
+# Do not bump by hand to release: the buttons refuse to run while package.json differs from the
+# latest tag. See docs/RELEASE_GUIDE.md.
 #
-# Explicit version types (for AI-driven releases):
+# Explicit version types:
 #   scripts/bump-version.sh beta patch  -> 1.3.0 -> 1.3.1-beta.1
 #   scripts/bump-version.sh beta minor  -> 1.3.0 -> 1.4.0-beta.1
 #   scripts/bump-version.sh beta major  -> 1.3.0 -> 2.0.0-beta.1
@@ -19,7 +20,7 @@
 #   scripts/bump-version.sh release major -> 1.3.0 -> 2.0.0
 #
 # --files-only (any position): update version files, then stop before git add/commit/tag.
-#   npm run bump:beta / bump:alpha / bump:release use it (they never commit or tag).
+#   Never commits or tags (useful to check a computed version locally).
 #
 
 set -e
@@ -55,9 +56,8 @@ VERSION_TYPE="${2:-auto}"  # Optional: patch, minor, major, or auto (default)
 if [ -z "$BUMP_TYPE" ]; then
     echo -e "${RED}❌ Error: Bump type is required${NC}"
     echo -e "${YELLOW}Usage:${NC}"
-    echo -e "  npm run bump:beta     # Bump to next beta version"
-    echo -e "  npm run bump:alpha    # Bump to next alpha version"
-    echo -e "  npm run bump:release  # Bump to stable release"
+    echo -e "  scripts/bump-version.sh beta|alpha|release [auto|patch|minor|major] [--files-only]"
+    echo -e "  (releases go through the Beta Release / Stable Release buttons, see docs/RELEASE_GUIDE.md)"
     echo -e ""
     echo -e "  scripts/bump-version.sh beta patch   # Explicit patch beta"
     echo -e "  scripts/bump-version.sh beta minor   # Explicit minor beta"
@@ -265,20 +265,19 @@ git tag -a "$TAG_NAME" -m "Release $NEW_VERSION"
 echo ""
 echo -e "${GREEN}🎉 Version bumped successfully to ${NEW_VERSION}!${NC}\n"
 echo -e "${YELLOW}📚 Next steps:${NC}"
-echo -e "  1. Review the changes: ${BLUE}git show${NC}"
-echo -e "  2. Push to GitHub: ${BLUE}git push && git push --tags${NC}"
-echo -e "  3. GitHub Actions will automatically:"
-if [[ "$BUMP_TYPE" =~ (beta|alpha) ]]; then
-    echo -e "     - Build the project"
-    echo -e "     - Create a pre-release on GitHub"
-    echo -e "     - Send notification to Discord (beta testers)"
+if [ "${CI:-}" = "true" ] || [ -n "${GITHUB_ACTIONS:-}" ]; then
+    echo -e "  The release button pushes this commit and tag, then publishes the release."
 else
-    echo -e "     - Build the project"
-    echo -e "     - Create a stable release on GitHub"
-    echo -e "     - (no Discord announcement for a tag pushed by hand: only the Stable Release (manual) button announces)"
-    echo -e "  4. Announce in Discord #annonces: Actions -> Announce stable release on Discord (manual), tag ${NEW_VERSION}"
-    echo -e "  5. Forums by hand: ${BLUE}npm run forums:open${NC}"
+    echo -e "  This commit and tag are local only: a tag pushed by hand publishes nothing."
+    echo -e "  To release, drop them (${BLUE}git tag -d ${TAG_NAME} && git reset --keep HEAD~1${NC})"
+    echo -e "  and use the buttons: GitHub -> Actions -> Beta Release (manual) / Stable Release (manual)."
 fi
+if [[ ! "$BUMP_TYPE" =~ (beta|alpha) ]]; then
+    echo -e "  A stable is announced in Discord #annonces by the Stable Release button;"
+    echo -e "  missed -> Actions -> Announce stable release on Discord (manual), tag ${NEW_VERSION}."
+    echo -e "  Forums by hand: ${BLUE}npm run forums:open${NC}"
+fi
+echo -e "  See docs/RELEASE_GUIDE.md"
 echo ""
 echo -e "${BLUE}💡 Smart Version Management Info:${NC}"
 echo -e "   package.json is the single source of truth"

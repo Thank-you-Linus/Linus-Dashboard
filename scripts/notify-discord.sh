@@ -5,7 +5,7 @@
 #   ./notify-discord.sh prerelease <version> <release_url>   # beta → beta testers channel
 #   ./notify-discord.sh release <X.Y.Z> <release_url>        # stable → #annonces
 #   Or called automatically by the GitHub Actions workflows:
-#   - prerelease: beta-release.yml, prerelease.yml (DISCORD_WEBHOOK_URL)
+#   - prerelease: beta-release.yml (DISCORD_WEBHOOK_URL)
 #   - release: stable-release.yml right after the stable is published, and the manual catch-up
 #     announce-stable.yml (DISCORD_WEBHOOK_STABLE_URL only, never the beta channel)
 # A stable message is .github/release-highlights/<version>.discord.md when it exists (curated text),

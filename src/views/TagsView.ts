@@ -1,4 +1,5 @@
 import { Helper } from "../Helper";
+import { SectionBuilder } from "../builders/SectionBuilder";
 import { LovelaceGridCardConfig, StackCardConfig } from "../types/homeassistant/lovelace/cards/types";
 import { LovelaceViewConfig } from "../types/homeassistant/data/lovelace";
 import { views } from "../types/strategy/views";
@@ -8,7 +9,6 @@ import { RefreshChip } from "../chips/RefreshChip";
 import { UnavailableChip } from "../chips/UnavailableChip";
 import { LabelRegistryEntry } from "../types/homeassistant/data/label_registry";
 import { navigateTo } from "../utils";
-import { UNDISCLOSED } from "../variables";
 
 /**
  * Tags View Class.
@@ -224,107 +224,8 @@ class TagsView {
     }
 
     // 4. Build hierarchical floor → area → entities
-    const hierarchicalCards = this.buildHierarchicalEntityCards(entityIds);
+    const hierarchicalCards = SectionBuilder.buildHierarchicalEntityCards(entityIds);
     cards.push(...hierarchicalCards);
-
-    return cards;
-  }
-
-  /**
-   * Build hierarchical entity cards organized by floor and area.
-   *
-   * @param entityIds - Array of entity IDs
-   * @returns Array of card configurations
-   * @private
-   */
-  private buildHierarchicalEntityCards(entityIds: string[]): any[] {
-    const cards: any[] = [];
-
-    // Group entities by floor and area
-    const entityByFloorArea: Record<string, Record<string, string[]>> = {};
-    const undisclosedEntities: string[] = [];
-
-    for (const entityId of entityIds) {
-      // Use Helper.getEntityArea which handles device inheritance
-      const area = Helper.getEntityArea(entityId);
-      const floorId = area?.floor_id ?? UNDISCLOSED;
-      const areaSlug = area?.slug ?? UNDISCLOSED;
-
-      if (floorId === UNDISCLOSED || areaSlug === UNDISCLOSED) {
-        undisclosedEntities.push(entityId);
-        continue;
-      }
-
-      if (!entityByFloorArea[floorId]) {
-        entityByFloorArea[floorId] = {};
-      }
-      if (!entityByFloorArea[floorId][areaSlug]) {
-        entityByFloorArea[floorId][areaSlug] = [];
-      }
-      entityByFloorArea[floorId][areaSlug].push(entityId);
-    }
-
-    // Process floors in order
-    const orderedFloorIds = Helper.orderedFloors
-      .map(f => f.floor_id)
-      .filter(fid => fid !== UNDISCLOSED && entityByFloorArea[fid]);
-
-    for (const floorId of orderedFloorIds) {
-      const floor = Helper.floors[floorId];
-      if (!floor) continue;
-
-      const areasInFloor = entityByFloorArea[floorId];
-
-      // Floor separator
-      cards.push({
-        type: "heading",
-        heading: floor.name,
-        heading_style: "title",
-        icon: floor.icon ?? "mdi:floor-plan",
-      });
-
-      // Process areas in this floor
-      for (const areaSlug of Object.keys(areasInFloor)) {
-        const area = Helper.areas[areaSlug];
-        if (!area) continue;
-
-        const areaEntityIds = areasInFloor[areaSlug];
-
-        // Area separator
-        cards.push({
-          type: "heading",
-          heading: area.name,
-          heading_style: "subtitle",
-          icon: area.icon ?? "mdi:home",
-        });
-
-        // Entity tiles
-        for (const entityId of areaEntityIds) {
-          cards.push({
-            type: "tile",
-            entity: entityId,
-          });
-        }
-      }
-    }
-
-    // Add undisclosed entities at the end if any
-    if (undisclosedEntities.length > 0) {
-      const undisclosedLabel = Helper.localize("ui.card.area.area_not_found") || "Unassigned";
-      cards.push({
-        type: "heading",
-        heading: undisclosedLabel,
-        heading_style: "subtitle",
-        icon: "mdi:help-circle",
-      });
-
-      for (const entityId of undisclosedEntities) {
-        cards.push({
-          type: "tile",
-          entity: entityId,
-        });
-      }
-    }
 
     return cards;
   }

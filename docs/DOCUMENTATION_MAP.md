@@ -78,7 +78,7 @@
 
 | Document                                                    | Description                     | Lines  | Priority      |
 | ----------------------------------------------------------- | ------------------------------- | ------ | ------------- |
-| **[Release Guide](RELEASE_GUIDE.md)**                       | The single release reference    | 230    | 🔥 START HERE |
+| **[Release Guide](RELEASE_GUIDE.md)**                       | The single release reference    | 217    | 🔥 START HERE |
 | [Local CI Testing](LOCAL_CI_TESTING.md)                     | Test CI locally before push     | 584    | 📖 Reference  |
 | [Release Notes Format](.aidriven/rules/release_notes.md)    | Release notes standards         | 7,024  | MANDATORY     |
 

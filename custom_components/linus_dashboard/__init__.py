@@ -1,6 +1,5 @@
 """Linus Dashboard integration for Home Assistant."""
 
-import asyncio
 import logging
 from pathlib import Path
 
@@ -64,11 +63,68 @@ PLATFORMS: list[Platform] = [
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
+# Bundled JS files, served under /linus_dashboard_files/www/ and declared as
+# Lovelace resources in this order. custom-elements-guard.js MUST stay first:
+# it patches customElements.define to be idempotent, preventing a DOMException
+# when HACS (or any other source) re-registers elements our bundled libs
+# already defined.
+JS_FILES: tuple[str, ...] = (
+    "custom-elements-guard.js",
+    "browser_mod.js",
+    "lovelace-mushroom/mushroom.js",
+    "lovelace-card-mod/card-mod.js",
+    "swipe-card/swipe-card.js",
+    "stack-in-card/stack-in-card.js",
+    "linus-strategy.js",
+)
+STATIC_FILES_KEY = "static_files"
+
+
+async def _async_register_static_files(hass: HomeAssistant) -> list[str]:
+    """
+    Serve the bundled JS files once per Home Assistant run (TK-259).
+
+    Returns the files actually served, in JS_FILES order. A second call
+    returns that list without touching the router: an aiohttp route cannot be
+    removed while Home Assistant runs, and adding the same URL again raises
+    `RuntimeError: Added route will never be executed`.
+    """
+    domain_data = hass.data.setdefault(DOMAIN, {})
+    if (registered := domain_data.get(STATIC_FILES_KEY)) is not None:
+        return registered
+
+    base_path = Path(__file__).parent / "www"
+
+    def _present_files() -> list[str]:
+        present = []
+        for js_file in JS_FILES:
+            js_path = base_path / js_file
+            if js_path.exists():
+                present.append(js_file)
+            else:
+                _LOGGER.warning(
+                    "JavaScript file not found: %s - skipping registration", js_path
+                )
+        return present
+
+    present = await hass.async_add_executor_job(_present_files)
+    await hass.http.async_register_static_paths([
+        StaticPathConfig(
+            f"/{DOMAIN}_files/www/{js_file}",
+            str(base_path / js_file),
+            cache_headers=False,
+        )
+        for js_file in present
+    ])
+    domain_data[STATIC_FILES_KEY] = present
+    return present
+
 
 async def async_setup(hass: HomeAssistant, _config: dict) -> bool:
     """Set up Linus Dashboard."""
     _LOGGER.info("Setting up Linus Dashboard")
     hass.data.setdefault(DOMAIN, {})
+    await _async_register_static_files(hass)
 
     # Register WebSocket commands
     websocket_api.async_register_command(hass, websocket_get_entities)
@@ -299,48 +355,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Linus Dashboard from a config entry."""
     _LOGGER.info("Setting up Linus Dashboard entry")
 
-    # Register all static paths and resources for bundled JS files.
-    # Phase 1: Check file existence and register static paths in parallel (I/O-bound).
-    # Phase 2: Register lovelace resources sequentially (shared storage, not parallelizable).
-    #
-    # mushroom-loader.js MUST be first: it patches customElements.define to be idempotent,
-    # preventing DOMException when HACS (or any other source) tries to re-register elements
-    # that our bundled libs already defined.
-    js_files = [
-        "custom-elements-guard.js",
-        "browser_mod.js",
-        "lovelace-mushroom/mushroom.js",
-        "lovelace-card-mod/card-mod.js",
-        "swipe-card/swipe-card.js",
-        "stack-in-card/stack-in-card.js",
-        "linus-strategy.js",
-    ]
-    static_only: set[str] = set()
+    # Static paths are registered once per Home Assistant start (async_setup):
+    # an aiohttp route cannot be removed while HA runs, so registering them
+    # again on every entry load failed every other reload (TK-259). The helper
+    # is idempotent: it returns the files already served, and only registers
+    # them here when setup_entry runs without async_setup.
+    registered = await _async_register_static_files(hass)
 
-    base_path = Path(__file__).parent / "www"
+    # Lovelace resources are declared on each load, sequentially (shared
+    # ResourceStorageCollection; utils.init_resource is idempotent).
     manifest_version = VERSION
-
-    # Phase 1: Check existence in parallel and register static paths
-    async def register_static_path(js_file: str) -> str | None:
-        """Register static path if file exists. Returns js_file if successful, None otherwise."""
-        js_path = base_path / js_file
-        if not await hass.async_add_executor_job(js_path.exists):
-            _LOGGER.warning(
-                "JavaScript file not found: %s - skipping registration", js_path
-            )
-            return None
-        js_url = f"/{DOMAIN}_files/www/{js_file}"
-        await hass.http.async_register_static_paths([
-            StaticPathConfig(js_url, str(js_path), cache_headers=False),
-        ])
-        return js_file
-
-    registered = await asyncio.gather(*(register_static_path(f) for f in js_files))
-
-    # Phase 2: Register lovelace resources sequentially (shared ResourceStorageCollection)
     for js_file in registered:
-        if js_file is None or js_file in static_only:
-            continue
         js_url = f"/{DOMAIN}_files/www/{js_file}"
         versioned_url = f"{js_url}?v={manifest_version}"
         await utils.init_resource(hass, versioned_url, str(manifest_version))

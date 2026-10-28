@@ -14,8 +14,7 @@ name: "Stable Release (manual)"
 # Forums (HA, HACF) stay manual: `npm run forums:open`.
 #
 # IMPORTANT: do not replace GITHUB_TOKEN by a PAT in this workflow. A tag pushed with a PAT would
-# trigger release.yml (on: push tags / release): it would run again and rewrite the release (it sends
-# no announcement, so #annonces would still get a single message, from this workflow).
+# trigger any future workflow listening on tags.
 # Tags pushed with GITHUB_TOKEN do not trigger other workflows, so the release is created here.
 
 on:

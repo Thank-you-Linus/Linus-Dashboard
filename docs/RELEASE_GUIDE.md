@@ -106,8 +106,8 @@ they are rewritten to `raw.githubusercontent.com` URLs at the released commit. A
 not committed, or an image written another way, fails the "Generate release notes" step. Preview with
 `TAG=<version> bash scripts/generate-release-notes.sh --ci --since-stable`.
 
-A real run publishes the final GitHub release (`v<tag>`, not a pre-release, marked latest) so HACS
-offers it, then announces it in Discord #annonces ([§ e](#e-stable-announcement-discord-and-forums)).
+A real run publishes the final GitHub release on the tag `<tag>` (no prefix), named `v<tag>`, not a
+pre-release, marked latest, so HACS offers it, then announces it in Discord #annonces ([§ e](#e-stable-announcement-discord-and-forums)).
 The release body can still be edited on GitHub afterwards, but the highlights file is the place for
 the wording.
 

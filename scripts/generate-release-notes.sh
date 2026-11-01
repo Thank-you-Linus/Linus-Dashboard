@@ -421,11 +421,8 @@ if [ "$CI_MODE" = "1" ]; then
     exit 0
 fi
 
-echo -e "${YELLOW}⚠️  Please review and edit the file before creating a release:${NC}"
-echo -e "   1. Add detailed explanations in English"
-echo -e "   2. Add translations in French"
-echo -e "   3. Fill in the 'For Beta Testers' sections"
-echo -e "   4. Remove any commits that shouldn't be public\n"
 echo -e "${BLUE}💡 This local file is a preview only:${NC}"
 echo -e "   The Beta Release / Stable Release buttons regenerate the notes themselves (--ci)"
 echo -e "   and publish them as the release body. See docs/RELEASE_GUIDE.md\n"
+echo -e "   To change the published wording, edit .github/release-notes-i18n.tsv (translations)"
+echo -e "   or .github/release-highlights/<version>.md (highlights), not this file.\n"

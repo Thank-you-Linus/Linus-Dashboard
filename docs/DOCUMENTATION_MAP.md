@@ -101,7 +101,7 @@
 | [AI Agents Reference](.aidriven/AGENTS.md)        | Quick agent commands         | 50    | 📖 Quick Ref  |
 | [Project Glossary](.aidriven/GLOSSARY.md)         | Standardized vocabulary      | 657   | ⭐ Essential  |
 | [Memory Bank](.aidriven/memorybank.md)            | AI memory system for project | 1500+ | ⭐ AI Context |
-| [OpenCode Commands](.opencode/README.md)          | Custom CLI commands          | 266   | 📖 Automation |
+| [OpenCode Commands](.opencode/README.md)          | Custom CLI commands          | 114   | 📖 Automation |
 
 ### 📝 User Documentation
 

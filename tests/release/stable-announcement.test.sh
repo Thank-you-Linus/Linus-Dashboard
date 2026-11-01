@@ -186,7 +186,8 @@ for name in old-prerelease old-release inline-push bare-push-plus-pr \
     WHY=$(tag_trigger_why "$FIXTURES/$name.yml")
     [ -n "$WHY" ] && ok "fixture $name: triggered by a tag ($WHY)" || fail "fixture $name: must be reported as triggered by a tag"
 done
-WHY=$(tag_trigger_why "$FIXTURES/old-prerelease.yml")
+name=old-prerelease
+WHY=$(tag_trigger_why "$FIXTURES/$name.yml")
 case "$WHY" in
     *"push filtered on tags"*"push without a branches filter"*) ok "fixture old-prerelease: every reason is shown ($WHY)" ;;
     *) fail "fixture old-prerelease: a reason was overwritten ($WHY)" ;;

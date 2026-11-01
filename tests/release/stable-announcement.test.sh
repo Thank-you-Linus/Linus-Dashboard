@@ -134,8 +134,10 @@ push_block() {
         inside { match($0, /^[[:space:]]*/); if (RLENGTH <= indent) exit; print }'
 }
 # tag_trigger_why <file>: why the workflow runs on a pushed tag or a published release, empty if it does not
+# (every reason found is kept, joined with "; ", so one never hides another)
 tag_trigger_why() {
     local on push why=""
+    add_why() { why="${why:+$why; }$1"; }
     on=$(on_block "$1")
     # An "on:" block that cannot be read cannot be proven free of tag triggers: fail closed
     if [ -z "$on" ]; then
@@ -144,13 +146,13 @@ tag_trigger_why() {
     fi
     push=$(echo "$on" | push_block)
     # Inline forms: "on: push", "on: [push, ...]", "on: release" (push without filters includes tags)
-    echo "$on" | head -n 1 | grep -qE '^["'"'"']?on["'"'"']?:.*\b(push|release|create)\b' && why="inline push/release/create trigger"
+    echo "$on" | head -n 1 | grep -qE '^["'"'"']?on["'"'"']?:.*\b(push|release|create)\b' && add_why "inline push/release/create trigger"
     # Block form, whatever the indentation: release/create events, or a push filtered on tags
-    echo "$on" | grep -qE '^[[:space:]]+(release|create):' && why="release or create event"
-    echo "$push" | grep -qE '^[[:space:]]+tags(-ignore)?:' && why="push filtered on tags"
+    echo "$on" | grep -qE '^[[:space:]]+(release|create):' && add_why "release or create event"
+    echo "$push" | grep -qE '^[[:space:]]+tags(-ignore)?:' && add_why "push filtered on tags"
     # A push with no branches filter (in the push block itself) also runs on every pushed tag
     if echo "$on" | grep -qE '^[[:space:]]+push:' && ! echo "$push" | grep -qE '^[[:space:]]+branches(-ignore)?:'; then
-        why="push without a branches filter (runs on tags too)"
+        add_why "push without a branches filter (runs on tags too)"
     fi
     echo "$why"
 }
@@ -184,6 +186,11 @@ for name in old-prerelease old-release inline-push bare-push-plus-pr \
     WHY=$(tag_trigger_why "$FIXTURES/$name.yml")
     [ -n "$WHY" ] && ok "fixture $name: triggered by a tag ($WHY)" || fail "fixture $name: must be reported as triggered by a tag"
 done
+WHY=$(tag_trigger_why "$FIXTURES/old-prerelease.yml")
+case "$WHY" in
+    *"push filtered on tags"*"push without a branches filter"*) ok "fixture old-prerelease: every reason is shown ($WHY)" ;;
+    *) fail "fixture old-prerelease: a reason was overwritten ($WHY)" ;;
+esac
 WHY=$(tag_trigger_why "$FIXTURES/push-branches-plus-pr-tags.yml")
 [ -z "$WHY" ] && ok "fixture push-branches-plus-pr-tags: push filtered on branches is not a tag trigger" || fail "fixture push-branches-plus-pr-tags: wrongly reported ($WHY)"
 

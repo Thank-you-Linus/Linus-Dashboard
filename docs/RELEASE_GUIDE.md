@@ -11,7 +11,7 @@
 - [Overview](#overview)
 - [a. Beta Release button](#a-beta-release-button)
 - [b. Stable Release button](#b-stable-release-button)
-- [c. CHANGELOG (after each button)](#c-changelog-after-each-button)
+- [c. CHANGELOG (after a beta or a stable)](#c-changelog-after-a-beta-or-a-stable)
 - [d. Rollback (manual)](#d-rollback-manual)
 - [e. Stable announcement (Discord and forums)](#e-stable-announcement-discord-and-forums)
 - [Local helpers](#local-helpers)
@@ -113,15 +113,18 @@ the wording.
 
 ---
 
-## c. CHANGELOG (after each button)
+## c. CHANGELOG (after a beta or a stable)
 
 No button commits `CHANGELOG.md`. The generator (`scripts/generate-changelog.sh`) takes its source
 version from `package.json`, which the button bumps and tags in the same run, so the section of a
 release cannot be generated before its tag.
 
-After **each** button run (beta or stable), open a PR on `main`:
+After a **beta** or **stable** button run, open a PR on `main`; nothing to do after an alpha (an alpha
+has no CHANGELOG section):
 
 ```bash
+TAG=<tag>                       # the tag the button just pushed, e.g. 1.5.0-beta.2 or 1.5.0
+git fetch origin --tags
 git switch -c "changelog-$TAG" origin/main
 npm run release:changelog       # writes the section ## [<version>], dated from its tag
 ```
@@ -192,7 +195,7 @@ by hand. Webhook setup: [DISCORD_WEBHOOKS_SETUP.md](DISCORD_WEBHOOKS_SETUP.md).
 |---------|-----|
 | `npm run release:check` | Readiness report before clicking a button |
 | `npm run release:notes` | Local preview of the release notes (`RELEASE_NOTES.md`, not committed) |
-| `npm run release:changelog` | CHANGELOG section of the current version ([§ c](#c-changelog-after-each-button)) |
+| `npm run release:changelog` | CHANGELOG section of the current version ([§ c](#c-changelog-after-a-beta-or-a-stable)) |
 | `npm run test:smoke` | Smoke tests run by both buttons |
 | `npm run test:release` | Tests of the changelog generator and of the stable announcement |
 | `npm run test:ci` | Local simulation of the CI and of the buttons' checks ([LOCAL_CI_TESTING.md](LOCAL_CI_TESTING.md)) |

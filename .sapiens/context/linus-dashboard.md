@@ -165,7 +165,7 @@ const result = await hass.callWS({
 - Discord webhook notifications (beta testers channel, #annonces for a stable)
 - **Tag format:** No 'v' prefix (critical!)
 - HACS publishing
-- Gestures left to humans: CHANGELOG section in a PR after each button, manual rollback, forums
+- Gestures left to humans: CHANGELOG section in a PR after a beta or a stable (none after an alpha), manual rollback, forums
   (`npm run forums:open`) — see `docs/RELEASE_GUIDE.md`
 
 ### Custom Skills

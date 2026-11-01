@@ -28,7 +28,7 @@ Called by the buttons, or run locally to check or preview:
   - Used by `generate-release-notes.sh`
 
 - **`generate-changelog.sh`** - Generate the CHANGELOG.md section of the current version
-  - Usage: `npm run release:changelog`, in a PR after each button (see `docs/RELEASE_GUIDE.md`)
+  - Usage: `npm run release:changelog`, in a PR after a beta or a stable, none after an alpha (see `docs/RELEASE_GUIDE.md`)
 
 - **`check-release-ready.sh`** - Readiness report before clicking a button
   - Usage: `npm run release:check`

@@ -121,8 +121,9 @@ done
 
 echo "3. no workflow is triggered by a pushed tag or a published release (the buttons are the only release path)"
 # on_block <file>: the lines of the workflow's top-level "on:" block, the "on:" line included
+# (the key may be quoted: "on": or 'on':)
 on_block() {
-    awk '/^on:/ { inside = 1; print; next } inside && /^[^[:space:]#]/ { exit } inside { print }' "$1"
+    awk '/^["\047]?on["\047]?:/ { inside = 1; print; next } inside && /^[^[:space:]#]/ { exit } inside { print }' "$1"
 }
 # push_block: from an "on:" block on stdin, the lines of its "push:" event alone (the lines indented
 # deeper than the "push:" key, up to the next key at the same or a shallower indent), key excluded
@@ -136,11 +137,16 @@ push_block() {
 tag_trigger_why() {
     local on push why=""
     on=$(on_block "$1")
+    # An "on:" block that cannot be read cannot be proven free of tag triggers: fail closed
+    if [ -z "$on" ]; then
+        echo "no readable on: block"
+        return
+    fi
     push=$(echo "$on" | push_block)
     # Inline forms: "on: push", "on: [push, ...]", "on: release" (push without filters includes tags)
-    echo "$on" | head -n 1 | grep -qE '^on:.*\b(push|release|create)\b' && why="inline push/release/create trigger"
-    # Block form: release/create events, or a push filtered on tags
-    echo "$on" | grep -qE '^[[:space:]]{2}(release|create):' && why="release or create event"
+    echo "$on" | head -n 1 | grep -qE '^["'"'"']?on["'"'"']?:.*\b(push|release|create)\b' && why="inline push/release/create trigger"
+    # Block form, whatever the indentation: release/create events, or a push filtered on tags
+    echo "$on" | grep -qE '^[[:space:]]+(release|create):' && why="release or create event"
     echo "$push" | grep -qE '^[[:space:]]+tags(-ignore)?:' && why="push filtered on tags"
     # A push with no branches filter (in the push block itself) also runs on every pushed tag
     if echo "$on" | grep -qE '^[[:space:]]+push:' && ! echo "$push" | grep -qE '^[[:space:]]+branches(-ignore)?:'; then
@@ -167,7 +173,14 @@ fixture old-release $'on:\n  release:\n    types:\n      - "published"\n  push:\
 fixture inline-push 'on: push'
 fixture bare-push-plus-pr $'on:\n  push:\n  pull_request:\n    branches: [main]'
 fixture push-branches-plus-pr-tags $'on:\n  push:\n    branches: [main]\n  pull_request:\n    branches: [main]\n    tags-ignore: ["*"]'
-for name in old-prerelease old-release inline-push bare-push-plus-pr; do
+fixture double-quoted-on $'"on":\n  push:\n    tags: ["*"]'
+fixture single-quoted-on $'\'on\':\n  release:\n    types: [published]'
+fixture release-indent-4 $'on:\n    release:\n        types: [published]'
+fixture create-indent-4 $'on:\n    create:'
+fixture push-tags-indent-4 $'on:\n    push:\n        branches: [main]\n        tags: ["*"]'
+fixture no-on-block $'name: unreadable trigger\ntriggers:\n  push:\n    branches: [main]'
+for name in old-prerelease old-release inline-push bare-push-plus-pr \
+    double-quoted-on single-quoted-on release-indent-4 create-indent-4 push-tags-indent-4 no-on-block; do
     WHY=$(tag_trigger_why "$FIXTURES/$name.yml")
     [ -n "$WHY" ] && ok "fixture $name: triggered by a tag ($WHY)" || fail "fixture $name: must be reported as triggered by a tag"
 done

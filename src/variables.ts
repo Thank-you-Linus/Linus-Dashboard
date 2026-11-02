@@ -3,6 +3,18 @@ export const MAGIC_AREAS_DOMAIN = "magic_areas";
 export const MAGIC_AREAS_NAME = "Magic Areas";
 export const LINUS_DASHBOARD_DOMAIN = "linus_dashboard";
 
+/**
+ * Platforms whose entities are our own aggregates/groups (Magic Areas,
+ * Linus Brain, Linus Dashboard) rather than "real" member entities.
+ * Single source of truth for the self-inclusion guard: such entities must
+ * never be listed as individual members of an area, domain or device.
+ */
+export const OWN_AGGREGATE_PLATFORMS: ReadonlySet<string> = new Set([
+  MAGIC_AREAS_DOMAIN,
+  LINUS_BRAIN_DOMAIN,
+  LINUS_DASHBOARD_DOMAIN,
+]);
+
 export const UNAVAILABLE = "unavailable";
 export const UNDISCLOSED = "undisclosed";
 

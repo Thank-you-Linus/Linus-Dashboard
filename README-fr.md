@@ -86,6 +86,8 @@
 Linus Dashboard est un tableau de bord magique Plug n Play conçu pour simplifier et améliorer votre expérience Home Assistant.
 Il organise automatiquement vos appareils en sections intelligentes, regroupées par pièces et types d'appareils, sans nécessiter de configuration compliquée.
 
+C'est un tableau de bord généré automatiquement, sans YAML : Linus le construit à partir des pièces et étages que vous avez déjà dans Home Assistant, et range seul les nouveaux appareils.
+
 **Fonctionnalités principales** :
 
 - 🏠 **Navigation Intelligente par Pièce**
@@ -99,6 +101,7 @@ Il organise automatiquement vos appareils en sections intelligentes, regroupées
 
 - 🔗 **Gardez Vos Tableaux de Bord Personnalisés**
   Vous avez déjà créé la vue énergétique parfaite ? Intégrez-la dans Linus ! [En savoir plus →](docs/EMBEDDED_DASHBOARDS.md)
+  Vous venez d'un autre tableau de bord ? Voyez ce que vous gardez et comment revenir en arrière. [En savoir plus →](https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/docs/SWITCHING_TO_LINUS-fr.md)
 
 - ⚡ **Installation en 5 Minutes**
   Branchez, utilisez et profitez. Aucun YAML requis.
@@ -159,6 +162,8 @@ _Exemple : Tableau de bord énergétique intégré de manière transparente dans
 
 [Guide complet avec configuration étape par étape →](docs/EMBEDDED_DASHBOARDS.md)
 
+**Vous venez d'un autre tableau de bord ?** Linus ne modifie jamais vos tableaux de bord existants : il ajoute son propre panneau à côté. Voyez ce que vous gardez, quoi vérifier et comment revenir en arrière. [En savoir plus →](https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/docs/SWITCHING_TO_LINUS-fr.md)
+
 ---
 
 ## 🌟 Fonctionnalités que vous allez adorer
@@ -192,6 +197,7 @@ _Exemple : Tableau de bord énergétique intégré de manière transparente dans
 **Découvrez les fonctionnalités :**
 - [📊 Guide de Détection d'Activité](docs/ACTIVITY_DETECTION.md) - Comprendre le suivi d'occupation des pièces
 - [📖 Tableaux de Bord Intégrés](docs/EMBEDDED_DASHBOARDS.md) - Intégrer des vues personnalisées
+- [🔄 Passer à Linus Dashboard](https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/docs/SWITCHING_TO_LINUS-fr.md) - Ce que vous gardez, quoi vérifier, comment revenir en arrière
 - [📚 Carte Complète de la Documentation](docs/DOCUMENTATION_MAP.md) - Index complet des guides
 
 ### Prérequis
@@ -264,6 +270,7 @@ Avec Home Assistant 2025.1+, vous pouvez glisser-déposer les pièces directemen
 **Q: Puis-je utiliser Linus avec mon tableau de bord existant ?**
 **Oui !** Utilisez les tableaux de bord intégrés pour intégrer vos vues personnalisées de manière transparente. Vous pouvez garder votre monitoring énergétique, vues caméras ou tout tableau de bord personnalisé tout en profitant de l'organisation automatique de Linus.
 [Guide de configuration →](docs/EMBEDDED_DASHBOARDS.md)
+Votre tableau de bord existant n'est jamais modifié et reste disponible dans la barre latérale. [En savoir plus →](https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/docs/SWITCHING_TO_LINUS-fr.md)
 
 **Q: Ai-je besoin de Linus Brain ?**
 **Non** - Linus Dashboard fonctionne de manière autonome. Linus Brain est une mise à niveau optionnelle pour la détection d'activité par IA et l'automatisation avancée.

@@ -3,7 +3,7 @@ import merge from "lodash.merge";
 
 import { configurationDefaults } from "./configurationDefaults";
 import { generic } from "./types/strategy/generic";
-import { DEVICE_CLASSES, DOMAIN_ACTIVE_STATES, LINUS_BRAIN_DOMAIN, LINUS_DASHBOARD_DOMAIN, MAGIC_AREAS_DOMAIN, MAGIC_AREAS_NAME, UNDISCLOSED, colorMapping, ALL_HOME_ASSISTANT_DOMAINS, STANDARD_DOMAIN_ICONS } from "./variables";
+import { DEVICE_CLASSES, DOMAIN_ACTIVE_STATES, MAGIC_AREAS_NAME, OWN_AGGREGATE_PLATFORMS, UNDISCLOSED, colorMapping, ALL_HOME_ASSISTANT_DOMAINS, STANDARD_DOMAIN_ICONS } from "./variables";
 import { getEntityDomain, getGlobalEntitiesExceptUndisclosed, getMAEntity, isAggregatableEntity, getMagicAreaSlug, groupEntitiesByDomain, slugify } from "./utils";
 import { createDomainTag } from "./utils/domainTagHelper";
 import {
@@ -851,10 +851,7 @@ class Helper {
       // light.linus_dashboard_all_lights_area_salon would show up as an
       // extra "individual" tile in the Salon light popup, indistinguishable
       // from a real light.
-      const isOwnAggregateEntity =
-        entity.platform === MAGIC_AREAS_DOMAIN ||
-        entity.platform === LINUS_BRAIN_DOMAIN ||
-        entity.platform === LINUS_DASHBOARD_DOMAIN;
+      const isOwnAggregateEntity = OWN_AGGREGATE_PLATFORMS.has(entity.platform);
 
       if (!isOwnAggregateEntity) {
         const areaId = entity.area_id ?? deviceAreaMap.get(entity.device_id ?? "") ?? UNDISCLOSED;

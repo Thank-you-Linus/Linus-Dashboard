@@ -28,7 +28,7 @@ Whichever it is, the steps below are the same: install Linus next to it, check a
 - **Devices with no area are grouped in an unassigned area**, labelled with the text Home Assistant itself uses for an area that is not found. Assign them an area in Home Assistant to place them in the right room.
 - **Rooms follow your Home Assistant order.** Linus uses the manual order you set in Home Assistant, then alphabetical order for the rest. [Learn more →](MANUAL_ORDERING.md)
 - **Linus has its own panel.** It adds a "Linus Dashboard" entry with a bowtie icon to the sidebar. Your existing dashboards stay where they are.
-- **Linus never edits your existing dashboards.** Generated dashboards will also show Linus's group entities; Linus loads its bundled custom cards on every dashboard, and they take precedence over separately installed copies of the same cards.
+- **Linus never edits your existing dashboards.** Generated dashboards will also show Linus's group entities; Linus loads its bundled custom cards on every dashboard. Only one copy of a given custom card can be loaded: if you also installed one of Linus's bundled cards separately, either copy may end up being used.
 
 ---
 
@@ -46,7 +46,7 @@ Whichever it is, the steps below are the same: install Linus next to it, check a
 
 **What you keep:** your dashboard and its views, unchanged. You do not have to rebuild them: a hand-made dashboard has its own views, so you can embed them as tabs in Linus (energy, cameras, media…). [Learn more →](EMBEDDED_DASHBOARDS.md)
 
-**What to check:** if your dashboard uses custom cards that Linus also bundles, the copy loaded by Linus takes precedence over the one you installed separately. Open your dashboard after installing Linus and check that it still looks the way you expect.
+**What to check:** if your dashboard uses custom cards that Linus also bundles, only one copy of a given custom card can be loaded: either the copy loaded by Linus or the one you installed separately may end up being used. Open your dashboard after installing Linus and check that it still looks the way you expect.
 
 **Going back:** see [Going back / uninstalling](#going-back--uninstalling). Read the warning about bundled cards before removing the resources.
 
@@ -80,6 +80,7 @@ Your previous dashboard was never modified, so going back means removing Linus:
 4. **Delete every resource whose URL starts with `/linus_dashboard_files/`.** Deleting the integration does not remove them.
 5. **Restart Home Assistant** (Settings → System → Restart). Home Assistant only stops serving the `/linus_dashboard_files/` files after a restart.
 6. **Hard-refresh your browser** (Ctrl+F5, or Cmd+Shift+R on macOS).
+7. *(Optional)* **To remove the files too, remove Linus Dashboard from HACS:** open HACS, select Linus Dashboard, ⋮ menu → Remove, then restart Home Assistant.
 
 > ⚠️ **Bundled cards:** if one of your other dashboards uses a custom card that came only with Linus, that card stops displaying once the resources are removed. Install that card separately before removing the resources if you want to keep it.
 

@@ -28,7 +28,7 @@ Dans tous les cas, la démarche est la même : installer Linus à côté, vérif
 - **Les appareils sans pièce sont regroupés dans une pièce non assignée**, affichée avec le libellé que Home Assistant utilise lui-même pour une pièce introuvable. Attribuez-leur une pièce dans Home Assistant pour les ranger au bon endroit.
 - **Les pièces suivent l'ordre de Home Assistant.** Linus reprend l'ordre manuel défini dans Home Assistant, puis l'ordre alphabétique pour le reste. [En savoir plus →](MANUAL_ORDERING.md)
 - **Linus a son propre panneau.** Il ajoute une entrée « Linus Dashboard », avec une icône nœud papillon, dans la barre latérale. Vos tableaux de bord existants restent à leur place.
-- **Linus ne modifie jamais vos tableaux de bord existants.** Les tableaux de bord générés afficheront aussi les entités de groupe de Linus ; Linus charge ses cartes personnalisées embarquées sur tous les tableaux de bord, et elles passent avant les copies des mêmes cartes installées à part.
+- **Linus ne modifie jamais vos tableaux de bord existants.** Les tableaux de bord générés afficheront aussi les entités de groupe de Linus ; Linus charge ses cartes personnalisées embarquées sur tous les tableaux de bord. Une seule copie d'une carte personnalisée donnée peut être chargée : si vous avez aussi installé à part l'une des cartes embarquées par Linus, l'une ou l'autre copie peut finir par être utilisée.
 
 ---
 
@@ -46,7 +46,7 @@ Dans tous les cas, la démarche est la même : installer Linus à côté, vérif
 
 **Ce que vous gardez :** votre tableau de bord et ses vues, inchangés. Ne repartez pas de zéro : un tableau de bord fait main a ses propres vues, vous pouvez donc les intégrer comme onglets dans Linus (énergie, caméras, multimédia…). [En savoir plus →](EMBEDDED_DASHBOARDS.md)
 
-**Quoi vérifier :** si votre tableau de bord utilise des cartes personnalisées que Linus embarque aussi, la copie chargée par Linus passe avant celle que vous avez installée à part. Ouvrez votre tableau de bord après avoir installé Linus et vérifiez qu'il s'affiche comme prévu.
+**Quoi vérifier :** si votre tableau de bord utilise des cartes personnalisées que Linus embarque aussi, une seule copie d'une carte personnalisée donnée peut être chargée : la copie chargée par Linus ou celle que vous avez installée à part peut finir par être utilisée. Ouvrez votre tableau de bord après avoir installé Linus et vérifiez qu'il s'affiche comme prévu.
 
 **Revenir en arrière :** voir [Revenir en arrière / désinstaller](#revenir-en-arrière--désinstaller). Lisez la mise en garde sur les cartes embarquées avant de retirer les ressources.
 
@@ -80,6 +80,7 @@ Votre tableau de bord précédent n'a jamais été modifié : revenir en arrièr
 4. **Supprimez chaque ressource dont l'URL commence par `/linus_dashboard_files/`.** Supprimer l'intégration ne les retire pas.
 5. **Redémarrez Home Assistant** (Paramètres → Système → Redémarrer). Home Assistant ne cesse de servir les fichiers `/linus_dashboard_files/` qu'après un redémarrage.
 6. **Rafraîchissez votre navigateur sans cache** (Ctrl+F5, ou Cmd+Shift+R sur macOS).
+7. *(Facultatif)* **Pour supprimer aussi les fichiers, retirez Linus Dashboard de HACS :** ouvrez HACS, sélectionnez Linus Dashboard, menu ⋮ → Supprimer, puis redémarrez Home Assistant.
 
 > ⚠️ **Cartes embarquées :** si l'un de vos autres tableaux de bord utilise une carte personnalisée fournie uniquement par Linus, cette carte cesse de s'afficher une fois les ressources supprimées. Installez cette carte à part avant de retirer les ressources si vous voulez la garder.
 

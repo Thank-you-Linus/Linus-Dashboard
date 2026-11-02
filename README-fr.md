@@ -270,7 +270,7 @@ Avec Home Assistant 2025.1+, vous pouvez glisser-déposer les pièces directemen
 **Q: Puis-je utiliser Linus avec mon tableau de bord existant ?**
 **Oui !** Utilisez les tableaux de bord intégrés pour intégrer vos vues personnalisées de manière transparente. Vous pouvez garder votre monitoring énergétique, vues caméras ou tout tableau de bord personnalisé tout en profitant de l'organisation automatique de Linus.
 [Guide de configuration →](docs/EMBEDDED_DASHBOARDS.md)
-Votre tableau de bord existant n'est jamais modifié et reste disponible dans la barre latérale. [En savoir plus →](https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/docs/SWITCHING_TO_LINUS-fr.md)
+Votre tableau de bord existant n'est jamais modifié et reste où il est. [En savoir plus →](https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/docs/SWITCHING_TO_LINUS-fr.md)
 
 **Q: Ai-je besoin de Linus Brain ?**
 **Non** - Linus Dashboard fonctionne de manière autonome. Linus Brain est une mise à niveau optionnelle pour la détection d'activité par IA et l'automatisation avancée.

@@ -308,7 +308,7 @@ With Home Assistant 2025.1+, you can drag & drop rooms directly in HA settings (
 **Q: Can I use Linus with my existing dashboard?**
 **Yes!** Use embedded dashboards to integrate your custom views seamlessly. You can keep your energy monitoring, camera views, or any custom dashboard while enjoying Linus's automatic organization.
 [Setup guide →](docs/EMBEDDED_DASHBOARDS.md)
-Your existing dashboard is never edited and stays available in the sidebar. [Learn more →](https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/docs/SWITCHING_TO_LINUS.md)
+Your existing dashboard is never edited and stays where it is. [Learn more →](https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/docs/SWITCHING_TO_LINUS.md)
 
 **Q: Do I need Linus Brain?**
 **No** - Linus Dashboard works standalone. Linus Brain is an optional upgrade for advanced AI activity detection and automation.

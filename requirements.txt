@@ -1,4 +1,4 @@
-aiohasupervisor==0.6.0
+aiohasupervisor==0.7.0
 colorlog==6.12.0
 # run this command to install the requirements : ./scripts/setup
 homeassistant==2026.4.0

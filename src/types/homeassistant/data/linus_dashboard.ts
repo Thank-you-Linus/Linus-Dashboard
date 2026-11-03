@@ -35,5 +35,6 @@ export interface LinusDashboardConfig {
     scene_colors?: Record<string, SceneColor[]>;
     /** Colors chosen in the integration options, as "#rrggbb" */
     scene_color_overrides?: Record<string, string>;
+    show_lights_on_area_cards?: boolean;
     debug?: boolean;
 }

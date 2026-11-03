@@ -36,6 +36,7 @@ from custom_components.linus_dashboard.const import (
     CONF_HIDE_GREETING,
     CONF_HIDE_GROUPS_FROM_VOICE_ASSISTANTS,
     CONF_SCENE_COLOR_OVERRIDES,
+    CONF_SHOW_LIGHTS_ON_AREA_CARDS,
     CONF_WEATHER_ENTITY,
     CONF_WEATHER_ENTITY_ID,
     DOMAIN,
@@ -588,6 +589,9 @@ async def websocket_get_entities(
         "scene_colors": utils.scene_colors(hass) if connection.user.is_admin else {},
         CONF_SCENE_COLOR_OVERRIDES: utils.scene_color_overrides_hex(
             config_entries[0].options.get(CONF_SCENE_COLOR_OVERRIDES)
+        ),
+        CONF_SHOW_LIGHTS_ON_AREA_CARDS: config_entries[0].options.get(
+            CONF_SHOW_LIGHTS_ON_AREA_CARDS, True
         ),
         "debug": debug_enabled,
         "version": VERSION,  # Include version for frontend version check

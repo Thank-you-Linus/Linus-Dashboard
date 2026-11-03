@@ -45,6 +45,7 @@ from .const import (
     CONF_HIDE_GREETING,
     CONF_HIDE_GROUPS_FROM_VOICE_ASSISTANTS,
     CONF_SCENE_COLOR_OVERRIDES,
+    CONF_SHOW_LIGHTS_ON_AREA_CARDS,
     CONF_WEATHER_ENTITY,
     DOMAIN,
 )
@@ -632,6 +633,11 @@ class LinusDashboardEditFlow(config_entries.OptionsFlow):
                 description={
                     "name": "Masquer les groupes de zone/étage des assistants vocaux"
                 },
+            ): BooleanSelector(),
+            vol.Optional(
+                CONF_SHOW_LIGHTS_ON_AREA_CARDS,
+                default=current_options.get(CONF_SHOW_LIGHTS_ON_AREA_CARDS, True),
+                description={"name": "Afficher les lumières sur les cartes de pièce"},
             ): BooleanSelector(),
         }
 

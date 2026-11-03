@@ -52,6 +52,8 @@ CONF_HIDE_GROUPS_FROM_VOICE_ASSISTANTS = "hide_groups_from_voice_assistants"
 
 # Manual scene chip colors: {scene entity_id: [r, g, b]} (ColorRGBSelector shape)
 CONF_SCENE_COLOR_OVERRIDES = "scene_color_overrides"
+# Home view area cards configuration
+CONF_SHOW_LIGHTS_ON_AREA_CARDS = "show_lights_on_area_cards"
 
 
 def get_area_device_info(entry_id: str, area_id: str, area_name: str) -> dict:

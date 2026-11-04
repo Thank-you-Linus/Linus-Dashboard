@@ -6,7 +6,7 @@ never be executed, method GET is already registered`, because each
 async_setup_entry registered the bundled JS files as static paths again on a
 router that cannot drop a route while Home Assistant runs. Depending on the
 registration order, main fails either with that RuntimeError on reload or
-silently, with the same GET route registered twice; the one-route-per-URL
+silently, with the same GET route registered twice; the single-route
 assertion below catches both. The unit tests
 (tests/python/test_reload_static_paths.py) use an HTTP double; this goes
 through the real `http` component and its aiohttp router, the real config
@@ -37,16 +37,9 @@ from custom_components.linus_dashboard.const import CONF_HIDE_GREETING, DOMAIN
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
 
-URL_PREFIX = f"/{DOMAIN}_files/www/"
-JS_FILES = [
-    "custom-elements-guard.js",
-    "browser_mod.js",
-    "lovelace-mushroom/mushroom.js",
-    "lovelace-card-mod/card-mod.js",
-    "swipe-card/swipe-card.js",
-    "stack-in-card/stack-in-card.js",
-    "linus-strategy.js",
-]
+# The whole www/ directory is served under one prefix so the content-hashed
+# chunks linus-strategy.js loads with dynamic import() are reachable too.
+STATIC_DIR_URL = f"/{DOMAIN}_files/www"
 RELOADS = 5
 
 
@@ -84,16 +77,17 @@ def _static_get_routes(hass: HomeAssistant) -> list[str]:
         for route in hass.http.app.router.routes()
         if route.method == "GET"
         and route.resource is not None
-        and route.resource.canonical.startswith(URL_PREFIX)
+        and route.resource.canonical.startswith(STATIC_DIR_URL)
     ]
 
 
-def _assert_one_route_per_file_and_one_panel(
+def _assert_one_static_route_and_one_panel(
     hass: HomeAssistant, ctx: SimpleNamespace
 ) -> None:
-    assert sorted(_static_get_routes(hass)) == sorted(
-        URL_PREFIX + js_file for js_file in JS_FILES
-    )
+    # One directory registration = two GET routes on the router: HA adds the
+    # aiohttp StaticResource (serves files under the prefix) plus a plain GET
+    # route for the exact URL. Registering it again would double this.
+    assert _static_get_routes(hass) == [STATIC_DIR_URL] * 2
     assert list(ctx.panels) == [DOMAIN]
 
 
@@ -112,7 +106,7 @@ async def test_reload_via_config_entries_five_times(
         assert entry.state is ConfigEntryState.LOADED
 
     assert frontend_stub.loads == RELOADS + 1
-    _assert_one_route_per_file_and_one_panel(hass, frontend_stub)
+    _assert_one_static_route_and_one_panel(hass, frontend_stub)
 
 
 async def test_options_change_reloads_entry(
@@ -133,4 +127,4 @@ async def test_options_change_reloads_entry(
 
     assert frontend_stub.loads == loads_before + 1
     assert entry.state is ConfigEntryState.LOADED
-    _assert_one_route_per_file_and_one_panel(hass, frontend_stub)
+    _assert_one_static_route_and_one_panel(hass, frontend_stub)

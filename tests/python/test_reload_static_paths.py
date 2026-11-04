@@ -36,6 +36,9 @@ JS_FILES = [
     "linus-strategy.js",
 ]
 URLS = [f"/{DOMAIN}_files/www/{js_file}" for js_file in JS_FILES]
+# The whole www/ directory is served under one prefix so the content-hashed
+# chunks linus-strategy.js loads with dynamic import() are reachable too.
+STATIC_DIR_URL = f"/{DOMAIN}_files/www"
 RELOADS = 5
 
 
@@ -130,7 +133,7 @@ def test_setup_unload_cycle_is_idempotent(mock_hass, harness):
 
     asyncio.run(run())
 
-    assert harness.http.urls == URLS
+    assert harness.http.urls == [STATIC_DIR_URL]
     assert list(harness.panels) == [DOMAIN]
 
 
@@ -148,7 +151,7 @@ def test_remove_then_readd_without_restart(mock_hass, harness):
 
     asyncio.run(run())
 
-    assert harness.http.urls == URLS
+    assert harness.http.urls == [STATIC_DIR_URL]
     assert list(harness.panels) == [DOMAIN]
 
 
@@ -186,5 +189,5 @@ def test_missing_js_file_skipped(mock_hass, harness, monkeypatch):
     asyncio.run(run())
 
     present = [url for url in URLS if not url.endswith(missing)]
-    assert harness.http.urls == present
+    assert harness.http.urls == [STATIC_DIR_URL]
     assert harness.resources == present

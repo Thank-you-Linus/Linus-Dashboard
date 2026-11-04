@@ -25,13 +25,15 @@ const createBundleConfig = ({
   return {
     name: name,
     mode: prodMode ? 'production' : 'development',
-    target: ['web', 'es5'],
+    target: ['web'],
     devtool: prodMode ? 'source-map' : 'eval-cheap-module-source-map',
     entry,
 
     output: {
       path: outputPath,
+      publicPath,
       filename: '[name].js',
+      chunkFilename: '[name].[contenthash:8].js',
     },
 
     resolve: {
@@ -51,9 +53,10 @@ const createBundleConfig = ({
                   [
                     '@babel/preset-env',
                     {
-                      targets: 'ie 11', // Maximum compatibility
-                      useBuiltIns: 'usage',
-                      corejs: '3.37',
+                      // HA's frontend only ships to evergreen browsers that support
+                      // native ES modules, so there's no need to polyfill or
+                      // down-compile for legacy engines like IE11.
+                      targets: { esmodules: true },
                     },
                   ],
                 ],
@@ -75,13 +78,11 @@ const createBundleConfig = ({
 
     optimization: {
       minimize: prodMode,
-      // Disable all chunk splitting - everything in one file
+      // Only split the dynamic import() points already used in src/ (views,
+      // cards, chips are loaded on demand via componentRegistry/utils.ts).
+      // The entry point itself still ships as a single synchronous chunk.
       splitChunks: {
         chunks: 'async',
-        cacheGroups: {
-          default: false,
-          vendors: false,
-        },
       },
     },
 
@@ -91,11 +92,6 @@ const createBundleConfig = ({
         __VERSION__: JSON.stringify('1.2.4'),
         'process.env.NODE_ENV': JSON.stringify(prodMode ? 'production' : 'development'),
         ...defineOverlay,
-      }),
-
-      // Keep everything in one chunk like your Webpack config
-      new rspack.optimize.LimitChunkCountPlugin({
-        maxChunks: 1,
       }),
     ],
 

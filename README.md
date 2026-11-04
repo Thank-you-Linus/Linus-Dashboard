@@ -249,6 +249,7 @@ make fake-house  # Provision the fake house test entities (bootstraps first if n
 make build       # Build frontend
 make build-prod  # Build frontend (production)
 make build-watch # Build frontend in watch mode
+make clean       # Remove generated files from www/
 make lint        # Run ESLint and Prettier
 make install     # Install all dependencies
 ```

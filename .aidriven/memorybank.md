@@ -410,7 +410,7 @@ npm install
 
 ```bash
 # Development build (watch mode)
-make dev
+make build-watch
 npm run build:dev
 
 # Production build
@@ -418,7 +418,6 @@ make build
 npm run build
 
 # Type checking
-npm run type-check
 npm run type-check
 
 # Linting

@@ -10,6 +10,7 @@ help:
 	@echo "   build       Build frontend"
 	@echo "   build-watch Build frontend in watch mode"
 	@echo "   build-prod  Build frontend (production)"
+	@echo "   clean       Remove generated files from www/"
 	@echo "   lint        Run linting and formatting"
 	@echo "   install     Install dependencies"
 	@echo "   bootstrap   Create the HA admin account + HA_TOKEN, no browser needed"

@@ -7,6 +7,9 @@ target-version = "py312"
 preview = true
 docstring-code-format = true
 quote-style = "double"
+# Ruff 0.16+ formats Python blocks in Markdown by default: documentation stays as written,
+# and .sapiens/command/sapiens-*.md are dangling symlinks the formatter cannot read.
+exclude = ["*.md"]
 
 [lint]
 select = ["ALL"]
@@ -95,6 +98,8 @@ ignore = [
     "FIX002", # Line contains TODO
     "D417", # Missing argument description in docstring
     "D102", # Missing docstring in public method
+    "CPY001", # Missing copyright notice (the licence is the repository's LICENSE file)
+    "PLR0917", # Too many positional arguments (same limit as PLR0913, ignored above)
 ]
 
 [lint.flake8-pytest-style]

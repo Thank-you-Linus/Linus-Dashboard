@@ -1,6 +1,5 @@
 """Linus Dashboard integration for Home Assistant."""
 
-import asyncio
 import logging
 from pathlib import Path
 
@@ -25,7 +24,7 @@ from homeassistant.helpers import floor_registry as fr
 from homeassistant.helpers.icon import async_get_icons
 from homeassistant.helpers.translation import async_get_translations
 
-from custom_components.linus_dashboard import utils
+from custom_components.linus_dashboard import registry_cleanup, utils
 from custom_components.linus_dashboard.aggregate import DOMAIN_ACTIVE_STATES
 from custom_components.linus_dashboard.const import (
     CONF_ALARM_ENTITY_IDS,
@@ -36,6 +35,8 @@ from custom_components.linus_dashboard.const import (
     CONF_EXCLUDED_TARGETS,
     CONF_HIDE_GREETING,
     CONF_HIDE_GROUPS_FROM_VOICE_ASSISTANTS,
+    CONF_SCENE_COLOR_OVERRIDES,
+    CONF_SHOW_LIGHTS_ON_AREA_CARDS,
     CONF_WEATHER_ENTITY,
     CONF_WEATHER_ENTITY_ID,
     DOMAIN,
@@ -63,11 +64,68 @@ PLATFORMS: list[Platform] = [
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
+# Bundled JS files, served under /linus_dashboard_files/www/ and declared as
+# Lovelace resources in this order. custom-elements-guard.js MUST stay first:
+# it patches customElements.define to be idempotent, preventing a DOMException
+# when HACS (or any other source) re-registers elements our bundled libs
+# already defined.
+JS_FILES: tuple[str, ...] = (
+    "custom-elements-guard.js",
+    "browser_mod.js",
+    "lovelace-mushroom/mushroom.js",
+    "lovelace-card-mod/card-mod.js",
+    "swipe-card/swipe-card.js",
+    "stack-in-card/stack-in-card.js",
+    "linus-strategy.js",
+)
+STATIC_FILES_KEY = "static_files"
+
+
+async def _async_register_static_files(hass: HomeAssistant) -> list[str]:
+    """
+    Serve the bundled www/ directory once per Home Assistant run (TK-259).
+
+    Returns the JS_FILES present on disk, in order. A second call
+    returns that list without touching the router: an aiohttp route cannot be
+    removed while Home Assistant runs, and adding the same URL again raises
+    `RuntimeError: Added route will never be executed`.
+    """
+    domain_data = hass.data.setdefault(DOMAIN, {})
+    if (registered := domain_data.get(STATIC_FILES_KEY)) is not None:
+        return registered
+
+    base_path = Path(__file__).parent / "www"
+
+    def _present_files() -> list[str]:
+        present = []
+        for js_file in JS_FILES:
+            js_path = base_path / js_file
+            if js_path.exists():
+                present.append(js_file)
+            else:
+                _LOGGER.warning(
+                    "JavaScript file not found: %s - skipping registration", js_path
+                )
+        return present
+
+    present = await hass.async_add_executor_job(_present_files)
+    # Serve the whole www/ directory under one prefix rather than one static
+    # path per known file. linus-strategy.js is code-split (dynamic import()
+    # for views/cards/chips), so the build emits extra content-hashed chunk
+    # files that aren't in JS_FILES and still need to be reachable. The
+    # prefix must match publicPath in rspack.config.cjs.
+    await hass.http.async_register_static_paths([
+        StaticPathConfig(f"/{DOMAIN}_files/www", str(base_path), cache_headers=False),
+    ])
+    domain_data[STATIC_FILES_KEY] = present
+    return present
+
 
 async def async_setup(hass: HomeAssistant, _config: dict) -> bool:
     """Set up Linus Dashboard."""
     _LOGGER.info("Setting up Linus Dashboard")
     hass.data.setdefault(DOMAIN, {})
+    await _async_register_static_files(hass)
 
     # Register WebSocket commands
     websocket_api.async_register_command(hass, websocket_get_entities)
@@ -298,52 +356,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Linus Dashboard from a config entry."""
     _LOGGER.info("Setting up Linus Dashboard entry")
 
-    # Register all static paths and resources for bundled JS files.
-    # Phase 1: Check file existence for the known entry files in parallel (I/O-bound).
-    # Phase 2: Register lovelace resources sequentially (shared storage, not parallelizable).
-    #
-    # mushroom-loader.js MUST be first: it patches customElements.define to be idempotent,
-    # preventing DOMException when HACS (or any other source) tries to re-register elements
-    # that our bundled libs already defined.
-    js_files = [
-        "custom-elements-guard.js",
-        "browser_mod.js",
-        "lovelace-mushroom/mushroom.js",
-        "lovelace-card-mod/card-mod.js",
-        "swipe-card/swipe-card.js",
-        "stack-in-card/stack-in-card.js",
-        "linus-strategy.js",
-    ]
-    static_only: set[str] = set()
+    # Static paths are registered once per Home Assistant start (async_setup):
+    # an aiohttp route cannot be removed while HA runs, so registering them
+    # again on every entry load failed every other reload (TK-259). The helper
+    # is idempotent: it returns the files already served, and only registers
+    # them here when setup_entry runs without async_setup.
+    registered = await _async_register_static_files(hass)
 
-    base_path = Path(__file__).parent / "www"
+    # Lovelace resources are declared on each load, sequentially (shared
+    # ResourceStorageCollection; utils.init_resource is idempotent).
     manifest_version = VERSION
-
-    # Serve the whole www/ directory under one prefix rather than one static
-    # path per known file. linus-strategy.js is code-split (dynamic import()
-    # for views/cards/chips), so the build emits extra content-hashed chunk
-    # files that aren't in js_files and still need to be reachable.
-    await hass.http.async_register_static_paths([
-        StaticPathConfig(f"/{DOMAIN}_files/www", str(base_path), cache_headers=False),
-    ])
-
-    # Phase 1: Check which known entry files actually exist (for resource registration)
-    async def check_entry_file(js_file: str) -> str | None:
-        """Return js_file if it exists on disk, else None."""
-        js_path = base_path / js_file
-        if not await hass.async_add_executor_job(js_path.exists):
-            _LOGGER.warning(
-                "JavaScript file not found: %s - skipping registration", js_path
-            )
-            return None
-        return js_file
-
-    registered = await asyncio.gather(*(check_entry_file(f) for f in js_files))
-
-    # Phase 2: Register lovelace resources sequentially (shared ResourceStorageCollection)
     for js_file in registered:
-        if js_file is None or js_file in static_only:
-            continue
         js_url = f"/{DOMAIN}_files/www/{js_file}"
         versioned_url = f"{js_url}?v={manifest_version}"
         await utils.init_resource(hass, versioned_url, str(manifest_version))
@@ -400,7 +423,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass, hass.config.language, "entity_component", list(DOMAIN_ACTIVE_STATES)
     )
 
-    # Forward platforms (aggregate sensors + area/floor/global group entities)
+    # Forward platforms (aggregate sensors + area/floor/global group entities).
+    # Each platform reports what it builds; whatever a build made with Home
+    # Assistant running no longer produces is removed from the registries (#217).
+    registry_cleanup.async_init(hass, entry, [platform.value for platform in PLATFORMS])
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     await async_hide_group_entities_from_voice_assistants(hass, entry)
@@ -500,12 +526,26 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not unload_ok:
         return False
 
+    registry_cleanup.async_unload(hass, entry)
+
     # Retrieve and remove the panel name
     panel_url = hass.data[DOMAIN].pop(entry.entry_id, None)
     if panel_url:
         frontend.async_remove_panel(hass, panel_url)
 
     return True
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, entry: ConfigEntry, device_entry: dr.DeviceEntry
+) -> bool:
+    """
+    Let the user delete an area/floor/global group device from the UI.
+
+    Without this hook Home Assistant only offers enable/disable on these
+    devices. Refused while a group still built in this run uses the device.
+    """
+    return registry_cleanup.async_device_is_removable(hass, entry, device_entry)
 
 
 @websocket_command({
@@ -543,6 +583,15 @@ async def websocket_get_entities(
         CONF_EXCLUDED_TARGETS: config_entries[0].options.get(CONF_EXCLUDED_TARGETS),
         CONF_EMBEDDED_DASHBOARDS: config_entries[0].options.get(
             CONF_EMBEDDED_DASHBOARDS, []
+        ),
+        # Scene chip colors (TK-124): detected colors need HA's scene configs,
+        # admin accounts only; manual colors chosen in the options always ship.
+        "scene_colors": utils.scene_colors(hass) if connection.user.is_admin else {},
+        CONF_SCENE_COLOR_OVERRIDES: utils.scene_color_overrides_hex(
+            config_entries[0].options.get(CONF_SCENE_COLOR_OVERRIDES)
+        ),
+        CONF_SHOW_LIGHTS_ON_AREA_CARDS: config_entries[0].options.get(
+            CONF_SHOW_LIGHTS_ON_AREA_CARDS, True
         ),
         "debug": debug_enabled,
         "version": VERSION,  # Include version for frontend version check

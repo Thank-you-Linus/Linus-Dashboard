@@ -53,6 +53,7 @@ from .entity_group import (
     scan_domain_members,
 )
 from .group_manager import PlatformGroupManager
+from .registry_cleanup import async_report_built
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -368,6 +369,8 @@ async def async_setup_entry(
     exclusions = ExclusionConfig.from_config_entry(config_entry)
     if domain_is_excluded("binary_sensor", exclusions):
         _LOGGER.debug("binary_sensor domain excluded, skipping group creation")
+        # Excluded builds nothing whatever the states: settled from the start.
+        async_report_built(hass, config_entry, "binary_sensor", [], settled=True)
         return
 
     # Module-level registries can hold stale entries from a previous load of
@@ -385,6 +388,8 @@ async def async_setup_entry(
         async_add_entities(entities)
         _LOGGER.info("Created %d binary_sensor group entities", len(entities))
 
+    async_report_built(hass, config_entry, "binary_sensor", entities)
+
     async def _rebuild(*_args) -> None:
         """Full rescan + reconcile: update existing groups, add/remove as needed."""
         before_ids = set(_PRESENCE_GROUPS.keys()) | set(_DEVICE_CLASS_GROUPS.keys())
@@ -401,8 +406,10 @@ async def async_setup_entry(
         for registry in (_PRESENCE_GROUPS, _DEVICE_CLASS_GROUPS):
             for uid in list(registry.keys()):
                 if uid not in after_ids:
-                    stale = registry.pop(uid)
-                    hass.async_create_task(stale.async_remove(force_remove=True))
+                    registry.pop(uid)
+
+        # Record the new build: the registry cleanup removes the dropped groups.
+        async_report_built(hass, config_entry, "binary_sensor", new_groups)
 
         if to_add:
             async_add_entities(to_add)

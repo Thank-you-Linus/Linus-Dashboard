@@ -4,8 +4,10 @@ Climate platform for Linus Dashboard: nested area/floor/global climate groups.
 Deliberately deferred earlier (see plan: no simple on/off control semantics
 like light/switch/fan/cover/siren) — added on explicit request for full
 domain parity. v1 "dumb" aggregation, same spirit as fan/cover's incomplete
-speed/position handling: hvac_mode/supported_features are an intersection
-across members (a mode the group offers must actually work everywhere),
+speed/position handling: hvac_modes are an intersection across members (a
+mode the group offers must actually work everywhere), supported_features
+only carry what the group implements (target temperature, on/off — never
+presets, fan, swing or a temperature range, see _detect_modes_and_features),
 current/target temperature are simple averages, and turn_on/turn_off are
 implemented via the universal set_hvac_mode primitive rather than the
 optional TURN_ON/TURN_OFF feature — so the group's own turn_on/off always
@@ -41,6 +43,7 @@ from .entity_group import (
     mean_float,
 )
 from .group_manager import PlatformGroupManager
+from .registry_cleanup import async_report_built
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -81,10 +84,17 @@ class ClimateGroup(NestedGroupMixin, ClimateEntity):
         """
         hvac_modes: intersection of members' hvac_modes (plus OFF, always
         offered) — guarantees any mode the group exposes is valid to set on
-        every member. supported_features: intersection too, except
-        TURN_ON/TURN_OFF which are always added regardless of member support
-        (our own turn_on/off use set_hvac_mode, not the members' turn_on/off
-        service, so they don't depend on members declaring that feature).
+        every member. supported_features: only the features this group
+        implements. TARGET_TEMPERATURE when every member has it (forwarded by
+        async_set_temperature); TURN_ON/TURN_OFF always, regardless of member
+        support (our own turn_on/off use set_hvac_mode, not the members'
+        turn_on/off service, so they don't depend on members declaring that
+        feature). Presets, fan, swing and temperature range are never
+        announced, even when every member shares them: the group forwards
+        none of them, and HA reads their mode lists (_attr_preset_modes...)
+        and the range's _attr_target_temperature_high/low as soon as the bit
+        is set — unset, every state write raised AttributeError and froze
+        the group (#233).
         """
         states = [
             state
@@ -108,7 +118,10 @@ class ClimateGroup(NestedGroupMixin, ClimateEntity):
         for f in features[1:]:
             common_features &= f
         self._attr_supported_features = (
-            ClimateEntityFeature(common_features)
+            (
+                ClimateEntityFeature(common_features)
+                & ClimateEntityFeature.TARGET_TEMPERATURE
+            )
             | ClimateEntityFeature.TURN_ON
             | ClimateEntityFeature.TURN_OFF
         )
@@ -262,6 +275,8 @@ async def async_setup_entry(
         async_add_entities(entities)
         _LOGGER.info("Created %d climate group entities", len(entities))
 
+    async_report_built(hass, config_entry, "climate", entities)
+
     async def _rebuild(*_args) -> None:
         before_ids = set(_CLIMATE_GROUPS.keys())
         new_groups = await build_nested_domain_groups(
@@ -271,8 +286,10 @@ async def async_setup_entry(
         to_add = [group for group in new_groups if group.unique_id not in before_ids]
 
         for uid in before_ids - after_ids:
-            stale = _CLIMATE_GROUPS.pop(uid)
-            hass.async_create_task(stale.async_remove(force_remove=True))
+            _CLIMATE_GROUPS.pop(uid)
+
+        # Record the new build: the registry cleanup removes the dropped groups.
+        async_report_built(hass, config_entry, "climate", new_groups)
 
         if to_add:
             async_add_entities(to_add)

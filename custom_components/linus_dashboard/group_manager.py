@@ -23,7 +23,11 @@ from typing import Any
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.event import async_call_later
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -265,7 +269,8 @@ class PlatformGroupManager:
 
         Args:
             startup_callback: Called after HA startup + delay
-            update_callback: Called when entity area changes (entity_id, changes)
+            update_callback: Called when an entity or device changes area
+                (entity_id or device_id, changes)
         """
         self._startup_callback = startup_callback
         self._update_callback = update_callback
@@ -342,6 +347,43 @@ class PlatformGroupManager:
             self.hass.bus.async_listen(
                 "entity_registry_updated",  # type: ignore[arg-type]
                 _entity_registry_updated,
+            )
+        )
+
+        # Device registry listener: an entity without its own area inherits
+        # its device's, so moving a device to another area (or deleting the
+        # area) changes group membership without any entity registry event.
+        @callback
+        def _device_registry_updated(event: Event) -> None:
+            """Handle a device changing area."""
+            if not self._startup_complete:
+                return
+            if event.data.get("action") != "update":
+                return
+            changes = event.data.get("changes", {})
+            if "area_id" not in changes:
+                return
+
+            device_id = event.data["device_id"]
+            # Only devices carrying a monitored entity, never this
+            # integration's own group devices (placed in their area at build).
+            if not any(
+                entity.domain in self._monitored_domains and entity.platform != DOMAIN
+                for entity in er.async_entries_for_device(
+                    er.async_get(self.hass), device_id
+                )
+            ):
+                return
+
+            if self._update_callback:
+                _LOGGER.debug("PlatformGroupManager: Device %s area changed", device_id)
+                coro = self._update_callback(device_id, changes)
+                self.hass.async_create_task(coro)  # type: ignore[arg-type]
+
+        unsubs.append(
+            self.hass.bus.async_listen(
+                dr.EVENT_DEVICE_REGISTRY_UPDATED,
+                _device_registry_updated,
             )
         )
 

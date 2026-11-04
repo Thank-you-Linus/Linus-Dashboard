@@ -64,7 +64,7 @@ class HomeAreaCard {
     // members report in). Gating on live state here would bake that transient
     // unavailability into the generated config permanently. getLightCard() wraps the
     // tile in a `conditional` card instead, which HA re-evaluates continuously.
-    if (all_lights_entity) {
+    if (all_lights_entity && Helper.linus_dashboard_config?.show_lights_on_area_cards !== false) {
       cards.push(this.getLightCard(all_lights_entity));
     }
 

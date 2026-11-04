@@ -239,7 +239,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Linus Dashboard media_player groups (flat + per device_class, area/floor/global)."""
-    exclusions = ExclusionConfig.from_config_entry(config_entry)
+    exclusions = ExclusionConfig.from_config_entry(config_entry, hass)
     _MEDIA_PLAYER_GROUPS.clear()
 
     entities = await _build_all_media_player_groups(hass, config_entry, exclusions)

@@ -234,7 +234,7 @@ def test_scan_require_state_true_is_unchanged(
     entity_reg.add("sensor.ok", original_device_class="humidity")
     fake_states.set("sensor.regonly_class", "1", {})  # state without device_class attr
     fake_states.set("sensor.ok", "1", {"device_class": "temperature"})
-    exclusions = ExclusionConfig.from_config_entry(mock_config_entry)
+    exclusions = ExclusionConfig.from_config_entry(mock_config_entry, mock_hass)
 
     default = scan_domain_members(
         mock_hass, domain="sensor", device_class="temperature", exclusions=exclusions
@@ -254,7 +254,7 @@ def test_scan_without_state_keeps_stateless_entity_with_registry_class(
 ):
     entity_reg.add("sensor.nostate", original_device_class="temperature")
     entity_reg.add("sensor.other", device_class="humidity")
-    exclusions = ExclusionConfig.from_config_entry(mock_config_entry)
+    exclusions = ExclusionConfig.from_config_entry(mock_config_entry, mock_hass)
     scoped = scan_domain_members(
         mock_hass,
         domain="sensor",
@@ -300,7 +300,7 @@ def test_device_class_declared_only_by_enum_sensors_is_ignored(
         capabilities={"options": ["low", "high"]},
     )
     entity_reg.add("sensor.t1", device_class="temperature")
-    exclusions = ExclusionConfig.from_config_entry(mock_config_entry)
+    exclusions = ExclusionConfig.from_config_entry(mock_config_entry, mock_hass)
     assert sensor._discover_numeric_device_classes(mock_hass, exclusions) == {
         "temperature"
     }
@@ -323,7 +323,7 @@ def test_discovery_skips_hidden_disabled_excluded_and_nonnumeric_live_state(
     entity_reg.add("sensor.ts", device_class="timestamp")
     fake_states.set("sensor.txt", "open")
     mock_config_entry.options = {"excluded_integrations": ["blocked"]}
-    exclusions = ExclusionConfig.from_config_entry(mock_config_entry)
+    exclusions = ExclusionConfig.from_config_entry(mock_config_entry, mock_hass)
     assert sensor._discover_numeric_device_classes(mock_hass, exclusions) == set()
 
 

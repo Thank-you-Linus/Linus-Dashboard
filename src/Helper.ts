@@ -773,6 +773,21 @@ class Helper {
     this.#excludedDeviceIds = new Set(initExcludedTargets?.device_id ?? []);
     this.#excludedFloorIds = new Set(initExcludedTargets?.floor_id ?? []);
     this.#excludedLabelIds = new Set(initExcludedTargets?.label_id ?? []);
+
+    // An excluded label excludes whatever carries it: an area (room) or a
+    // device, not only an entity. Expand it into the concrete id sets once,
+    // so every isAreaExcluded/isDeviceExcluded/isEntityExcluded check (room
+    // list, room tiles, popups, device selector, ...) honours it. Same
+    // expansion as the backend's ExclusionConfig.from_config_entry.
+    // Floors carry no labels in Home Assistant.
+    if (this.#excludedLabelIds.size > 0) {
+      const hasExcludedLabel = (item: any) =>
+        Array.isArray(item?.labels) && item.labels.some((label: string) => this.#excludedLabelIds.has(label));
+      for (const area of areas) if (hasExcludedLabel(area)) this.#excludedAreaIds.add(area.area_id);
+      for (const device of devices) if (hasExcludedLabel(device)) this.#excludedDeviceIds.add(device.id);
+      for (const entity of entities) if (hasExcludedLabel(entity)) this.#excludedEntityIds.add(entity.entity_id);
+    }
+
     const excludedIntegrations = new Set(linus_dashboard_config?.excluded_integrations ?? []);
     const excludedDomains = new Set(linus_dashboard_config?.excluded_domains ?? []);
     const excludedDeviceClasses = new Set(linus_dashboard_config?.excluded_device_classes ?? []);
@@ -794,12 +809,6 @@ class Helper {
       if (effectiveAreaId && this.#excludedAreaIds.has(effectiveAreaId)) return acc;
       if (this.#excludedEntityIds.has(entity.entity_id)) return acc;
       if (entity.device_id && this.#excludedDeviceIds.has(entity.device_id)) return acc;
-      if (this.#excludedLabelIds.size > 0 && entity.labels?.length) {
-        const hasExcludedLabel = entity.labels.some((label: any) => this.#excludedLabelIds.has(label));
-        if (hasExcludedLabel) {
-          return acc;
-        }
-      }
 
       // Exclusion par intégration
       if (excludedIntegrations.size > 0) {

@@ -75,7 +75,7 @@ Whichever it is, the steps below are the same: install Linus next to it, check a
 Your previous dashboard was never modified, so going back means removing Linus:
 
 1. **Delete the integration:** Settings → Devices & Services → Linus Dashboard → ⋮ → Delete. This removes the Linus panel from the sidebar.
-2. Go to **Settings → Dashboards → ⋮ (top right) → Resources**. On older Home Assistant versions, this entry only appears once advanced mode is turned on in your user profile.
+2. Go to **Settings → Dashboards → ⋮ (top right) → Resources**.
 3. **Delete every resource whose URL starts with `/linus_dashboard_files/`.** Deleting the integration does not remove them.
 4. **Restart Home Assistant** (Settings → System, restart button at the top right). Home Assistant only stops serving the `/linus_dashboard_files/` files after a restart.
 5. **Hard-refresh your browser** (Ctrl+F5, or Cmd+Shift+R on macOS).
@@ -83,7 +83,7 @@ Your previous dashboard was never modified, so going back means removing Linus:
 
 > ⚠️ **Bundled cards:** if one of your other dashboards uses a custom card that came only with Linus, that card stops displaying once the resources are removed. Install that card separately before removing the resources if you want to keep it.
 
-If your Lovelace resources are managed in YAML, there is nothing to delete in step 3: Linus loads its files without adding them to the list, and the restart in step 4 is enough.
+If your Lovelace resources are managed in YAML, step 3 may have nothing to delete: skip it if no `/linus_dashboard_files/` resource is listed. If one is listed, remove it from your YAML configuration. Then go on to step 4.
 
 Home Assistant removes Linus's devices and entities with the integration. If a device with "Linus Dashboard" as manufacturer is still listed in Settings → Devices & Services → Devices, delete it.
 

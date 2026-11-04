@@ -75,7 +75,7 @@ Dans tous les cas, la démarche est la même : installer Linus à côté, vérif
 Votre tableau de bord précédent n'a jamais été modifié : revenir en arrière, c'est retirer Linus.
 
 1. **Supprimez l'intégration :** Paramètres → Appareils et services → Linus Dashboard → ⋮ → Supprimer. Le panneau de Linus disparaît de la barre latérale.
-2. Allez dans **Paramètres → Tableaux de bord → ⋮ (en haut à droite) → Ressources**. Sur les anciennes versions de Home Assistant, cette entrée n'apparaît qu'une fois le mode avancé activé dans votre profil utilisateur.
+2. Allez dans **Paramètres → Tableaux de bord → ⋮ (en haut à droite) → Ressources**.
 3. **Supprimez chaque ressource dont l'URL commence par `/linus_dashboard_files/`.** Supprimer l'intégration ne les retire pas.
 4. **Redémarrez Home Assistant** (Paramètres → Système, bouton de redémarrage en haut à droite). Home Assistant ne cesse de servir les fichiers `/linus_dashboard_files/` qu'après un redémarrage.
 5. **Rafraîchissez votre navigateur sans cache** (Ctrl+F5, ou Cmd+Shift+R sur macOS).
@@ -83,7 +83,7 @@ Votre tableau de bord précédent n'a jamais été modifié : revenir en arrièr
 
 > ⚠️ **Cartes embarquées :** si l'un de vos autres tableaux de bord utilise une carte personnalisée fournie uniquement par Linus, cette carte cesse de s'afficher une fois les ressources supprimées. Installez cette carte à part avant de retirer les ressources si vous voulez la garder.
 
-Si vos ressources Lovelace sont gérées en YAML, il n'y a rien à supprimer à l'étape 3 : Linus charge ses fichiers sans les ajouter à la liste, et le redémarrage de l'étape 4 suffit.
+Si vos ressources Lovelace sont gérées en YAML, l'étape 3 peut n'avoir rien à supprimer : passez-la si aucune ressource `/linus_dashboard_files/` n'est listée. Si une ressource est listée, retirez-la de votre configuration YAML. Continuez ensuite à l'étape 4.
 
 Home Assistant retire les appareils et entités de Linus avec l'intégration. Si un appareil avec « Linus Dashboard » comme fabricant reste listé dans Paramètres → Appareils et services → Appareils, supprimez-le.
 

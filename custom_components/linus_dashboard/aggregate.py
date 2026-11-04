@@ -255,7 +255,7 @@ def resolve_reference_unit(
         votes = Counter(u for u in units if u)
     if not votes:
         return None
-    return sorted(votes, key=lambda unit: (-votes[unit], str(unit)))[0]
+    return min(votes, key=lambda unit: (-votes[unit], str(unit)))
 
 
 def convert_member_value(

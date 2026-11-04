@@ -746,7 +746,7 @@ This workflow works in VS Code with:
 - Share learnings with team
 
 ### Per Release
-- Version bump all files (`npm run bump`)
+- Version bump all files (`npm run bump:release`)
 - Update changelog
 - Test cache-busting
 - Verify build artifacts

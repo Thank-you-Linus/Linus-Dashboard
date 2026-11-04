@@ -250,7 +250,7 @@ fi
 echo -e "${BLUE}📋 Git operations:${NC}"
 
 # Stage changes (only files that actually change)
-git add package.json package-lock.json custom_components/linus_dashboard/manifest.json custom_components/linus_dashboard/www/
+git add package.json package-lock.json custom_components/linus_dashboard/manifest.json
 
 # Commit
 COMMIT_MSG="chore: Bump version to ${NEW_VERSION}"

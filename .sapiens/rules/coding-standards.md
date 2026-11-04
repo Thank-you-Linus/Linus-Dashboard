@@ -288,8 +288,7 @@ chore: update dependencies to latest versions
 7. Discord notification sent automatically: a beta in the beta testers channel, a stable once in #annonces (by the Stable Release (manual) button, text `.github/release-highlights/<version>.discord.md`; missed → `announce-stable.yml`)
 
 ### Build Outputs
-- **Development:** `dist/` directory (not committed)
-- **Production:** Optimized bundle in `dist/`
+- **Output:** generated files in `custom_components/linus_dashboard/www/`, not committed; CI and releases build them
 - **Source maps:** Generated for debugging
 
 ## Documentation Standards

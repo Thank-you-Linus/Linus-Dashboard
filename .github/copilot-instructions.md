@@ -1,5 +1,7 @@
 # Copilot Instructions for Linus Dashboard
 
+Rules for contributions, including the frontend build, which is never committed: [AGENTS.md](../AGENTS.md).
+
 ## Big Picture Architecture
 - **Linus Dashboard** is a Home Assistant custom integration and frontend dashboard, designed for plug-and-play use. It auto-organizes devices into smart sections by room and type.
 - Main components:
@@ -16,7 +18,7 @@
   - For local dev, run `./scripts/develop` to start Home Assistant on port 8123.
 - **Build frontend:**
   - Use `npm install` then `npm run build` or `make build` (see `package.json` scripts).
-  - Development: `npm run build-dev` for watch mode with source maps.
+  - Development: `npm run build:dev` for watch mode with source maps.
   - Production: `make build-prod` for optimized build.
   - **Build system**: Uses Rspack (like Home Assistant) instead of Webpack for faster builds and better compatibility.
   - TypeScript config: `tsconfig.json`, Rspack configs: `rspack.config.cjs` / `rspack.dev.config.cjs`.

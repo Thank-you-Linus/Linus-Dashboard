@@ -75,6 +75,12 @@ def harness(mock_hass, monkeypatch):
     mock_hass.config_entries.async_unload_platforms = AsyncMock(return_value=True)
     mock_hass.data["lovelace"] = SimpleNamespace(dashboards={})
 
+    # The frontend build is not committed: these tests must not depend on it.
+    real_exists = Path.exists
+    www = Path(integration.__file__).parent / "www"
+    built = www / "linus-strategy.js"
+    monkeypatch.setattr(Path, "exists", lambda path: path == built or real_exists(path))
+
     async def fake_init_resource(_hass, url, _ver):
         ctx.resources.append(url.split("?", maxsplit=1)[0])
         return True

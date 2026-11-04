@@ -29,6 +29,12 @@ fi
 ## without resulting to symlinks.
 export PYTHONPATH="${PYTHONPATH}:${PWD}/custom_components"
 
+# The frontend build is not committed: Home Assistant lists it once, at startup.
+if [[ ! -f custom_components/linus_dashboard/www/linus-strategy.js ]]; then
+    echo "📦 No frontend build yet, building..."
+    npm run build
+fi
+
 echo "🚀 Starting Home Assistant on http://localhost:8123"
 echo "   Config directory: ${PWD}/config"
 echo "   Custom components: ${PWD}/custom_components"

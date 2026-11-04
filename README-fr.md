@@ -16,7 +16,10 @@
       <img src="https://discordapp.com/api/guilds/1104794215440978042/widget.png?style=shield" alt="Communauté Discord"/>
     </a>
     <a href="https://github.com/Thank-you-Linus/Linus-Dashboard/stargazers">
-      <img src="https://img.shields.io/github/stars/Thank-you-Linus/Linus-Dashboard?style=social" alt="Étoiles GitHub"/>
+      <img src="https://img.shields.io/github/stars/Thank-you-Linus/Linus-Dashboard?style=social&logo=github&label=%C3%89toiles" alt="Étoiles GitHub"/>
+    </a>
+    <a href="https://github.com/Thank-you-Linus/Linus-Dashboard/releases">
+      <img src="https://img.shields.io/github/downloads/Thank-you-Linus/Linus-Dashboard/total?style=social&logo=github&label=T%C3%A9l%C3%A9chargements" alt="Téléchargements au total"/>
     </a>
   </p>
 
@@ -265,6 +268,25 @@ Avec Home Assistant 2025.1+, vous pouvez glisser-déposer les pièces directemen
 **Q: Ai-je besoin de Linus Brain ?**
 **Non** - Linus Dashboard fonctionne de manière autonome. Linus Brain est une mise à niveau optionnelle pour la détection d'activité par IA et l'automatisation avancée.
 [Comparer les fonctionnalités →](https://thankyou-linus.com/)
+
+**Q: Linus Dashboard crée-t-il ses propres entités de pièce/étage, ou faut-il une autre intégration ?**
+**Il les crée nativement.** Pour chaque pièce et chaque étage (et la maison entière), Linus Dashboard ajoute ses propres entités de groupe — détection de présence, et un « toutes les lumières »/« tous les interrupteurs »/« tous les ventilateurs »/« tous les volets »/« toutes les sirènes » pilotable pour chacun — sans autre intégration. Vous pouvez désactiver chacun par domaine dans les options de l'intégration.
+
+Chaque entité de groupe (et les capteurs d'agrégat `binary_sensor` tout-ou-rien) compte aussi ses membres au niveau des feuilles : `total` (membres), `active_count` / `active_entity_ids` (membres allumés/ouverts/détectés) et `unavailable_count` / `unavailable_entity_ids` (membres `unavailable`, `unknown`, ou déclarés mais absents de Home Assistant). Une feuille partagée par deux sous-groupes n'est comptée qu'une fois dans chacun de ces attributs. Par exemple, le nombre de volets fermés dans les pièces à vivre d'un étage, chaque matin :
+
+```jinja
+{{ state_attr('cover.linus_dashboard_shutter_floor_pieces_a_vivre', 'total')
+   - state_attr('cover.linus_dashboard_shutter_floor_pieces_a_vivre', 'active_count')
+   - state_attr('cover.linus_dashboard_shutter_floor_pieces_a_vivre', 'unavailable_count') }}
+```
+
+**Q: Les chips de scène de la popup lumière peuvent-elles afficher les couleurs de la scène ?**
+**Oui, pour les scènes créées dans Home Assistant.** Dans la popup lumière d'une pièce, chaque chip de scène prend la couleur dominante des lampes que la scène allume.
+- **Colorées automatiquement :** les scènes créées dans Home Assistant (éditeur de scènes, `scenes.yaml`, `scene.create`) dont les lampes sont réglées en couleur, ou en température de blanc (affichée en teinte chaude ou froide) — pour les comptes administrateurs.
+- **Non colorées automatiquement :** les scènes Philips Hue et les autres scènes fournies par une intégration (Home Assistant ne connaît pas leurs couleurs), les scènes sans lampe colorée, et toutes les scènes pour les comptes non administrateurs.
+- **Repli :** la chip garde son aspect neutre habituel, ou affiche la couleur que vous choisissez pour cette scène dans les options de l'intégration (Paramètres → Appareils et services → Linus Dashboard → Configurer, étape « Couleurs des chips de scène »). Une couleur choisie passe toujours avant la couleur détectée.
+
+Après avoir modifié une scène, rechargez le tableau de bord pour voir sa nouvelle couleur.
 
 ### Dépannage
 

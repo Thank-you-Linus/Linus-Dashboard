@@ -84,6 +84,7 @@ from .entity_group import (
     scan_domain_members,
 )
 from .group_manager import PlatformGroupManager
+from .registry_cleanup import async_report_built
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -128,18 +129,26 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Linus Dashboard sensors (generic counts, numeric aggregates, health)."""
-    sensors: list[SensorEntity] = []
     # A previous load of this config entry (reload after an options change)
     # leaves stale entries — those entities were torn down by HA already.
     _NUMERIC_SENSORS.clear()
 
-    sensors.extend(await _build_aggregate_sensors(hass, config_entry))
-    sensors.extend(await _build_numeric_sensors(hass, config_entry))
-    sensors.extend(await _build_health_sensors(hass, config_entry))
+    aggregate_sensors = await _build_aggregate_sensors(hass, config_entry)
+    numeric_sensors = await _build_numeric_sensors(hass, config_entry)
+    health_sensors = await _build_health_sensors(hass, config_entry)
+    # Built once per setup; only the numeric aggregates are rebuilt below.
+    static_sensors: list[SensorEntity] = [*aggregate_sensors, *health_sensors]
+    sensors: list[SensorEntity] = [
+        *aggregate_sensors,
+        *numeric_sensors,
+        *health_sensors,
+    ]
 
     if sensors:
         async_add_entities(sensors)
         _LOGGER.info("Created %d sensors", len(sensors))
+
+    async_report_built(hass, config_entry, "sensor", sensors)
 
     async def _rebuild(*_args) -> None:
         """Re-run numeric discovery: refresh existing aggregates, add/remove the rest."""
@@ -151,8 +160,12 @@ async def async_setup_entry(
         to_add = [s for s in new_sensors if s.unique_id not in before_ids]
 
         for uid in before_ids - after_ids:
-            stale = _NUMERIC_SENSORS.pop(uid)
-            hass.async_create_task(stale.async_remove(force_remove=True))
+            _NUMERIC_SENSORS.pop(uid)
+
+        # Record the new build: the registry cleanup removes the dropped ones.
+        async_report_built(
+            hass, config_entry, "sensor", [*static_sensors, *new_sensors]
+        )
 
         if to_add:
             async_add_entities(to_add)
@@ -396,10 +409,14 @@ class LinusDashboardAggregateSensor(SensorEntity):
     def _update_state(self) -> None:
         """Recompute all aggregate values from current HA state."""
         entity_states: dict[str, str] = {}
+        unavailable_ids: list[str] = []
         for entity_id in self._tracked_entities:
             state_obj = self.hass.states.get(entity_id)
             if state_obj and state_obj.state not in ("unavailable", "unknown"):
                 entity_states[entity_id] = state_obj.state
+            else:
+                # Absent from HA, or present but unavailable/unknown.
+                unavailable_ids.append(entity_id)
 
         active_count = compute_active_count(entity_states, self._domain)
         active_ids = compute_active_entity_ids(entity_states, self._domain)
@@ -419,6 +436,8 @@ class LinusDashboardAggregateSensor(SensorEntity):
             # of aggregate it is reading. This sensor only ever tracks raw
             # entities, so no leaf-level recursion applies here.
             "active_count": active_count,
+            "unavailable_entity_ids": sorted(unavailable_ids),
+            "unavailable_count": len(unavailable_ids),
         }
 
 
@@ -876,10 +895,35 @@ async def _build_numeric_sensors(
 # concatenates every floor's already-concatenated area list).
 MAX_UNAVAILABLE_ENTITY_IDS = 200
 
+# Stateless entities: their state is the time of their last press, activation,
+# event or message, so they stay "unknown" until the first one — their normal
+# resting state, not a fault (a never-pressed restart button). Only
+# "unavailable" means one of them is down.
+STATELESS_DOMAINS = frozenset({
+    "ai_task",
+    "button",
+    "conversation",
+    "event",
+    "input_button",
+    "notify",
+    "scene",
+    "stt",
+    "tts",
+    "wake_word",
+})
+
+
+def _is_down(entity_id: str, state: str) -> bool:
+    """Whether a raw entity state counts as unavailable for the health sensor."""
+    if state == "unavailable":
+        return True
+    return state == "unknown" and entity_id.split(".", 1)[0] not in STATELESS_DOMAINS
+
 
 class LinusDashboardHealthSensor(SensorEntity):
     """
-    Count and list of unavailable/unknown entities in a zone/floor/global.
+    Count and list of unavailable/unknown entities in a zone/floor/global
+    ("unknown" not counted for STATELESS_DOMAINS, see above).
 
     Subscribes to its tracked entities and recomputes on change (debounced),
     same pattern as LinusDashboardAggregateSensor above — it used to just
@@ -942,7 +986,7 @@ class LinusDashboardHealthSensor(SensorEntity):
                 eid
                 for eid in self._tracked_entity_ids
                 if (state := self.hass.states.get(eid)) is not None
-                and state.state in ("unavailable", "unknown")
+                and _is_down(eid, state.state)
             ]
 
         self._attr_native_value = len(unavailable)

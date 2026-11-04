@@ -2,8 +2,8 @@ name: "Beta Release (manual)"
 
 # One-click pre-release from the GitHub UI (Actions -> Beta Release (manual) -> Run workflow).
 # Runs the quality gates, bumps the version, tags, pushes main + tag atomically and publishes the
-# GitHub pre-release. The existing "Pre-Release" workflow (tag push) is untouched; tags pushed with
-# GITHUB_TOKEN do not trigger it, so the release is created here.
+# GitHub pre-release. Tags pushed with GITHUB_TOKEN do not trigger other
+# workflows, so the release is created here.
 
 on:
   workflow_dispatch:

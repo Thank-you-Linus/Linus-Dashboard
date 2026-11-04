@@ -43,13 +43,17 @@ CONF_EXCLUDED_DEVICE_CLASSES = "excluded_device_classes"
 CONF_EXCLUDED_TARGETS = "excluded_targets"
 CONF_HIDE_GREETING = "hide_greeting"
 CONF_EXCLUDED_INTEGRATIONS = "excluded_integrations"
-CONF_SHOW_ALL_DEVICES = "show_all_devices"
 
 # Embedded dashboards configuration
 CONF_EMBEDDED_DASHBOARDS = "embedded_dashboards"
 
 # Area/floor/global group entities configuration
 CONF_HIDE_GROUPS_FROM_VOICE_ASSISTANTS = "hide_groups_from_voice_assistants"
+
+# Manual scene chip colors: {scene entity_id: [r, g, b]} (ColorRGBSelector shape)
+CONF_SCENE_COLOR_OVERRIDES = "scene_color_overrides"
+# Home view area cards configuration
+CONF_SHOW_LIGHTS_ON_AREA_CARDS = "show_lights_on_area_cards"
 
 
 def get_area_device_info(entry_id: str, area_id: str, area_name: str) -> dict:

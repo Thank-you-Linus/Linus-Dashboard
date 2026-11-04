@@ -1,5 +1,6 @@
 import { Helper } from "./Helper";
 import { EntityRegistryEntry } from "./types/homeassistant/data/entity_registry";
+import { DeviceRegistryEntry } from "./types/homeassistant/data/device_registry";
 import { generic } from "./types/strategy/generic";
 import { ActionConfig, LovelaceCardConfig } from "./types/homeassistant/data/lovelace";
 import {
@@ -22,7 +23,7 @@ import { ImageAreaCard } from "./cards/ImageAreaCard";
 import { AggregateChip } from "./chips/AggregateChip";
 import { AggregateCard } from "./cards/AggregateCard";
 import { CardFactory } from "./factories/CardFactory";
-import { memoize } from "./utils/memoization";
+import { memoize, memoizeWeak } from "./utils/memoization";
 import { PerformanceProfiler } from "./utils/performanceProfiler";
 
 const DEVICE_CLASS_DOMAINS = new Set(Object.keys(DEVICE_CLASSES));
@@ -699,6 +700,30 @@ export const getAreaName = memoize(function getAreaName(area: StrategyArea): str
 }, { name: 'getAreaName', maxSize: 100 });
 
 /**
+ * Get the display name of a device.
+ *
+ * Resolution order: non-empty `name_by_user`, then `name`, then `model`, then
+ * Home Assistant's own "unnamed device" translation, then "Unnamed device".
+ * Never falls back to `device.id` (an opaque registry UUID).
+ * Memoized by object identity (WeakMap), as the argument is an object.
+ *
+ * @param {DeviceRegistryEntry} device - The device.
+ * @returns {string} - The device name.
+ */
+export const getDeviceName = memoizeWeak(function getDeviceName(device: DeviceRegistryEntry): string {
+    for (const candidate of [device.name_by_user, device.name, device.model]) {
+        if (candidate && candidate.trim() !== "") return candidate;
+    }
+
+    const localized = Helper.localize("ui.panel.config.devices.unnamed_device");
+    if (localized && localized !== "translation not found" && !localized.includes("{")) {
+        return localized;
+    }
+
+    return "Unnamed device";
+});
+
+/**
  * Get global entities except undisclosed.
  * @param {string} device_class - The device class.
  * @returns {string[]} - The global entities.
@@ -924,6 +949,33 @@ export async function processEntitiesForView(
 }
 
 /**
+ * Pop-up action listing one domain's entities in a single area.
+ *
+ * Reuses the area-scoped AggregateChip so the heading opens exactly the
+ * pop-up the room's chip of the same domain opens (LightPopup for lights,
+ * CoverPopup for covers, ...), with the same entities and group controls.
+ *
+ * @param domain - The base domain (e.g. "light").
+ * @param device_class - The device class; null for entities without one.
+ * @param area_slug - The area to scope the pop-up to.
+ * @returns The pop-up action, or undefined when no pop-up can be built.
+ */
+export function getAreaDomainPopupAction(
+    domain: string,
+    device_class: string | null | undefined,
+    area_slug: string
+): ActionConfig | undefined {
+    try {
+        const chip = new AggregateChip({ domain, device_class, scope: "area", area_slug }).getChip() as any;
+        const action = chip?.tap_action;
+        return action && action.action !== "none" ? action : undefined;
+    } catch (e) {
+        Helper.logError(`Could not build the ${domain} pop-up for area ${area_slug}`, e);
+        return undefined;
+    }
+}
+
+/**
  * Process entities for an area or floor view.
  * @param {object} params - The parameters object.
  * @param {StrategyArea} [params.area] - The area to process entities for.
@@ -1041,6 +1093,11 @@ export async function processEntitiesForAreaOrFloorView({
                             title: Helper.localize(getDomainTranslationKey(domain)),
                             titleIcon: Helper.icons[domain as ResourceKeys]?._?.default,
                             titleNavigate: domain,
+                            // In a room, tapping the heading (e.g. "Lights") opens
+                            // the pop-up listing only this room's entities of
+                            // that domain instead of navigating to the
+                            // house-wide domain view.
+                            title_tap_action: getAreaDomainPopupAction(domain, deviceClassParam, area.slug),
                         }),
                         domain,
                     };

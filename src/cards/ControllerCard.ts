@@ -67,8 +67,8 @@ class ControllerCard {
         icon: this.#defaultConfig.titleIcon,
         heading_style: "title",
         badges: [],
-        ...(this.#defaultConfig.titleNavigate && {
-          tap_action: navigateTo(this.#defaultConfig.titleNavigate)
+        ...((this.#defaultConfig.title_tap_action || this.#defaultConfig.titleNavigate) && {
+          tap_action: this.#defaultConfig.title_tap_action ?? navigateTo(this.#defaultConfig.titleNavigate!)
         })
       })
     }

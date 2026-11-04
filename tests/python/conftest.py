@@ -7,7 +7,10 @@ dev environment) — same convention as the sibling Linus Brain project's
 tests/conftest.py for its non-integration-level tests. Sufficient for the
 pure computation and single-entity logic covered here; full entity-lifecycle
 (async_added_to_hass through a real entity_platform) is still only exercised
-by manual live testing against the ha-test fixture.
+by manual live testing against the ha-test fixture, and by
+tests/python/integration/ — which does use pytest-homeassistant-custom-
+component, in its own environment and process (see the module docstring
+there and the CI `python-tests-integration` job).
 """
 
 from __future__ import annotations
@@ -24,7 +27,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers import floor_registry as fr
 
 import custom_components.linus_dashboard as integration
-from custom_components.linus_dashboard import group_manager, sensor
+from custom_components.linus_dashboard import entity_group, group_manager, sensor
 
 
 class FakeStates:
@@ -164,6 +167,14 @@ def clean_registry():
     sensor._NUMERIC_SENSORS.clear()
     yield
     sensor._NUMERIC_SENSORS.clear()
+
+
+@pytest.fixture(autouse=True)
+def clean_group_entity_ids():
+    """Group entities register themselves in a module-level set; reset it."""
+    entity_group._GROUP_ENTITY_IDS.clear()
+    yield
+    entity_group._GROUP_ENTITY_IDS.clear()
 
 
 @pytest.fixture

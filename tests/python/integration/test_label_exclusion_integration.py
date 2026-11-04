@@ -54,7 +54,9 @@ def _temperature_sensor(
     if area_id:
         er.async_get(hass).async_update_entity(entry.entity_id, area_id=area_id)
     hass.states.async_set(
-        entry.entity_id, "21", {"device_class": "temperature", "unit_of_measurement": "°C"}
+        entry.entity_id,
+        "21",
+        {"device_class": "temperature", "unit_of_measurement": "°C"},
     )
     return entry.entity_id
 
@@ -100,4 +102,5 @@ async def test_excluded_label_on_device_entity_and_area(hass: HomeAssistant):
     # the labelled room has no member at all.
     assert scoped.area_entities == {kitchen: [kept]}
     assert via_device not in scoped.area_entities[kitchen]
-    assert in_attic not in sum(scoped.area_entities.values(), [])
+    all_members = [eid for members in scoped.area_entities.values() for eid in members]
+    assert in_attic not in all_members

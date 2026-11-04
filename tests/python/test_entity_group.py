@@ -15,7 +15,9 @@ def test_mean_float_averages_with_decimal_precision():
     assert mean_float(21.5, 22.3) == 21.9
 
 
-def test_exclusion_config_from_config_entry_defaults_to_empty(mock_config_entry, mock_hass):
+def test_exclusion_config_from_config_entry_defaults_to_empty(
+    mock_config_entry, mock_hass
+):
     mock_config_entry.options = {}
     exclusions = ExclusionConfig.from_config_entry(mock_config_entry, mock_hass)
     assert exclusions.excluded_domains == set()

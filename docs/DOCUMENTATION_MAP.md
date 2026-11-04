@@ -12,6 +12,10 @@
 
 → **[Quick Start Guide](QUICK_START.md)** - 5 minutes from install to running dashboard
 
+### I'm switching from another dashboard (10 minutes)
+
+→ **[Switching to Linus Dashboard](SWITCHING_TO_LINUS.md)** - What you keep, what to check, how to go back ([Français](SWITCHING_TO_LINUS-fr.md))
+
 ### I want to contribute code (1-2 hours)
 
 1. [CONTRIBUTING.md](../CONTRIBUTING.md) - Setup & contribution process (30 min)
@@ -95,6 +99,7 @@
 | **[Quick Start Guide](QUICK_START.md)**                               | 5-minute setup guide (NEW)                   | Users      | 🔥 NEW USERS   |
 | **[Activity Detection](ACTIVITY_DETECTION.md)**                       | Automatic sensor detection & troubleshooting | Users      | ⭐ Core Feature |
 | [Embedded Dashboards](EMBEDDED_DASHBOARDS.md)                         | Integrate custom Lovelace dashboards         | Users      | ⭐ Popular     |
+| [Switching to Linus Dashboard](SWITCHING_TO_LINUS.md)                 | What you keep, what to check, how to go back | Users      | 🔄 Switching   |
 | [Manual Ordering](MANUAL_ORDERING.md)                                 | HA 2025.1+ room ordering                     | Users      | 📖 HA 2025.1+  |
 | [Area Specific Entities](AREA_SPECIFIC_ENTITIES.md)                   | Temperature/humidity per area                | Users/Devs | 📖 Advanced    |
 | [Notification Improvements](development/NOTIFICATION_IMPROVEMENTS.md) | Notification system enhancements             | Devs       | 📖 Reference   |
@@ -116,6 +121,8 @@
 | [README.md](../README.md)               | Main project documentation | EN        | 🔥 START HERE      |
 | [README-fr.md](../README-fr.md)         | French version             | FR        | 🔥 START HERE (FR) |
 | **[Quick Start Guide](QUICK_START.md)** | 5-minute setup (NEW)       | EN + FR   | ⭐ New Users       |
+| [Switching to Linus Dashboard](SWITCHING_TO_LINUS.md) | Coming from another dashboard | EN | 🔄 Switching |
+| [Passer à Linus Dashboard](SWITCHING_TO_LINUS-fr.md) | Venir d'un autre tableau de bord | FR | 🔄 Switching (FR) |
 | [RELEASE_NOTES.md](../RELEASE_NOTES.md) | Current release notes      | EN + FR   | 📖 Latest          |
 
 ---
@@ -149,6 +156,8 @@ linus-dashboard/
 ├── docs/                               # Feature & release documentation
 │   ├── QUICK_START.md                  # 5-minute setup guide (NEW)
 │   ├── EMBEDDED_DASHBOARDS.md          # Custom dashboards integration
+│   ├── SWITCHING_TO_LINUS.md           # Coming from another dashboard (EN)
+│   ├── SWITCHING_TO_LINUS-fr.md        # Coming from another dashboard (FR)
 │   ├── MANUAL_ORDERING.md              # HA 2025.1+ room ordering
 │   ├── AREA_SPECIFIC_ENTITIES.md       # Temperature/humidity per area
 │   ├── DASHBOARD_ENHANCEMENTS.md       # Feature architecture

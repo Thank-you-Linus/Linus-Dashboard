@@ -86,6 +86,8 @@
 
 Linus Dashboard is a Plug n Play magic dashboard designed to simplify and elevate your Home Assistant experience. It automatically organizes your devices into smart sections, grouped by rooms and device types, without requiring complicated setup.
 
+It is an auto-generated dashboard with no YAML: Linus builds it from the areas and floors you already have in Home Assistant, and places new devices on its own.
+
 Key features:
 
 - 🏠 **Smart Room Navigation**
@@ -99,6 +101,7 @@ Key features:
 
 - 🔗 **Keep Your Custom Dashboards**
   Already built the perfect energy view? Embed it in Linus! [Learn more →](docs/EMBEDDED_DASHBOARDS.md)
+  Switching from another dashboard? See what you keep and how to go back. [Learn more →](https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/docs/SWITCHING_TO_LINUS.md)
 
 - ⚡ **Install in 5 Minutes**
   Just plug, play, and enjoy. No YAML required.
@@ -159,6 +162,8 @@ _Example: Energy dashboard embedded seamlessly in Linus_
 
 [Complete guide with step-by-step setup →](docs/EMBEDDED_DASHBOARDS.md)
 
+**Switching from another dashboard?** Linus never edits your existing dashboards: it adds its own panel next to them. See what you keep, what to check and how to go back. [Learn more →](https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/docs/SWITCHING_TO_LINUS.md)
+
 ---
 
 ## 🌟 Features You'll Love
@@ -195,6 +200,7 @@ _Example: Energy dashboard embedded seamlessly in Linus_
 
 - [📊 Activity Detection Guide](docs/ACTIVITY_DETECTION.md) - Understand room occupancy tracking
 - [📖 Embedded Dashboards](docs/EMBEDDED_DASHBOARDS.md) - Integrate custom views
+- [🔄 Switching to Linus Dashboard](https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/docs/SWITCHING_TO_LINUS.md) - What you keep, what to check, how to go back
 - [📚 Full Documentation Map](docs/DOCUMENTATION_MAP.md) - Complete guide index
 
 ### Prerequisites
@@ -302,6 +308,7 @@ With Home Assistant 2025.1+, you can drag & drop rooms directly in HA settings (
 **Q: Can I use Linus with my existing dashboard?**
 **Yes!** Use embedded dashboards to integrate your custom views seamlessly. You can keep your energy monitoring, camera views, or any custom dashboard while enjoying Linus's automatic organization.
 [Setup guide →](docs/EMBEDDED_DASHBOARDS.md)
+Your existing dashboard is never edited and stays where it is. [Learn more →](https://github.com/Thank-you-Linus/Linus-Dashboard/blob/main/docs/SWITCHING_TO_LINUS.md)
 
 **Q: Do I need Linus Brain?**
 **No** - Linus Dashboard works standalone. Linus Brain is an optional upgrade for advanced AI activity detection and automation.

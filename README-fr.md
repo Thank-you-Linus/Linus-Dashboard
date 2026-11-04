@@ -262,7 +262,7 @@ Après l’installation, suivez ces étapes :
 - ✅ Certaines entités sont intentionnellement cachées (non disponibles, entités de configuration)
 
 **Q: Comment réorganiser mes pièces ?**
-Avec Home Assistant 2025.1+, vous pouvez glisser-déposer les pièces directement dans les paramètres HA (Paramètres → Zones et secteurs). Linus respecte automatiquement votre ordre manuel.
+Avec Home Assistant 2025.1+, vous pouvez glisser-déposer les pièces directement dans les paramètres HA (Paramètres → Pièces, étiquettes et zones). Linus respecte automatiquement votre ordre manuel.
 [En savoir plus →](docs/MANUAL_ORDERING.md)
 
 ### Fonctionnalités & Compatibilité

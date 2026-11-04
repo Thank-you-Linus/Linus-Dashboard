@@ -25,10 +25,10 @@ Whichever it is, the steps below are the same: install Linus next to it, check a
 - **Your areas, floors, devices and entities are read, never changed.** Linus never changes your areas, floors, devices or entities. It adds its own group devices and entities (one device per area, one per floor and one for the whole house, with "Linus Dashboard" as manufacturer). Excluding a domain in the integration options also stops Linus from creating the group entities of that domain.
 - **Excluded and hidden items stay out.** Domains, device classes, entities, devices, areas, floors and labels you exclude in the Linus options do not appear, and neither do entities you have hidden in Home Assistant.
 - **Unavailable entities stay visible.** They are listed last and gathered in the Unavailable view, so you can fix them.
-- **Devices with no area are grouped in an unassigned area**, labelled with the text Home Assistant itself uses for an area that is not found. Assign them an area in Home Assistant to place them in the right room.
-- **Rooms follow your Home Assistant order.** Linus uses the manual order you set in Home Assistant, then alphabetical order for the rest. [Learn more →](MANUAL_ORDERING.md)
+- **Devices with no area are grouped in an unassigned area**, labelled "Area not found." (Home Assistant's own text, in your language). Assign them an area in Home Assistant to place them in the right room.
+- **Rooms follow your Home Assistant order.** Linus uses the order you set in Home Assistant. [Learn more →](MANUAL_ORDERING.md)
 - **Linus has its own panel.** It adds a "Linus Dashboard" entry with a bowtie icon to the sidebar. Your existing dashboards stay where they are.
-- **Linus never edits your existing dashboards.** Generated dashboards will also show Linus's group entities; Linus loads its bundled custom cards on every dashboard. Only one copy of a given custom card can be loaded: if you also installed one of Linus's bundled cards separately, either copy may end up being used.
+- **Linus never edits your existing dashboards.** A generated dashboard that automatically discovers entities may also show Linus's group entities; check that dashboard after installing. Linus loads its bundled custom cards on every dashboard. Only one copy of a given custom card can be loaded: if you also installed one of Linus's bundled cards separately, either copy may end up being used.
 
 ---
 
@@ -38,7 +38,7 @@ Whichever it is, the steps below are the same: install Linus next to it, check a
 
 **What you keep:** the default dashboard is still there, in the sidebar, unchanged.
 
-**What to check:** the default dashboard lists entities by area, so it will also show Linus's group entities. Only dashboards with their own views can be embedded in Linus: the default dashboard, which you never edited, has none, so it cannot be embedded.
+**What to check:** the default dashboard automatically discovers entities, so it may also show Linus's group entities; check it after installing. Only dashboards with their own views can be embedded in Linus: the default dashboard, which you never edited, has none, so it cannot be embedded.
 
 **Going back:** see [Going back / uninstalling](#going-back--uninstalling).
 
@@ -54,7 +54,7 @@ Whichever it is, the steps below are the same: install Linus next to it, check a
 
 **What you keep:** the other dashboard stays in the sidebar; Linus does not change its configuration.
 
-**What to check:** a generated dashboard lists entities by area, so it will also show Linus's group entities. Only dashboards with their own views can be embedded in Linus: a dashboard built only from a strategy has none, so it cannot be embedded.
+**What to check:** a generated dashboard that automatically discovers entities may also show Linus's group entities; check it after installing. Only dashboards with their own views can be embedded in Linus: a dashboard built only from a strategy has none, so it cannot be embedded.
 
 **Going back:** see [Going back / uninstalling](#going-back--uninstalling).
 
@@ -75,18 +75,17 @@ Whichever it is, the steps below are the same: install Linus next to it, check a
 Your previous dashboard was never modified, so going back means removing Linus:
 
 1. **Delete the integration:** Settings → Devices & Services → Linus Dashboard → ⋮ → Delete. This removes the Linus panel from the sidebar.
-2. **Enable advanced mode** in your user profile (it shows the Resources page).
-3. Go to **Settings → Dashboards → ⋮ (top right) → Resources**.
-4. **Delete every resource whose URL starts with `/linus_dashboard_files/`.** Deleting the integration does not remove them.
-5. **Restart Home Assistant** (Settings → System → Restart). Home Assistant only stops serving the `/linus_dashboard_files/` files after a restart.
-6. **Hard-refresh your browser** (Ctrl+F5, or Cmd+Shift+R on macOS).
-7. *(Optional)* **To remove the files too, remove Linus Dashboard from HACS:** open HACS, select Linus Dashboard, ⋮ menu → Remove, then restart Home Assistant.
+2. Go to **Settings → Dashboards → ⋮ (top right) → Resources**. On older Home Assistant versions, this entry only appears once advanced mode is turned on in your user profile.
+3. **Delete every resource whose URL starts with `/linus_dashboard_files/`.** Deleting the integration does not remove them.
+4. **Restart Home Assistant** (Settings → System, restart button at the top right). Home Assistant only stops serving the `/linus_dashboard_files/` files after a restart.
+5. **Hard-refresh your browser** (Ctrl+F5, or Cmd+Shift+R on macOS).
+6. *(Optional)* **If you installed Linus through HACS, remove it from HACS too** to delete its files, then restart Home Assistant.
 
 > ⚠️ **Bundled cards:** if one of your other dashboards uses a custom card that came only with Linus, that card stops displaying once the resources are removed. Install that card separately before removing the resources if you want to keep it.
 
-If your Lovelace resources are managed in YAML, there is nothing to delete in step 4: Linus loads its files without adding them to the list, and the restart in step 5 is enough.
+If your Lovelace resources are managed in YAML, there is nothing to delete in step 3: Linus loads its files without adding them to the list, and the restart in step 4 is enough.
 
-Home Assistant normally removes the devices and entities of a deleted integration; check Settings → Devices & Services → Devices afterwards and delete any device with "Linus Dashboard" as manufacturer that is still listed.
+Home Assistant removes Linus's devices and entities with the integration. If a device with "Linus Dashboard" as manufacturer is still listed in Settings → Devices & Services → Devices, delete it.
 
 ---
 

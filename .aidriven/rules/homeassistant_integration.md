@@ -158,7 +158,7 @@ def get_version() -> str:
 - `manifest.json` → `"version": "1.3.0"`
 - `const.py` → `VERSION = "1.3.0"`
 
-Use `npm run bump` to update all files automatically.
+Use `npm run bump:release` to update all files automatically.
 
 ---
 
@@ -431,7 +431,7 @@ await utils.init_resource(hass, versioned_url, str(manifest_version))
 
 **Solution**:
 1. Rebuild frontend: `npm run build`
-2. Update all version files: `npm run bump`
+2. Update all version files: `npm run bump:release`
 3. Verify manifest version matches package.json
 4. Clear browser cache
 

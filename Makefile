@@ -1,13 +1,13 @@
 # Linus Dashboard - Minimal Development Commands
 
-.PHONY: help dev build build-watch build-prod lint install bootstrap fake-house
+.PHONY: help dev build build-watch build-prod clean lint install bootstrap fake-house
 
 # Default help
 help:
 	@echo "🎯 Linus Dashboard Commands"
 	@echo ""
 	@echo "   dev         Start Home Assistant development server"
-	@echo "   build       Build frontend (development)"
+	@echo "   build       Build frontend"
 	@echo "   build-watch Build frontend in watch mode"
 	@echo "   build-prod  Build frontend (production)"
 	@echo "   lint        Run linting and formatting"
@@ -25,6 +25,10 @@ dev:
 	else \
 		echo "🔗 config/custom_components already exists, skipping symlink"; \
 	fi
+	@if [ ! -f custom_components/linus_dashboard/www/linus-strategy.js ]; then \
+		echo "📦 No frontend build yet, building..."; \
+		npm run build; \
+	fi
 	@echo "🐍 Activating Python virtual environment..."
 	@echo "🚀 Starting Home Assistant on http://localhost:8123"
 	@. ./.env 2>/dev/null || true; \
@@ -35,10 +39,14 @@ build:
 	npm run build
 
 build-watch:
-	npm run build-dev
+	npm run build:dev
 
 build-prod:
-	npm run build-prod
+	npm run build:prod
+
+# Remove generated files from www/ (old chunks pile up across builds)
+clean:
+	git clean -fdX custom_components/linus_dashboard/www
 
 # Linting
 lint:

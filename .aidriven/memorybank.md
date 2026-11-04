@@ -411,7 +411,7 @@ npm install
 ```bash
 # Development build (watch mode)
 make dev
-npm run build-dev
+npm run build:dev
 
 # Production build
 make build
@@ -419,14 +419,14 @@ npm run build
 
 # Type checking
 npm run type-check
-npm run type-check:watch
+npm run type-check
 
 # Linting
 make lint
 npm run lint
 
 # Start Home Assistant
-make develop
+make dev
 ./ha-env/bin/hass -c /config
 ```
 
@@ -435,7 +435,7 @@ make develop
 ```bash
 # 1. Make changes to TypeScript files in src/
 # 2. Run build (or watch mode)
-npm run build-dev  # Watch mode, auto-rebuilds
+npm run build:dev  # Watch mode, auto-rebuilds
 
 # 3. Output goes to custom_components/linus_dashboard/www/
 # 4. Restart Home Assistant to load new bundle

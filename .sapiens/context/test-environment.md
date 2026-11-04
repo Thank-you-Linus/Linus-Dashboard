@@ -13,6 +13,6 @@ Le geste qui déploie une PR sur l'instance Home Assistant de test n'est pas dé
 
 Propriétés du code à garder en tête avant de tester une PR.
 
-1. Le bundle frontend est commité (`custom_components/linus_dashboard/www/linus-strategy.js` et son `.map`). Il est produit par le script `build` du `package.json`. Une PR qui modifie `src/` sans le régénérer s'installe sans erreur et sert l'ancien code ; la CI ne contrôle que sa présence et sa taille.
+1. Le build du frontend n'est pas commité (`custom_components/linus_dashboard/www/linus-strategy.js`, son `.map` et les morceaux à nom haché sont ignorés par git). La CI le construit sur chaque PR et le publie comme artefact `build-output`, que le geste de déploiement installe : une PR dont la CI n'a pas tourné n'a rien à tester.
 2. La branche par défaut est `main`, pas `master`.
 3. Home Assistant ne consomme que `custom_components/`, `config/` et `src/` : des modifications non commitées sur ces chemins faussent un test de PR.

@@ -13,6 +13,12 @@ fi
 echo "🐍 Activating Python virtual environment..."
 source ha-env/bin/activate
 
+# The frontend build is not committed: Home Assistant lists it once, at startup.
+if [[ ! -f custom_components/linus_dashboard/www/linus-strategy.js ]]; then
+    echo "📦 No frontend build yet, building..."
+    npm run build
+fi
+
 echo "🚀 Starting Home Assistant on http://localhost:8123"
 echo "   Config directory: $(pwd)/config"
 echo "   Custom components: $(pwd)/custom_components"

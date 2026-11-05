@@ -272,7 +272,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Linus Dashboard light groups (area/floor/global)."""
-    exclusions = ExclusionConfig.from_config_entry(config_entry)
+    exclusions = ExclusionConfig.from_config_entry(config_entry, hass)
 
     # Module-level registry can hold stale entries from a previous load of
     # this config entry (reload after an options change) — those entities

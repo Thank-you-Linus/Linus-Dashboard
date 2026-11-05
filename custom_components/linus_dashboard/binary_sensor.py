@@ -366,7 +366,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Linus Dashboard binary_sensor groups (presence + per device_class)."""
-    exclusions = ExclusionConfig.from_config_entry(config_entry)
+    exclusions = ExclusionConfig.from_config_entry(config_entry, hass)
     if domain_is_excluded("binary_sensor", exclusions):
         _LOGGER.debug("binary_sensor domain excluded, skipping group creation")
         # Excluded builds nothing whatever the states: settled from the start.

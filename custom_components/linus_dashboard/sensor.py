@@ -207,15 +207,15 @@ async def _build_aggregate_sensors(
     dev_reg = dr.async_get(hass)
     area_reg = ar.async_get(hass)
 
-    options = config_entry.options
-    excluded_domains = set(options.get("excluded_domains") or [])
-    excluded_device_classes = set(options.get("excluded_device_classes") or [])
-    excluded_targets = options.get("excluded_targets") or {}
-    excluded_entity_ids = set(excluded_targets.get("entity_id") or [])
-    excluded_area_ids = set(excluded_targets.get("area_id") or [])
-    excluded_device_ids = set(excluded_targets.get("device_id") or [])
-    excluded_floor_ids = set(excluded_targets.get("floor_id") or [])
-    excluded_integrations = set(options.get("excluded_integrations") or [])
+    # Same exclusion options as every group platform, labels expanded.
+    exclusions = ExclusionConfig.from_config_entry(config_entry, hass)
+    excluded_domains = exclusions.excluded_domains
+    excluded_device_classes = exclusions.excluded_device_classes
+    excluded_entity_ids = exclusions.excluded_entity_ids
+    excluded_area_ids = exclusions.excluded_area_ids
+    excluded_device_ids = exclusions.excluded_device_ids
+    excluded_floor_ids = exclusions.excluded_floor_ids
+    excluded_integrations = exclusions.excluded_integrations
 
     # Domain-level buckets serve chips without a device_class — the only
     # remaining case, now that device_class buckets are covered by real
@@ -780,7 +780,7 @@ async def _build_numeric_sensors(
     Returns every aggregate (existing ones refreshed in place, new ones
     constructed) — the caller decides which still need async_add_entities.
     """
-    exclusions = ExclusionConfig.from_config_entry(config_entry)
+    exclusions = ExclusionConfig.from_config_entry(config_entry, hass)
     entry_id = config_entry.entry_id
     area_reg = ar.async_get(hass)
     entities: list[LinusDashboardNumericAggregateSensor] = []
@@ -1086,7 +1086,7 @@ async def _build_health_sensors(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> list[LinusDashboardHealthSensor]:
     """Build unavailable/unknown-entity-count sensors, nested area/floor/global."""
-    exclusions = ExclusionConfig.from_config_entry(config_entry)
+    exclusions = ExclusionConfig.from_config_entry(config_entry, hass)
     entry_id = config_entry.entry_id
     entities: list[LinusDashboardHealthSensor] = []
 

@@ -1,23 +1,22 @@
 # Agent Guidelines for Linus Dashboard
 
+Contribution rules, including the frontend build, which is never committed, are in the root [AGENTS.md](../AGENTS.md). It wins over this file.
+
 ## Build/Lint/Test Commands
 
 ### Frontend (TypeScript)
 - **Build production**: `npm run build` or `make build`
-- **Build development**: `npm run build-dev` or `make dev` (watch mode)
+- **Build development**: `npm run build:dev` or `make build-watch` (watch mode)
 - **Type check**: `npm run type-check`
-- **Type check watch**: `npm run type-check:watch`
 - **Lint**: `npm run lint` or `make lint`
 - **Lint check**: `npm run lint:check`
-- **Build analyze**: `npm run build:analyze` (with bundle size analysis)
 
 ### Backend (Python)
-- **Format**: `black custom_components/linus_dashboard/`
-- **Lint**: `ruff check custom_components/linus_dashboard/`
-- **Type check**: `mypy custom_components/linus_dashboard/`
+- **Format**: `python3 -m ruff format .`
+- **Lint**: `python3 -m ruff check .`
 
 ### Home Assistant
-- **Start HA**: `./ha-env/bin/hass -c /config` or `make develop`
+- **Start HA**: `./ha-env/bin/hass -c /config` or `make dev`
 - **Check config**: `./ha-env/bin/hass -c /config --script check_config`
 - **Stop HA**: `pkill -f "hass -c /config"`
 
@@ -65,7 +64,7 @@ grep "Setting up Linus Dashboard" /config/home-assistant.log
 1. **Make changes** to TypeScript files in `src/`
 2. **Build** the frontend:
    ```bash
-   npm run build  # or npm run build-dev for watch mode
+   npm run build  # or npm run build:dev for watch mode
    ```
 3. **Verify output** in `custom_components/linus_dashboard/www/linus-strategy.js`
 4. **Restart Home Assistant**:
@@ -214,7 +213,7 @@ When releasing a new version, update ALL of these files:
 
 **Use version-bump-prompt**:
 ```bash
-npm run bump  # Automatically updates all files
+npm run bump:release  # Automatically updates all files
 ```
 
 ### Cache-Busting
@@ -258,7 +257,7 @@ npm run bump  # Automatically updates all files
 - **Entity Filtering**: Filter entities early in the pipeline
 - **Caching**: Helper singleton caches hass state
 - **Debouncing**: Avoid regenerating dashboard on every state change
-- **Bundle Size**: Monitor bundle size with `npm run build:analyze`
+- **Bundle Size**: Watch the size reported by `npm run build`
 - **Large Installs**: Test with 500+ entities to ensure performance
 
 ## Testing Checklist
@@ -267,7 +266,7 @@ Before releasing:
 - [ ] TypeScript compiles without errors (`npm run type-check`)
 - [ ] ESLint passes (`npm run lint:check`)
 - [ ] Production build succeeds (`npm run build`)
-- [ ] Bundle size is reasonable (check `build:analyze`)
+- [ ] Bundle size is reasonable (reported by `npm run build`)
 - [ ] Home Assistant loads integration without errors
 - [ ] Dashboard appears in sidebar with bow-tie icon
 - [ ] All views render correctly (areas, domains, home)

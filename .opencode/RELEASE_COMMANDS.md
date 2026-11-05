@@ -43,7 +43,6 @@ Crée une pre-release beta pour les tests communautaires.
 **Fichiers modifiés :**
 - `package.json`, `package-lock.json`, `manifest.json`
 - `RELEASE_NOTES.md` (généré et édité par IA)
-- `custom_components/linus_dashboard/www/` (build)
 
 **Validations automatiques :**
 - Notes de release (format, sections, pas de TODO)

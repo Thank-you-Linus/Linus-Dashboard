@@ -246,9 +246,10 @@ The project includes a complete development environment that sets up automatical
 make dev         # Start Home Assistant development server
 make bootstrap    # Create the HA admin account + token via the API (no browser)
 make fake-house  # Provision the fake house test entities (bootstraps first if needed)
-make build       # Build frontend (development)
+make build       # Build frontend
 make build-prod  # Build frontend (production)
 make build-watch # Build frontend in watch mode
+make clean       # Remove generated files from www/
 make lint        # Run ESLint and Prettier
 make install     # Install all dependencies
 ```

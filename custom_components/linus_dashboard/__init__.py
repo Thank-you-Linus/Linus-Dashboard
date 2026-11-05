@@ -83,9 +83,9 @@ STATIC_FILES_KEY = "static_files"
 
 async def _async_register_static_files(hass: HomeAssistant) -> list[str]:
     """
-    Serve the bundled JS files once per Home Assistant run (TK-259).
+    Serve the bundled www/ directory once per Home Assistant run (TK-259).
 
-    Returns the files actually served, in JS_FILES order. A second call
+    Returns the JS_FILES present on disk, in order. A second call
     returns that list without touching the router: an aiohttp route cannot be
     removed while Home Assistant runs, and adding the same URL again raises
     `RuntimeError: Added route will never be executed`.
@@ -109,13 +109,13 @@ async def _async_register_static_files(hass: HomeAssistant) -> list[str]:
         return present
 
     present = await hass.async_add_executor_job(_present_files)
+    # Serve the whole www/ directory under one prefix rather than one static
+    # path per known file. linus-strategy.js is code-split (dynamic import()
+    # for views/cards/chips), so the build emits extra content-hashed chunk
+    # files that aren't in JS_FILES and still need to be reachable. The
+    # prefix must match publicPath in rspack.config.cjs.
     await hass.http.async_register_static_paths([
-        StaticPathConfig(
-            f"/{DOMAIN}_files/www/{js_file}",
-            str(base_path / js_file),
-            cache_headers=False,
-        )
-        for js_file in present
+        StaticPathConfig(f"/{DOMAIN}_files/www", str(base_path), cache_headers=False),
     ])
     domain_data[STATIC_FILES_KEY] = present
     return present

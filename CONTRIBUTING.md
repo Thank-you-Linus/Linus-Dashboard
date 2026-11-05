@@ -51,6 +51,8 @@ code .
 
 #### 3. Launch Home Assistant
 
+The frontend build is not committed. Run `npm run build` once before the first launch: Home Assistant only lists it at startup, so it needs a restart if it started without one.
+
 Once the container is ready, you have **two options**:
 
 **Option A: Via Debugger (Recommended)**
@@ -70,7 +72,7 @@ In a **new terminal** (while Home Assistant is running):
 
 ```bash
 # For development with watch mode
-npm run build-dev
+npm run build:dev
 
 # For a single build
 npm run build
@@ -136,6 +138,8 @@ and set `HA_TOKEN` in `.env` yourself from a token created in the UI
 4. **Lint** your code with `scripts/lint`
 5. **Update** documentation if necessary
 6. **Submit** your pull request!
+
+Do not commit the frontend build: `npm run build` output in `custom_components/linus_dashboard/www/` is ignored by git, and CI builds every pull request. See [AGENTS.md](AGENTS.md) for the checks to run and the rules that come up in review. It is written for AI coding agents, and it applies to everyone.
 
 ## 🐛 Report bugs
 
@@ -225,6 +229,8 @@ code .
 
 #### 3. Lancer Home Assistant
 
+Le build du frontend n'est pas commité. Lancez `npm run build` une fois avant le premier démarrage : Home Assistant ne le repère qu'au démarrage, il faut donc le redémarrer s'il a démarré sans.
+
 Une fois le conteneur prêt, vous avez **deux options** :
 
 **Option A : Via le Debugger (Recommandée)**
@@ -244,7 +250,7 @@ Dans un **nouveau terminal** (pendant que Home Assistant tourne) :
 
 ```bash
 # Pour le développement avec watch mode
-npm run build-dev
+npm run build:dev
 
 # Pour un build unique
 npm run build
@@ -311,6 +317,8 @@ créé dans l'interface (**Profil → Sécurité → Jetons**) — voir `.env.ex
 4. **Linter** votre code avec `scripts/lint`
 5. **Mettre à jour** la documentation si nécessaire
 6. **Soumettre** votre pull request !
+
+Ne commitez pas le build du frontend : le résultat de `npm run build` dans `custom_components/linus_dashboard/www/` est ignoré par git, et la CI construit chaque pull request. Voir [AGENTS.md](AGENTS.md) pour les vérifications à lancer et les règles qui reviennent en revue. Il est écrit pour les agents IA, et il vaut pour tout le monde.
 
 ## 🐛 Signaler des bugs
 

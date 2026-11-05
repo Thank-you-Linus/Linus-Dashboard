@@ -56,7 +56,7 @@
             "label": "Build Frontend (Watch)",
             "type": "shell",
             "command": "npm",
-            "args": ["run", "build-dev"],
+            "args": ["run", "build:dev"],
             "group": "build",
             "isBackground": true,
             "presentation": {

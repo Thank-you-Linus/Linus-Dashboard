@@ -15,15 +15,19 @@ def test_mean_float_averages_with_decimal_precision():
     assert mean_float(21.5, 22.3) == 21.9
 
 
-def test_exclusion_config_from_config_entry_defaults_to_empty(mock_config_entry):
+def test_exclusion_config_from_config_entry_defaults_to_empty(
+    mock_config_entry, mock_hass
+):
     mock_config_entry.options = {}
-    exclusions = ExclusionConfig.from_config_entry(mock_config_entry)
+    exclusions = ExclusionConfig.from_config_entry(mock_config_entry, mock_hass)
     assert exclusions.excluded_domains == set()
     assert exclusions.excluded_entity_ids == set()
     assert exclusions.excluded_area_ids == set()
 
 
-def test_exclusion_config_from_config_entry_reads_excluded_targets(mock_config_entry):
+def test_exclusion_config_from_config_entry_reads_excluded_targets(
+    mock_config_entry, mock_hass
+):
     mock_config_entry.options = {
         "excluded_domains": ["climate"],
         "excluded_device_classes": ["battery"],
@@ -35,7 +39,7 @@ def test_exclusion_config_from_config_entry_reads_excluded_targets(mock_config_e
             "floor_id": ["basement"],
         },
     }
-    exclusions = ExclusionConfig.from_config_entry(mock_config_entry)
+    exclusions = ExclusionConfig.from_config_entry(mock_config_entry, mock_hass)
     assert exclusions.excluded_domains == {"climate"}
     assert exclusions.excluded_device_classes == {"battery"}
     assert exclusions.excluded_integrations == {"mqtt"}
@@ -43,6 +47,47 @@ def test_exclusion_config_from_config_entry_reads_excluded_targets(mock_config_e
     assert exclusions.excluded_device_ids == {"dev1"}
     assert exclusions.excluded_area_ids == {"garage"}
     assert exclusions.excluded_floor_ids == {"basement"}
+
+
+def test_exclusion_config_expands_excluded_labels(
+    mock_config_entry, mock_hass, monkeypatch
+):
+    """
+    An excluded label excludes whatever carries it: the labelled entity,
+    every entity of a labelled device (its temperature sensor no longer
+    feeds the room tile) and everything in a labelled room.
+    """
+    from types import SimpleNamespace
+
+    from homeassistant.helpers import area_registry as ar
+    from homeassistant.helpers import device_registry as dr
+    from homeassistant.helpers import entity_registry as er
+
+    by_label = {
+        "er": {"ignore": [SimpleNamespace(entity_id="sensor.labelled")]},
+        "dr": {"ignore": [SimpleNamespace(id="dev_thermo")]},
+        "ar": {"ignore": [SimpleNamespace(id="attic")]},
+    }
+    for name, module in (("er", er), ("dr", dr), ("ar", ar)):
+        monkeypatch.setattr(module, "async_get", lambda _hass: SimpleNamespace())
+        monkeypatch.setattr(
+            module,
+            "async_entries_for_label",
+            lambda _reg, label_id, _name=name: by_label[_name].get(label_id, []),
+        )
+
+    mock_config_entry.options = {
+        "excluded_targets": {
+            "entity_id": ["light.foo"],
+            "device_id": ["dev1"],
+            "area_id": ["garage"],
+            "label_id": ["ignore", "unused"],
+        },
+    }
+    exclusions = ExclusionConfig.from_config_entry(mock_config_entry, mock_hass)
+    assert exclusions.excluded_entity_ids == {"light.foo", "sensor.labelled"}
+    assert exclusions.excluded_device_ids == {"dev1", "dev_thermo"}
+    assert exclusions.excluded_area_ids == {"garage", "attic"}
 
 
 def test_domain_is_excluded():

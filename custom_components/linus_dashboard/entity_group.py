@@ -79,11 +79,21 @@ class ExclusionConfig:
     excluded_integrations: set[str] = field(default_factory=set)
 
     @classmethod
-    def from_config_entry(cls, config_entry: ConfigEntry) -> "ExclusionConfig":
-        """Build from the same options keys used by _build_aggregate_sensors."""
+    def from_config_entry(
+        cls, config_entry: ConfigEntry, hass: HomeAssistant
+    ) -> "ExclusionConfig":
+        """
+        Build from the config entry's exclusion options.
+
+        Excluded labels are expanded into the concrete entity/device/area id
+        sets: a label excludes whatever carries it (an entity, a device and
+        so all its entities, or an area and so everything in it), and every
+        scan then only has to check ids. Floors carry no labels in Home
+        Assistant. The frontend does the same expansion (Helper.initialize).
+        """
         options = config_entry.options
         excluded_targets = options.get("excluded_targets") or {}
-        return cls(
+        exclusions = cls(
             excluded_domains=set(options.get("excluded_domains") or []),
             excluded_device_classes=set(options.get("excluded_device_classes") or []),
             excluded_entity_ids=set(excluded_targets.get("entity_id") or []),
@@ -92,6 +102,27 @@ class ExclusionConfig:
             excluded_floor_ids=set(excluded_targets.get("floor_id") or []),
             excluded_integrations=set(options.get("excluded_integrations") or []),
         )
+        exclusions.expand_labels(hass, set(excluded_targets.get("label_id") or []))
+        return exclusions
+
+    def expand_labels(self, hass: HomeAssistant, label_ids: set[str]) -> None:
+        """Add the entities, devices and areas carrying any of label_ids."""
+        if not label_ids:
+            return
+        entity_reg = er.async_get(hass)
+        device_reg = dr.async_get(hass)
+        area_reg = ar.async_get(hass)
+        for label_id in label_ids:
+            self.excluded_entity_ids.update(
+                entry.entity_id
+                for entry in er.async_entries_for_label(entity_reg, label_id)
+            )
+            self.excluded_device_ids.update(
+                device.id for device in dr.async_entries_for_label(device_reg, label_id)
+            )
+            self.excluded_area_ids.update(
+                area.id for area in ar.async_entries_for_label(area_reg, label_id)
+            )
 
 
 @dataclass

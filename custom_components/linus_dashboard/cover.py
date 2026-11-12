@@ -194,7 +194,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Linus Dashboard cover groups (flat + per device_class, area/floor/global)."""
-    exclusions = ExclusionConfig.from_config_entry(config_entry)
+    exclusions = ExclusionConfig.from_config_entry(config_entry, hass)
     _COVER_GROUPS.clear()
 
     entities = await _build_all_cover_groups(hass, config_entry, exclusions)

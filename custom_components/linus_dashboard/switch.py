@@ -88,7 +88,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Linus Dashboard switch groups (area/floor/global)."""
-    exclusions = ExclusionConfig.from_config_entry(config_entry)
+    exclusions = ExclusionConfig.from_config_entry(config_entry, hass)
     _SWITCH_GROUPS.clear()
 
     build_kwargs = {

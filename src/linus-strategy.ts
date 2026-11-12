@@ -206,15 +206,13 @@ class LinusStrategy extends HTMLTemplateElement {
   private static createFloorSubviews(views: LovelaceViewConfig[]) {
     for (const floor of Helper.orderedFloors) {
       if (!floor.hidden) {
-        const excludedTargets = Helper.linus_dashboard_config?.excluded_targets;
-        
         // Check direct floor exclusion
-        const isFloorExcluded = excludedTargets?.floor_id?.includes(floor.floor_id);
-        
-        // Check if ALL areas in this floor are excluded
+        const isFloorExcluded = Helper.isFloorExcluded(floor.floor_id);
+
+        // Check if ALL areas in this floor are excluded (by id or by label)
         const allAreasExcluded = floor.areas_slug.every((area_slug) => {
           const area = Helper.areas[area_slug];
-          return area && excludedTargets?.area_id?.includes(area.area_id);
+          return area && Helper.isAreaExcluded(area.area_id);
         });
 
         // Skip floor if directly excluded OR all its areas are excluded

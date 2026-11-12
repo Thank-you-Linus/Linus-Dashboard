@@ -4,5 +4,5 @@
 # pins, so the integration job (tests/python/integration, which installs that
 # plugin on its own — its aiohasupervisor pin conflicts with requirements.txt)
 # runs the same pytest.
-pytest==9.1.1
+pytest==9.2.0
 pytest-asyncio==1.4.1.post1
